@@ -33,6 +33,24 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Add eyes reaction to issue or comment
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          if [ "${{ github.event_name }}" = "issues" ]; then
+            echo "Adding eyes reaction to issue #${{ github.event.issue.number }}"
+            gh api repos/${{ github.repository }}/issues/${{ github.event.issue.number }}/reactions \
+              --method POST \
+              --field content=eyes
+          elif [ "${{ github.event_name }}" = "issue_comment" ]; then
+            echo "Adding eyes reaction to comment ${{ github.event.comment.id }}"
+            gh api repos/${{ github.repository }}/issues/comments/${{ github.event.comment.id }}/reactions \
+              --method POST \
+              --field content=eyes
+          else
+            echo "No reaction needed for workflow_dispatch"
+          fi
+
       - name: Get Issue or PR Number
         id: get-number
         shell: pwsh
