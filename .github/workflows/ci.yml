@@ -56,9 +56,9 @@ jobs:
         shell: pwsh
         run: |
           if ("${{ github.event_name }}" -eq "workflow_dispatch") {
-            $number=${{ inputs.issue_number }}
+            $number="${{ inputs.issue_number }}"
           } else {
-            $number=${{ github.event.issue.number }}
+            $number="${{ github.event.issue.number }}"
           }
           echo "number=${{ inputs.issue_number }}" >> $env:GITHUB_OUTPUT
           echo "I will triage issue number #$number"
