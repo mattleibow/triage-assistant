@@ -35,10 +35,12 @@ jobs:
         shell: pwsh
         run: |
           if ("${{ github.event_name }}" -eq "workflow_dispatch") {
-            echo "number=${{ inputs.issue_number }}" >> $env:GITHUB_OUTPUT
+            $number=${{ inputs.issue_number }}
           } else {
-            echo "number=${{ github.event.issue.number }}" >> $env:GITHUB_OUTPUT
+            $number=${{ github.event.issue.number }}
           }
+          echo "number=${{ inputs.issue_number }}" >> $env:GITHUB_OUTPUT
+          echo "I will triage issue number #$number"
 
       - name: Determine OVERLAP label for the issue
         id: triage-overlap
