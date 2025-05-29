@@ -1,0 +1,66 @@
+name: 'Flexible Triage Labels Action'
+description: 'Process issues and apply labels using AI inference, supporting multiple triage modes.'
+
+inputs:
+  issue:
+    description: 'The issue number of the issue to triage'
+    required: true
+  template:
+    description: 'Triage template: multi-label, single-label, regression, missing-info'
+    required: true
+  label:
+    description: 'The label to apply to an issue'
+    required: false
+    default: ''
+  label-prefix:
+    description: 'Prefix for label search (e.g., platform/, area-, etc.)'
+    required: false
+    default: ''
+
+outputs:
+  response-file:
+    description: 'The file that contains the labels to apply to the issue'
+    value: ${{ steps.inference.outputs.response-file }}
+
+runs:
+  using: 'composite'
+  steps:
+
+    - name: Generate a unique ID
+      id: guid
+      shell: pwsh
+      run: |
+        $guid = [guid]::NewGuid().ToString()
+        "id=$guid" >> $env:GITHUB_OUTPUT
+
+    - name: Create System prompt file
+      id: create-system-prompt
+      uses: ${{ github.action_path }}/../triage-ai-gen-prompt
+      with:
+        template: ${{ github.action_path }}/system-prompt-${{ inputs.template }}.md
+        output: ${{ runner.temp }}/triage-labels/prompts/${{ steps.guid.outputs.id }}/system-prompt.md
+        replacements: |
+          ISSUE_NUMBER=${{ inputs.issue }}
+          ISSUE_REPO=${{ github.repository }}
+          LABEL_PREFIX=${{ inputs.label-prefix }}
+          LABEL=${{ inputs.label }}
+
+    - name: Create User prompt file
+      id: create-user-prompt
+      uses: ${{ github.action_path }}/../triage-ai-gen-prompt
+      with:
+        template: ${{ github.action_path }}/user-prompt.md
+        output: ${{ runner.temp }}/triage-labels/prompts/${{ steps.guid.outputs.id }}/user-prompt.md
+        replacements: |
+          ISSUE_NUMBER=${{ inputs.issue }}
+          ISSUE_REPO=${{ github.repository }}
+          LABEL_PREFIX=${{ inputs.label-prefix }}
+          LABEL=${{ inputs.label }}
+
+    - name: Run AI inference
+      id: inference
+      uses: mattleibow/ai-inference@mattleibow/response-file
+      with:
+        system-prompt-file: "${{ steps.create-system-prompt.outputs.prompt }}"
+        prompt-file: "${{ steps.create-user-prompt.outputs.prompt }}"
+        response-file: "${{ runner.temp }}/triage-assistant/responses/response-${{ steps.guid.outputs.id }}.json"
