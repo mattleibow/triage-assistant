@@ -52,7 +52,7 @@ runs:
     - name: Select labels
       id: select-labels
       if: ${{ inputs.template != '' }}
-      uses: ${{ github.action_path }}/src/select-labels
+      uses: ./src/select-labels
       with:
         issue: ${{ inputs.issue }}
         template: ${{ inputs.template }}
@@ -62,7 +62,7 @@ runs:
     - name: Apply labels and comment
       id: apply
       if: ${{ inputs.apply-labels == 'true' || inputs.apply-comment == 'true' }}
-      uses: ${{ github.action_path }}/src/apply
+      uses: ./src/apply
       with:
         issue: ${{ inputs.issue }}
         input-files: ${{ steps.select-labels.outputs.response-file }}
