@@ -1,0 +1,99 @@
+name: "Triage Issue"
+
+on:
+  # When someone opens a new issue
+  issues:
+    types: [opened,reopened]
+  # When someone adds the "/triage" comments
+  issue_comment:
+    types: [created, edited]
+  # When the workflow is run manually
+  workflow_dispatch:
+    inputs:
+      issue_number:
+        description: 'Issue number to triage'
+        required: true
+        type: number
+
+permissions:
+  contents: read
+  issues: write
+  models: read
+
+jobs:
+  triage:
+    name: Triage Issue
+    runs-on: ubuntu-latest
+    if: |
+      github.event_name == 'issues' ||
+      github.event_name == 'workflow_dispatch' ||
+      (github.event_name == 'issue_comment' && startsWith(github.event.comment.body, '/triage'))
+    steps:
+
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Get Issue or PR Number
+        id: get-number
+        shell: pwsh
+        run: |
+          if ("${{ github.event_name }}" -eq "workflow_dispatch") {
+            $number="${{ inputs.issue_number }}"
+          } else {
+            $number="${{ github.event.issue.number }}"
+          }
+          echo "number=$number" >> $env:GITHUB_OUTPUT
+          echo "I will triage issue number #$number"
+
+      - name: Add eyes reaction to issue or comment
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          if ("${{ github.event_name }}" -eq "issues") {
+            Write-Host "Adding eyes reaction to issue #${{ github.event.issue.number }}"
+            gh api repos/${{ github.repository }}/issues/${{ github.event.issue.number }}/reactions `
+              --method POST `
+              --field content=eyes
+          } elseif ("${{ github.event_name }}" -eq "issue_comment") {
+            Write-Host "Adding eyes reaction to comment ${{ github.event.comment.id }}"
+            gh api repos/${{ github.repository }}/issues/comments/${{ github.event.comment.id }}/reactions `
+              --method POST `
+              --field content=eyes
+          } elseif ("${{ github.event_name }}" -eq "workflow_dispatch") {
+            Write-Host "Adding eyes reaction to issue #${{ inputs.issue_number }}"
+            gh api repos/${{ github.repository }}/issues/${{ inputs.issue_number }}/reactions `
+              --method POST `
+              --field content=eyes
+          }
+
+      - name: Determine OVERLAP label for the issue
+        id: triage-overlap
+        uses: ./
+        with:
+          issue: ${{ steps.get-number.outputs.number }}
+          label-prefix: 'overlap-'
+          template: 'multi-label'
+
+      - name: Determine AREA label for the issue
+        id: triage-area
+        uses: ./
+        with:
+          issue: ${{ steps.get-number.outputs.number }}
+          label-prefix: 'area-'
+          template: 'single-label'
+
+      - name: Determine REGRESSION label for the issue
+        id: triage-regression
+        uses: ./
+        with:
+          issue: ${{ steps.get-number.outputs.number }}
+          label: 'regression'
+          template: 'regression'
+
+      - name: Apply Labels and Comment
+        uses: ./
+        with:
+          issue: ${{ steps.get-number.outputs.number }}
+          apply-labels: true
+          apply-comment: true
