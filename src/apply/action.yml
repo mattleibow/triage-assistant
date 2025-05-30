@@ -38,7 +38,7 @@ runs:
 
     - name: Create System prompt file
       id: create-system-prompt
-      uses: ./../triage-ai-gen-prompt
+      uses: ./triage-ai-gen-prompt
       with:
         template: ${{ github.action_path }}/system-prompt.md
         output: ${{ runner.temp }}/triage-apply/prompts/system-prompt.md
@@ -49,7 +49,7 @@ runs:
 
     - name: Create User prompt file
       id: create-user-prompt
-      uses: ./../triage-ai-gen-prompt
+      uses: ./triage-ai-gen-prompt
       with:
         template: ${{ github.action_path }}/user-prompt.md
         output: ${{ runner.temp }}/triage-apply/prompts/user-prompt.md
