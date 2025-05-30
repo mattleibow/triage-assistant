@@ -79,7 +79,7 @@ runs:
       with:
         script: |
           const fs = require('fs');
-          const summary = fs.readFileSync('${{ steps.inference.outputs.response }}', 'utf8');
+          const summary = fs.readFileSync('${{ steps.inference.outputs.response-file }}', 'utf8');
 
           const issueNumber = parseInt('${{ inputs.issue }}', 10);
           const footer = '${{ inputs.footer }}';
@@ -99,7 +99,7 @@ runs:
       with:
         script: |
           const fs = require('fs');
-          const mergedJson = fs.readFileSync('${{ steps.merge.outputs.merged-file }}', 'utf8');
+          const mergedJson = fs.readFileSync('${{ steps.merge.outputs.responses-file }}', 'utf8');
           const merged = JSON.parse(mergedJson);
 
           const issueNumber = parseInt('${{ inputs.issue }}', 10);
