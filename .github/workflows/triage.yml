@@ -1,9 +1,9 @@
-name: "Triage Issues and Pull Requests"
+name: 'Triage Issues and Pull Requests'
 
 on:
   # When someone opens a new issue
   issues:
-    types: [opened,reopened]
+    types: [opened, reopened]
   # When someone opens a new pull request or updates an existing one
   pull_request:
     types: [opened, reopened, synchronize]
@@ -18,7 +18,6 @@ on:
         required: true
         type: number
   push:
-    
 
 permissions:
   contents: read
@@ -36,7 +35,6 @@ jobs:
     #   github.event_name == 'workflow_dispatch' ||
     #   (github.event_name == 'issue_comment' && startsWith(github.event.comment.body, '/triage'))
     steps:
-
       - name: Checkout repository
         uses: actions/checkout@v4
 

@@ -31317,7 +31317,7 @@ accurately assign a single best label to new issues that are opened.
   used in order to find the best match.
 
 ===== Available Labels =====
-EXEC: gh label list --limit 1000 --json name,description --search "{{LABEL_PREFIX}}" --jq 'sort_by(.name)[] | select(.name | startswith("{{LABEL_PREFIX}}")) | "- name: \(.name)\n  description: \(.description)"'
+EXEC: gh label list --limit 1000 --json name,description --search "{{LABEL_PREFIX}}" --jq 'sort_by(.name)[] | select(.name | startswith("{{LABEL_PREFIX}}")) | "- name: \\(.name)\\n  description: \\(.description)"'
 ===== Available Labels =====
 
 ## Reasoning
@@ -31371,7 +31371,7 @@ accurately assign multiple labels to new issues that are opened.
   be used in order to find the best match.
 
 ===== Available Labels =====
-EXEC: gh label list --limit 1000 --json name,description --search "{{LABEL_PREFIX}}" --jq 'sort_by(.name)[] | select(.name | startswith("{{LABEL_PREFIX}}")) | "- name: \(.name)\n  description: \(.description)"'
+EXEC: gh label list --limit 1000 --json name,description --search "{{LABEL_PREFIX}}" --jq 'sort_by(.name)[] | select(.name | startswith("{{LABEL_PREFIX}}")) | "- name: \\(.name)\\n  description: \\(.description)"'
 ===== Available Labels =====
 
 ## Reasoning
@@ -40164,10 +40164,10 @@ function getPathFromMapKey(mapKey) {
  * Generates a prompt from a template string or file by replacing placeholders and executing commands.
  *
  * @param templateContent The template content as a string.
- * @param outputPath The path where the generated prompt will be written.
+ * @param outputPath Optional path where the generated prompt will be written.
  * @param replacements Record of placeholder keys and their replacement values.
- * @param token GitHub token for authentication when executing commands.
- * @returns Promise that resolves when the prompt is generated and written to the output file.
+ * @param config Configuration object containing token for external service access.
+ * @returns Promise that resolves to the generated prompt content.
  */
 async function generatePrompt(templateContent, outputPath, replacements, config) {
     const lines = templateContent.split('\n');
@@ -40184,7 +40184,7 @@ async function generatePrompt(templateContent, outputPath, replacements, config)
             coreExports.info(`Executing command: ${command}`);
             try {
                 let output = '';
-                await execExports.exec(command, [], {
+                await execExports.exec('pwsh', ['-Command', command], {
                     listeners: {
                         stdout: (data) => {
                             output += data.toString();
@@ -40207,11 +40207,15 @@ async function generatePrompt(templateContent, outputPath, replacements, config)
             outputContent.push(line);
         }
     }
-    await fs.promises.writeFile(outputPath, outputContent.join('\n'));
-    // Log the created prompt for debugging
-    coreExports.info('Created prompt from template:');
-    const createdContent = await fs.promises.readFile(outputPath, 'utf8');
-    coreExports.info(createdContent);
+    const output = outputContent.join('\n');
+    if (outputPath) {
+        await fs.promises.writeFile(outputPath, output);
+        // Log the created prompt for debugging
+        coreExports.info('Created prompt from template:');
+        const createdContent = await fs.promises.readFile(outputPath, 'utf8');
+        coreExports.info(createdContent);
+    }
+    return output;
 }
 /**
  * Runs AI inference to generate a response file.
@@ -40219,8 +40223,8 @@ async function generatePrompt(templateContent, outputPath, replacements, config)
  * @param systemPrompt The system prompt content.
  * @param userPrompt The user prompt content.
  * @param responseFile Path to write the response file.
- * @param config The triage configuration object.
  * @param maxTokens Optional maximum tokens limit (default: 200).
+ * @param config The inference configuration object.
  */
 async function runInference(systemPrompt, userPrompt, responseFile, maxTokens = 200, config) {
     try {

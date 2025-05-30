@@ -36,14 +36,34 @@ export async function generatePrompt(
       const command = execMatch[1]
       core.info(`Executing command: ${command}`)
 
-      
+      try {
+        let output = ''
+
+        await exec.exec('pwsh', ['-Command', command], {
+          listeners: {
+            stdout: (data: Buffer) => {
+              output += data.toString()
+            }
+          },
+          env: {
+            ...process.env,
+            GH_TOKEN: config.token
+          }
+        })
+
+        const result = output.trim().split('\n')
+        outputContent.push(...result)
+      } catch (error) {
+        core.setFailed(`Error executing command '${command}': ${error}`)
+        throw error
+      }
     } else {
       outputContent.push(line)
     }
   }
-  
+
   const output = outputContent.join('\n')
-  
+
   if (outputPath) {
     await fs.promises.writeFile(outputPath, output)
 
@@ -53,7 +73,7 @@ export async function generatePrompt(
     core.info(createdContent)
   }
 
-  return output;
+  return output
 }
 
 /**
