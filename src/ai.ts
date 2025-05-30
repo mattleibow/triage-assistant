@@ -4,23 +4,23 @@ import ModelClient, { isUnexpected } from '@azure-rest/ai-inference'
 import { AzureKeyCredential } from '@azure/core-auth'
 import * as fs from 'fs'
 import * as path from 'path'
-import { TriageConfig } from './triage-config.js'
+import { PromptConfig, InferenceConfig } from './triage-config.js'
 
 /**
  * Generates a prompt from a template string or file by replacing placeholders and executing commands.
  *
  * @param templateContent The template content as a string.
- * @param outputPath The path where the generated prompt will be written.
+ * @param outputPath Optional path where the generated prompt will be written.
  * @param replacements Record of placeholder keys and their replacement values.
- * @param token GitHub token for authentication when executing commands.
- * @returns Promise that resolves when the prompt is generated and written to the output file.
+ * @param config Configuration object containing token for external service access.
+ * @returns Promise that resolves to the generated prompt content.
  */
 export async function generatePrompt(
   templateContent: string,
-  outputPath: string,
+  outputPath: string | undefined,
   replacements: Record<string, any>,
-  config: TriageConfig
-): Promise<void> {
+  config: PromptConfig
+): Promise<string> {
   const lines = templateContent.split('\n')
   const outputContent: string[] = []
 
@@ -60,13 +60,19 @@ export async function generatePrompt(
       outputContent.push(line)
     }
   }
+  
+  const output = outputContent.join('\n')
+  
+  if (outputPath) {
+    await fs.promises.writeFile(outputPath, output)
 
-  await fs.promises.writeFile(outputPath, outputContent.join('\n'))
+    // Log the created prompt for debugging
+    core.info('Created prompt from template:')
+    const createdContent = await fs.promises.readFile(outputPath, 'utf8')
+    core.info(createdContent)
+  }
 
-  // Log the created prompt for debugging
-  core.info('Created prompt from template:')
-  const createdContent = await fs.promises.readFile(outputPath, 'utf8')
-  core.info(createdContent)
+  return output;
 }
 
 /**
@@ -75,15 +81,15 @@ export async function generatePrompt(
  * @param systemPrompt The system prompt content.
  * @param userPrompt The user prompt content.
  * @param responseFile Path to write the response file.
- * @param config The triage configuration object.
  * @param maxTokens Optional maximum tokens limit (default: 200).
+ * @param config The inference configuration object.
  */
 export async function runInference(
   systemPrompt: string,
   userPrompt: string,
   responseFile: string,
   maxTokens: number = 200,
-  config: TriageConfig
+  config: InferenceConfig
 ): Promise<void> {
   try {
     // Create Azure AI client

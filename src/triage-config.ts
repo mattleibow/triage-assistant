@@ -72,3 +72,33 @@ export interface TriageConfig {
    */
   labelPrefix: string
 }
+
+/**
+ * Minimal configuration needed for generating prompts.
+ */
+export interface PromptConfig {
+  /**
+   * The authentication token for accessing external services.
+   */
+  token: string
+}
+
+/**
+ * Minimal configuration needed for AI inference operations.
+ */
+export interface InferenceConfig {
+  /**
+   * The endpoint URL for the AI service.
+   */
+  aiEndpoint: string
+
+  /**
+   * The AI model identifier to use for processing.
+   */
+  aiModel: string
+
+  /**
+   * The authentication token for accessing the AI service.
+   */
+  token: string
+}
