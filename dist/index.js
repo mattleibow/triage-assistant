@@ -40283,8 +40283,7 @@ async function selectLabels(config) {
     await fs.promises.mkdir(responseDir, { recursive: true });
     // Generate system prompt
     const systemPromptPath = path.join(promptDir, 'system-prompt.md');
-    const systemPrompt = await fs.promises.readFile(systemPromptPath, 'utf8');
-    await generatePrompt(getPrompt$1(config.template), systemPrompt, {
+    await generatePrompt(getPrompt$1(config.template), systemPromptPath, {
         ISSUE_NUMBER: config.issueNumber,
         ISSUE_REPO: config.repository,
         LABEL_PREFIX: config.labelPrefix,
@@ -40292,8 +40291,7 @@ async function selectLabels(config) {
     }, config);
     // Generate user prompt
     const userPromptPath = path.join(promptDir, 'user-prompt.md');
-    const userPrompt = await fs.promises.readFile(userPromptPath, 'utf8');
-    await generatePrompt(getPrompt$1('user'), userPrompt, {
+    await generatePrompt(getPrompt$1('user'), userPromptPath, {
         ISSUE_NUMBER: config.issueNumber,
         ISSUE_REPO: config.repository,
         LABEL_PREFIX: config.labelPrefix,

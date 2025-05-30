@@ -23,10 +23,9 @@ export async function selectLabels(config: TriageConfig): Promise<string> {
 
   // Generate system prompt
   const systemPromptPath = path.join(promptDir, 'system-prompt.md')
-  const systemPrompt = await fs.promises.readFile(systemPromptPath, 'utf8')
   await generatePrompt(
     getPrompt(config.template),
-    systemPrompt,
+    systemPromptPath,
     {
       ISSUE_NUMBER: config.issueNumber,
       ISSUE_REPO: config.repository,
@@ -38,10 +37,9 @@ export async function selectLabels(config: TriageConfig): Promise<string> {
 
   // Generate user prompt
   const userPromptPath = path.join(promptDir, 'user-prompt.md')
-  const userPrompt = await fs.promises.readFile(userPromptPath, 'utf8')
   await generatePrompt(
     getPrompt('user'),
-    userPrompt,
+    userPromptPath,
     {
       ISSUE_NUMBER: config.issueNumber,
       ISSUE_REPO: config.repository,
