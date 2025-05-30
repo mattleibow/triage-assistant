@@ -82,11 +82,10 @@ foreach ($line in $lines) {
 }
 
 # Save the processed content to the output file
-$outputFilename = Split-Path -Leaf $Output
-Set-Content -Path $outputFilename -Value $outputContent -ErrorAction Stop
+$outputContent | Set-Content $Output
 
 # Log the created prompt for debugging
 Write-Host ""
 Write-Host "Created prompt from template:"
 Write-Host ""
-Get-Content $outputFilename
+Get-Content $Output

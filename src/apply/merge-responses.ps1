@@ -84,6 +84,4 @@ foreach ($file in $allFiles) {
 
 # Save to the output file
 New-Item -Path (Split-Path -Path $Output) -ItemType Directory -Force | Out-Null
-$merged |
-    ConvertTo-Json |
-    Set-Content $Output
+$merged | ConvertTo-Json | Set-Content $Output
