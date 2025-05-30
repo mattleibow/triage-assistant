@@ -1,9 +1,12 @@
-name: "Triage Issue"
+name: "Triage Issues and Pull Requests"
 
 on:
   # When someone opens a new issue
   issues:
     types: [opened,reopened]
+  # When someone opens a new pull request or updates an existing one
+  pull_request:
+    types: [opened, reopened, synchronize]
   # When someone adds the "/triage" comments
   issue_comment:
     types: [created, edited]
@@ -22,10 +25,11 @@ permissions:
 
 jobs:
   triage:
-    name: Triage Issue
+    name: Triage
     runs-on: ubuntu-latest
     if: |
       github.event_name == 'issues' ||
+      github.event_name == 'pull_request' ||
       github.event_name == 'workflow_dispatch' ||
       (github.event_name == 'issue_comment' && startsWith(github.event.comment.body, '/triage'))
     steps:
@@ -40,7 +44,7 @@ jobs:
           if ("${{ github.event_name }}" -eq "workflow_dispatch") {
             $number="${{ inputs.issue_number }}"
           } else {
-            $number="${{ github.event.issue.number }}"
+            $number="${{ github.event.number }}"
           }
           echo "number=$number" >> $env:GITHUB_OUTPUT
           echo "I will triage issue number #$number"
@@ -53,6 +57,11 @@ jobs:
           if ("${{ github.event_name }}" -eq "issues") {
             Write-Host "Adding eyes reaction to issue #${{ github.event.issue.number }}"
             gh api repos/${{ github.repository }}/issues/${{ github.event.issue.number }}/reactions `
+              --method POST `
+              --field content=eyes
+          } elseif ("${{ github.event_name }}" -eq "pull_request") {
+            Write-Host "Adding eyes reaction to pull request #${{ github.event.pull_request.number }}"
+            gh api repos/${{ github.repository }}/issues/${{ github.event.pull_request.number }}/reactions `
               --method POST `
               --field content=eyes
           } elseif ("${{ github.event_name }}" -eq "issue_comment") {
