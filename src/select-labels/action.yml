@@ -35,7 +35,7 @@ runs:
 
     - name: Create System prompt file
       id: create-system-prompt
-      uses: ./gen-prompt
+      uses: ./../src/gen-prompt
       with:
         template: ${{ github.action_path }}/system-prompt-${{ inputs.template }}.md
         output: ${{ runner.temp }}/triage-labels/prompts/${{ steps.guid.outputs.id }}/system-prompt.md
@@ -47,7 +47,7 @@ runs:
 
     - name: Create User prompt file
       id: create-user-prompt
-      uses: ./gen-prompt
+      uses: ./../src/gen-prompt
       with:
         template: ${{ github.action_path }}/user-prompt.md
         output: ${{ runner.temp }}/triage-labels/prompts/${{ steps.guid.outputs.id }}/user-prompt.md
