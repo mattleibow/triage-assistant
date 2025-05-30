@@ -64,3 +64,9 @@ runs:
         system-prompt-file: "${{ steps.create-system-prompt.outputs.prompt }}"
         prompt-file: "${{ steps.create-user-prompt.outputs.prompt }}"
         response-file: "${{ runner.temp }}/triage-assistant/responses/response-${{ steps.guid.outputs.id }}.json"
+
+    - name: Log the response file
+      shell: pwsh
+      run: |
+        echo "Response file: ${{ steps.inference.outputs.response-file }}"
+        cat "${{ steps.inference.outputs.response-file }}"

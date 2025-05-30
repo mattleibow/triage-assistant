@@ -67,6 +67,12 @@ runs:
         response-file: "${{ runner.temp }}/triage-apply/responses/response.md"
         max-tokens: 500
 
+    - name: Log the response file
+      shell: pwsh
+      run: |
+        echo "Response file: ${{ steps.inference.outputs.response-file }}"
+        cat "${{ steps.inference.outputs.response-file }}"
+
     - name: Comment on the issue with summary
       uses: actions/github-script@v7
       if: ${{ inputs.apply-comment == 'true' }}
