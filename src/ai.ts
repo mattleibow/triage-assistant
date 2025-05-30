@@ -39,7 +39,7 @@ export async function generatePrompt(
       try {
         let output = ''
         
-        await exec.exec('pwsh', ['-Command', command], {
+        await exec.exec('pwxsh', ['-Command', command], {
           listeners: {
             stdout: (data: Buffer) => {
               output += data.toString()
