@@ -3,7 +3,7 @@ name: "Triage Issue"
 on:
   # When someone opens a new issue
   issues:
-    types: [opened]
+    types: [opened,reopened]
   # When someone adds the "/triage" comments
   issue_comment:
     types: [created, edited]
@@ -60,7 +60,7 @@ jobs:
           } else {
             $number="${{ github.event.issue.number }}"
           }
-          echo "number=${{ inputs.issue_number }}" >> $env:GITHUB_OUTPUT
+          echo "number=$number" >> $env:GITHUB_OUTPUT
           echo "I will triage issue number #$number"
 
       - name: Determine OVERLAP label for the issue
