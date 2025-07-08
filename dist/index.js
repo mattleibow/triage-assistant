@@ -40261,6 +40261,7 @@ async function runInference(systemPrompt, userPrompt, responseFile, maxTokens = 
         // Write the response to the specified file
         await fs.promises.writeFile(responseFile, modelResponse, 'utf-8');
         coreExports.info(`AI inference completed. Response written to: ${responseFile}`);
+        coreExports.info(`Response content: ${modelResponse}`);
     }
     catch (error) {
         coreExports.error(`AI inference failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
@@ -40271,7 +40272,7 @@ async function runInference(systemPrompt, userPrompt, responseFile, maxTokens = 
 /**
  * Selects labels for an issue using AI inference based on a template.
  *
- * @param config The triage configuration object.
+ * @param config The select labels configuration object.
  * @returns Promise that resolves with the path to the response file.
  */
 async function selectLabels(config) {
@@ -40283,6 +40284,7 @@ async function selectLabels(config) {
     await fs.promises.mkdir(responseDir, { recursive: true });
     // Generate system prompt
     const systemPromptPath = path.join(promptDir, 'system-prompt.md');
+    //const systemPrompt = await fs.promises.readFile(systemPromptPath, 'utf8')
     await generatePrompt(getPrompt$1(config.template), systemPromptPath, {
         ISSUE_NUMBER: config.issueNumber,
         ISSUE_REPO: config.repository,
@@ -40291,6 +40293,7 @@ async function selectLabels(config) {
     }, config);
     // Generate user prompt
     const userPromptPath = path.join(promptDir, 'user-prompt.md');
+    //const userPrompt = await fs.promises.readFile(userPromptPath, 'utf8')
     await generatePrompt(getPrompt$1('user'), userPromptPath, {
         ISSUE_NUMBER: config.issueNumber,
         ISSUE_REPO: config.repository,
@@ -40300,10 +40303,6 @@ async function selectLabels(config) {
     // Run AI inference
     const responseFile = path.join(responseDir, `response-${guid}.json`);
     await runInference(systemPromptPath, userPromptPath, responseFile, 200, config);
-    // Log the response file
-    coreExports.info(`Response file: ${responseFile}`);
-    const responseContent = await fs.promises.readFile(responseFile, 'utf8');
-    coreExports.info(`Response content: ${responseContent}`);
     return responseFile;
 }
 
@@ -40449,23 +40448,27 @@ async function applyLabelsToIssue(mergedResponse, config, octokit) {
  * @param inputFiles Comma or newline separated list of input files.
  * @param config The triage configuration object.
  */
-async function applyLabelsAndComment(inputFiles, config) {
+async function applyLabelsAndComment(config) {
     const octokit = githubExports.getOctokit(config.token);
     // Merge response JSON files
     const mergedResponseFile = path.join(config.tempDir, 'triage-assistant', 'responses.json');
     const responseDir = path.join(config.tempDir, 'triage-assistant', 'responses');
-    const mergedResponse = await mergeResponses(inputFiles, mergedResponseFile, responseDir);
+    const mergedResponse = await mergeResponses('', mergedResponseFile, responseDir);
+    // Log the merged response for debugging
+    coreExports.info(`Merged response: ${JSON.stringify(mergedResponse, null, 2)}`);
     if (config.applyComment) {
         // Generate summary using AI
         const summaryDir = path.join(config.tempDir, 'triage-apply', 'prompts');
         await fs.promises.mkdir(summaryDir, { recursive: true });
         const systemPromptPath = path.join(summaryDir, 'system-prompt.md');
+        //const systemPrompt = await fs.promises.readFile(systemPromptPath, 'utf8')
         await generatePrompt(getPrompt('system'), systemPromptPath, {
             ISSUE_NUMBER: config.issueNumber.toString(),
             ISSUE_REPO: config.repository,
             MERGED_JSON: mergedResponseFile
         }, config);
         const userPromptPath = path.join(summaryDir, 'user-prompt.md');
+        //const userPrompt = await fs.promises.readFile(userPromptPath, 'utf8')
         await generatePrompt(getPrompt('user'), userPromptPath, {
             ISSUE_NUMBER: config.issueNumber.toString(),
             ISSUE_REPO: config.repository,
@@ -40494,14 +40497,7 @@ async function applyLabelsAndComment(inputFiles, config) {
  */
 async function mergeResponses(inputFiles, outputPath, responseDir) {
     const allFiles = [];
-    if (inputFiles) {
-        // Process comma or newline separated input
-        allFiles.push(...inputFiles
-            .split(/[,\n\r]+/)
-            .map((f) => f.trim())
-            .filter((f) => f));
-    }
-    else {
+    {
         // Process all JSON files from responses directory
         if (fs.existsSync(responseDir)) {
             const files = await fs.promises.readdir(responseDir);
@@ -40585,7 +40581,7 @@ async function run() {
         }
         // Step 2: Apply labels and comment if requested
         if (config.applyLabels || config.applyComment) {
-            await applyLabelsAndComment(responseFile, config);
+            await applyLabelsAndComment(config);
         }
         coreExports.setOutput('response-file', responseFile);
     }

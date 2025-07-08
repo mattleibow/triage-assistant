@@ -15,8 +15,11 @@ export interface TriageResponse {
     'broken-version': string
     evidence: string
   }
-  labels: Array<{
+  labels?: Array<{
     label: string
     reason: string
   }>
+
+  // Index signature to allow dynamic property access
+  [key: string]: unknown
 }

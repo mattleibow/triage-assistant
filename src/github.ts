@@ -1,7 +1,7 @@
 import * as github from '@actions/github'
 import * as fs from 'fs'
 import { TriageResponse } from './triage-response.js'
-import { TriageConfig } from './triage-config.js'
+import { GitHubConfig } from './triage-config.js'
 
 /**
  * Comments on an issue with the provided summary.
@@ -11,16 +11,17 @@ import { TriageConfig } from './triage-config.js'
  * @param octokit The GitHub API client.
  */
 export async function commentOnIssue(
+  octokit: ReturnType<typeof github.getOctokit>,
   summaryFile: string,
-  config: TriageConfig,
-  octokit: ReturnType<typeof github.getOctokit>
+  config: GitHubConfig,
+  footer?: string
 ): Promise<void> {
   const summary = await fs.promises.readFile(summaryFile, 'utf8')
 
   const commentBody = `
     ${summary}
     
-    ${config.commentFooter}
+    ${footer}
     `
 
   await octokit.rest.issues.createComment({
@@ -39,12 +40,11 @@ export async function commentOnIssue(
  * @param octokit The GitHub API client.
  */
 export async function applyLabelsToIssue(
+  octokit: ReturnType<typeof github.getOctokit>,
   mergedResponse: TriageResponse,
-  config: TriageConfig,
-  octokit: ReturnType<typeof github.getOctokit>
+  config: GitHubConfig
 ): Promise<void> {
-  const labels =
-    mergedResponse.labels?.map((l) => l.label)?.filter(Boolean) || []
+  const labels = mergedResponse.labels?.map((l) => l.label)?.filter(Boolean) || []
 
   if (labels.length > 0) {
     await octokit.rest.issues.addLabels({

@@ -1,18 +1,17 @@
-import * as core from '@actions/core'
 import * as fs from 'fs'
 import * as path from 'path'
 import { v4 as uuidv4 } from 'uuid'
 import { getPrompt } from './prompts/select-labels/index.js'
 import { generatePrompt, runInference } from './ai.js'
-import { TriageConfig } from './triage-config.js'
+import { SelectLabelsPromptConfig } from './triage-config.js'
 
 /**
  * Selects labels for an issue using AI inference based on a template.
  *
- * @param config The triage configuration object.
+ * @param config The select labels configuration object.
  * @returns Promise that resolves with the path to the response file.
  */
-export async function selectLabels(config: TriageConfig): Promise<string> {
+export async function selectLabels(config: SelectLabelsPromptConfig): Promise<string> {
   const guid = uuidv4()
   const promptDir = path.join(config.tempDir, 'triage-labels', 'prompts', guid)
   const responseDir = path.join(config.tempDir, 'triage-assistant', 'responses')
@@ -51,18 +50,9 @@ export async function selectLabels(config: TriageConfig): Promise<string> {
 
   // Run AI inference
   const responseFile = path.join(responseDir, `response-${guid}.json`)
-  await runInference(
-    systemPromptPath,
-    userPromptPath,
-    responseFile,
-    200,
-    config
-  )
-
-  // Log the response file
-  core.info(`Response file: ${responseFile}`)
-  const responseContent = await fs.promises.readFile(responseFile, 'utf8')
-  core.info(`Response content: ${responseContent}`)
+  const systemPrompt = await fs.promises.readFile(systemPromptPath, 'utf8')
+  const userPrompt = await fs.promises.readFile(userPromptPath, 'utf8')
+  await runInference(systemPrompt, userPrompt, responseFile, 200, config)
 
   return responseFile
 }

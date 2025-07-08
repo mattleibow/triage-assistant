@@ -16,8 +16,7 @@ export async function run(): Promise<void> {
     const DEFAULT_AI_MODEL = 'openai/gpt-4o'
 
     // Initialize configuration object
-    const issueNumberStr =
-      core.getInput('issue') || github.context.issue.number.toString()
+    const issueNumberStr = core.getInput('issue') || github.context.issue.number.toString()
     const config: TriageConfig = {
       aiEndpoint: core.getInput('ai-endpoint') || DEFAULT_AI_ENDPOINT,
       aiModel: core.getInput('ai-model') || DEFAULT_AI_MODEL,
@@ -44,7 +43,7 @@ export async function run(): Promise<void> {
 
     // Step 2: Apply labels and comment if requested
     if (config.applyLabels || config.applyComment) {
-      await applyLabelsAndComment(responseFile, config)
+      await applyLabelsAndComment(config)
     }
 
     core.setOutput('response-file', responseFile)

@@ -11,31 +11,6 @@ import * as path from 'path'
 jest.unstable_mockModule('@actions/core', () => core)
 jest.unstable_mockModule('@actions/exec', () => exec)
 
-let mockResponseBody: any = {
-  choices: [
-    {
-      message: {
-        content: 'Mock AI response content'
-      }
-    }
-  ]
-}
-const mockPost = jest.fn().mockImplementation(() => ({
-  status: '200',
-  body: mockResponseBody
-}))
-
-const that = {
-  default: jest.fn(() => ({
-    path: jest.fn(() => ({
-      post: mockPost
-    }))
-  })),
-  isUnexpected: jest.fn(() => false)
-}
-
-jest.unstable_mockModule('@azure-rest/ai-inference', () => that)
-
 // Import the module being tested
 const { generatePrompt } = await import('../src/ai.js')
 
@@ -56,12 +31,7 @@ describe('generatePrompt', () => {
     const templateContent = 'Hello {{name}}, welcome to {{project}}!'
     const replacements = { name: 'John', project: 'TestProject' }
 
-    const result = await generatePrompt(
-      templateContent,
-      undefined,
-      replacements,
-      mockConfig
-    )
+    const result = await generatePrompt(templateContent, undefined, replacements, mockConfig)
 
     expect(result).toBe('Hello John, welcome to TestProject!')
   })
@@ -70,12 +40,7 @@ describe('generatePrompt', () => {
     const templateContent = 'This is a simple template without placeholders.'
     const replacements = {}
 
-    const result = await generatePrompt(
-      templateContent,
-      undefined,
-      replacements,
-      mockConfig
-    )
+    const result = await generatePrompt(templateContent, undefined, replacements, mockConfig)
 
     expect(result).toBe('This is a simple template without placeholders.')
   })
@@ -86,12 +51,7 @@ Line 2: {{value2}}
 Line 3: Static text`
     const replacements = { value1: 'First', value2: 'Second' }
 
-    const result = await generatePrompt(
-      templateContent,
-      undefined,
-      replacements,
-      mockConfig
-    )
+    const result = await generatePrompt(templateContent, undefined, replacements, mockConfig)
 
     expect(result).toBe(`Line 1: First
 Line 2: Second
@@ -102,12 +62,7 @@ Line 3: Static text`)
     const templateContent = ''
     const replacements = {}
 
-    const result = await generatePrompt(
-      templateContent,
-      undefined,
-      replacements,
-      mockConfig
-    )
+    const result = await generatePrompt(templateContent, undefined, replacements, mockConfig)
 
     expect(result).toBe('')
   })
@@ -116,12 +71,7 @@ Line 3: Static text`)
     const templateContent = 'Hello {{name}}!'
     const replacements = { name: 'John', unused: 'value' }
 
-    const result = await generatePrompt(
-      templateContent,
-      undefined,
-      replacements,
-      mockConfig
-    )
+    const result = await generatePrompt(templateContent, undefined, replacements, mockConfig)
 
     expect(result).toBe('Hello John!')
   })
@@ -130,12 +80,7 @@ Line 3: Static text`)
     const templateContent = 'Hello {{name}}, welcome to {{project}}!'
     const replacements = { name: 'John' }
 
-    const result = await generatePrompt(
-      templateContent,
-      undefined,
-      replacements,
-      mockConfig
-    )
+    const result = await generatePrompt(templateContent, undefined, replacements, mockConfig)
 
     expect(result).toBe('Hello John, welcome to {{project}}!')
   })
@@ -155,28 +100,21 @@ After command`
       return Promise.resolve(0)
     })
 
-    const result = await generatePrompt(
-      templateContent,
-      undefined,
-      replacements,
-      mockConfig
-    )
+    const result = await generatePrompt(templateContent, undefined, replacements, mockConfig)
 
     expect(result).toBe(`Before command
 test output
 After command`)
     expect(exec.exec).toHaveBeenCalledWith(
-      'echo "test output"',
-      [],
+      'pwsh',
+      ['-Command', 'echo "test output"'],
       expect.objectContaining({
         env: expect.objectContaining({
           GH_TOKEN: 'test-token'
         })
       })
     )
-    expect(core.info).toHaveBeenCalledWith(
-      'Executing command: echo "test output"'
-    )
+    expect(core.info).toHaveBeenCalledWith('Executing command: echo "test output"')
   })
 
   it('should write output to file when outputPath is provided', async () => {
@@ -185,19 +123,10 @@ After command`)
     const outputPath = path.join(process.cwd(), 'test-output.txt')
 
     // Mock fs.promises methods
-    const writeFileSpy = jest
-      .spyOn(fs.promises, 'writeFile')
-      .mockResolvedValue(undefined)
-    const readFileSpy = jest
-      .spyOn(fs.promises, 'readFile')
-      .mockResolvedValue('Hello World!')
+    const writeFileSpy = jest.spyOn(fs.promises, 'writeFile').mockResolvedValue(undefined)
+    const readFileSpy = jest.spyOn(fs.promises, 'readFile').mockResolvedValue('Hello World!')
 
-    const result = await generatePrompt(
-      templateContent,
-      outputPath,
-      replacements,
-      mockConfig
-    )
+    const result = await generatePrompt(templateContent, outputPath, replacements, mockConfig)
 
     expect(result).toBe('Hello World!')
     expect(writeFileSpy).toHaveBeenCalledWith(outputPath, 'Hello World!')
@@ -217,12 +146,10 @@ After command`)
     const testError = new Error('Command not found')
     exec.exec.mockRejectedValue(testError)
 
-    await expect(
-      generatePrompt(templateContent, undefined, replacements, mockConfig)
-    ).rejects.toThrow('Command not found')
-
-    expect(core.setFailed).toHaveBeenCalledWith(
-      "Error executing command 'invalid-command': Error: Command not found"
+    await expect(generatePrompt(templateContent, undefined, replacements, mockConfig)).rejects.toThrow(
+      'Command not found'
     )
+
+    expect(core.setFailed).toHaveBeenCalledWith("Error executing command 'invalid-command': Error: Command not found")
   })
 })

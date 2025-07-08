@@ -18,7 +18,7 @@ import { PromptConfig, InferenceConfig } from './triage-config.js'
 export async function generatePrompt(
   templateContent: string,
   outputPath: string | undefined,
-  replacements: Record<string, any>,
+  replacements: Record<string, unknown>,
   config: PromptConfig
 ): Promise<string> {
   const lines = templateContent.split('\n')
@@ -27,7 +27,7 @@ export async function generatePrompt(
   for (let line of lines) {
     // Replace placeholders
     for (const [key, value] of Object.entries(replacements)) {
-      line = line.replace(new RegExp(`{{${key}}}`, 'g'), value)
+      line = line.replace(new RegExp(`{{${key}}}`, 'g'), String(value || ''))
     }
 
     // Check for EXEC: command prefix
@@ -94,13 +94,9 @@ export async function runInference(
 ): Promise<void> {
   try {
     // Create Azure AI client
-    const client = ModelClient(
-      config.aiEndpoint,
-      new AzureKeyCredential(config.token),
-      {
-        userAgentOptions: { userAgentPrefix: 'github-actions-triage-assistant' }
-      }
-    )
+    const client = ModelClient(config.aiEndpoint, new AzureKeyCredential(config.token), {
+      userAgentOptions: { userAgentPrefix: 'github-actions-triage-assistant' }
+    })
 
     // Make the AI inference request
     const response = await client.path('/chat/completions').post({
@@ -124,9 +120,7 @@ export async function runInference(
       if (response.body.error) {
         throw response.body.error
       }
-      throw new Error(
-        `An error occurred while fetching the response (${response.status}): ${response.body}`
-      )
+      throw new Error(`An error occurred while fetching the response (${response.status}): ${response.body}`)
     }
 
     const modelResponse: string = response.body.choices[0].message.content || ''
@@ -138,10 +132,9 @@ export async function runInference(
     await fs.promises.writeFile(responseFile, modelResponse, 'utf-8')
 
     core.info(`AI inference completed. Response written to: ${responseFile}`)
+    core.info(`Response content: ${modelResponse}`)
   } catch (error) {
-    core.error(
-      `AI inference failed: ${error instanceof Error ? error.message : 'Unknown error'}`
-    )
+    core.error(`AI inference failed: ${error instanceof Error ? error.message : 'Unknown error'}`)
     throw error
   }
 }

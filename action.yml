@@ -1,7 +1,5 @@
 name: 'AI Triage Assistant'
-description:
-  'An AI assistant that triages issues by applying labels based on the issue
-  content.'
+description: 'An AI assistant that triages issues by applying labels based on the issue content.'
 author: 'mattleibow'
 
 branding:
@@ -22,9 +20,7 @@ inputs:
 
   # Label selection inputs
   template:
-    description:
-      'Triage template to use: multi-label, single-label, regression,
-      missing-info'
+    description: 'Triage template to use: multi-label, single-label, regression, missing-info'
     required: false
     default: ''
   label:
@@ -49,8 +45,8 @@ inputs:
     description: 'Footer text to append to the AI response comment'
     required: false
     default:
-      '_This entire triage process was automated by AI and mistakes may have
-      been made. Please let us know so we can continue to improve._'
+      '_This entire triage process was automated by AI and mistakes may have been made. Please let us know so we can
+      continue to improve._'
 
 outputs:
   response-file:

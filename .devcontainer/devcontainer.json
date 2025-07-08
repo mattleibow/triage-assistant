@@ -19,7 +19,8 @@
         "me-dutour-mathieu.vscode-github-actions",
         "redhat.vscode-yaml",
         "rvest.vs-code-prettier-eslint",
-        "yzhang.markdown-all-in-one"
+        "yzhang.markdown-all-in-one",
+        "Orta.vscode-jest"
       ],
       "settings": {
         "editor.defaultFormatter": "esbenp.prettier-vscode",

@@ -36,9 +36,7 @@ export type TemplateName = (typeof TEMPLATE_NAMES)[number]
 export function getPrompt(templateName: TemplateName): string {
   const prompt = PROMPTS[templateName]
   if (!prompt) {
-    throw new Error(
-      `Template '${templateName}' not found. Available templates: ${TEMPLATE_NAMES.join(', ')}`
-    )
+    throw new Error(`Template '${templateName}' not found. Available templates: ${TEMPLATE_NAMES.join(', ')}`)
   }
   return prompt
 }
