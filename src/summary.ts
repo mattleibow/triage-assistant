@@ -121,6 +121,8 @@ export async function mergeResponses(
   await fs.promises.mkdir(path.dirname(outputPath), { recursive: true })
   await fs.promises.writeFile(outputPath, JSON.stringify(merged, null, 2))
 
+  core.info(`Merged response written to: ${outputPath}`)
+
   return merged
 }
 
