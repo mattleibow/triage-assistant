@@ -31306,8 +31306,6 @@ accurately assign a single best label to new issues that are opened.
    content to make a decision, do not assign any labels.
 6. If the label that you have selected is not in the list of
    labels, then do not assign any labels.
-7. If no labels match or can be assigned, then you are to
-   reply with a \`null\` label and \`null\` reason.
 
 ## Labels
 * The only labels that are valid for assignment are found
@@ -31341,6 +31339,16 @@ EXEC: gh label list --limit 1000 --json name,description --search "{{LABEL_PREFI
       "label": "LABEL_NAME_HERE", 
       "reason": "REASON_FOR_LABEL_HERE"
     }
+  ]
+}
+
+If this issue does not have a label that can be assigned, respond with:
+
+{
+  "remarks": [
+    "REMARK_CITING_NON_MATCHING_OF_LABELS"
+  ],
+  "labels": [
   ]
 }
 `;
@@ -31396,6 +31404,16 @@ EXEC: gh label list --limit 1000 --json name,description --search "{{LABEL_PREFI
       "reason": "REASON_FOR_LABEL_HERE"
     },
     ...
+  ]
+}
+
+If this issue does not have any labels that can be assigned, respond with:
+
+{
+  "remarks": [
+    "REMARK_CITING_NON_MATCHING_OF_LABELS"
+  ],
+  "labels": [
   ]
 }
 `;
@@ -31466,6 +31484,9 @@ If this issue has strong evidence of a regression, respond with:
 If this issue does not have strong evidence a regression, respond with:
 
 {
+  "remarks": [
+    "REMARK_CITING_LACK_OF_REGRESSION_EVIDENCE"
+  ],
   "labels": [
   ]
 }
@@ -40412,7 +40433,7 @@ Please summarize the results of this triage.
 
 The following labels will be applied for the specified reasons:
 
-EXEC: jq -r '"| Label | Reason |", "|:-|:-|", (.labels[] | "| \(.label) | \(.reason) |")' {{MERGED_JSON}}
+EXEC: jq -r '"| Label | Reason |", "|:-|:-|", (.labels[] | "| \\(.label) | \\(.reason) |")' {{MERGED_JSON}}
 `;
 
 /**
@@ -40526,6 +40547,7 @@ async function mergeResponses(inputFiles, responseDir, outputPath) {
     }
     await fs.promises.mkdir(path.dirname(outputPath), { recursive: true });
     await fs.promises.writeFile(outputPath, JSON.stringify(merged, null, 2));
+    coreExports.info(`Merged response written to: ${outputPath}`);
     return merged;
 }
 /**
