@@ -1,5 +1,0 @@
----
-paths:
-  .github/workflows/triage.yml:
-    ignore:
-      - 'unknown permission scope "models".+'
