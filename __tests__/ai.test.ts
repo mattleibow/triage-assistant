@@ -2,7 +2,7 @@
  * Unit tests for the AI functionality, src/ai.ts
  */
 import { jest } from '@jest/globals'
-import * as core from '../__fixtures__/core.js'
+import * as core from '../__fixtures__/actions-core.js'
 import * as exec from '../__fixtures__/exec.js'
 import * as fs from 'fs'
 import * as path from 'path'
@@ -21,6 +21,7 @@ describe('generatePrompt', () => {
 
   beforeEach(() => {
     jest.clearAllMocks()
+    jest.resetAllMocks()
   })
 
   afterEach(() => {

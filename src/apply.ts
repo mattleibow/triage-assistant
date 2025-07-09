@@ -1,7 +1,7 @@
 import * as core from '@actions/core'
 import * as github from '@actions/github'
 import * as path from 'path'
-import { commentOnIssue, applyLabelsToIssue } from './github.js'
+import { commentOnIssue, applyLabelsToIssue } from './issues.js'
 import { ApplyConfig } from './triage-config.js'
 import { generateSummary, mergeResponses } from './summary.js'
 

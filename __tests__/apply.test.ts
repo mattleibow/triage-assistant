@@ -3,22 +3,18 @@
  */
 
 import * as path from 'path'
-import * as core from '../__fixtures__/core.js'
-import * as github from '../__fixtures__/github.js'
+import * as core from '../__fixtures__/actions-core.js'
+import * as github from '../__fixtures__/actions-github.js'
+import * as issues from '../__fixtures__/issues.js'
 import * as summary from '../__fixtures__/summary.js'
 import { jest } from '@jest/globals'
 import { FileSystemMock } from '../__tests__/helpers/filesystem-mock.js'
 
 // Mock dependencies using fixtures
 jest.unstable_mockModule('@actions/core', () => core)
-jest.unstable_mockModule('../src/github.js', () => github)
+jest.unstable_mockModule('@actions/github', () => github)
+jest.unstable_mockModule('../src/issues.js', () => issues)
 jest.unstable_mockModule('../src/summary.js', () => summary)
-
-// Mock GitHub module
-const mockGetOctokit = jest.fn()
-jest.unstable_mockModule('@actions/github', () => ({
-  getOctokit: mockGetOctokit
-}))
 
 // Import the module being tested
 const { applyLabelsAndComment } = await import('../src/apply.js')
@@ -52,9 +48,10 @@ describe('apply', () => {
 
   beforeEach(() => {
     jest.clearAllMocks()
+    jest.resetAllMocks()
 
     // Setup mock returns
-    mockGetOctokit.mockReturnValue(mockOctokit)
+    github.getOctokit.mockImplementation(() => mockOctokit)
 
     // Mock file system operations
     inMemoryFs.setup()
@@ -98,7 +95,7 @@ describe('apply', () => {
       )
 
       // Verify commentOnIssue was called
-      expect(github.commentOnIssue).toHaveBeenCalledWith(
+      expect(issues.commentOnIssue).toHaveBeenCalledWith(
         mockOctokit,
         summaryResponseFile,
         mockConfig,
@@ -106,7 +103,7 @@ describe('apply', () => {
       )
 
       // Verify applyLabelsToIssue was called
-      expect(github.applyLabelsToIssue).toHaveBeenCalledWith(mockOctokit, mockMergedResponse, mockConfig)
+      expect(issues.applyLabelsToIssue).toHaveBeenCalledWith(mockOctokit, mockMergedResponse, mockConfig)
     })
 
     it('should only apply labels when applyComment is false', async () => {
@@ -126,10 +123,10 @@ describe('apply', () => {
 
       // Verify generateSummary and commentOnIssue were NOT called
       expect(summary.generateSummary).not.toHaveBeenCalled()
-      expect(github.commentOnIssue).not.toHaveBeenCalled()
+      expect(issues.commentOnIssue).not.toHaveBeenCalled()
 
       // Verify applyLabelsToIssue was called
-      expect(github.applyLabelsToIssue).toHaveBeenCalledWith(mockOctokit, mockMergedResponse, configWithoutComment)
+      expect(issues.applyLabelsToIssue).toHaveBeenCalledWith(mockOctokit, mockMergedResponse, configWithoutComment)
     })
 
     it('should only apply comments when applyLabels is false', async () => {
@@ -155,7 +152,7 @@ describe('apply', () => {
         configWithoutLabels,
         path.join(testTempDir, 'triage-assistant', 'responses.json')
       )
-      expect(github.commentOnIssue).toHaveBeenCalledWith(
+      expect(issues.commentOnIssue).toHaveBeenCalledWith(
         mockOctokit,
         summaryResponseFile,
         configWithoutLabels,
@@ -163,7 +160,7 @@ describe('apply', () => {
       )
 
       // Verify applyLabelsToIssue was NOT called
-      expect(github.applyLabelsToIssue).not.toHaveBeenCalled()
+      expect(issues.applyLabelsToIssue).not.toHaveBeenCalled()
     })
 
     it('should not apply anything when both applyComment and applyLabels are false', async () => {
@@ -187,8 +184,8 @@ describe('apply', () => {
 
       // Verify nothing else was called
       expect(summary.generateSummary).not.toHaveBeenCalled()
-      expect(github.commentOnIssue).not.toHaveBeenCalled()
-      expect(github.applyLabelsToIssue).not.toHaveBeenCalled()
+      expect(issues.commentOnIssue).not.toHaveBeenCalled()
+      expect(issues.applyLabelsToIssue).not.toHaveBeenCalled()
     })
 
     it('should handle empty merged response gracefully', async () => {
@@ -204,8 +201,8 @@ describe('apply', () => {
       // Verify all functions were still called
       expect(summary.mergeResponses).toHaveBeenCalled()
       expect(summary.generateSummary).toHaveBeenCalled()
-      expect(github.commentOnIssue).toHaveBeenCalled()
-      expect(github.applyLabelsToIssue).toHaveBeenCalledWith(mockOctokit, mockMergedResponse, mockConfig)
+      expect(issues.commentOnIssue).toHaveBeenCalled()
+      expect(issues.applyLabelsToIssue).toHaveBeenCalledWith(mockOctokit, mockMergedResponse, mockConfig)
     })
 
     it('should propagate errors from mergeResponses', async () => {
@@ -216,8 +213,8 @@ describe('apply', () => {
 
       expect(summary.mergeResponses).toHaveBeenCalled()
       expect(summary.generateSummary).not.toHaveBeenCalled()
-      expect(github.commentOnIssue).not.toHaveBeenCalled()
-      expect(github.applyLabelsToIssue).not.toHaveBeenCalled()
+      expect(issues.commentOnIssue).not.toHaveBeenCalled()
+      expect(issues.applyLabelsToIssue).not.toHaveBeenCalled()
     })
 
     it('should propagate errors from generateSummary', async () => {
@@ -231,8 +228,8 @@ describe('apply', () => {
 
       expect(summary.mergeResponses).toHaveBeenCalled()
       expect(summary.generateSummary).toHaveBeenCalled()
-      expect(github.commentOnIssue).not.toHaveBeenCalled()
-      expect(github.applyLabelsToIssue).not.toHaveBeenCalled()
+      expect(issues.commentOnIssue).not.toHaveBeenCalled()
+      expect(issues.applyLabelsToIssue).not.toHaveBeenCalled()
     })
 
     it('should propagate errors from commentOnIssue', async () => {
@@ -242,14 +239,14 @@ describe('apply', () => {
 
       summary.mergeResponses.mockResolvedValue(mockMergedResponse)
       summary.generateSummary.mockResolvedValue(summaryResponseFile)
-      github.commentOnIssue.mockRejectedValue(error)
+      issues.commentOnIssue.mockRejectedValue(error)
 
       await expect(applyLabelsAndComment(mockConfig)).rejects.toThrow('Failed to comment on issue')
 
       expect(summary.mergeResponses).toHaveBeenCalled()
       expect(summary.generateSummary).toHaveBeenCalled()
-      expect(github.commentOnIssue).toHaveBeenCalled()
-      expect(github.applyLabelsToIssue).not.toHaveBeenCalled()
+      expect(issues.commentOnIssue).toHaveBeenCalled()
+      expect(issues.applyLabelsToIssue).not.toHaveBeenCalled()
     })
 
     it('should propagate errors from applyLabelsToIssue', async () => {
@@ -263,14 +260,14 @@ describe('apply', () => {
       const error = new Error('Failed to apply labels')
 
       summary.mergeResponses.mockResolvedValue(mockMergedResponse)
-      github.applyLabelsToIssue.mockRejectedValue(error)
+      issues.applyLabelsToIssue.mockRejectedValue(error)
 
       await expect(applyLabelsAndComment(configLabelsOnly)).rejects.toThrow('Failed to apply labels')
 
       expect(summary.mergeResponses).toHaveBeenCalled()
       expect(summary.generateSummary).not.toHaveBeenCalled()
-      expect(github.commentOnIssue).not.toHaveBeenCalled()
-      expect(github.applyLabelsToIssue).toHaveBeenCalled()
+      expect(issues.commentOnIssue).not.toHaveBeenCalled()
+      expect(issues.applyLabelsToIssue).toHaveBeenCalled()
     })
 
     it('should create correct file paths based on tempDir', async () => {
@@ -311,7 +308,7 @@ describe('apply', () => {
 
       await applyLabelsAndComment(configWithCustomToken)
 
-      expect(mockGetOctokit).toHaveBeenCalledWith(customToken)
+      expect(github.getOctokit).toHaveBeenCalledWith(customToken)
     })
   })
 })

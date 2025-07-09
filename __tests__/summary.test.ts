@@ -5,15 +5,14 @@
 import * as fs from 'fs'
 import * as path from 'path'
 import * as ai from '../__fixtures__/ai.js'
-import * as core from '../__fixtures__/core.js'
+import * as core from '../__fixtures__/actions-core.js'
+import * as github from '../__fixtures__/actions-github.js'
 import { jest } from '@jest/globals'
 import { FileSystemMock } from '../__tests__/helpers/filesystem-mock.js'
 
 // Mock dependencies using fixtures
 jest.unstable_mockModule('@actions/core', () => core)
-jest.unstable_mockModule('@actions/github', () => ({
-  getOctokit: jest.fn()
-}))
+jest.unstable_mockModule('@actions/github', () => github)
 jest.unstable_mockModule('../src/ai.js', () => ai)
 
 // Import the module being tested
@@ -27,6 +26,7 @@ describe('summary', () => {
 
   beforeEach(() => {
     jest.clearAllMocks()
+    jest.resetAllMocks()
 
     // Mock file system operations
     inMemoryFs.setup()
@@ -34,7 +34,6 @@ describe('summary', () => {
 
   afterEach(() => {
     jest.restoreAllMocks()
-
     inMemoryFs.teardown()
   })
 

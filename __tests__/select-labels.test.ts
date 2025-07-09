@@ -2,7 +2,7 @@
  * Unit tests for the select-labels functionality, src/select-labels.ts
  */
 import { jest } from '@jest/globals'
-import * as core from '../__fixtures__/core.js'
+import * as core from '../__fixtures__/actions-core.js'
 import * as exec from '../__fixtures__/exec.js'
 import * as ai from '../__fixtures__/ai.js'
 import * as fs from 'fs'
@@ -259,6 +259,7 @@ describe('selectLabels', () => {
         await expect(selectLabels(config)).resolves.toBeDefined()
 
         jest.clearAllMocks()
+
         ai.generatePrompt.mockResolvedValue('content')
         ai.runInference.mockResolvedValue(undefined)
       }
