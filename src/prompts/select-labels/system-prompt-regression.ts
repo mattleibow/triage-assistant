@@ -64,6 +64,9 @@ If this issue has strong evidence of a regression, respond with:
 If this issue does not have strong evidence a regression, respond with:
 
 {
+  "remarks": [
+    "REMARK_CITING_LACK_OF_REGRESSION_EVIDENCE"
+  ],
   "labels": [
   ]
 }

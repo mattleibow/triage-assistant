@@ -51,4 +51,14 @@ EXEC: gh label list --limit 1000 --json name,description --search "{{LABEL_PREFI
     ...
   ]
 }
+
+If this issue does not have any labels that can be assigned, respond with:
+
+{
+  "remarks": [
+    "REMARK_CITING_NON_MATCHING_OF_LABELS"
+  ],
+  "labels": [
+  ]
+}
 `

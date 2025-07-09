@@ -11,8 +11,6 @@ accurately assign a single best label to new issues that are opened.
    content to make a decision, do not assign any labels.
 6. If the label that you have selected is not in the list of
    labels, then do not assign any labels.
-7. If no labels match or can be assigned, then you are to
-   reply with a \`null\` label and \`null\` reason.
 
 ## Labels
 * The only labels that are valid for assignment are found
@@ -46,6 +44,16 @@ EXEC: gh label list --limit 1000 --json name,description --search "{{LABEL_PREFI
       "label": "LABEL_NAME_HERE", 
       "reason": "REASON_FOR_LABEL_HERE"
     }
+  ]
+}
+
+If this issue does not have a label that can be assigned, respond with:
+
+{
+  "remarks": [
+    "REMARK_CITING_NON_MATCHING_OF_LABELS"
+  ],
+  "labels": [
   ]
 }
 `
