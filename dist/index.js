@@ -40388,15 +40388,16 @@ with an easy to understand message while also being detailed.
 * **IMPORTANT** Respond with a correctly formed markdown file.
 * **IMPORTANT** Do not wrap the markdown in code blocks as it will
   be rendered directly
-* The markdown file should have 3 main parts:
+* The markdown file should have 4 main parts:
   1. A short sentence summary about the affected components.
   2. A short sentence summary about whether or not this is a regression.
   3. Collapsable section for details
     A. Detailed summary as a bulleted list
     B. Complete actions table in the format:
-      | Action | Item | Description |
-      | :----- | :--- | :---------- |
-      | Action 1 | Item 1 | Reason 1 | 
+      | Action   | Item   | Description |
+      | :------- | :----- | :---------- |
+      | Action 1 | Item 1 | Reason 1    | 
+  4. A summary of any remarks made. 
 
 An example response would be like this:
 
@@ -40406,6 +40407,9 @@ An example response would be like this:
 Labels will be applied to indicate the affected platforms (SquareOS and BoxPhone) and the specific area of the issue (Carrot control).
 
 This issue is a regression since the Carrot was growing fine in v1 but now is broken in v2.
+
+Additional remarks:
+* This issue seems to be related to the new cars feature, but there are no cars labels.
 
 <details>
 <summary>Detailed Summary and Actions</summary>
@@ -40434,6 +40438,10 @@ Please summarize the results of this triage.
 The following labels will be applied for the specified reasons:
 
 EXEC: jq -r '"| Label | Reason |", "|:-|:-|", (.labels[] | "| \\(.label) | \\(.reason) |")' {{MERGED_JSON}}
+
+The following remarks were made:
+
+EXEC: jq -r '.remarks[] | "- " + .' {{MERGED_JSON}}
 `;
 
 /**
