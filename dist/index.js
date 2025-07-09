@@ -40337,10 +40337,10 @@ async function selectLabels(config) {
 async function commentOnIssue(octokit, summaryFile, config, footer) {
     const summary = await fs.promises.readFile(summaryFile, 'utf8');
     const commentBody = `
-    ${summary}
-    
-    ${footer}
-    `;
+${summary}
+
+${footer}
+`;
     await octokit.rest.issues.createComment({
         owner: config.repoOwner,
         repo: config.repoName,

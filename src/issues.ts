@@ -19,10 +19,10 @@ export async function commentOnIssue(
   const summary = await fs.promises.readFile(summaryFile, 'utf8')
 
   const commentBody = `
-    ${summary}
-    
-    ${footer}
-    `
+${summary}
+
+${footer}
+`
 
   await octokit.rest.issues.createComment({
     owner: config.repoOwner,
