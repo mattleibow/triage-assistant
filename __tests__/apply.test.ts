@@ -4,25 +4,21 @@
 
 import * as path from 'path'
 import * as core from '../__fixtures__/core.js'
+import * as github from '../__fixtures__/github.js'
+import * as summary from '../__fixtures__/summary.js'
 import { jest } from '@jest/globals'
 import { FileSystemMock } from '../__tests__/helpers/filesystem-mock.js'
 
 // Mock dependencies using fixtures
 jest.unstable_mockModule('@actions/core', () => core)
+jest.unstable_mockModule('../src/github.js', () => github)
+jest.unstable_mockModule('../src/summary.js', () => summary)
 
 // Mock GitHub module
 const mockGetOctokit = jest.fn()
 jest.unstable_mockModule('@actions/github', () => ({
   getOctokit: mockGetOctokit
 }))
-
-// Mock github functions using fixture
-const githubMock = await import('../__fixtures__/github.js')
-jest.unstable_mockModule('../src/github.js', () => githubMock)
-
-// Mock summary functions using fixture
-const summaryMock = await import('../__fixtures__/summary.js')
-jest.unstable_mockModule('../src/summary.js', () => summaryMock)
 
 // Import the module being tested
 const { applyLabelsAndComment } = await import('../src/apply.js')
@@ -80,13 +76,13 @@ describe('apply', () => {
 
       const summaryResponseFile = '/tmp/test/summary-response.json'
 
-      summaryMock.mergeResponses.mockResolvedValue(mockMergedResponse)
-      summaryMock.generateSummary.mockResolvedValue(summaryResponseFile)
+      summary.mergeResponses.mockResolvedValue(mockMergedResponse)
+      summary.generateSummary.mockResolvedValue(summaryResponseFile)
 
       await applyLabelsAndComment(mockConfig)
 
       // Verify mergeResponses was called correctly
-      expect(summaryMock.mergeResponses).toHaveBeenCalledWith(
+      expect(summary.mergeResponses).toHaveBeenCalledWith(
         '',
         path.join(testTempDir, 'triage-assistant', 'responses'),
         path.join(testTempDir, 'triage-assistant', 'responses.json')
@@ -96,13 +92,13 @@ describe('apply', () => {
       expect(core.info).toHaveBeenCalledWith(`Merged response: ${JSON.stringify(mockMergedResponse, null, 2)}`)
 
       // Verify generateSummary was called
-      expect(summaryMock.generateSummary).toHaveBeenCalledWith(
+      expect(summary.generateSummary).toHaveBeenCalledWith(
         mockConfig,
         path.join(testTempDir, 'triage-assistant', 'responses.json')
       )
 
       // Verify commentOnIssue was called
-      expect(githubMock.commentOnIssue).toHaveBeenCalledWith(
+      expect(github.commentOnIssue).toHaveBeenCalledWith(
         mockOctokit,
         summaryResponseFile,
         mockConfig,
@@ -110,7 +106,7 @@ describe('apply', () => {
       )
 
       // Verify applyLabelsToIssue was called
-      expect(githubMock.applyLabelsToIssue).toHaveBeenCalledWith(mockOctokit, mockMergedResponse, mockConfig)
+      expect(github.applyLabelsToIssue).toHaveBeenCalledWith(mockOctokit, mockMergedResponse, mockConfig)
     })
 
     it('should only apply labels when applyComment is false', async () => {
@@ -124,16 +120,16 @@ describe('apply', () => {
         labels: [{ label: 'enhancement', reason: 'Feature request' }]
       }
 
-      summaryMock.mergeResponses.mockResolvedValue(mockMergedResponse)
+      summary.mergeResponses.mockResolvedValue(mockMergedResponse)
 
       await applyLabelsAndComment(configWithoutComment)
 
       // Verify generateSummary and commentOnIssue were NOT called
-      expect(summaryMock.generateSummary).not.toHaveBeenCalled()
-      expect(githubMock.commentOnIssue).not.toHaveBeenCalled()
+      expect(summary.generateSummary).not.toHaveBeenCalled()
+      expect(github.commentOnIssue).not.toHaveBeenCalled()
 
       // Verify applyLabelsToIssue was called
-      expect(githubMock.applyLabelsToIssue).toHaveBeenCalledWith(mockOctokit, mockMergedResponse, configWithoutComment)
+      expect(github.applyLabelsToIssue).toHaveBeenCalledWith(mockOctokit, mockMergedResponse, configWithoutComment)
     })
 
     it('should only apply comments when applyLabels is false', async () => {
@@ -149,17 +145,17 @@ describe('apply', () => {
 
       const summaryResponseFile = '/tmp/test/summary-response.json'
 
-      summaryMock.mergeResponses.mockResolvedValue(mockMergedResponse)
-      summaryMock.generateSummary.mockResolvedValue(summaryResponseFile)
+      summary.mergeResponses.mockResolvedValue(mockMergedResponse)
+      summary.generateSummary.mockResolvedValue(summaryResponseFile)
 
       await applyLabelsAndComment(configWithoutLabels)
 
       // Verify generateSummary and commentOnIssue were called
-      expect(summaryMock.generateSummary).toHaveBeenCalledWith(
+      expect(summary.generateSummary).toHaveBeenCalledWith(
         configWithoutLabels,
         path.join(testTempDir, 'triage-assistant', 'responses.json')
       )
-      expect(githubMock.commentOnIssue).toHaveBeenCalledWith(
+      expect(github.commentOnIssue).toHaveBeenCalledWith(
         mockOctokit,
         summaryResponseFile,
         configWithoutLabels,
@@ -167,7 +163,7 @@ describe('apply', () => {
       )
 
       // Verify applyLabelsToIssue was NOT called
-      expect(githubMock.applyLabelsToIssue).not.toHaveBeenCalled()
+      expect(github.applyLabelsToIssue).not.toHaveBeenCalled()
     })
 
     it('should not apply anything when both applyComment and applyLabels are false', async () => {
@@ -181,18 +177,18 @@ describe('apply', () => {
         labels: [{ label: 'bug', reason: 'Contains error' }]
       }
 
-      summaryMock.mergeResponses.mockResolvedValue(mockMergedResponse)
+      summary.mergeResponses.mockResolvedValue(mockMergedResponse)
 
       await applyLabelsAndComment(configWithNothing)
 
       // Verify only mergeResponses was called (for logging)
-      expect(summaryMock.mergeResponses).toHaveBeenCalled()
+      expect(summary.mergeResponses).toHaveBeenCalled()
       expect(core.info).toHaveBeenCalled()
 
       // Verify nothing else was called
-      expect(summaryMock.generateSummary).not.toHaveBeenCalled()
-      expect(githubMock.commentOnIssue).not.toHaveBeenCalled()
-      expect(githubMock.applyLabelsToIssue).not.toHaveBeenCalled()
+      expect(summary.generateSummary).not.toHaveBeenCalled()
+      expect(github.commentOnIssue).not.toHaveBeenCalled()
+      expect(github.applyLabelsToIssue).not.toHaveBeenCalled()
     })
 
     it('should handle empty merged response gracefully', async () => {
@@ -200,43 +196,43 @@ describe('apply', () => {
         labels: []
       }
 
-      summaryMock.mergeResponses.mockResolvedValue(mockMergedResponse)
-      summaryMock.generateSummary.mockResolvedValue('/tmp/test/summary-response.json')
+      summary.mergeResponses.mockResolvedValue(mockMergedResponse)
+      summary.generateSummary.mockResolvedValue('/tmp/test/summary-response.json')
 
       await applyLabelsAndComment(mockConfig)
 
       // Verify all functions were still called
-      expect(summaryMock.mergeResponses).toHaveBeenCalled()
-      expect(summaryMock.generateSummary).toHaveBeenCalled()
-      expect(githubMock.commentOnIssue).toHaveBeenCalled()
-      expect(githubMock.applyLabelsToIssue).toHaveBeenCalledWith(mockOctokit, mockMergedResponse, mockConfig)
+      expect(summary.mergeResponses).toHaveBeenCalled()
+      expect(summary.generateSummary).toHaveBeenCalled()
+      expect(github.commentOnIssue).toHaveBeenCalled()
+      expect(github.applyLabelsToIssue).toHaveBeenCalledWith(mockOctokit, mockMergedResponse, mockConfig)
     })
 
     it('should propagate errors from mergeResponses', async () => {
       const error = new Error('Failed to merge responses')
-      summaryMock.mergeResponses.mockRejectedValue(error)
+      summary.mergeResponses.mockRejectedValue(error)
 
       await expect(applyLabelsAndComment(mockConfig)).rejects.toThrow('Failed to merge responses')
 
-      expect(summaryMock.mergeResponses).toHaveBeenCalled()
-      expect(summaryMock.generateSummary).not.toHaveBeenCalled()
-      expect(githubMock.commentOnIssue).not.toHaveBeenCalled()
-      expect(githubMock.applyLabelsToIssue).not.toHaveBeenCalled()
+      expect(summary.mergeResponses).toHaveBeenCalled()
+      expect(summary.generateSummary).not.toHaveBeenCalled()
+      expect(github.commentOnIssue).not.toHaveBeenCalled()
+      expect(github.applyLabelsToIssue).not.toHaveBeenCalled()
     })
 
     it('should propagate errors from generateSummary', async () => {
       const mockMergedResponse = { labels: [] }
       const error = new Error('Failed to generate summary')
 
-      summaryMock.mergeResponses.mockResolvedValue(mockMergedResponse)
-      summaryMock.generateSummary.mockRejectedValue(error)
+      summary.mergeResponses.mockResolvedValue(mockMergedResponse)
+      summary.generateSummary.mockRejectedValue(error)
 
       await expect(applyLabelsAndComment(mockConfig)).rejects.toThrow('Failed to generate summary')
 
-      expect(summaryMock.mergeResponses).toHaveBeenCalled()
-      expect(summaryMock.generateSummary).toHaveBeenCalled()
-      expect(githubMock.commentOnIssue).not.toHaveBeenCalled()
-      expect(githubMock.applyLabelsToIssue).not.toHaveBeenCalled()
+      expect(summary.mergeResponses).toHaveBeenCalled()
+      expect(summary.generateSummary).toHaveBeenCalled()
+      expect(github.commentOnIssue).not.toHaveBeenCalled()
+      expect(github.applyLabelsToIssue).not.toHaveBeenCalled()
     })
 
     it('should propagate errors from commentOnIssue', async () => {
@@ -244,16 +240,16 @@ describe('apply', () => {
       const summaryResponseFile = '/tmp/test/summary-response.json'
       const error = new Error('Failed to comment on issue')
 
-      summaryMock.mergeResponses.mockResolvedValue(mockMergedResponse)
-      summaryMock.generateSummary.mockResolvedValue(summaryResponseFile)
-      githubMock.commentOnIssue.mockRejectedValue(error)
+      summary.mergeResponses.mockResolvedValue(mockMergedResponse)
+      summary.generateSummary.mockResolvedValue(summaryResponseFile)
+      github.commentOnIssue.mockRejectedValue(error)
 
       await expect(applyLabelsAndComment(mockConfig)).rejects.toThrow('Failed to comment on issue')
 
-      expect(summaryMock.mergeResponses).toHaveBeenCalled()
-      expect(summaryMock.generateSummary).toHaveBeenCalled()
-      expect(githubMock.commentOnIssue).toHaveBeenCalled()
-      expect(githubMock.applyLabelsToIssue).not.toHaveBeenCalled()
+      expect(summary.mergeResponses).toHaveBeenCalled()
+      expect(summary.generateSummary).toHaveBeenCalled()
+      expect(github.commentOnIssue).toHaveBeenCalled()
+      expect(github.applyLabelsToIssue).not.toHaveBeenCalled()
     })
 
     it('should propagate errors from applyLabelsToIssue', async () => {
@@ -266,15 +262,15 @@ describe('apply', () => {
       const mockMergedResponse = { labels: [] }
       const error = new Error('Failed to apply labels')
 
-      summaryMock.mergeResponses.mockResolvedValue(mockMergedResponse)
-      githubMock.applyLabelsToIssue.mockRejectedValue(error)
+      summary.mergeResponses.mockResolvedValue(mockMergedResponse)
+      github.applyLabelsToIssue.mockRejectedValue(error)
 
       await expect(applyLabelsAndComment(configLabelsOnly)).rejects.toThrow('Failed to apply labels')
 
-      expect(summaryMock.mergeResponses).toHaveBeenCalled()
-      expect(summaryMock.generateSummary).not.toHaveBeenCalled()
-      expect(githubMock.commentOnIssue).not.toHaveBeenCalled()
-      expect(githubMock.applyLabelsToIssue).toHaveBeenCalled()
+      expect(summary.mergeResponses).toHaveBeenCalled()
+      expect(summary.generateSummary).not.toHaveBeenCalled()
+      expect(github.commentOnIssue).not.toHaveBeenCalled()
+      expect(github.applyLabelsToIssue).toHaveBeenCalled()
     })
 
     it('should create correct file paths based on tempDir', async () => {
@@ -286,18 +282,18 @@ describe('apply', () => {
 
       const mockMergedResponse = { labels: [] }
 
-      summaryMock.mergeResponses.mockResolvedValue(mockMergedResponse)
-      summaryMock.generateSummary.mockResolvedValue('/custom/summary.json')
+      summary.mergeResponses.mockResolvedValue(mockMergedResponse)
+      summary.generateSummary.mockResolvedValue('/custom/summary.json')
 
       await applyLabelsAndComment(configWithCustomTemp)
 
-      expect(summaryMock.mergeResponses).toHaveBeenCalledWith(
+      expect(summary.mergeResponses).toHaveBeenCalledWith(
         '',
         path.join(customTempDir, 'triage-assistant', 'responses'),
         path.join(customTempDir, 'triage-assistant', 'responses.json')
       )
 
-      expect(summaryMock.generateSummary).toHaveBeenCalledWith(
+      expect(summary.generateSummary).toHaveBeenCalledWith(
         configWithCustomTemp,
         path.join(customTempDir, 'triage-assistant', 'responses.json')
       )
@@ -311,7 +307,7 @@ describe('apply', () => {
       }
 
       const mockMergedResponse = { labels: [] }
-      summaryMock.mergeResponses.mockResolvedValue(mockMergedResponse)
+      summary.mergeResponses.mockResolvedValue(mockMergedResponse)
 
       await applyLabelsAndComment(configWithCustomToken)
 

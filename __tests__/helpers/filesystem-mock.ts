@@ -23,8 +23,8 @@ export class FileSystemMock {
 
     // Mock fs.readFile to read from in-memory filesystem
     jest.spyOn(fs.promises, 'readFile').mockImplementation(async (filePath) => {
-      const file = path.join(filePath.toString())
-      console.error(`Reading file: ${file}`)
+      const file = this.cleanDirPath(filePath.toString())
+      // console.log(`Reading file: ${file}`)
 
       const content = this.files.get(file)
       if (content) {
@@ -36,8 +36,8 @@ export class FileSystemMock {
 
     // Mock readdir to list files in a directory
     jest.spyOn(fs.promises, 'readdir').mockImplementation((async (dirPath) => {
-      const dir = path.join(dirPath.toString())
-      console.error(`Reading directory: ${dir}`)
+      const dir = this.cleanDirPath(dirPath.toString())
+      // console.log(`Reading directory: ${dir}`)
 
       if (!this.directories.has(dir)) {
         throw new Error(`Directory not found: ${dir}`)
@@ -47,7 +47,7 @@ export class FileSystemMock {
         .filter((file) => path.dirname(path.join(file)).startsWith(dir))
         .map((file) => path.basename(file))
 
-      console.log(`Reading directory: ${dir}, files: ${files.join(', ')}`)
+      // console.log(`Reading directory: ${dir}, files: ${files.join(', ')}`)
 
       return Promise.resolve(files)
     }) as typeof fs.promises.readdir)
@@ -63,7 +63,6 @@ export class FileSystemMock {
   }
 
   forceSet(filePath: string, content: string): void {
-    console.error(`Forcing set file: ${filePath}`)
     this.mkdir(path.dirname(filePath), { recursive: true })
     this.writeFile(filePath, content)
   }
@@ -74,9 +73,9 @@ export class FileSystemMock {
 
   private writeFile(filePath: string, content: string) {
     const file = path.join(filePath)
-    console.log(`Writing file: ${file}`)
+    // console.log(`Writing file: ${file}`)
 
-    const dir = path.dirname(file)
+    const dir = this.cleanDirPath(path.dirname(file))
     if (!this.directories.has(dir)) {
       throw new Error(`Directory not found: ${dir}`)
     }
@@ -84,20 +83,24 @@ export class FileSystemMock {
   }
 
   private mkdir(dirPath: string, options?: { recursive: boolean } | null | undefined) {
-    const dir = path.join(dirPath.toString())
+    const dir = this.cleanDirPath(dirPath)
     if (!this.directories.has(dir)) {
-      console.log(`Creating directory: ${dir}`)
+      // console.log(`Creating directory: ${dir}`)
       this.directories.add(dir)
 
       if (options?.recursive) {
-        let parentDir = path.dirname(dir)
+        let parentDir = this.cleanDirPath(path.dirname(dir))
         while (!this.directories.has(parentDir)) {
-          console.log(`Creating parent directory: ${parentDir}`)
+          // console.log(`Creating parent directory: ${parentDir}`)
           this.directories.add(parentDir)
 
-          parentDir = path.dirname(parentDir)
+          parentDir = this.cleanDirPath(path.dirname(parentDir))
         }
       }
     }
+  }
+
+  private cleanDirPath(dir: string): string {
+    return path.join(dir).replace(new RegExp(`[${path.sep}]+$`), '')
   }
 }
