@@ -40175,7 +40175,7 @@ async function generatePrompt(templateContent, outputPath, replacements, config)
     for (let line of lines) {
         // Replace placeholders
         for (const [key, value] of Object.entries(replacements)) {
-            line = line.replace(new RegExp(`{{${key}}}`, 'g'), value);
+            line = line.replace(new RegExp(`{{${key}}}`, 'g'), String(value || ''));
         }
         // Check for EXEC: command prefix
         const execMatch = line.match(/^EXEC:\s*(.+)$/);
@@ -40284,7 +40284,6 @@ async function selectLabels(config) {
     await fs.promises.mkdir(responseDir, { recursive: true });
     // Generate system prompt
     const systemPromptPath = path.join(promptDir, 'system-prompt.md');
-    //const systemPrompt = await fs.promises.readFile(systemPromptPath, 'utf8')
     await generatePrompt(getPrompt$1(config.template), systemPromptPath, {
         ISSUE_NUMBER: config.issueNumber,
         ISSUE_REPO: config.repository,
@@ -40293,7 +40292,6 @@ async function selectLabels(config) {
     }, config);
     // Generate user prompt
     const userPromptPath = path.join(promptDir, 'user-prompt.md');
-    //const userPrompt = await fs.promises.readFile(userPromptPath, 'utf8')
     await generatePrompt(getPrompt$1('user'), userPromptPath, {
         ISSUE_NUMBER: config.issueNumber,
         ISSUE_REPO: config.repository,
@@ -40302,13 +40300,55 @@ async function selectLabels(config) {
     }, config);
     // Run AI inference
     const responseFile = path.join(responseDir, `response-${guid}.json`);
-    await runInference(systemPromptPath, userPromptPath, responseFile, 200, config);
+    const systemPrompt = await fs.promises.readFile(systemPromptPath, 'utf8');
+    const userPrompt = await fs.promises.readFile(userPromptPath, 'utf8');
+    await runInference(systemPrompt, userPrompt, responseFile, 200, config);
     return responseFile;
+}
+
+/**
+ * Comments on an issue with the provided summary.
+ *
+ * @param summaryFile Path to the file containing the summary text.
+ * @param config The triage configuration object.
+ * @param octokit The GitHub API client.
+ */
+async function commentOnIssue(octokit, summaryFile, config, footer) {
+    const summary = await fs.promises.readFile(summaryFile, 'utf8');
+    const commentBody = `
+    ${summary}
+    
+    ${footer}
+    `;
+    await octokit.rest.issues.createComment({
+        owner: config.repoOwner,
+        repo: config.repoName,
+        issue_number: config.issueNumber,
+        body: commentBody
+    });
+}
+/**
+ * Applies labels to an issue based on the merged response data.
+ *
+ * @param mergedResponse The merged response containing labels to apply.
+ * @param config The triage configuration object.
+ * @param octokit The GitHub API client.
+ */
+async function applyLabelsToIssue(octokit, mergedResponse, config) {
+    const labels = mergedResponse.labels?.map((l) => l.label)?.filter(Boolean) || [];
+    if (labels.length > 0) {
+        await octokit.rest.issues.addLabels({
+            owner: config.repoOwner,
+            repo: config.repoName,
+            issue_number: config.issueNumber,
+            labels
+        });
+    }
 }
 
 const systemPrompt = `
 You are an assistant helping to triage GitHub issues. Your
-focus is to summarize some actions and then prove the user
+focus is to summarize some actions and then prove to the user
 with an easy to understand message while also being detailed.
 
 ## Summarization Process
@@ -40403,107 +40443,55 @@ function getPrompt(templateName) {
 }
 
 /**
- * Comments on an issue with the provided summary.
+ * Generates a summary of the merged response using AI inference.
  *
- * @param summaryFile Path to the file containing the summary text.
  * @param config The triage configuration object.
- * @param octokit The GitHub API client.
+ * @param mergedResponseFile Path to the merged response JSON file.
+ * @returns Promise that resolves with the path to the summary response file.
  */
-async function commentOnIssue(summaryFile, config, octokit) {
-    const summary = await fs.promises.readFile(summaryFile, 'utf8');
-    const commentBody = `
-    ${summary}
-    
-    ${config.commentFooter}
-    `;
-    await octokit.rest.issues.createComment({
-        owner: config.repoOwner,
-        repo: config.repoName,
-        issue_number: config.issueNumber,
-        body: commentBody
-    });
-}
-/**
- * Applies labels to an issue based on the merged response data.
- *
- * @param mergedResponse The merged response containing labels to apply.
- * @param config The triage configuration object.
- * @param octokit The GitHub API client.
- */
-async function applyLabelsToIssue(mergedResponse, config, octokit) {
-    const labels = mergedResponse.labels?.map((l) => l.label)?.filter(Boolean) || [];
-    if (labels.length > 0) {
-        await octokit.rest.issues.addLabels({
-            owner: config.repoOwner,
-            repo: config.repoName,
-            issue_number: config.issueNumber,
-            labels
-        });
-    }
-}
-
-/**
- * Applies labels and comments to an issue based on merged response data.
- *
- * @param inputFiles Comma or newline separated list of input files.
- * @param config The triage configuration object.
- */
-async function applyLabelsAndComment(config) {
-    const octokit = githubExports.getOctokit(config.token);
-    // Merge response JSON files
-    const mergedResponseFile = path.join(config.tempDir, 'triage-assistant', 'responses.json');
-    const responseDir = path.join(config.tempDir, 'triage-assistant', 'responses');
-    const mergedResponse = await mergeResponses('', mergedResponseFile, responseDir);
-    // Log the merged response for debugging
-    coreExports.info(`Merged response: ${JSON.stringify(mergedResponse, null, 2)}`);
-    if (config.applyComment) {
-        // Generate summary using AI
-        const summaryDir = path.join(config.tempDir, 'triage-apply', 'prompts');
-        await fs.promises.mkdir(summaryDir, { recursive: true });
-        const systemPromptPath = path.join(summaryDir, 'system-prompt.md');
-        //const systemPrompt = await fs.promises.readFile(systemPromptPath, 'utf8')
-        await generatePrompt(getPrompt('system'), systemPromptPath, {
-            ISSUE_NUMBER: config.issueNumber.toString(),
-            ISSUE_REPO: config.repository,
-            MERGED_JSON: mergedResponseFile
-        }, config);
-        const userPromptPath = path.join(summaryDir, 'user-prompt.md');
-        //const userPrompt = await fs.promises.readFile(userPromptPath, 'utf8')
-        await generatePrompt(getPrompt('user'), userPromptPath, {
-            ISSUE_NUMBER: config.issueNumber.toString(),
-            ISSUE_REPO: config.repository,
-            MERGED_JSON: mergedResponseFile
-        }, config);
-        const summaryResponseFile = path.join(config.tempDir, 'triage-apply', 'responses', 'response.md');
-        await fs.promises.mkdir(path.dirname(summaryResponseFile), {
-            recursive: true
-        });
-        await runInference(systemPromptPath, userPromptPath, summaryResponseFile, 500, config);
-        // Comment on the issue
-        await commentOnIssue(summaryResponseFile, config, octokit);
-    }
-    if (config.applyLabels) {
-        // Apply labels to the issue
-        await applyLabelsToIssue(mergedResponse, config, octokit);
-    }
+async function generateSummary(config, mergedResponseFile) {
+    const summaryDir = path.join(config.tempDir, 'triage-apply', 'prompts');
+    await fs.promises.mkdir(summaryDir, { recursive: true });
+    const systemPromptPath = path.join(summaryDir, 'system-prompt.md');
+    await generatePrompt(getPrompt('system'), systemPromptPath, {
+        ISSUE_NUMBER: config.issueNumber.toString(),
+        ISSUE_REPO: config.repository,
+        MERGED_JSON: mergedResponseFile
+    }, config);
+    const userPromptPath = path.join(summaryDir, 'user-prompt.md');
+    await generatePrompt(getPrompt('user'), userPromptPath, {
+        ISSUE_NUMBER: config.issueNumber.toString(),
+        ISSUE_REPO: config.repository,
+        MERGED_JSON: mergedResponseFile
+    }, config);
+    const summaryResponseFile = path.join(config.tempDir, 'triage-apply', 'responses', 'response.md');
+    await fs.promises.mkdir(path.dirname(summaryResponseFile), { recursive: true });
+    const systemPrompt = await fs.promises.readFile(systemPromptPath, 'utf8');
+    const userPrompt = await fs.promises.readFile(userPromptPath, 'utf8');
+    await runInference(systemPrompt, userPrompt, summaryResponseFile, 500, config);
+    return summaryResponseFile;
 }
 /**
  * Merges multiple response JSON files into a single response file.
  *
  * @param inputFiles Comma or newline separated list of input files.
- * @param outputPath Path to write the merged response file.
  * @param responseDir The directory with response files.
+ * @param outputPath Path to write the merged response file.
  * @returns Promise that resolves with the merged response data.
  */
-async function mergeResponses(inputFiles, outputPath, responseDir) {
+async function mergeResponses(inputFiles, responseDir, outputPath) {
     const allFiles = [];
     {
         // Process all JSON files from responses directory
-        if (fs.existsSync(responseDir)) {
-            const files = await fs.promises.readdir(responseDir);
-            allFiles.push(...files
-                .filter((f) => f.endsWith('.json'))
-                .map((f) => path.join(responseDir, f)));
+        try {
+            const files = await fs.promises.readdir(path.join(responseDir));
+            const jsonFilePaths = files
+                .filter((f) => f.endsWith('.json')) // get json files
+                .map((f) => path.join(responseDir, f)); // construct full paths
+            allFiles.push(...jsonFilePaths);
+        }
+        catch {
+            // The directory may not exist, so we ignore the error
         }
     }
     if (allFiles.length === 0) {
@@ -40512,21 +40500,12 @@ async function mergeResponses(inputFiles, outputPath, responseDir) {
     coreExports.info(`Merging files: ${allFiles.join(', ')}`);
     const merged = {};
     for (const file of allFiles) {
-        if (fs.existsSync(file)) {
+        try {
             coreExports.info(`Processing file: ${file}`);
-            let fileContents = await fs.promises.readFile(file, 'utf8');
-            // Remove wrapping code blocks if present
-            const lines = fileContents
-                .split('\n')
-                .filter((line) => line.trim() !== '');
-            if (lines[0]?.match(/^\s*```/)) {
-                lines.shift();
-            }
-            if (lines[lines.length - 1]?.match(/^\s*```/)) {
-                lines.pop();
-            }
-            fileContents = lines.join('\n');
+            // Read and parse the JSON file
+            const fileContents = await getFileContents(file);
             const json = JSON.parse(fileContents);
+            // Merge the JSON data
             for (const [key, value] of Object.entries(json)) {
                 if (merged[key]) {
                     if (Array.isArray(merged[key]) && Array.isArray(value)) {
@@ -40541,10 +40520,60 @@ async function mergeResponses(inputFiles, outputPath, responseDir) {
                 }
             }
         }
+        catch {
+            coreExports.warning(`Failed to read or parse file: ${file}`);
+        }
     }
     await fs.promises.mkdir(path.dirname(outputPath), { recursive: true });
     await fs.promises.writeFile(outputPath, JSON.stringify(merged, null, 2));
     return merged;
+}
+/**
+ * Helper function to read file contents and remove wrapping code blocks if present.
+ *
+ * @param file Path to the file to read.
+ * @returns Promise that resolves with the file contents.
+ */
+async function getFileContents(file) {
+    let fileContents = await fs.promises.readFile(file, 'utf8');
+    // Break file contents into lines
+    const lines = fileContents.split('\n');
+    // Remove wrapping code blocks if present
+    if (lines[0]?.match(/^\s*```/)) {
+        lines.shift();
+    }
+    if (lines[lines.length - 1]?.match(/^\s*```/)) {
+        lines.pop();
+    }
+    // Combine lines back into a single string
+    fileContents = lines.join('\n');
+    return fileContents;
+}
+
+/**
+ * Applies labels and comments to an issue based on merged response data.
+ *
+ * @param inputFiles Comma or newline separated list of input files.
+ * @param config The triage configuration object.
+ */
+async function applyLabelsAndComment(config) {
+    const octokit = githubExports.getOctokit(config.token);
+    // Merge response JSON files
+    const mergedResponseFile = path.join(config.tempDir, 'triage-assistant', 'responses.json');
+    const responseDir = path.join(config.tempDir, 'triage-assistant', 'responses');
+    const mergedResponse = await mergeResponses('', responseDir, mergedResponseFile);
+    // Log the merged response for debugging
+    coreExports.info(`Merged response: ${JSON.stringify(mergedResponse, null, 2)}`);
+    if (config.applyComment) {
+        // Generate summary using AI
+        const summaryResponseFile = await generateSummary(config, mergedResponseFile);
+        // Comment on the issue
+        await commentOnIssue(octokit, summaryResponseFile, config, config.commentFooter);
+    }
+    if (config.applyLabels) {
+        // Apply labels to the issue
+        await applyLabelsToIssue(octokit, mergedResponse, config);
+    }
 }
 
 /**
