@@ -1,0 +1,4 @@
+skip-path:
+  # this is not part of the action and is just an
+  # example workflow demonstrating the process
+  - .github/workflows/triage.yml
