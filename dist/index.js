@@ -40212,6 +40212,8 @@ function getPathFromMapKey(mapKey) {
  * @returns Promise that resolves to the generated prompt content.
  */
 async function generatePrompt(templateContent, outputPath, replacements, config) {
+    coreExports.debug(`Generating prompt from template:`);
+    coreExports.debug(templateContent);
     const lines = templateContent.split('\n');
     const outputContent = [];
     for (let line of lines) {
@@ -40251,12 +40253,15 @@ async function generatePrompt(templateContent, outputPath, replacements, config)
     }
     const output = outputContent.join('\n');
     if (outputPath) {
+        coreExports.debug(`Writing generated prompt to file: ${outputPath}`);
         await fs.promises.writeFile(outputPath, output);
         // Log the created prompt for debugging
-        coreExports.info('Created prompt from template:');
         const createdContent = await fs.promises.readFile(outputPath, 'utf8');
-        coreExports.info(createdContent);
+        coreExports.debug(`Generated prompt file contained:`);
+        coreExports.debug(createdContent);
     }
+    coreExports.info(`Created prompt from template:`);
+    coreExports.info(output);
     return output;
 }
 /**
@@ -40269,6 +40274,7 @@ async function generatePrompt(templateContent, outputPath, replacements, config)
  * @param config The inference configuration object.
  */
 async function runInference(systemPrompt, userPrompt, responseFile, maxTokens = 200, config) {
+    coreExports.debug(`Running inference...`);
     try {
         // Create Azure AI client
         const client = createClient(config.aiEndpoint, new AzureKeyCredential(config.token), {

@@ -21,6 +21,9 @@ export async function generatePrompt(
   replacements: Record<string, unknown>,
   config: PromptConfig
 ): Promise<string> {
+  core.debug(`Generating prompt from template:`)
+  core.debug(templateContent)
+
   const lines = templateContent.split('\n')
   const outputContent: string[] = []
 
@@ -65,13 +68,17 @@ export async function generatePrompt(
   const output = outputContent.join('\n')
 
   if (outputPath) {
+    core.debug(`Writing generated prompt to file: ${outputPath}`)
     await fs.promises.writeFile(outputPath, output)
 
     // Log the created prompt for debugging
-    core.info('Created prompt from template:')
     const createdContent = await fs.promises.readFile(outputPath, 'utf8')
-    core.info(createdContent)
+    core.debug(`Generated prompt file contained:`)
+    core.debug(createdContent)
   }
+
+  core.info(`Created prompt from template:`)
+  core.info(output)
 
   return output
 }
@@ -92,6 +99,8 @@ export async function runInference(
   maxTokens: number = 200,
   config: InferenceConfig
 ): Promise<void> {
+  core.debug(`Running inference...`)
+
   try {
     // Create Azure AI client
     const client = ModelClient(config.aiEndpoint, new AzureKeyCredential(config.token), {
