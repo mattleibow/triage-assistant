@@ -46,7 +46,6 @@ jobs:
           } else {
             $number="${{ github.event.number }}"
           }
-          $number="4"
           echo "number=$number" >> $env:GITHUB_OUTPUT
           echo "I will triage issue number #$number"
 
