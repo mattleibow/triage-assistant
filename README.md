@@ -20,11 +20,9 @@ name: 'Triage Issues and Pull Requests'
 
 on:
   issues:
-    types: [opened, reopened]
+    types: [opened]
   pull_request:
-    types: [opened, reopened, synchronize]
-  issue_comment:
-    types: [created, edited]
+    types: [opened]
 
 permissions:
   contents: read
@@ -35,13 +33,7 @@ permissions:
 jobs:
   triage:
     runs-on: ubuntu-latest
-    if: |
-      github.event_name == 'issues' ||
-      github.event_name == 'pull_request' ||
-      (github.event_name == 'issue_comment' && startsWith(github.event.comment.body, '/triage'))
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
 
       - name: Determine area label
         uses: mattleibow/triage-assistant@v1
@@ -49,14 +41,6 @@ jobs:
           label-prefix: 'area-'
           template: 'single-label'
           apply-labels: true
-
-      - name: Check for regression
-        uses: mattleibow/triage-assistant@v1
-        with:
-          label: 'regression'
-          template: 'regression'
-          apply-labels: true
-          apply-comment: true
 ```
 
 ### Advanced Multi-Step Triage
@@ -143,7 +127,7 @@ The action supports several triage templates:
 - **`single-label`**: Selects the best single label from available options
 - **`multi-label`**: Can select multiple relevant labels
 - **`regression`**: Specifically checks if an issue is a regression
-- **`missing-info`**: Determines if the issue lacks sufficient information
+
 
 ## AI Model Configuration
 
