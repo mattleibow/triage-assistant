@@ -8,14 +8,18 @@
  * @property labels - An array of label objects, each containing:
  *   - `label`: The name of the label.
  *   - `reason`: The reason why the label was applied.
+ * @property remarks - An array of remarks or comments related to the triage.
  */
 export interface TriageResponse {
-  regression?: {
+  remarks: Array<string>
+
+  regression: {
     'working-version': string
     'broken-version': string
     evidence: string
-  }
-  labels?: Array<{
+  } | null
+
+  labels: Array<{
     label: string
     reason: string
   }>

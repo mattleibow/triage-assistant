@@ -40601,7 +40601,11 @@ async function mergeResponses(inputFiles, responseDir, outputPath) {
         throw new Error('No input files specified for merging responses');
     }
     coreExports.info(`Merging files: ${allFiles.join(', ')}`);
-    const merged = {};
+    const merged = {
+        remarks: [],
+        regression: null,
+        labels: []
+    };
     for (const file of allFiles) {
         try {
             coreExports.info(`Processing file: ${file}`);

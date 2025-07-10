@@ -65,6 +65,8 @@ describe('apply', () => {
   describe('applyLabelsAndComment', () => {
     it('should apply both labels and comments when both are enabled', async () => {
       const mockMergedResponse = {
+        remarks: [],
+        regression: null,
         labels: [
           { label: 'bug', reason: 'Contains error information' },
           { label: 'area-ui', reason: 'UI related issue' }
@@ -114,6 +116,8 @@ describe('apply', () => {
       }
 
       const mockMergedResponse = {
+        remarks: [],
+        regression: null,
         labels: [{ label: 'enhancement', reason: 'Feature request' }]
       }
 
@@ -137,6 +141,8 @@ describe('apply', () => {
       }
 
       const mockMergedResponse = {
+        remarks: [],
+        regression: null,
         labels: [{ label: 'bug', reason: 'Contains error' }]
       }
 
@@ -171,6 +177,8 @@ describe('apply', () => {
       }
 
       const mockMergedResponse = {
+        remarks: [],
+        regression: null,
         labels: [{ label: 'bug', reason: 'Contains error' }]
       }
 
@@ -190,6 +198,8 @@ describe('apply', () => {
 
     it('should handle empty merged response gracefully', async () => {
       const mockMergedResponse = {
+        remarks: [],
+        regression: null,
         labels: []
       }
 
@@ -218,7 +228,11 @@ describe('apply', () => {
     })
 
     it('should propagate errors from generateSummary', async () => {
-      const mockMergedResponse = { labels: [] }
+      const mockMergedResponse = {
+        remarks: [],
+        regression: null,
+        labels: []
+      }
       const error = new Error('Failed to generate summary')
 
       summary.mergeResponses.mockResolvedValue(mockMergedResponse)
@@ -233,7 +247,11 @@ describe('apply', () => {
     })
 
     it('should propagate errors from commentOnIssue', async () => {
-      const mockMergedResponse = { labels: [] }
+      const mockMergedResponse = {
+        remarks: [],
+        regression: null,
+        labels: []
+      }
       const summaryResponseFile = '/tmp/test/summary-response.json'
       const error = new Error('Failed to comment on issue')
 
@@ -256,7 +274,11 @@ describe('apply', () => {
         applyLabels: true
       }
 
-      const mockMergedResponse = { labels: [] }
+      const mockMergedResponse = {
+        remarks: [],
+        regression: null,
+        labels: []
+      }
       const error = new Error('Failed to apply labels')
 
       summary.mergeResponses.mockResolvedValue(mockMergedResponse)
@@ -277,7 +299,11 @@ describe('apply', () => {
         tempDir: customTempDir
       }
 
-      const mockMergedResponse = { labels: [] }
+      const mockMergedResponse = {
+        remarks: [],
+        regression: null,
+        labels: []
+      }
 
       summary.mergeResponses.mockResolvedValue(mockMergedResponse)
       summary.generateSummary.mockResolvedValue('/custom/summary.json')
@@ -303,7 +329,11 @@ describe('apply', () => {
         token: customToken
       }
 
-      const mockMergedResponse = { labels: [] }
+      const mockMergedResponse = {
+        remarks: [],
+        regression: null,
+        labels: []
+      }
       summary.mergeResponses.mockResolvedValue(mockMergedResponse)
 
       await applyLabelsAndComment(configWithCustomToken)
