@@ -50,7 +50,11 @@ function getAugmentedNamespace(n) {
   var f = n.default;
 	if (typeof f == "function") {
 		var a = function a () {
-			if (this instanceof a) {
+			var isInstance = false;
+      try {
+        isInstance = this instanceof a;
+      } catch {}
+			if (isInstance) {
         return Reflect.construct(f, arguments, this.constructor);
 			}
 			return f.apply(this, arguments);
@@ -27322,6 +27326,7 @@ function requireContext () {
 	        this.action = process.env.GITHUB_ACTION;
 	        this.actor = process.env.GITHUB_ACTOR;
 	        this.job = process.env.GITHUB_JOB;
+	        this.runAttempt = parseInt(process.env.GITHUB_RUN_ATTEMPT, 10);
 	        this.runNumber = parseInt(process.env.GITHUB_RUN_NUMBER, 10);
 	        this.runId = parseInt(process.env.GITHUB_RUN_ID, 10);
 	        this.apiUrl = (_a = process.env.GITHUB_API_URL) !== null && _a !== void 0 ? _a : `https://api.github.com`;
@@ -33968,7 +33973,7 @@ function requireCommon () {
 
 			const split = (typeof namespaces === 'string' ? namespaces : '')
 				.trim()
-				.replace(' ', ',')
+				.replace(/\s+/g, ',')
 				.split(',')
 				.filter(Boolean);
 
@@ -34320,7 +34325,7 @@ function requireBrowser () {
 		function load() {
 			let r;
 			try {
-				r = exports.storage.getItem('debug');
+				r = exports.storage.getItem('debug') || exports.storage.getItem('DEBUG') ;
 			} catch (error) {
 				// Swallow
 				// XXX (@Qix-) should we be logging these?
@@ -40207,6 +40212,8 @@ function getPathFromMapKey(mapKey) {
  * @returns Promise that resolves to the generated prompt content.
  */
 async function generatePrompt(templateContent, outputPath, replacements, config) {
+    coreExports.debug(`Generating prompt from template:`);
+    coreExports.debug(templateContent);
     const lines = templateContent.split('\n');
     const outputContent = [];
     for (let line of lines) {
@@ -40246,12 +40253,15 @@ async function generatePrompt(templateContent, outputPath, replacements, config)
     }
     const output = outputContent.join('\n');
     if (outputPath) {
+        coreExports.debug(`Writing generated prompt to file: ${outputPath}`);
         await fs.promises.writeFile(outputPath, output);
         // Log the created prompt for debugging
-        coreExports.info('Created prompt from template:');
         const createdContent = await fs.promises.readFile(outputPath, 'utf8');
-        coreExports.info(createdContent);
+        coreExports.debug(`Generated prompt file contained:`);
+        coreExports.debug(createdContent);
     }
+    coreExports.info(`Created prompt from template:`);
+    coreExports.info(output);
     return output;
 }
 /**
@@ -40264,6 +40274,7 @@ async function generatePrompt(templateContent, outputPath, replacements, config)
  * @param config The inference configuration object.
  */
 async function runInference(systemPrompt, userPrompt, responseFile, maxTokens = 200, config) {
+    coreExports.debug(`Running inference...`);
     try {
         // Create Azure AI client
         const client = createClient(config.aiEndpoint, new AzureKeyCredential(config.token), {
@@ -40698,8 +40709,8 @@ async function run() {
         // Initialize configuration object
         const issueNumberStr = coreExports.getInput('issue') || githubExports.context.issue.number.toString();
         config = {
-            aiEndpoint: coreExports.getInput('ai-endpoint') || DEFAULT_AI_ENDPOINT,
-            aiModel: coreExports.getInput('ai-model') || DEFAULT_AI_MODEL,
+            aiEndpoint: coreExports.getInput('ai-endpoint') || process.env.TRIAGE_AI_ENDPOINT || DEFAULT_AI_ENDPOINT,
+            aiModel: coreExports.getInput('ai-model') || process.env.TRIAGE_AI_MODEL || DEFAULT_AI_MODEL,
             applyComment: coreExports.getBooleanInput('apply-comment'),
             commentFooter: coreExports.getInput('comment-footer'),
             applyLabels: coreExports.getBooleanInput('apply-labels'),
@@ -40709,7 +40720,7 @@ async function run() {
             repository: `${githubExports.context.repo.owner}/${githubExports.context.repo.repo}`,
             tempDir: process.env.RUNNER_TEMP || require$$0.tmpdir(),
             template: coreExports.getInput('template'),
-            token: coreExports.getInput('token') || process.env.GITHUB_TOKEN || '',
+            token: coreExports.getInput('token') || process.env.TRIAGE_GITHUB_TOKEN || process.env.GITHUB_TOKEN || '',
             label: coreExports.getInput('label'),
             labelPrefix: coreExports.getInput('label-prefix')
         };
