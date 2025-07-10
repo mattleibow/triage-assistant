@@ -1,4 +1,4 @@
-# Create a GitHub Action Using TypeScript
+# AI Triage Assistant
 
 [![GitHub Super-Linter](https://github.com/mattleibow/triage-assistant/actions/workflows/linter.yml/badge.svg)](https://github.com/super-linter/super-linter)
 ![CI](https://github.com/mattleibow/triage-assistant/actions/workflows/ci.yml/badge.svg)
@@ -6,224 +6,187 @@
 [![CodeQL](https://github.com/mattleibow/triage-assistant/actions/workflows/codeql-analysis.yml/badge.svg)](https://github.com/mattleibow/triage-assistant/actions/workflows/codeql-analysis.yml)
 [![Coverage](./badges/coverage.svg)](./badges/coverage.svg)
 
-## Initial Setup
-
-After you've cloned the repository to your local machine or codespace, you'll need to perform some initial setup steps
-before you can develop your action.
-
-> [!NOTE]
->
-> You'll need to have a reasonably modern version of [Node.js](https://nodejs.org) handy (20.x or later should work!).
-> If you are using a version manager like [`nodenv`](https://github.com/nodenv/nodenv) or
-> [`fnm`](https://github.com/Schniz/fnm), this template has a `.node-version` file at the root of the repository that
-> can be used to automatically switch to the correct version when you `cd` into the repository. Additionally, this
-> `.node-version` file is used by GitHub Actions in any `actions/setup-node` actions.
-
-1. :hammer_and_wrench: Install the dependencies
-
-   ```bash
-   npm install
-   ```
-
-1. :building_construction: Package the TypeScript for distribution
-
-   ```bash
-   npm run bundle
-   ```
-
-1. :white_check_mark: Run the tests
-
-   ```bash
-   $ npm test
-
-   PASS  ./index.test.js
-     ✓ throws invalid number (3ms)
-     ✓ wait 500 ms (504ms)
-     ✓ test runs (95ms)
-
-   ...
-   ```
-
-## Update the Action Metadata
-
-The [`action.yml`](action.yml) file defines metadata about your action, such as input(s) and output(s). For details
-about this file, see
-[Metadata syntax for GitHub Actions](https://docs.github.com/en/actions/creating-actions/metadata-syntax-for-github-actions).
-
-When you copy this repository, update `action.yml` with the name, description, inputs, and outputs for your action.
-
-## Update the Action Code
-
-1. Create a new branch
-
-   ```bash
-   git checkout -b releases/v1
-   ```
-
-1. Replace the contents of `src/` with your action code
-1. Add tests to `__tests__/` for your source code
-1. Format, test, and build the action
-
-   ```bash
-   npm run all
-   ```
-
-   > This step is important! It will run [`rollup`](https://rollupjs.org/) to build the final JavaScript action code
-   > with all dependencies included. If you do not run this step, your action will not work correctly when it is used in
-   > a workflow.
-
-1. (Optional) Test your action locally
-
-   The [`@github/local-action`](https://github.com/github/local-action) utility can be used to test your action locally.
-   It is a simple command-line tool that "stubs" (or simulates) the GitHub Actions Toolkit. This way, you can run your
-   TypeScript action locally without having to commit and push your changes to a repository.
-
-   The `local-action` utility can be run in the following ways:
-
-   - Visual Studio Code Debugger
-
-     Make sure to review and, if needed, update [`.vscode/launch.json`](./.vscode/launch.json)
-
-   - Terminal/Command Prompt
-
-     ```bash
-     # npx @github/local action <action-yaml-path> <entrypoint> <dotenv-file>
-     npx @github/local-action . src/main.ts .env
-     ```
-
-   You can provide a `.env` file to the `local-action` CLI to set environment variables used by the GitHub Actions
-   Toolkit. For example, setting inputs and event payload data used by your action. For more information, see the
-   example file, [`.env.example`](./.env.example), and the
-   [GitHub Actions Documentation](https://docs.github.com/en/actions/learn-github-actions/variables#default-environment-variables).
-
-1. Commit your changes
-
-   ```bash
-   git add .
-   git commit -m "My first action is ready!"
-   ```
-
-1. Push them to your repository
-
-   ```bash
-   git push -u origin releases/v1
-   ```
-
-1. Create a pull request and get feedback on your action
-1. Merge the pull request into the `main` branch
-
-Your action is now published! :rocket:
-
-For information about versioning your action, see
-[Versioning](https://github.com/actions/toolkit/blob/master/docs/action-versioning.md) in the GitHub Actions toolkit.
-
-## Validate the Action
-
-You can now validate the action by referencing it in a workflow file. For example,
-[`ci.yml`](./.github/workflows/ci.yml) demonstrates how to reference an action in the same repository.
-
-```yaml
-steps:
-  - name: Checkout
-    id: checkout
-    uses: actions/checkout@v4
-
-  - name: Test Local Action
-    id: test-action
-    uses: ./
-    with:
-      milliseconds: 1000
-
-  - name: Print Output
-    id: output
-    run: echo "${{ steps.test-action.outputs.time }}"
-```
-
-For example workflow runs, check out the [Actions tab](https://github.com/mattleibow/triage-assistant/actions)! :rocket:
+An AI-powered GitHub Action that automatically triages issues and pull requests by analyzing their content and applying
+appropriate labels using large language models.
 
 ## Usage
 
-After testing, you can create version tag(s) that developers can use to reference different stable versions of your
-action. For more information, see [Versioning](https://github.com/actions/toolkit/blob/master/docs/action-versioning.md)
-in the GitHub Actions toolkit.
+### Basic Triage Workflow
 
-To include the action in a workflow in another repository, you can use the `uses` syntax with the `@` symbol to
-reference a specific branch, tag, or commit hash.
+Create a workflow file (e.g., `.github/workflows/triage.yml`) to automatically triage new issues and pull requests:
+
+```yaml
+name: 'Triage Issues and Pull Requests'
+
+on:
+  issues:
+    types: [opened, reopened]
+  pull_request:
+    types: [opened, reopened, synchronize]
+  issue_comment:
+    types: [created, edited]
+
+permissions:
+  contents: read
+  issues: write
+  pull-requests: write
+  models: read
+
+jobs:
+  triage:
+    runs-on: ubuntu-latest
+    if: |
+      github.event_name == 'issues' ||
+      github.event_name == 'pull_request' ||
+      (github.event_name == 'issue_comment' && startsWith(github.event.comment.body, '/triage'))
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Determine area label
+        uses: mattleibow/triage-assistant@v1
+        with:
+          label-prefix: 'area-'
+          template: 'single-label'
+          apply-labels: true
+
+      - name: Check for regression
+        uses: mattleibow/triage-assistant@v1
+        with:
+          label: 'regression'
+          template: 'regression'
+          apply-labels: true
+          apply-comment: true
+```
+
+### Advanced Multi-Step Triage
+
+For more sophisticated triage workflows, you can use multiple steps with different templates:
 
 ```yaml
 steps:
-  - name: Checkout
-    id: checkout
-    uses: actions/checkout@v4
-
-  - name: Test Local Action
-    id: test-action
-    uses: mattleibow/triage-assistant@v1 # Commit with the `v1` tag
+  - name: Determine overlap labels
+    uses: mattleibow/triage-assistant@v1
     with:
-      milliseconds: 1000
+      label-prefix: 'overlap-'
+      template: 'multi-label'
 
-  - name: Print Output
-    id: output
-    run: echo "${{ steps.test-action.outputs.time }}"
+  - name: Determine area label
+    uses: mattleibow/triage-assistant@v1
+    with:
+      label-prefix: 'area-'
+      template: 'single-label'
+
+  - name: Check for regression
+    uses: mattleibow/triage-assistant@v1
+    with:
+      label: 'regression'
+      template: 'regression'
+
+  - name: Apply all labels and add comment
+    uses: mattleibow/triage-assistant@v1
+    with:
+      apply-labels: true
+      apply-comment: true
 ```
 
-## Publishing a New Release
+### Manual Triage
 
-This project includes a helper script, [`script/release`](./script/release) designed to streamline the process of
-tagging and pushing new releases for GitHub Actions.
+You can also trigger triage manually using workflow dispatch:
 
-GitHub Actions allows users to select a specific version of the action to use, based on release tags. This script
-simplifies this process by performing the following steps:
+```yaml
+on:
+  workflow_dispatch:
+    inputs:
+      issue_number:
+        description: 'Issue number to triage'
+        required: true
+        type: number
 
-1. **Retrieving the latest release tag:** The script starts by fetching the most recent SemVer release tag of the
-   current branch, by looking at the local data available in your repository.
-1. **Prompting for a new release tag:** The user is then prompted to enter a new release tag. To assist with this, the
-   script displays the tag retrieved in the previous step, and validates the format of the inputted tag (vX.X.X). The
-   user is also reminded to update the version field in package.json.
-1. **Tagging the new release:** The script then tags a new release and syncs the separate major tag (e.g. v1, v2) with
-   the new release tag (e.g. v1.0.0, v2.1.2). When the user is creating a new major release, the script auto-detects
-   this and creates a `releases/v#` branch for the previous major version.
-1. **Pushing changes to remote:** Finally, the script pushes the necessary commits, tags and branches to the remote
-   repository. From here, you will need to create a new release in GitHub so users can easily reference the new tags in
-   their workflows.
-
-## Dependency License Management
-
-This template includes a GitHub Actions workflow, [`licensed.yml`](./.github/workflows/licensed.yml), that uses
-[Licensed](https://github.com/licensee/licensed) to check for dependencies with missing or non-compliant licenses. This
-workflow is initially disabled. To enable the workflow, follow the below steps.
-
-1. Open [`licensed.yml`](./.github/workflows/licensed.yml)
-1. Uncomment the following lines:
-
-   ```yaml
-   # pull_request:
-   #   branches:
-   #     - main
-   # push:
-   #   branches:
-   #     - main
-   ```
-
-1. Save and commit the changes
-
-Once complete, this workflow will run any time a pull request is created or changes pushed directly to `main`. If the
-workflow detects any dependencies with missing or non-compliant licenses, it will fail the workflow and provide details
-on the issue(s) found.
-
-### Updating Licenses
-
-Whenever you install or update dependencies, you can use the Licensed CLI to update the licenses database. To install
-Licensed, see the project's [Readme](https://github.com/licensee/licensed?tab=readme-ov-file#installation).
-
-To update the cached licenses, run the following command:
-
-```bash
-licensed cache
+jobs:
+  triage:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Triage specific issue
+        uses: mattleibow/triage-assistant@v1
+        with:
+          issue: ${{ inputs.issue_number }}
+          template: 'single-label'
+          label-prefix: 'area-'
+          apply-labels: true
+          apply-comment: true
 ```
 
-To check the status of cached licenses, run the following command:
+## Inputs
 
-```bash
-licensed status
+| Name             | Description                                                                  | Default                 | Required |
+| ---------------- | ---------------------------------------------------------------------------- | ----------------------- | -------- |
+| `issue`          | The issue number to triage                                                   | Current issue/PR number | No       |
+| `token`          | GitHub token for API access                                                  | `${{ github.token }}`   | No       |
+| `template`       | Triage template: `multi-label`, `single-label`, `regression`, `missing-info` | `''`                    | No       |
+| `label`          | Specific label to evaluate                                                   | `''`                    | No       |
+| `label-prefix`   | Prefix for label search (e.g., `area-`, `platform/`)                         | `''`                    | No       |
+| `apply-labels`   | Whether to apply labels to the issue                                         | `false`                 | No       |
+| `apply-comment`  | Whether to add a comment with AI analysis                                    | `false`                 | No       |
+| `comment-footer` | Footer text for AI comments                                                  | Default disclaimer      | No       |
+
+## Outputs
+
+| Name            | Description                                        |
+| --------------- | -------------------------------------------------- |
+| `response-file` | Path to the file containing the AI analysis result |
+
+## Triage Templates
+
+The action supports several triage templates:
+
+- **`single-label`**: Selects the best single label from available options
+- **`multi-label`**: Can select multiple relevant labels
+- **`regression`**: Specifically checks if an issue is a regression
+- **`missing-info`**: Determines if the issue lacks sufficient information
+
+## AI Model Configuration
+
+The action uses AI models from GitHub Models by default. You can configure the model using environment variables:
+
+```yaml
+env:
+  TRIAGE_AI_MODEL: openai/gpt-4o-mini # Use a specific model
+  TRIAGE_AI_ENDPOINT: https://models.github.ai/inference # Custom endpoint
 ```
+
+## Permissions
+
+The action requires the following permissions:
+
+```yaml
+permissions:
+  contents: read # To read repository content
+  issues: write # To add labels and comments to issues
+  pull-requests: write # To add labels and comments to pull requests
+  models: read # To access GitHub Models for AI inference
+```
+
+## Example: Complete Triage Setup
+
+For a complete example of how to set up automated triage, see the [triage.yml](./.github/workflows/triage.yml) workflow
+in this repository.
+
+## Customization
+
+The action automatically discovers available labels in your repository and uses them for triage. Make sure your
+repository has appropriate labels with descriptive names and descriptions for best results.
+
+For labels with prefixes (e.g., `area-api`, `area-docs`, `platform/android`), use the `label-prefix` input to focus the
+AI on specific label categories.
+
+## Troubleshooting
+
+- Ensure your GitHub token has the necessary permissions
+- Check that the AI model you're using is available in GitHub Models
+- Verify that labels exist in your repository before trying to apply them
+- Review the AI response file output for detailed analysis information
+
+## Contributing
+
+Contributions are welcome! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for development setup and guidelines.
