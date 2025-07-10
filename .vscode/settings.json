@@ -1,0 +1,43 @@
+{
+  // Formatting and editor settings
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "editor.tabSize": 2,
+  "editor.formatOnSave": true,
+
+  // Markdown settings
+  "markdown.extension.list.indentationSize": "adaptive",
+  "markdown.extension.italic.indicator": "_",
+  "markdown.extension.orderedList.marker": "one",
+
+  // TypeScript settings
+  "typescript.preferences.includePackageJsonAutoImports": "on",
+  "typescript.updateImportsOnFileMove.enabled": "always",
+
+  // ESLint settings
+  "eslint.workingDirectories": ["."],
+  "eslint.validate": ["javascript", "typescript"],
+
+  // Jest settings
+  "jest.runMode": "on-save",
+
+  // File associations
+  "files.associations": {
+    "*.yml": "yaml",
+    "*.yaml": "yaml"
+  },
+
+  // Search settings
+  "search.exclude": {
+    "**/node_modules": true,
+    "**/dist": true,
+    "**/coverage": true,
+    "**/.git": true
+  },
+
+  // File watcher settings
+  "files.watcherExclude": {
+    "**/node_modules/**": true,
+    "**/dist/**": true,
+    "**/coverage/**": true
+  }
+}
