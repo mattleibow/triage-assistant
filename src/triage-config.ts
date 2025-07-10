@@ -5,6 +5,10 @@ export interface GitHubConfig {
   repoOwner: string
 }
 
+export interface ReactionsConfig extends GitHubConfig {
+  token: string
+}
+
 export interface PromptConfig {
   token: string
 }

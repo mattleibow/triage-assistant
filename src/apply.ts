@@ -2,8 +2,24 @@ import * as core from '@actions/core'
 import * as github from '@actions/github'
 import * as path from 'path'
 import { commentOnIssue, applyLabelsToIssue } from './issues.js'
-import { ApplyConfig } from './triage-config.js'
+import { ApplyConfig, ReactionsConfig } from './triage-config.js'
+import { addEyes, removeEyes } from './reactions.js'
 import { generateSummary, mergeResponses } from './summary.js'
+
+/**
+ * Manages reactions (such as eyes) for an issue or PR.
+ *
+ * @param config The reactions configuration object.
+ * @param addReaction If true, add the reaction; if false, remove it.
+ */
+export async function manageReactions(config: ReactionsConfig, addReaction: boolean): Promise<void> {
+  const octokit = github.getOctokit(config.token)
+  if (addReaction) {
+    await addEyes(octokit, config)
+  } else {
+    await removeEyes(octokit, config)
+  }
+}
 
 /**
  * Applies labels and comments to an issue based on merged response data.

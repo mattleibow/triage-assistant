@@ -40383,6 +40383,53 @@ async function applyLabelsToIssue(octokit, mergedResponse, config) {
     }
 }
 
+/**
+ * Adds an 'eyes' reaction to the specified issue using the provided Octokit instance and config.
+ * Ignores errors if the reaction already exists or is successfully created.
+ *
+ * @param octokit - An authenticated Octokit instance
+ * @param config - The configuration for the repository and issue
+ */
+async function addEyes(octokit, config) {
+    try {
+        await octokit.rest.reactions.createForIssue({
+            owner: config.repoOwner,
+            repo: config.repoName,
+            issue_number: config.issueNumber,
+            content: 'eyes'
+        });
+    }
+    catch (e) {
+        const err = e;
+        if (!err.status || (err.status !== 200 && err.status !== 201 && err.status !== 409)) {
+            throw e;
+        }
+    }
+}
+/**
+ * Removes the 'eyes' reaction from the specified issue if it was added by github-actions[bot].
+ *
+ * @param octokit - An authenticated Octokit instance
+ * @param config - The configuration for the repository and issue
+ */
+async function removeEyes(octokit, config) {
+    const reactions = await octokit.rest.reactions.listForIssue({
+        owner: config.repoOwner,
+        repo: config.repoName,
+        issue_number: config.issueNumber
+    });
+    for (const reaction of reactions.data) {
+        if (reaction.content === 'eyes' && reaction.user?.login === 'github-actions[bot]') {
+            await octokit.rest.reactions.deleteForIssue({
+                owner: config.repoOwner,
+                repo: config.repoName,
+                issue_number: config.issueNumber,
+                reaction_id: reaction.id
+            });
+        }
+    }
+}
+
 const systemPrompt = `
 You are an assistant helping to triage GitHub issues. Your
 focus is to summarize some actions and then prove to the user
@@ -40597,6 +40644,21 @@ async function getFileContents(file) {
 }
 
 /**
+ * Manages reactions (such as eyes) for an issue or PR.
+ *
+ * @param config The reactions configuration object.
+ * @param addReaction If true, add the reaction; if false, remove it.
+ */
+async function manageReactions(config, addReaction) {
+    const octokit = githubExports.getOctokit(config.token);
+    if (addReaction) {
+        await addEyes(octokit, config);
+    }
+    else {
+        await removeEyes(octokit, config);
+    }
+}
+/**
  * Applies labels and comments to an issue based on merged response data.
  *
  * @param inputFiles Comma or newline separated list of input files.
@@ -40628,12 +40690,14 @@ async function applyLabelsAndComment(config) {
  * @returns Resolves when the action is complete.
  */
 async function run() {
+    const DEFAULT_AI_ENDPOINT = 'https://models.github.ai/inference';
+    const DEFAULT_AI_MODEL = 'openai/gpt-4o';
+    let config;
+    let shouldRemoveReactions = false;
     try {
-        const DEFAULT_AI_ENDPOINT = 'https://models.github.ai/inference';
-        const DEFAULT_AI_MODEL = 'openai/gpt-4o';
         // Initialize configuration object
         const issueNumberStr = coreExports.getInput('issue') || githubExports.context.issue.number.toString();
-        const config = {
+        config = {
             aiEndpoint: coreExports.getInput('ai-endpoint') || DEFAULT_AI_ENDPOINT,
             aiModel: coreExports.getInput('ai-model') || DEFAULT_AI_MODEL,
             applyComment: coreExports.getBooleanInput('apply-comment'),
@@ -40650,14 +40714,23 @@ async function run() {
             labelPrefix: coreExports.getInput('label-prefix')
         };
         let responseFile = '';
-        // Step 1: Select labels if template is provided
-        if (config.template) {
+        const shouldAddLabels = config.template ? true : false;
+        const shouldAddSummary = config.applyLabels || config.applyComment;
+        const shouldAddReactions = shouldAddLabels || shouldAddSummary;
+        shouldRemoveReactions = shouldAddSummary;
+        // Step 1: Add eyes reaction at the start
+        if (shouldAddReactions) {
+            await manageReactions(config, true);
+        }
+        // Step 2: Select labels if template is provided
+        if (shouldAddLabels) {
             responseFile = await selectLabels(config);
         }
-        // Step 2: Apply labels and comment if requested
-        if (config.applyLabels || config.applyComment) {
+        // Step 3: Apply labels and comment if requested
+        if (shouldAddSummary) {
             await applyLabelsAndComment(config);
         }
+        // Step 4: Set the response file output
         coreExports.setOutput('response-file', responseFile);
     }
     catch (error) {
@@ -40667,6 +40740,12 @@ async function run() {
         }
         else {
             coreExports.setFailed(`An unknown error occurred: ${JSON.stringify(error)}`);
+        }
+    }
+    finally {
+        // Step 5: Remove eyes reaction at the end if needed
+        if (shouldRemoveReactions && config) {
+            await manageReactions(config, false);
         }
     }
 }
