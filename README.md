@@ -34,7 +34,6 @@ jobs:
   triage:
     runs-on: ubuntu-latest
     steps:
-
       - name: Determine area label
         uses: mattleibow/triage-assistant@v1
         with:
@@ -127,7 +126,6 @@ The action supports several triage templates:
 - **`single-label`**: Selects the best single label from available options
 - **`multi-label`**: Can select multiple relevant labels
 - **`regression`**: Specifically checks if an issue is a regression
-
 
 ## AI Model Configuration
 
