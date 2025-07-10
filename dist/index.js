@@ -40709,8 +40709,8 @@ async function run() {
         // Initialize configuration object
         const issueNumberStr = coreExports.getInput('issue') || githubExports.context.issue.number.toString();
         config = {
-            aiEndpoint: coreExports.getInput('ai-endpoint') || DEFAULT_AI_ENDPOINT,
-            aiModel: coreExports.getInput('ai-model') || DEFAULT_AI_MODEL,
+            aiEndpoint: coreExports.getInput('ai-endpoint') || process.env.TRIAGE_AI_ENDPOINT || DEFAULT_AI_ENDPOINT,
+            aiModel: coreExports.getInput('ai-model') || process.env.TRIAGE_AI_MODEL || DEFAULT_AI_MODEL,
             applyComment: coreExports.getBooleanInput('apply-comment'),
             commentFooter: coreExports.getInput('comment-footer'),
             applyLabels: coreExports.getBooleanInput('apply-labels'),
@@ -40720,7 +40720,7 @@ async function run() {
             repository: `${githubExports.context.repo.owner}/${githubExports.context.repo.repo}`,
             tempDir: process.env.RUNNER_TEMP || require$$0.tmpdir(),
             template: coreExports.getInput('template'),
-            token: coreExports.getInput('token') || process.env.GITHUB_TOKEN || '',
+            token: coreExports.getInput('token') || process.env.TRIAGE_GITHUB_TOKEN || process.env.GITHUB_TOKEN || '',
             label: coreExports.getInput('label'),
             labelPrefix: coreExports.getInput('label-prefix')
         };

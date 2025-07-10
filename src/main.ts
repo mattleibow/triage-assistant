@@ -21,8 +21,8 @@ export async function run(): Promise<void> {
     // Initialize configuration object
     const issueNumberStr = core.getInput('issue') || github.context.issue.number.toString()
     config = {
-      aiEndpoint: core.getInput('ai-endpoint') || DEFAULT_AI_ENDPOINT,
-      aiModel: core.getInput('ai-model') || DEFAULT_AI_MODEL,
+      aiEndpoint: core.getInput('ai-endpoint') || process.env.TRIAGE_AI_ENDPOINT || DEFAULT_AI_ENDPOINT,
+      aiModel: core.getInput('ai-model') || process.env.TRIAGE_AI_MODEL || DEFAULT_AI_MODEL,
       applyComment: core.getBooleanInput('apply-comment'),
       commentFooter: core.getInput('comment-footer'),
       applyLabels: core.getBooleanInput('apply-labels'),
@@ -32,7 +32,7 @@ export async function run(): Promise<void> {
       repository: `${github.context.repo.owner}/${github.context.repo.repo}`,
       tempDir: process.env.RUNNER_TEMP || os.tmpdir(),
       template: core.getInput('template'),
-      token: core.getInput('token') || process.env.GITHUB_TOKEN || '',
+      token: core.getInput('token') || process.env.TRIAGE_GITHUB_TOKEN || process.env.GITHUB_TOKEN || '',
       label: core.getInput('label'),
       labelPrefix: core.getInput('label-prefix')
     }
