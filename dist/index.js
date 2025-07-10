@@ -31323,6 +31323,8 @@ EXEC: gh label list --limit 1000 --json name,description --search "{{LABEL_PREFI
   selected to make sure that everyone knows why.
 * You need to make sure to mention other related labels and
   why they were not a good selection for the issue.
+* You should also provide a brief reasoning if there
+  were no labels selected for assignment.
 * Make sure your reason is short and concise, but includes
   the reason for the selection and the rejection.
 
@@ -31333,6 +31335,9 @@ EXEC: gh label list --limit 1000 --json name,description --search "{{LABEL_PREFI
   including code blocks or markdown as this will be read
   by a machine.
 
+If there was an appropriate label selected for assignment,
+respond with the label and the reason for the label:
+
 {
   "labels": [
     {
@@ -31342,11 +31347,14 @@ EXEC: gh label list --limit 1000 --json name,description --search "{{LABEL_PREFI
   ]
 }
 
-If this issue does not have a label that can be assigned, respond with:
+If there was no appropriate label available for assignment,
+respond with a remark showing your reasoning to not select
+any label:
+
 
 {
   "remarks": [
-    "REMARK_CITING_NON_MATCHING_OF_LABELS"
+    "REASON_FOR_NOT_SELECTING_A_LABEL_HERE"
   ],
   "labels": [
   ]
@@ -31387,6 +31395,8 @@ EXEC: gh label list --limit 1000 --json name,description --search "{{LABEL_PREFI
   was selected to make sure that everyone knows why.
 * You need to make sure to mention other related labels
   and why they were not a good selection for the issue.
+* You should also provide a brief reasoning if there
+  were no labels selected for assignment.
 * Make sure your reason is short and concise, but
   includes the reason for the selection and the rejection.
 
@@ -31396,6 +31406,9 @@ EXEC: gh label list --limit 1000 --json name,description --search "{{LABEL_PREFI
 * Do not wrap the JSON in any other text or formatting,
   including code blocks or markdown as this will be read
   by a machine.
+
+If there were appropriate labels selected for assignment,
+respond with the labels and the reason for each label:
 
 {
   "labels": [
@@ -31407,11 +31420,14 @@ EXEC: gh label list --limit 1000 --json name,description --search "{{LABEL_PREFI
   ]
 }
 
-If this issue does not have any labels that can be assigned, respond with:
+If there were no appropriate labels available for assignment,
+respond with a remark showing your reasoning to not select
+any labels:
+
 
 {
   "remarks": [
-    "REMARK_CITING_NON_MATCHING_OF_LABELS"
+    "REASON_FOR_NOT_SELECTING_ANY_LABELS_HERE"
   ],
   "labels": [
   ]

@@ -57,7 +57,7 @@ respond with the labels and the reason for each label:
   ]
 }
 
-If there were no appropriate labels available for assignments,
+If there were no appropriate labels available for assignment,
 respond with a remark showing your reasoning to not select
 any labels:
 
