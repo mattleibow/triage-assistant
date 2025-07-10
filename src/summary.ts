@@ -92,7 +92,11 @@ export async function mergeResponses(
 
   core.info(`Merging files: ${allFiles.join(', ')}`)
 
-  const merged: TriageResponse = {}
+  const merged: TriageResponse = {
+    remarks: [],
+    regression: null,
+    labels: []
+  }
   for (const file of allFiles) {
     try {
       core.info(`Processing file: ${file}`)

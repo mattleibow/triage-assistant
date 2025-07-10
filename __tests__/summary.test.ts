@@ -303,13 +303,32 @@ describe('summary', () => {
         expect(result.customField).toBe('value2')
         expect(result.anotherField).toBe('new value')
       })
+
+      it('should handle missing fields gracefully with no regressions', async () => {
+        const inputFiles = `${testResponsesDir}/file1.json,${testResponsesDir}/file2.json`
+
+        inMemoryFs.forceSet(path.join(testResponsesDir, 'file1.json'), '{}')
+        inMemoryFs.forceSet(path.join(testResponsesDir, 'file2.json'), '{}')
+
+        const result = await mergeResponses(inputFiles, testResponsesDir, testMergedResponseFile)
+
+        expect(result).toStrictEqual({
+          remarks: [],
+          regression: null,
+          labels: []
+        })
+      })
     })
 
     describe('file operations', () => {
       it('should create output directory and write merged response', async () => {
         const inputFiles = `${testResponsesDir}/test.json`
 
-        const mockData = { labels: [{ label: 'test', reason: 'test reason' }] }
+        const mockData = {
+          remarks: [],
+          regression: null,
+          labels: [{ label: 'test', reason: 'test reason' }]
+        }
 
         inMemoryFs.forceSet(path.join(testResponsesDir, 'test.json'), JSON.stringify(mockData))
 
