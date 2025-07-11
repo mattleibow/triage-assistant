@@ -1,8 +1,11 @@
 {
-  "name": "typescript-action",
-  "description": "GitHub Actions TypeScript template",
+  "name": "triage-assistant",
+  "description": "An AI-powered tool for triaging issues in GitHub repositories.",
   "version": "0.0.0",
-  "author": "",
+  "author": {
+    "name": "Matthew Leibowitz",
+    "url": "https://github.com/mattleibow"
+  },
   "type": "module",
   "private": true,
   "homepage": "https://github.com/mattleibow/triage-assistant",
@@ -14,7 +17,9 @@
     "url": "https://github.com/mattleibow/triage-assistant/issues"
   },
   "keywords": [
-    "actions"
+    "actions",
+    "ai",
+    "triage"
   ],
   "exports": {
     ".": "./dist/index.js"
