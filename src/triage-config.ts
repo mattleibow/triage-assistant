@@ -39,6 +39,13 @@ export interface ApplyConfig extends SummaryPromptConfig, GitHubConfig {
   commentFooter: string
 }
 
-export interface TriageConfig extends SelectLabelsPromptConfig, SummaryPromptConfig, ApplyConfig {
+export interface EngagementConfig extends GitHubConfig {
+  project: string
+  projectColumn: string
+  projectToken: string
+  updateProject: boolean
+}
+
+export interface TriageConfig extends SelectLabelsPromptConfig, SummaryPromptConfig, ApplyConfig, EngagementConfig {
   // no properties here, but may be later
 }

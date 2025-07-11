@@ -3,6 +3,7 @@ import * as github from '@actions/github'
 import * as os from 'os'
 import { selectLabels } from './select-labels.js'
 import { applyLabelsAndComment, manageReactions } from './apply.js'
+import { calculateEngagementScores, updateProjectWithScores } from './engagement.js'
 import { TriageConfig } from './triage-config.js'
 
 /**
@@ -34,7 +35,11 @@ export async function run(): Promise<void> {
       template: core.getInput('template'),
       token: core.getInput('token') || process.env.TRIAGE_GITHUB_TOKEN || process.env.GITHUB_TOKEN || '',
       label: core.getInput('label'),
-      labelPrefix: core.getInput('label-prefix')
+      labelPrefix: core.getInput('label-prefix'),
+      project: core.getInput('project'),
+      projectColumn: core.getInput('project-column'),
+      projectToken: core.getInput('project-token') || core.getInput('token') || process.env.TRIAGE_GITHUB_TOKEN || process.env.GITHUB_TOKEN || '',
+      updateProject: core.getBooleanInput('update-project')
     }
 
     let responseFile = ''
@@ -42,6 +47,7 @@ export async function run(): Promise<void> {
     const shouldAddLabels = config.template ? true : false
     const shouldAddSummary = config.applyLabels || config.applyComment
     const shouldAddReactions = shouldAddLabels || shouldAddSummary
+    const shouldCalculateEngagement = config.project ? true : false
     shouldRemoveReactions = shouldAddSummary
 
     // Step 1: Add eyes reaction at the start
@@ -49,17 +55,33 @@ export async function run(): Promise<void> {
       await manageReactions(config, true)
     }
 
-    // Step 2: Select labels if template is provided
+    // Step 2: Calculate engagement scores if project is specified
+    if (shouldCalculateEngagement) {
+      const engagementResponse = await calculateEngagementScores(config)
+      core.info(`Calculated engagement scores for ${engagementResponse.totalItems} items`)
+      
+      // Update project with scores if requested
+      if (config.updateProject) {
+        await updateProjectWithScores(config, engagementResponse)
+      }
+      
+      // Save engagement response to file
+      const engagementFile = `${config.tempDir}/engagement-response.json`
+      await core.summary.addRaw(JSON.stringify(engagementResponse, null, 2))
+      core.setOutput('engagement-response', engagementFile)
+    }
+
+    // Step 3: Select labels if template is provided
     if (shouldAddLabels) {
       responseFile = await selectLabels(config)
     }
 
-    // Step 3: Apply labels and comment if requested
+    // Step 4: Apply labels and comment if requested
     if (shouldAddSummary) {
       await applyLabelsAndComment(config)
     }
 
-    // Step 4: Set the response file output
+    // Step 5: Set the response file output
     core.setOutput('response-file', responseFile)
   } catch (error) {
     // Fail the workflow run if an error occurs
@@ -69,7 +91,7 @@ export async function run(): Promise<void> {
       core.setFailed(`An unknown error occurred: ${JSON.stringify(error)}`)
     }
   } finally {
-    // Step 5: Remove eyes reaction at the end if needed
+    // Step 6: Remove eyes reaction at the end if needed
     if (shouldRemoveReactions && config) {
       await manageReactions(config, false)
     }

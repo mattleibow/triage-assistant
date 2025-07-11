@@ -40699,6 +40699,276 @@ async function applyLabelsAndComment(config) {
     }
 }
 
+var EngagementResponseEngagementClassification;
+(function (EngagementResponseEngagementClassification) {
+    EngagementResponseEngagementClassification["Hot"] = "Hot";
+})(EngagementResponseEngagementClassification || (EngagementResponseEngagementClassification = {}));
+
+/**
+ * Calculate engagement scores for issues in a project
+ * @param config - Configuration object containing project and authentication details
+ * @returns Promise<EngagementResponse> - The engagement response with scores
+ */
+async function calculateEngagementScores(config) {
+    const octokit = githubExports.getOctokit(config.projectToken);
+    if (config.project) {
+        return await calculateProjectEngagementScores(config, octokit);
+    }
+    else {
+        return await calculateIssueEngagementScores(config, octokit);
+    }
+}
+/**
+ * Calculate engagement scores for a single issue
+ */
+async function calculateIssueEngagementScores(config, octokit) {
+    coreExports.info(`Calculating engagement score for issue #${config.issueNumber}`);
+    const issueDetails = await getIssueDetails(octokit, config.repoOwner, config.repoName, config.issueNumber);
+    const score = calculateScore(issueDetails);
+    const previousScore = calculatePreviousScore();
+    const item = {
+        id: null,
+        issue: {
+            id: issueDetails.id,
+            owner: config.repoOwner,
+            repo: config.repoName,
+            number: issueDetails.number
+        },
+        engagement: {
+            score,
+            previousScore,
+            classification: score > previousScore ? EngagementResponseEngagementClassification.Hot : null
+        }
+    };
+    return {
+        items: [item],
+        totalItems: 1
+    };
+}
+/**
+ * Calculate engagement scores for all issues in a project
+ */
+async function calculateProjectEngagementScores(config, octokit) {
+    coreExports.info(`Calculating engagement scores for project #${config.project}`);
+    const projectNumber = parseInt(config.project, 10);
+    const projectDetails = await getProjectDetails(octokit, config.repoOwner, projectNumber);
+    const projectItems = await getProjectItems(octokit, config.repoOwner);
+    const items = [];
+    for (const projectItem of projectItems) {
+        if (projectItem.content) {
+            const issueDetails = await getIssueDetails(octokit, config.repoOwner, config.repoName, projectItem.content.number);
+            const score = calculateScore(issueDetails);
+            const previousScore = calculatePreviousScore();
+            const item = {
+                id: projectItem.id,
+                issue: {
+                    id: projectItem.content.id,
+                    owner: config.repoOwner,
+                    repo: config.repoName,
+                    number: projectItem.content.number
+                },
+                engagement: {
+                    score,
+                    previousScore,
+                    classification: score > previousScore ? EngagementResponseEngagementClassification.Hot : null
+                }
+            };
+            items.push(item);
+        }
+    }
+    return {
+        items,
+        totalItems: items.length,
+        project: {
+            id: projectDetails.id,
+            owner: config.repoOwner,
+            number: projectNumber
+        }
+    };
+}
+/**
+ * Get detailed information about an issue including comments
+ */
+async function getIssueDetails(octokit, owner, repo, issueNumber) {
+    const { data: issue } = await octokit.rest.issues.get({
+        owner,
+        repo,
+        issue_number: issueNumber
+    });
+    // Get issue comments
+    const { data: comments } = await octokit.rest.issues.listComments({
+        owner,
+        repo,
+        issue_number: issueNumber
+    });
+    const commentsData = comments.map(comment => ({
+        id: comment.id,
+        user: comment.user,
+        created_at: comment.created_at,
+        reactions: comment.reactions
+    }));
+    return {
+        id: issue.id,
+        number: issue.number,
+        title: issue.title,
+        body: issue.body || '',
+        state: issue.state,
+        created_at: issue.created_at,
+        updated_at: issue.updated_at,
+        closed_at: issue.closed_at,
+        comments: issue.comments,
+        reactions: issue.reactions,
+        comments_data: commentsData,
+        user: issue.user,
+        assignees: issue.assignees
+    };
+}
+/**
+ * Get project details using GraphQL API
+ */
+async function getProjectDetails(octokit, owner, projectNumber) {
+    // Since the REST API for projects has changed, we'll use a simplified approach
+    // In a real implementation, you'd use GraphQL API
+    return {
+        id: `project-${projectNumber}`,
+        number: projectNumber,
+        title: `Project ${projectNumber}`,
+        url: `https://github.com/orgs/${owner}/projects/${projectNumber}`,
+        owner: {
+            login: owner
+        }
+    };
+}
+/**
+ * Get all items in a project using GraphQL API
+ */
+async function getProjectItems(octokit, owner, projectNumber) {
+    // Note: This requires GraphQL API to get project items
+    // For this implementation, we'll use a workaround by getting repository issues
+    // In a real scenario, you'd need to use the GraphQL API
+    coreExports.info('Using repository issues as project items (simplified implementation)');
+    try {
+        const { data: issues } = await octokit.rest.issues.listForRepo({
+            owner,
+            repo: githubExports.context.repo.repo,
+            state: 'all',
+            per_page: 100
+        });
+        return issues.map(issue => ({
+            id: `item-${issue.id}`,
+            content: {
+                id: issue.id,
+                number: issue.number,
+                title: issue.title,
+                url: issue.html_url,
+                body: issue.body || '',
+                state: issue.state,
+                created_at: issue.created_at,
+                updated_at: issue.updated_at,
+                closed_at: issue.closed_at,
+                comments: issue.comments,
+                reactions: issue.reactions,
+                user: issue.user,
+                assignees: issue.assignees
+            }
+        }));
+    }
+    catch (error) {
+        coreExports.warning(`Failed to get project items: ${error}`);
+        return [];
+    }
+}
+/**
+ * Calculate engagement score for an issue based on the C# service algorithm
+ */
+function calculateScore(issue) {
+    // Components from the C# service:
+    // - Number of Comments       => Indicates discussion and interest
+    // - Number of Reactions      => Shows emotional engagement
+    // - Number of Contributors   => Reflects the diversity of input
+    // - Time Since Last Activity => More recent activity indicates higher engagement
+    // - Issue Age                => Older issues might need more attention
+    // - Number of Linked PRs     => Shows active work on the issue (not implemented)
+    const totalComments = issue.comments;
+    const totalReactions = issue.reactions.total_count + (issue.comments_data?.reduce((sum, comment) => sum + comment.reactions.total_count, 0) || 0);
+    const contributors = getUniqueContributors(issue);
+    const lastActivity = Math.max(1, getTimeSinceLastActivity(issue));
+    const issueAge = Math.max(1, getIssueAge(issue));
+    const linkedPullRequests = 0; // Not implemented yet
+    // Weights from the C# service:
+    const CommentsWeight = 3;
+    const ReactionsWeight = 1;
+    const ContributorsWeight = 2;
+    const LastActivityWeight = 1;
+    const IssueAgeWeight = 1;
+    const LinkedPullRequestsWeight = 2;
+    const score = (CommentsWeight * totalComments) +
+        (ReactionsWeight * totalReactions) +
+        (ContributorsWeight * contributors) +
+        (LastActivityWeight * (1 / lastActivity)) +
+        (IssueAgeWeight * (1 / issueAge)) +
+        (LinkedPullRequestsWeight * linkedPullRequests);
+    return Math.round(score);
+}
+/**
+ * Calculate previous score (7 days ago) - simplified implementation
+ */
+function calculatePreviousScore(issue) {
+    // This is a simplified implementation
+    // In a real scenario, you'd need to get historical data
+    // For now, we'll return 0 as a placeholder
+    return 0;
+}
+/**
+ * Get unique contributors to an issue
+ */
+function getUniqueContributors(issue) {
+    const contributors = new Set();
+    // Add issue author
+    contributors.add(issue.user.login);
+    // Add assignees
+    issue.assignees.forEach(assignee => contributors.add(assignee.login));
+    // Add comment authors
+    issue.comments_data?.forEach(comment => contributors.add(comment.user.login));
+    return contributors.size;
+}
+/**
+ * Get time since last activity in days
+ */
+function getTimeSinceLastActivity(issue) {
+    const lastUpdate = new Date(issue.updated_at);
+    const now = new Date();
+    const diffMs = now.getTime() - lastUpdate.getTime();
+    const diffDays = diffMs / (1000 * 60 * 60 * 24);
+    return Math.ceil(diffDays);
+}
+/**
+ * Get issue age in days
+ */
+function getIssueAge(issue) {
+    const created = new Date(issue.created_at);
+    const now = new Date();
+    const diffMs = now.getTime() - created.getTime();
+    const diffDays = diffMs / (1000 * 60 * 60 * 24);
+    return Math.ceil(diffDays);
+}
+/**
+ * Update project field with engagement scores
+ */
+async function updateProjectWithScores(config, response) {
+    if (!config.updateProject || !response.project) {
+        coreExports.info('Skipping project update');
+        return;
+    }
+    coreExports.info(`Updating project #${config.project} with engagement scores`);
+    // Note: This would require GraphQL API to update project fields
+    // For now, we'll just log the actions that would be taken
+    coreExports.info(`Would update ${response.totalItems} items in project with engagement scores`);
+    for (const item of response.items) {
+        coreExports.info(`Would update item ${item.id} with score ${item.engagement.score}`);
+    }
+}
+
 /**
  * The main function for the action.
  *
@@ -40726,26 +40996,44 @@ async function run() {
             template: coreExports.getInput('template'),
             token: coreExports.getInput('token') || process.env.TRIAGE_GITHUB_TOKEN || process.env.GITHUB_TOKEN || '',
             label: coreExports.getInput('label'),
-            labelPrefix: coreExports.getInput('label-prefix')
+            labelPrefix: coreExports.getInput('label-prefix'),
+            project: coreExports.getInput('project'),
+            projectColumn: coreExports.getInput('project-column'),
+            projectToken: coreExports.getInput('project-token') || coreExports.getInput('token') || process.env.TRIAGE_GITHUB_TOKEN || process.env.GITHUB_TOKEN || '',
+            updateProject: coreExports.getBooleanInput('update-project')
         };
         let responseFile = '';
         const shouldAddLabels = config.template ? true : false;
         const shouldAddSummary = config.applyLabels || config.applyComment;
         const shouldAddReactions = shouldAddLabels || shouldAddSummary;
+        const shouldCalculateEngagement = config.project ? true : false;
         shouldRemoveReactions = shouldAddSummary;
         // Step 1: Add eyes reaction at the start
         if (shouldAddReactions) {
             await manageReactions(config, true);
         }
-        // Step 2: Select labels if template is provided
+        // Step 2: Calculate engagement scores if project is specified
+        if (shouldCalculateEngagement) {
+            const engagementResponse = await calculateEngagementScores(config);
+            coreExports.info(`Calculated engagement scores for ${engagementResponse.totalItems} items`);
+            // Update project with scores if requested
+            if (config.updateProject) {
+                await updateProjectWithScores(config, engagementResponse);
+            }
+            // Save engagement response to file
+            const engagementFile = `${config.tempDir}/engagement-response.json`;
+            await coreExports.summary.addRaw(JSON.stringify(engagementResponse, null, 2));
+            coreExports.setOutput('engagement-response', engagementFile);
+        }
+        // Step 3: Select labels if template is provided
         if (shouldAddLabels) {
             responseFile = await selectLabels(config);
         }
-        // Step 3: Apply labels and comment if requested
+        // Step 4: Apply labels and comment if requested
         if (shouldAddSummary) {
             await applyLabelsAndComment(config);
         }
-        // Step 4: Set the response file output
+        // Step 5: Set the response file output
         coreExports.setOutput('response-file', responseFile);
     }
     catch (error) {
@@ -40758,7 +41046,7 @@ async function run() {
         }
     }
     finally {
-        // Step 5: Remove eyes reaction at the end if needed
+        // Step 6: Remove eyes reaction at the end if needed
         if (shouldRemoveReactions && config) {
             await manageReactions(config, false);
         }

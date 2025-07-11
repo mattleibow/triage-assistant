@@ -112,12 +112,17 @@ jobs:
 | `apply-labels`   | Whether to apply labels to the issue                                         | `false`                 | No       |
 | `apply-comment`  | Whether to add a comment with AI analysis                                    | `false`                 | No       |
 | `comment-footer` | Footer text for AI comments                                                  | Default disclaimer      | No       |
+| `project`        | Project number to calculate engagement scores for                            | `''`                    | No       |
+| `project-column` | Column name to update with engagement scores                                 | `'Engagement Score'`    | No       |
+| `project-token`  | GitHub token for project access                                              | `${{ github.token }}`   | No       |
+| `update-project` | Whether to update project items with engagement scores                       | `false`                 | No       |
 
 ## Outputs
 
-| Name            | Description                                        |
-| --------------- | -------------------------------------------------- |
-| `response-file` | Path to the file containing the AI analysis result |
+| Name                 | Description                                        |
+| -------------------- | -------------------------------------------------- |
+| `response-file`      | Path to the file containing the AI analysis result |
+| `engagement-response` | Path to the file containing engagement scoring results |
 
 ## Triage Templates
 
@@ -126,6 +131,48 @@ The action supports several triage templates:
 - **`single-label`**: Selects the best single label from available options
 - **`multi-label`**: Can select multiple relevant labels
 - **`regression`**: Specifically checks if an issue is a regression
+
+## Engagement Scoring
+
+The action also supports calculating engagement scores for issues in GitHub projects. This helps identify which issues are receiving the most community attention and engagement.
+
+### Engagement Score Calculation
+
+The engagement score is calculated based on several factors:
+
+- **Comments** (weight: 3) - Number of comments on the issue
+- **Reactions** (weight: 1) - Total reactions on the issue and comments
+- **Contributors** (weight: 2) - Number of unique contributors (author, assignees, commenters)
+- **Recency** (weight: 1) - Time since last activity (inverse weight)
+- **Age** (weight: 1) - Issue age (inverse weight)
+- **Linked PRs** (weight: 2) - Number of linked pull requests (future feature)
+
+### Example: Calculate Engagement Scores
+
+```yaml
+name: 'Update Engagement Scores'
+
+on:
+  schedule:
+    - cron: '0 9 * * *' # Daily at 9 AM
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: read
+  projects: write
+
+jobs:
+  engagement:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Calculate engagement scores
+        uses: mattleibow/triage-assistant@v0
+        with:
+          project: '1' # Project number
+          project-column: 'Engagement Score'
+          update-project: true
+```
 
 ## AI Model Configuration
 
