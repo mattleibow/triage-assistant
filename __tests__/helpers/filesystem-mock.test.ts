@@ -35,20 +35,6 @@ describe('FileSystemMock', () => {
       fsmock.teardown()
       expect(fsmock.has('/test/file.txt')).toBe(false)
     })
-
-    // it('should mock fs.promises methods when setup is called', () => {
-    //   const mkdirSpy = jest.spyOn(fs.promises, 'mkdir')
-    //   const writeFileSpy = jest.spyOn(fs.promises, 'writeFile')
-    //   const readFileSpy = jest.spyOn(fs.promises, 'readFile')
-    //   const readdirSpy = jest.spyOn(fs.promises, 'readdir')
-
-    //   fsmock.setup()
-
-    //   expect(mkdirSpy).toHaveBeenCalled()
-    //   expect(writeFileSpy).toHaveBeenCalled()
-    //   expect(readFileSpy).toHaveBeenCalled()
-    //   expect(readdirSpy).toHaveBeenCalled()
-    // })
   })
 
   describe('file operations', () => {
