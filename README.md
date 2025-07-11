@@ -35,7 +35,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Determine area label
-        uses: mattleibow/triage-assistant@v1
+        uses: mattleibow/triage-assistant@v0
         with:
           label-prefix: 'area-'
           template: 'single-label'
@@ -49,25 +49,25 @@ For more sophisticated triage workflows, you can use multiple steps with differe
 ```yaml
 steps:
   - name: Determine overlap labels
-    uses: mattleibow/triage-assistant@v1
+    uses: mattleibow/triage-assistant@v0
     with:
       label-prefix: 'overlap-'
       template: 'multi-label'
 
   - name: Determine area label
-    uses: mattleibow/triage-assistant@v1
+    uses: mattleibow/triage-assistant@v0
     with:
       label-prefix: 'area-'
       template: 'single-label'
 
   - name: Check for regression
-    uses: mattleibow/triage-assistant@v1
+    uses: mattleibow/triage-assistant@v0
     with:
       label: 'regression'
       template: 'regression'
 
   - name: Apply all labels and add comment
-    uses: mattleibow/triage-assistant@v1
+    uses: mattleibow/triage-assistant@v0
     with:
       apply-labels: true
       apply-comment: true
@@ -91,7 +91,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Triage specific issue
-        uses: mattleibow/triage-assistant@v1
+        uses: mattleibow/triage-assistant@v0
         with:
           issue: ${{ inputs.issue_number }}
           template: 'single-label'
