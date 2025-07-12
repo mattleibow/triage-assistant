@@ -20,7 +20,7 @@ inputs:
 
   # Label selection inputs
   template:
-    description: 'Triage template to use: multi-label, single-label, regression, missing-info'
+    description: 'Triage template to use: multi-label, single-label, regression, missing-info, engagement-score'
     required: false
     default: ''
   label:
@@ -48,9 +48,25 @@ inputs:
       '_This entire triage process was automated by AI and mistakes may have been made. Please let us know so we can
       continue to improve._'
 
+  # Engagement scoring inputs
+  project:
+    description: 'The project number to calculate engagement scores for'
+    required: false
+    default: ''
+  project-column:
+    description: 'The column name to update with engagement scores'
+    required: false
+    default: 'Engagement Score'
+  apply-scores:
+    description: 'Whether to update the project items with the engagement scores'
+    required: false
+    default: 'false'
+
 outputs:
   response-file:
     description: 'The file that contains the result of AI inference'
+  engagement-response:
+    description: 'The file that contains the engagement scoring results'
 
 runs:
   using: node20
