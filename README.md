@@ -119,9 +119,9 @@ jobs:
 
 ## Outputs
 
-| Name                 | Description                                        |
-| -------------------- | -------------------------------------------------- |
-| `response-file`      | Path to the file containing the AI analysis result |
+| Name                  | Description                                            |
+| --------------------- | ------------------------------------------------------ |
+| `response-file`       | Path to the file containing the AI analysis result     |
 | `engagement-response` | Path to the file containing engagement scoring results |
 
 ## Triage Templates
@@ -134,7 +134,8 @@ The action supports several triage templates:
 
 ## Engagement Scoring
 
-The action also supports calculating engagement scores for issues in GitHub projects. This helps identify which issues are receiving the most community attention and engagement.
+The action also supports calculating engagement scores for issues in GitHub projects. This helps identify which issues
+are receiving the most community attention and engagement.
 
 ### Engagement Score Calculation
 

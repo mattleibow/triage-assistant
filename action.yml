@@ -20,7 +20,7 @@ inputs:
 
   # Label selection inputs
   template:
-    description: 'Triage template to use: multi-label, single-label, regression, missing-info'
+    description: 'Triage template to use: multi-label, single-label, regression, missing-info, engagement-score'
     required: false
     default: ''
   label:
@@ -57,11 +57,7 @@ inputs:
     description: 'The column name to update with engagement scores'
     required: false
     default: 'Engagement Score'
-  project-token:
-    description: 'The GitHub token to use when updating the project'
-    required: false
-    default: ''
-  update-project:
+  apply-scores:
     description: 'Whether to update the project items with the engagement scores'
     required: false
     default: 'false'

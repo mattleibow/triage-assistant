@@ -42,8 +42,8 @@ export interface ApplyConfig extends SummaryPromptConfig, GitHubConfig {
 export interface EngagementConfig extends GitHubConfig {
   project: string
   projectColumn: string
-  projectToken: string
-  updateProject: boolean
+  token: string
+  applyScores: boolean
 }
 
 export interface TriageConfig extends SelectLabelsPromptConfig, SummaryPromptConfig, ApplyConfig, EngagementConfig {
