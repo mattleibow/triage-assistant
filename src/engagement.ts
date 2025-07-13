@@ -1,7 +1,30 @@
 import * as core from '@actions/core'
 import * as github from '@actions/github'
-import { EngagementConfig } from './triage-config.js'
+import { EngagementConfig, TriageConfig } from './triage-config.js'
 import { EngagementResponse, EngagementItem, IssueDetails, CommentData } from './engagement-types.js'
+
+/**
+ * Run the complete engagement scoring workflow
+ * @param config - The triage configuration
+ * @returns Promise<string> - The engagement response file path
+ */
+export async function runEngagementWorkflow(config: TriageConfig): Promise<string> {
+  core.info('Running in engagement scoring mode')
+
+  const engagementResponse = await calculateEngagementScores(config)
+  core.info(`Calculated engagement scores for ${engagementResponse.totalItems} items`)
+
+  // Update project with scores if requested
+  if (config.applyScores) {
+    await updateProjectWithScores(config, engagementResponse)
+  }
+
+  // Save engagement response to file
+  const engagementFile = `${config.tempDir}/engagement-response.json`
+  await core.summary.addRaw(JSON.stringify(engagementResponse, null, 2))
+  
+  return engagementFile
+}
 
 /**
  * Calculate engagement scores for issues in a project or single issue
@@ -248,11 +271,164 @@ export async function updateProjectWithScores(config: EngagementConfig, response
 
   core.info(`Updating project #${config.project} with engagement scores`)
 
-  // Note: This would require GraphQL API to update project fields
-  // For now, we'll just log the actions that would be taken
-  core.info(`Would update ${response.totalItems} items in project with engagement scores`)
+  const octokit = github.getOctokit(config.token)
 
-  for (const item of response.items) {
-    core.info(`Would update issue #${item.issueNumber} with score ${item.engagement.score}`)
+  try {
+    // Get project information using GraphQL
+    const projectQuery = `
+      query($owner: String!, $repo: String!, $projectNumber: Int!) {
+        repository(owner: $owner, name: $repo) {
+          projectV2(number: $projectNumber) {
+            id
+            fields(first: 100) {
+              nodes {
+                ... on ProjectV2Field {
+                  id
+                  name
+                  dataType
+                }
+                ... on ProjectV2SingleSelectField {
+                  id
+                  name
+                  dataType
+                  options {
+                    id
+                    name
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    `
+
+    const projectData = await octokit.graphql<{
+      repository: {
+        projectV2: {
+          id: string
+          fields: {
+            nodes: Array<{
+              id: string
+              name: string
+              dataType: string
+              options?: Array<{ id: string; name: string }>
+            }>
+          }
+        }
+      }
+    }>(projectQuery, {
+      owner: config.repoOwner,
+      repo: config.repoName,
+      projectNumber: parseInt(config.project, 10)
+    })
+
+    const project = projectData.repository.projectV2
+    if (!project) {
+      throw new Error(`Project #${config.project} not found`)
+    }
+
+    // Find the engagement score field
+    const engagementField = project.fields.nodes.find(field => 
+      field.name === config.projectColumn
+    )
+
+    if (!engagementField) {
+      core.warning(`Field "${config.projectColumn}" not found in project. Available fields: ${project.fields.nodes.map(f => f.name).join(', ')}`)
+      return
+    }
+
+    // Update each issue's engagement score
+    let updatedCount = 0
+    for (const item of response.items) {
+      try {
+        // Get project item for this issue
+        const itemQuery = `
+          query($projectId: ID!, $issueNumber: Int!) {
+            node(id: $projectId) {
+              ... on ProjectV2 {
+                items(first: 100) {
+                  nodes {
+                    id
+                    content {
+                      ... on Issue {
+                        number
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        `
+
+        const itemData = await octokit.graphql<{
+          node: {
+            items: {
+              nodes: Array<{
+                id: string
+                content: {
+                  number: number
+                }
+              }>
+            }
+          }
+        }>(itemQuery, {
+          projectId: project.id,
+          issueNumber: item.issueNumber
+        })
+
+        const projectItem = itemData.node.items.nodes.find(
+          node => node.content.number === item.issueNumber
+        )
+
+        if (!projectItem) {
+          core.warning(`Issue #${item.issueNumber} not found in project`)
+          continue
+        }
+
+        // Update the field value
+        const updateMutation = `
+          mutation($projectId: ID!, $itemId: ID!, $fieldId: ID!, $value: String!) {
+            updateProjectV2ItemFieldValue(
+              input: {
+                projectId: $projectId
+                itemId: $itemId
+                fieldId: $fieldId
+                value: {
+                  text: $value
+                }
+              }
+            ) {
+              projectV2Item {
+                id
+              }
+            }
+          }
+        `
+
+        await octokit.graphql(updateMutation, {
+          projectId: project.id,
+          itemId: projectItem.id,
+          fieldId: engagementField.id,
+          value: item.engagement.score.toString()
+        })
+
+        core.info(`Updated issue #${item.issueNumber} with score ${item.engagement.score}`)
+        updatedCount++
+      } catch (error) {
+        core.warning(`Failed to update issue #${item.issueNumber}: ${error}`)
+      }
+    }
+
+    core.info(`Successfully updated ${updatedCount} of ${response.totalItems} items`)
+  } catch (error) {
+    core.warning(`Failed to update project: ${error}`)
+    
+    // Fallback to logging the actions that would be taken
+    core.info(`Would update ${response.totalItems} items in project with engagement scores`)
+    for (const item of response.items) {
+      core.info(`Would update issue #${item.issueNumber} with score ${item.engagement.score}`)
+    }
   }
 }

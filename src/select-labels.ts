@@ -3,7 +3,8 @@ import * as path from 'path'
 import { v4 as uuidv4 } from 'uuid'
 import { getPrompt } from './prompts/select-labels/index.js'
 import { generatePrompt, runInference } from './ai.js'
-import { SelectLabelsPromptConfig } from './triage-config.js'
+import { SelectLabelsPromptConfig, TriageConfig } from './triage-config.js'
+import { applyLabelsAndComment, manageReactions } from './apply.js'
 
 /**
  * Selects labels for an issue using AI inference based on a template.
@@ -55,4 +56,45 @@ export async function selectLabels(config: SelectLabelsPromptConfig): Promise<st
   await runInference(systemPrompt, userPrompt, responseFile, 200, config)
 
   return responseFile
+}
+
+/**
+ * Run the complete triage workflow for labels and comments
+ * @param config - The triage configuration
+ * @returns Promise<string> - The response file path
+ */
+export async function runTriageWorkflow(config: TriageConfig): Promise<string> {
+  const shouldAddLabels = config.template ? true : false
+  const shouldAddSummary = config.applyLabels || config.applyComment
+  const shouldAddReactions = shouldAddLabels || shouldAddSummary
+  let shouldRemoveReactions = shouldAddSummary
+
+  let responseFile = ''
+
+  try {
+    // Step 1: Add eyes reaction at the start
+    if (shouldAddReactions) {
+      await manageReactions(config, true)
+    }
+
+    // Step 2: Select labels if template is provided
+    if (shouldAddLabels) {
+      responseFile = await selectLabels(config)
+    }
+
+    // Step 3: Apply labels and comment if requested
+    if (shouldAddSummary) {
+      await applyLabelsAndComment(config)
+    }
+
+    return responseFile
+  } catch (error) {
+    shouldRemoveReactions = false // Don't remove reactions on error
+    throw error
+  } finally {
+    // Remove eyes reaction at the end if needed
+    if (shouldRemoveReactions) {
+      await manageReactions(config, false)
+    }
+  }
 }

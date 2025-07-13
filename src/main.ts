@@ -1,9 +1,8 @@
 import * as core from '@actions/core'
 import * as github from '@actions/github'
 import * as os from 'os'
-import { selectLabels } from './select-labels.js'
-import { applyLabelsAndComment, manageReactions } from './apply.js'
-import { calculateEngagementScores, updateProjectWithScores } from './engagement.js'
+import { runTriageWorkflow } from './select-labels.js'
+import { runEngagementWorkflow } from './engagement.js'
 import { TriageConfig } from './triage-config.js'
 
 /**
@@ -16,25 +15,33 @@ export async function run(): Promise<void> {
   const DEFAULT_AI_MODEL = 'openai/gpt-4o'
 
   let config: TriageConfig | undefined
-  let shouldRemoveReactions = false
-
+  
   try {
     const template = core.getInput('template')
     const project = core.getInput('project')
+    const issue = core.getInput('issue')
 
     // Determine if this is engagement scoring mode
     const isEngagementMode = template === 'engagement-score'
 
-    // For engagement mode, don't default to current issue number and require project
+    // Validate mode-specific requirements
     let issueNumberStr = ''
     if (isEngagementMode) {
       if (!project) {
         throw new Error('Project is required when using engagement-score template')
       }
-      issueNumberStr = core.getInput('issue') // Don't default to current issue
+      issueNumberStr = issue // Don't default to current issue
     } else {
-      // For label/comment mode, default to current issue
-      issueNumberStr = core.getInput('issue') || github.context.issue.number.toString()
+      // For label/comment mode, default to current issue if available
+      if (issue) {
+        issueNumberStr = issue
+      } else if (github.context.issue && github.context.issue.number) {
+        issueNumberStr = github.context.issue.number.toString()
+      }
+      
+      if (!issueNumberStr) {
+        throw new Error('Issue number is required for label/comment triage mode')
+      }
     }
 
     // Initialize configuration object
@@ -62,48 +69,17 @@ export async function run(): Promise<void> {
 
     if (isEngagementMode) {
       // Engagement scoring mode
-      core.info('Running in engagement scoring mode')
-
-      const engagementResponse = await calculateEngagementScores(config)
-      core.info(`Calculated engagement scores for ${engagementResponse.totalItems} items`)
-
-      // Update project with scores if requested
-      const shouldUpdateScores = config.applyScores
-      if (shouldUpdateScores) {
-        await updateProjectWithScores(config, engagementResponse)
-      }
-
-      // Save engagement response to file
-      const engagementFile = `${config.tempDir}/engagement-response.json`
-      await core.summary.addRaw(JSON.stringify(engagementResponse, null, 2))
-      core.setOutput('engagement-response', engagementFile)
+      responseFile = await runEngagementWorkflow(config)
+      core.setOutput('engagement-response', responseFile)
     } else {
       // Label/comment triage mode
       core.info('Running in label/comment triage mode')
-
+      
       if (!config.issueNumber) {
         throw new Error('Issue number is required for label/comment triage mode')
       }
 
-      const shouldAddLabels = config.template ? true : false
-      const shouldAddSummary = config.applyLabels || config.applyComment
-      const shouldAddReactions = shouldAddLabels || shouldAddSummary
-      shouldRemoveReactions = shouldAddSummary
-
-      // Step 1: Add eyes reaction at the start
-      if (shouldAddReactions) {
-        await manageReactions(config, true)
-      }
-
-      // Step 2: Select labels if template is provided
-      if (shouldAddLabels) {
-        responseFile = await selectLabels(config)
-      }
-
-      // Step 3: Apply labels and comment if requested
-      if (shouldAddSummary) {
-        await applyLabelsAndComment(config)
-      }
+      responseFile = await runTriageWorkflow(config)
     }
 
     // Set the response file output
@@ -114,11 +90,6 @@ export async function run(): Promise<void> {
       core.setFailed(error.message)
     } else {
       core.setFailed(`An unknown error occurred: ${JSON.stringify(error)}`)
-    }
-  } finally {
-    // Remove eyes reaction at the end if needed (only for label/comment mode)
-    if (shouldRemoveReactions && config) {
-      await manageReactions(config, false)
     }
   }
 }

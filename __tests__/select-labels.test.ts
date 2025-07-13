@@ -19,8 +19,17 @@ jest.unstable_mockModule('uuid', () => ({
 }))
 
 // Import the module being tested and mocked dependencies
-const { selectLabels } = await import('../src/select-labels.js')
+const { selectLabels, runTriageWorkflow } = await import('../src/select-labels.js')
 const { getPrompt, TEMPLATE_NAMES } = await import('../src/prompts/select-labels/index.js')
+
+// Mock the apply functions
+const mockApplyLabelsAndComment = jest.fn<() => Promise<void>>()
+const mockManageReactions = jest.fn<() => Promise<void>>()
+
+jest.unstable_mockModule('../src/apply.js', () => ({
+  applyLabelsAndComment: mockApplyLabelsAndComment,
+  manageReactions: mockManageReactions
+}))
 
 describe('selectLabels', () => {
   const mockConfig: SelectLabelsPromptConfig = {
@@ -35,6 +44,16 @@ describe('selectLabels', () => {
     labelPrefix: 'type/',
     label: 'bug',
     template: 'single-label'
+  }
+
+  const mockTriageConfig = {
+    ...mockConfig,
+    applyComment: false,
+    applyLabels: false,
+    commentFooter: '',
+    project: '',
+    projectColumn: 'Engagement Score',
+    applyScores: false
   }
 
   const inMemoryFs = new FileSystemMock()
@@ -56,6 +75,10 @@ describe('selectLabels', () => {
 
     // Mock runInference to simulate AI inference
     ai.runInference.mockResolvedValue(undefined)
+    
+    // Mock apply functions
+    mockApplyLabelsAndComment.mockResolvedValue(undefined)
+    mockManageReactions.mockResolvedValue(undefined)
   })
 
   afterEach(() => {
@@ -263,6 +286,229 @@ describe('selectLabels', () => {
         ai.generatePrompt.mockResolvedValue('content')
         ai.runInference.mockResolvedValue(undefined)
       }
+    })
+  })
+})
+
+describe('runTriageWorkflow', () => {
+  const mockTriageConfig = {
+    aiEndpoint: 'https://test-ai-endpoint.com',
+    aiModel: 'test-model',
+    token: 'test-token',
+    tempDir: '/tmp/test',
+    issueNumber: 123,
+    repoOwner: 'owner',
+    repoName: 'repo',
+    repository: 'owner/repo',
+    labelPrefix: 'type/',
+    label: 'bug',
+    template: 'single-label',
+    applyComment: false,
+    applyLabels: false,
+    commentFooter: '',
+    project: '',
+    projectColumn: 'Engagement Score',
+    applyScores: false
+  }
+
+  const inMemoryFs = new FileSystemMock()
+
+  beforeEach(() => {
+    jest.clearAllMocks()
+
+    // Mock the file system operations
+    inMemoryFs.setup()
+
+    // Mock generatePrompt to simulate the real behavior: process template and write to file
+    ai.generatePrompt.mockImplementation(async (template, outputPath) => {
+      const processedContent = template.toString()
+      if (outputPath) {
+        await fs.promises.writeFile(outputPath, processedContent)
+      }
+      return processedContent
+    })
+
+    // Mock runInference to simulate AI inference
+    ai.runInference.mockResolvedValue(undefined)
+    
+    // Mock apply functions
+    mockApplyLabelsAndComment.mockResolvedValue(undefined)
+    mockManageReactions.mockResolvedValue(undefined)
+  })
+
+  afterEach(() => {
+    jest.restoreAllMocks()
+    inMemoryFs.teardown()
+  })
+
+  describe('complete workflow', () => {
+    it('should run complete workflow with template, labels, and comments', async () => {
+      const config = {
+        ...mockTriageConfig,
+        template: 'single-label',
+        applyLabels: true,
+        applyComment: true
+      }
+
+      const result = await runTriageWorkflow(config)
+
+      // Should add reactions at start
+      expect(mockManageReactions).toHaveBeenCalledWith(config, true)
+      
+      // Should run label selection
+      expect(ai.generatePrompt).toHaveBeenCalledTimes(2)
+      expect(ai.runInference).toHaveBeenCalledTimes(1)
+      
+      // Should apply labels and comments
+      expect(mockApplyLabelsAndComment).toHaveBeenCalledWith(config)
+      
+      // Should remove reactions at end
+      expect(mockManageReactions).toHaveBeenCalledWith(config, false)
+      
+      // Should return response file path
+      expect(result).toMatch(/response-.+\.json$/)
+    })
+
+    it('should skip label selection when no template provided', async () => {
+      const config = {
+        ...mockTriageConfig,
+        template: '', // No template
+        applyLabels: true,
+        applyComment: true
+      }
+
+      const result = await runTriageWorkflow(config)
+
+      // Should not run label selection
+      expect(ai.generatePrompt).not.toHaveBeenCalled()
+      expect(ai.runInference).not.toHaveBeenCalled()
+      
+      // Should still apply labels and comments
+      expect(mockApplyLabelsAndComment).toHaveBeenCalledWith(config)
+      
+      // Should return empty response file
+      expect(result).toBe('')
+    })
+
+    it('should skip reactions when no actions needed', async () => {
+      const config = {
+        ...mockTriageConfig,
+        template: '', // No template
+        applyLabels: false,
+        applyComment: false
+      }
+
+      await runTriageWorkflow(config)
+
+      // Should not add/remove reactions
+      expect(mockManageReactions).not.toHaveBeenCalled()
+      
+      // Should not run any other operations
+      expect(ai.generatePrompt).not.toHaveBeenCalled()
+      expect(mockApplyLabelsAndComment).not.toHaveBeenCalled()
+    })
+
+    it('should handle label selection errors gracefully', async () => {
+      const config = {
+        ...mockTriageConfig,
+        template: 'single-label',
+        applyLabels: true,
+        applyComment: true
+      }
+
+      const error = new Error('Label selection failed')
+      ai.runInference.mockRejectedValue(error)
+
+      await expect(runTriageWorkflow(config)).rejects.toThrow('Label selection failed')
+      
+      // Should have added reactions but not removed them due to error
+      expect(mockManageReactions).toHaveBeenCalledWith(config, true)
+      expect(mockManageReactions).not.toHaveBeenCalledWith(config, false)
+    })
+
+    it('should handle apply errors gracefully', async () => {
+      const config = {
+        ...mockTriageConfig,
+        template: 'single-label',
+        applyLabels: true,
+        applyComment: true
+      }
+
+      const error = new Error('Apply failed')
+      mockApplyLabelsAndComment.mockRejectedValue(error)
+
+      await expect(runTriageWorkflow(config)).rejects.toThrow('Apply failed')
+      
+      // Should have added reactions but not removed them due to error
+      expect(mockManageReactions).toHaveBeenCalledWith(config, true)
+      expect(mockManageReactions).not.toHaveBeenCalledWith(config, false)
+    })
+
+    it('should handle reaction management errors gracefully', async () => {
+      const config = {
+        ...mockTriageConfig,
+        template: 'single-label',
+        applyLabels: true,
+        applyComment: true
+      }
+
+      const error = new Error('Reaction management failed')
+      mockManageReactions.mockRejectedValue(error)
+
+      await expect(runTriageWorkflow(config)).rejects.toThrow('Reaction management failed')
+    })
+
+    it('should work with different template types', async () => {
+      const templates = ['single-label', 'multi-label', 'regression', 'missing-info']
+      
+      for (const template of templates) {
+        jest.clearAllMocks()
+        
+        // Reset mocks
+        ai.generatePrompt.mockImplementation(async (template, outputPath) => {
+          const processedContent = template.toString()
+          if (outputPath) {
+            await fs.promises.writeFile(outputPath, processedContent)
+          }
+          return processedContent
+        })
+        ai.runInference.mockResolvedValue(undefined)
+        mockApplyLabelsAndComment.mockResolvedValue(undefined)
+        mockManageReactions.mockResolvedValue(undefined)
+        
+        const config = {
+          ...mockTriageConfig,
+          template,
+          applyLabels: true,
+          applyComment: true
+        }
+
+        const result = await runTriageWorkflow(config)
+
+        expect(ai.generatePrompt).toHaveBeenCalledTimes(2)
+        expect(ai.runInference).toHaveBeenCalledTimes(1)
+        expect(mockApplyLabelsAndComment).toHaveBeenCalledWith(config)
+        expect(result).toMatch(/response-.+\.json$/)
+      }
+    })
+
+    it('should handle partial workflow configurations', async () => {
+      const config = {
+        ...mockTriageConfig,
+        template: 'single-label',
+        applyLabels: true,
+        applyComment: false // Only apply labels, not comments
+      }
+
+      const result = await runTriageWorkflow(config)
+
+      // Should still run full workflow
+      expect(mockManageReactions).toHaveBeenCalledWith(config, true)
+      expect(ai.generatePrompt).toHaveBeenCalledTimes(2)
+      expect(ai.runInference).toHaveBeenCalledTimes(1)
+      expect(mockApplyLabelsAndComment).toHaveBeenCalledWith(config)
+      expect(mockManageReactions).toHaveBeenCalledWith(config, false)
+      expect(result).toMatch(/response-.+\.json$/)
     })
   })
 })
