@@ -31,7 +31,7 @@ const { run } = await import('../src/main.js')
 describe('main', () => {
   beforeEach(() => {
     jest.clearAllMocks()
-    
+
     // Setup default GitHub context
     ;(github.context as any).repo = {
       owner: 'test-owner',
@@ -40,7 +40,7 @@ describe('main', () => {
     ;(github.context as any).issue = {
       number: 123
     }
-    
+
     // Reset all inputs
     ;(core.getInput as jest.Mock).mockImplementation((name: string) => {
       switch (name) {
@@ -56,9 +56,8 @@ describe('main', () => {
           return ''
       }
     })
-    
     ;(core.getBooleanInput as jest.Mock).mockReturnValue(false)
-    
+
     // Mock successful workflow runs
     mockRunTriageWorkflow.mockResolvedValue('/tmp/response.json')
     mockRunEngagementWorkflow.mockResolvedValue('/tmp/engagement.json')
@@ -134,7 +133,6 @@ describe('main', () => {
 
     it('should require issue number for triage mode when no context available', async () => {
       ;(github.context as any).issue = undefined
-
       ;(core.getInput as jest.Mock).mockImplementation((name: string) => {
         switch (name) {
           case 'template':
@@ -214,10 +212,9 @@ describe('main', () => {
   describe('triage mode', () => {
     it('should run triage workflow for label templates', async () => {
       const templates = ['single-label', 'multi-label', 'regression', 'missing-info']
-      
+
       for (const template of templates) {
         jest.clearAllMocks()
-        
         ;(core.getInput as jest.Mock).mockImplementation((name: string) => {
           switch (name) {
             case 'template':
@@ -266,7 +263,6 @@ describe('main', () => {
             return ''
         }
       })
-
       ;(core.getBooleanInput as jest.Mock).mockImplementation((name: string) => {
         switch (name) {
           case 'apply-labels':
@@ -313,7 +309,6 @@ describe('main', () => {
     it('should handle engagement workflow errors', async () => {
       const error = new Error('Engagement workflow failed')
       mockRunEngagementWorkflow.mockRejectedValue(error)
-
       ;(core.getInput as jest.Mock).mockImplementation((name: string) => {
         switch (name) {
           case 'template':
@@ -347,7 +342,6 @@ describe('main', () => {
       process.env.TRIAGE_AI_ENDPOINT = 'https://env-ai.com'
       process.env.TRIAGE_AI_MODEL = 'env-model'
       process.env.TRIAGE_GITHUB_TOKEN = 'env-token'
-
       ;(core.getInput as jest.Mock).mockImplementation((name: string) => {
         switch (name) {
           case 'template':

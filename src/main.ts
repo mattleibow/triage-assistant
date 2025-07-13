@@ -15,7 +15,7 @@ export async function run(): Promise<void> {
   const DEFAULT_AI_MODEL = 'openai/gpt-4o'
 
   let config: TriageConfig | undefined
-  
+
   try {
     const template = core.getInput('template')
     const project = core.getInput('project')
@@ -38,7 +38,7 @@ export async function run(): Promise<void> {
       } else if (github.context.issue && github.context.issue.number) {
         issueNumberStr = github.context.issue.number.toString()
       }
-      
+
       if (!issueNumberStr) {
         throw new Error('Issue number is required for label/comment triage mode')
       }
@@ -74,7 +74,7 @@ export async function run(): Promise<void> {
     } else {
       // Label/comment triage mode
       core.info('Running in label/comment triage mode')
-      
+
       if (!config.issueNumber) {
         throw new Error('Issue number is required for label/comment triage mode')
       }

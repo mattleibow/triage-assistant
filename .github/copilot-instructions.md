@@ -31,15 +31,34 @@ The action's behavior is controlled by the `template` input parameter:
 
 ### Core Structure
 
-- **`src/main.ts`** - Entry point with dual mode orchestration logic
+- **`src/main.ts`** - Entry point with dual mode orchestration logic and input validation
 - **`src/triage-config.ts`** - Configuration interface and input parsing
-- **`src/select-labels.ts`** - Core triage logic and LLM interaction (label mode only)
+- **`src/select-labels.ts`** - Core triage logic, LLM interaction, and complete triage workflow (label mode only)
 - **`src/apply.ts`** - GitHub API interactions for applying labels/comments (label mode only)
-- **`src/engagement.ts`** - Engagement scoring logic and GitHub API integration (scoring mode only)
+- **`src/engagement.ts`** - Engagement scoring logic, GitHub API integration, and complete engagement workflow (scoring mode only)
 - **`src/engagement-types.ts`** - TypeScript interfaces for engagement data structures
 - **`src/ai.ts`** - AI model client abstraction
 - **`src/issues.ts`** - Issue data retrieval and formatting
 - **`src/prompts/`** - AI prompt templates organized by functionality
+
+### Workflow Architecture
+
+The action follows a clean separation of concerns with dedicated workflow functions:
+
+#### Label/Comment Triage Mode
+- **`main.ts`**: Validates inputs, creates configuration, calls `runTriageWorkflow`
+- **`select-labels.ts`**: Contains `runTriageWorkflow` function that:
+  - Manages reaction lifecycle (add/remove eyes reaction)
+  - Calls `selectLabels` for AI label selection
+  - Calls `applyLabelsAndComment` for GitHub API operations
+  - Handles error states and cleanup
+
+#### Engagement Scoring Mode
+- **`main.ts`**: Validates inputs, creates configuration, calls `runEngagementWorkflow`
+- **`engagement.ts`**: Contains `runEngagementWorkflow` function that:
+  - Calls `calculateEngagementScores` for score computation
+  - Calls `updateProjectWithScores` for project updates
+  - Manages engagement response file creation
 
 ### Prompt Engineering Architecture (Label Mode Only)
 
@@ -54,8 +73,10 @@ The action uses a two-tier prompt system for label/comment triage:
 
 - **Algorithm**: Multi-factor scoring based on comments, reactions, contributors, recency, age, and linked PRs
 - **Weights**: Comments (3), Reactions (1), Contributors (2), Recency (1), Age (1), Linked PRs (2)
+- **Duplicate Handling**: Uses Set to ensure unique contributor counting
 - **Classification**: Issues with increasing scores are marked as "Hot"
-- **Project Integration**: Can update GitHub Projects with calculated scores
+- **Project Integration**: Full GraphQL API integration for GitHub Projects v2 with comprehensive error handling
+- **Fallback**: Graceful degradation to logging when GraphQL operations fail
 
 ## Development Patterns
 
@@ -80,6 +101,9 @@ The action uses a two-tier prompt system for label/comment triage:
 - Tests must cover both modes and their specific functionality
 - Mock GitHub API responses in tests
 - Coverage reporting with badge generation
+- **Comprehensive workflow testing**: Tests for main.ts, select-labels.ts workflow, and engagement.ts workflow
+- **Real scenario testing**: Tests cover actual scoring algorithms, duplicate handling, and error conditions
+- **Integration testing**: Tests verify proper interaction between components
 
 ### Build and Distribution
 
@@ -115,7 +139,7 @@ The action uses a two-tier prompt system for label/comment triage:
 ### Label/Comment Triage Mode Requirements
 
 - `template`: One of `single-label`, `multi-label`, `regression`, `missing-info`
-- `issue`: Defaults to current GitHub issue if not specified
+- `issue`: Defaults to current GitHub issue if not specified (with null safety)
 - `apply-labels`: Controls whether to actually apply labels
 - `apply-comment`: Controls whether to add AI explanation comments
 
@@ -126,6 +150,30 @@ The action uses a two-tier prompt system for label/comment triage:
 - `issue`: Should NOT be defaulted - only used if explicitly provided for filtering
 - `apply-scores`: Controls whether to update project items with scores
 
+## Input Validation Logic
+
+The action implements strict validation:
+
+```typescript
+if (isEngagementMode) {
+  if (!project) {
+    throw new Error('Project is required when using engagement-score template')
+  }
+  issueNumberStr = issue // Don't default to current issue
+} else {
+  // For label/comment mode, default to current issue if available
+  if (issue) {
+    issueNumberStr = issue
+  } else if (github.context.issue && github.context.issue.number) {
+    issueNumberStr = github.context.issue.number.toString()
+  }
+  
+  if (!issueNumberStr) {
+    throw new Error('Issue number is required for label/comment triage mode')
+  }
+}
+```
+
 ## Common Development Tasks
 
 ### Adding New Triage Templates (Label Mode)
@@ -133,7 +181,7 @@ The action uses a two-tier prompt system for label/comment triage:
 1. Create system prompt in `src/prompts/select-labels/system-prompt-{template}.ts`
 2. Export from `src/prompts/select-labels/index.ts`
 3. Update template validation in `src/select-labels.ts`
-4. Add comprehensive tests in `__tests__/`
+4. Add comprehensive tests in `__tests__/` covering the new workflow
 
 ### Modifying AI Behavior (Label Mode)
 
@@ -146,8 +194,9 @@ The action uses a two-tier prompt system for label/comment triage:
 
 - Adjust weights in `calculateScore` function in `src/engagement.ts`
 - Modify classification logic in engagement calculation
-- Update project field integration logic
-- Add tests for new scoring behavior
+- Update project field integration logic with GraphQL mutations
+- Add tests for new scoring behavior with realistic scenarios
+- Test duplicate handling and edge cases
 
 ### Testing Changes
 
@@ -157,6 +206,8 @@ The action uses a two-tier prompt system for label/comment triage:
 - Mock GitHub API responses in tests
 - **Critical**: Test both modes independently and ensure proper mode detection
 - Test error conditions for missing requirements in each mode
+- Test workflow functions (`runTriageWorkflow`, `runEngagementWorkflow`)
+- Test engagement scoring algorithm with various issue configurations
 
 ### Build Process
 

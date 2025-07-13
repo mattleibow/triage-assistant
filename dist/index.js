@@ -40318,43 +40318,6 @@ async function runInference(systemPrompt, userPrompt, responseFile, maxTokens = 
 }
 
 /**
- * Selects labels for an issue using AI inference based on a template.
- *
- * @param config The select labels configuration object.
- * @returns Promise that resolves with the path to the response file.
- */
-async function selectLabels(config) {
-    const guid = v4();
-    const promptDir = path.join(config.tempDir, 'triage-labels', 'prompts', guid);
-    const responseDir = path.join(config.tempDir, 'triage-assistant', 'responses');
-    // Ensure directories exist
-    await fs.promises.mkdir(promptDir, { recursive: true });
-    await fs.promises.mkdir(responseDir, { recursive: true });
-    // Generate system prompt
-    const systemPromptPath = path.join(promptDir, 'system-prompt.md');
-    await generatePrompt(getPrompt$1(config.template), systemPromptPath, {
-        ISSUE_NUMBER: config.issueNumber,
-        ISSUE_REPO: config.repository,
-        LABEL_PREFIX: config.labelPrefix,
-        LABEL: config.label
-    }, config);
-    // Generate user prompt
-    const userPromptPath = path.join(promptDir, 'user-prompt.md');
-    await generatePrompt(getPrompt$1('user'), userPromptPath, {
-        ISSUE_NUMBER: config.issueNumber,
-        ISSUE_REPO: config.repository,
-        LABEL_PREFIX: config.labelPrefix,
-        LABEL: config.label
-    }, config);
-    // Run AI inference
-    const responseFile = path.join(responseDir, `response-${guid}.json`);
-    const systemPrompt = await fs.promises.readFile(systemPromptPath, 'utf8');
-    const userPrompt = await fs.promises.readFile(userPromptPath, 'utf8');
-    await runInference(systemPrompt, userPrompt, responseFile, 200, config);
-    return responseFile;
-}
-
-/**
  * Comments on an issue with the provided summary.
  *
  * @param summaryFile Path to the file containing the summary text.
@@ -40700,6 +40663,98 @@ async function applyLabelsAndComment(config) {
 }
 
 /**
+ * Selects labels for an issue using AI inference based on a template.
+ *
+ * @param config The select labels configuration object.
+ * @returns Promise that resolves with the path to the response file.
+ */
+async function selectLabels(config) {
+    const guid = v4();
+    const promptDir = path.join(config.tempDir, 'triage-labels', 'prompts', guid);
+    const responseDir = path.join(config.tempDir, 'triage-assistant', 'responses');
+    // Ensure directories exist
+    await fs.promises.mkdir(promptDir, { recursive: true });
+    await fs.promises.mkdir(responseDir, { recursive: true });
+    // Generate system prompt
+    const systemPromptPath = path.join(promptDir, 'system-prompt.md');
+    await generatePrompt(getPrompt$1(config.template), systemPromptPath, {
+        ISSUE_NUMBER: config.issueNumber,
+        ISSUE_REPO: config.repository,
+        LABEL_PREFIX: config.labelPrefix,
+        LABEL: config.label
+    }, config);
+    // Generate user prompt
+    const userPromptPath = path.join(promptDir, 'user-prompt.md');
+    await generatePrompt(getPrompt$1('user'), userPromptPath, {
+        ISSUE_NUMBER: config.issueNumber,
+        ISSUE_REPO: config.repository,
+        LABEL_PREFIX: config.labelPrefix,
+        LABEL: config.label
+    }, config);
+    // Run AI inference
+    const responseFile = path.join(responseDir, `response-${guid}.json`);
+    const systemPrompt = await fs.promises.readFile(systemPromptPath, 'utf8');
+    const userPrompt = await fs.promises.readFile(userPromptPath, 'utf8');
+    await runInference(systemPrompt, userPrompt, responseFile, 200, config);
+    return responseFile;
+}
+/**
+ * Run the complete triage workflow for labels and comments
+ * @param config - The triage configuration
+ * @returns Promise<string> - The response file path
+ */
+async function runTriageWorkflow(config) {
+    const shouldAddLabels = config.template ? true : false;
+    const shouldAddSummary = config.applyLabels || config.applyComment;
+    const shouldAddReactions = shouldAddLabels || shouldAddSummary;
+    let shouldRemoveReactions = shouldAddSummary;
+    let responseFile = '';
+    try {
+        // Step 1: Add eyes reaction at the start
+        if (shouldAddReactions) {
+            await manageReactions(config, true);
+        }
+        // Step 2: Select labels if template is provided
+        if (shouldAddLabels) {
+            responseFile = await selectLabels(config);
+        }
+        // Step 3: Apply labels and comment if requested
+        if (shouldAddSummary) {
+            await applyLabelsAndComment(config);
+        }
+        return responseFile;
+    }
+    catch (error) {
+        shouldRemoveReactions = false; // Don't remove reactions on error
+        throw error;
+    }
+    finally {
+        // Remove eyes reaction at the end if needed
+        if (shouldRemoveReactions) {
+            await manageReactions(config, false);
+        }
+    }
+}
+
+/**
+ * Run the complete engagement scoring workflow
+ * @param config - The triage configuration
+ * @returns Promise<string> - The engagement response file path
+ */
+async function runEngagementWorkflow(config) {
+    coreExports.info('Running in engagement scoring mode');
+    const engagementResponse = await calculateEngagementScores(config);
+    coreExports.info(`Calculated engagement scores for ${engagementResponse.totalItems} items`);
+    // Update project with scores if requested
+    if (config.applyScores) {
+        await updateProjectWithScores(config, engagementResponse);
+    }
+    // Save engagement response to file
+    const engagementFile = `${config.tempDir}/engagement-response.json`;
+    await coreExports.summary.addRaw(JSON.stringify(engagementResponse, null, 2));
+    return engagementFile;
+}
+/**
  * Calculate engagement scores for issues in a project or single issue
  * @param config - Configuration object containing project and authentication details
  * @returns Promise<EngagementResponse> - The engagement response with scores
@@ -40901,11 +40956,124 @@ async function updateProjectWithScores(config, response) {
         return;
     }
     coreExports.info(`Updating project #${config.project} with engagement scores`);
-    // Note: This would require GraphQL API to update project fields
-    // For now, we'll just log the actions that would be taken
-    coreExports.info(`Would update ${response.totalItems} items in project with engagement scores`);
-    for (const item of response.items) {
-        coreExports.info(`Would update issue #${item.issueNumber} with score ${item.engagement.score}`);
+    const octokit = githubExports.getOctokit(config.token);
+    try {
+        // Get project information using GraphQL
+        const projectQuery = `
+      query($owner: String!, $repo: String!, $projectNumber: Int!) {
+        repository(owner: $owner, name: $repo) {
+          projectV2(number: $projectNumber) {
+            id
+            fields(first: 100) {
+              nodes {
+                ... on ProjectV2Field {
+                  id
+                  name
+                  dataType
+                }
+                ... on ProjectV2SingleSelectField {
+                  id
+                  name
+                  dataType
+                  options {
+                    id
+                    name
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    `;
+        const projectData = await octokit.graphql(projectQuery, {
+            owner: config.repoOwner,
+            repo: config.repoName,
+            projectNumber: parseInt(config.project, 10)
+        });
+        const project = projectData.repository.projectV2;
+        if (!project) {
+            throw new Error(`Project #${config.project} not found`);
+        }
+        // Find the engagement score field
+        const engagementField = project.fields.nodes.find((field) => field.name === config.projectColumn);
+        if (!engagementField) {
+            coreExports.warning(`Field "${config.projectColumn}" not found in project. Available fields: ${project.fields.nodes.map((f) => f.name).join(', ')}`);
+            return;
+        }
+        // Update each issue's engagement score
+        let updatedCount = 0;
+        for (const item of response.items) {
+            try {
+                // Get project item for this issue
+                const itemQuery = `
+          query($projectId: ID!, $issueNumber: Int!) {
+            node(id: $projectId) {
+              ... on ProjectV2 {
+                items(first: 100) {
+                  nodes {
+                    id
+                    content {
+                      ... on Issue {
+                        number
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        `;
+                const itemData = await octokit.graphql(itemQuery, {
+                    projectId: project.id,
+                    issueNumber: item.issueNumber
+                });
+                const projectItem = itemData.node.items.nodes.find((node) => node.content.number === item.issueNumber);
+                if (!projectItem) {
+                    coreExports.warning(`Issue #${item.issueNumber} not found in project`);
+                    continue;
+                }
+                // Update the field value
+                const updateMutation = `
+          mutation($projectId: ID!, $itemId: ID!, $fieldId: ID!, $value: String!) {
+            updateProjectV2ItemFieldValue(
+              input: {
+                projectId: $projectId
+                itemId: $itemId
+                fieldId: $fieldId
+                value: {
+                  text: $value
+                }
+              }
+            ) {
+              projectV2Item {
+                id
+              }
+            }
+          }
+        `;
+                await octokit.graphql(updateMutation, {
+                    projectId: project.id,
+                    itemId: projectItem.id,
+                    fieldId: engagementField.id,
+                    value: item.engagement.score.toString()
+                });
+                coreExports.info(`Updated issue #${item.issueNumber} with score ${item.engagement.score}`);
+                updatedCount++;
+            }
+            catch (error) {
+                coreExports.warning(`Failed to update issue #${item.issueNumber}: ${error}`);
+            }
+        }
+        coreExports.info(`Successfully updated ${updatedCount} of ${response.totalItems} items`);
+    }
+    catch (error) {
+        coreExports.warning(`Failed to update project: ${error}`);
+        // Fallback to logging the actions that would be taken
+        coreExports.info(`Would update ${response.totalItems} items in project with engagement scores`);
+        for (const item of response.items) {
+            coreExports.info(`Would update issue #${item.issueNumber} with score ${item.engagement.score}`);
+        }
     }
 }
 
@@ -40918,23 +41086,31 @@ async function run() {
     const DEFAULT_AI_ENDPOINT = 'https://models.github.ai/inference';
     const DEFAULT_AI_MODEL = 'openai/gpt-4o';
     let config;
-    let shouldRemoveReactions = false;
     try {
         const template = coreExports.getInput('template');
         const project = coreExports.getInput('project');
+        const issue = coreExports.getInput('issue');
         // Determine if this is engagement scoring mode
         const isEngagementMode = template === 'engagement-score';
-        // For engagement mode, don't default to current issue number and require project
+        // Validate mode-specific requirements
         let issueNumberStr = '';
         if (isEngagementMode) {
             if (!project) {
                 throw new Error('Project is required when using engagement-score template');
             }
-            issueNumberStr = coreExports.getInput('issue'); // Don't default to current issue
+            issueNumberStr = issue; // Don't default to current issue
         }
         else {
-            // For label/comment mode, default to current issue
-            issueNumberStr = coreExports.getInput('issue') || githubExports.context.issue.number.toString();
+            // For label/comment mode, default to current issue if available
+            if (issue) {
+                issueNumberStr = issue;
+            }
+            else if (githubExports.context.issue && githubExports.context.issue.number) {
+                issueNumberStr = githubExports.context.issue.number.toString();
+            }
+            if (!issueNumberStr) {
+                throw new Error('Issue number is required for label/comment triage mode');
+            }
         }
         // Initialize configuration object
         config = {
@@ -40959,18 +41135,8 @@ async function run() {
         let responseFile = '';
         if (isEngagementMode) {
             // Engagement scoring mode
-            coreExports.info('Running in engagement scoring mode');
-            const engagementResponse = await calculateEngagementScores(config);
-            coreExports.info(`Calculated engagement scores for ${engagementResponse.totalItems} items`);
-            // Update project with scores if requested
-            const shouldUpdateScores = config.applyScores;
-            if (shouldUpdateScores) {
-                await updateProjectWithScores(config, engagementResponse);
-            }
-            // Save engagement response to file
-            const engagementFile = `${config.tempDir}/engagement-response.json`;
-            await coreExports.summary.addRaw(JSON.stringify(engagementResponse, null, 2));
-            coreExports.setOutput('engagement-response', engagementFile);
+            responseFile = await runEngagementWorkflow(config);
+            coreExports.setOutput('engagement-response', responseFile);
         }
         else {
             // Label/comment triage mode
@@ -40978,22 +41144,7 @@ async function run() {
             if (!config.issueNumber) {
                 throw new Error('Issue number is required for label/comment triage mode');
             }
-            const shouldAddLabels = config.template ? true : false;
-            const shouldAddSummary = config.applyLabels || config.applyComment;
-            const shouldAddReactions = shouldAddLabels || shouldAddSummary;
-            shouldRemoveReactions = shouldAddSummary;
-            // Step 1: Add eyes reaction at the start
-            if (shouldAddReactions) {
-                await manageReactions(config, true);
-            }
-            // Step 2: Select labels if template is provided
-            if (shouldAddLabels) {
-                responseFile = await selectLabels(config);
-            }
-            // Step 3: Apply labels and comment if requested
-            if (shouldAddSummary) {
-                await applyLabelsAndComment(config);
-            }
+            responseFile = await runTriageWorkflow(config);
         }
         // Set the response file output
         coreExports.setOutput('response-file', responseFile);
@@ -41005,12 +41156,6 @@ async function run() {
         }
         else {
             coreExports.setFailed(`An unknown error occurred: ${JSON.stringify(error)}`);
-        }
-    }
-    finally {
-        // Remove eyes reaction at the end if needed (only for label/comment mode)
-        if (shouldRemoveReactions && config) {
-            await manageReactions(config, false);
         }
     }
 }

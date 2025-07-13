@@ -22,7 +22,7 @@ export async function runEngagementWorkflow(config: TriageConfig): Promise<strin
   // Save engagement response to file
   const engagementFile = `${config.tempDir}/engagement-response.json`
   await core.summary.addRaw(JSON.stringify(engagementResponse, null, 2))
-  
+
   return engagementFile
 }
 
@@ -329,12 +329,12 @@ export async function updateProjectWithScores(config: EngagementConfig, response
     }
 
     // Find the engagement score field
-    const engagementField = project.fields.nodes.find(field => 
-      field.name === config.projectColumn
-    )
+    const engagementField = project.fields.nodes.find((field) => field.name === config.projectColumn)
 
     if (!engagementField) {
-      core.warning(`Field "${config.projectColumn}" not found in project. Available fields: ${project.fields.nodes.map(f => f.name).join(', ')}`)
+      core.warning(
+        `Field "${config.projectColumn}" not found in project. Available fields: ${project.fields.nodes.map((f) => f.name).join(', ')}`
+      )
       return
     }
 
@@ -378,9 +378,7 @@ export async function updateProjectWithScores(config: EngagementConfig, response
           issueNumber: item.issueNumber
         })
 
-        const projectItem = itemData.node.items.nodes.find(
-          node => node.content.number === item.issueNumber
-        )
+        const projectItem = itemData.node.items.nodes.find((node) => node.content.number === item.issueNumber)
 
         if (!projectItem) {
           core.warning(`Issue #${item.issueNumber} not found in project`)
@@ -424,7 +422,7 @@ export async function updateProjectWithScores(config: EngagementConfig, response
     core.info(`Successfully updated ${updatedCount} of ${response.totalItems} items`)
   } catch (error) {
     core.warning(`Failed to update project: ${error}`)
-    
+
     // Fallback to logging the actions that would be taken
     core.info(`Would update ${response.totalItems} items in project with engagement scores`)
     for (const item of response.items) {

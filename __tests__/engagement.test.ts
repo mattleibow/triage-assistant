@@ -12,11 +12,9 @@ jest.unstable_mockModule('@actions/core', () => core)
 jest.unstable_mockModule('@actions/github', () => github)
 
 // Import the module being tested
-const { 
-  calculateEngagementScores, 
-  updateProjectWithScores,
-  runEngagementWorkflow 
-} = await import('../src/engagement.js')
+const { calculateEngagementScores, updateProjectWithScores, runEngagementWorkflow } = await import(
+  '../src/engagement.js'
+)
 
 describe('engagement', () => {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -86,9 +84,7 @@ describe('engagement', () => {
           projectV2: {
             id: 'project-123',
             fields: {
-              nodes: [
-                { id: 'field-123', name: 'Engagement Score', dataType: 'TEXT' }
-              ]
+              nodes: [{ id: 'field-123', name: 'Engagement Score', dataType: 'TEXT' }]
             }
           }
         }
@@ -327,9 +323,7 @@ describe('engagement', () => {
             projectV2: {
               id: 'project-123',
               fields: {
-                nodes: [
-                  { id: 'field-123', name: 'Engagement Score', dataType: 'TEXT' }
-                ]
+                nodes: [{ id: 'field-123', name: 'Engagement Score', dataType: 'TEXT' }]
               }
             }
           }
@@ -403,9 +397,7 @@ describe('engagement', () => {
           projectV2: {
             id: 'project-123',
             fields: {
-              nodes: [
-                { id: 'field-other', name: 'Other Field', dataType: 'TEXT' }
-              ]
+              nodes: [{ id: 'field-other', name: 'Other Field', dataType: 'TEXT' }]
             }
           }
         }
@@ -442,9 +434,7 @@ describe('engagement', () => {
             projectV2: {
               id: 'project-123',
               fields: {
-                nodes: [
-                  { id: 'field-123', name: 'Engagement Score', dataType: 'TEXT' }
-                ]
+                nodes: [{ id: 'field-123', name: 'Engagement Score', dataType: 'TEXT' }]
               }
             }
           }
