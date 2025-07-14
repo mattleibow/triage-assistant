@@ -44,7 +44,7 @@ describe('engagement', () => {
       repository: 'owner/repo',
       repoName: 'repo',
       repoOwner: 'owner',
-      project: '',
+      project: 0,
       projectColumn: 'Engagement Score',
       token: 'fake-token',
       applyScores: false
@@ -135,7 +135,7 @@ describe('engagement', () => {
   describe('calculateEngagementScores', () => {
     it('should calculate engagement score for a single issue', async () => {
       config.issueNumber = 123
-      config.project = '' // No project, single issue mode
+      config.project = 0 // No project, single issue mode
 
       const mockIssue = {
         id: 123,
@@ -170,7 +170,7 @@ describe('engagement', () => {
       mockOctokit.rest.issues.get.mockResolvedValue({ data: mockIssue })
       mockOctokit.rest.issues.listComments.mockResolvedValue({ data: mockComments })
 
-      const result = await calculateEngagementScores(config)
+      const result = await calculateEngagementScores(config, mockOctokit)
 
       expect(result.totalItems).toBe(1)
       expect(result.items).toHaveLength(1)
@@ -185,7 +185,7 @@ describe('engagement', () => {
     })
 
     it('should calculate engagement scores for project issues', async () => {
-      config.project = '1'
+      config.project = 1
       config.issueNumber = 0
 
       const mockIssues = [
@@ -226,7 +226,7 @@ describe('engagement', () => {
       })
       mockOctokit.rest.issues.listComments.mockResolvedValue({ data: [] })
 
-      const result = await calculateEngagementScores(config)
+      const result = await calculateEngagementScores(config, mockOctokit)
 
       expect(result.totalItems).toBe(2)
       expect(result.items).toHaveLength(2)
@@ -241,7 +241,7 @@ describe('engagement', () => {
     })
 
     it('should throw error when neither project nor issue number is specified', async () => {
-      config.project = ''
+      config.project = 0
       config.issueNumber = 0
 
       await expect(calculateEngagementScores(config)).rejects.toThrow(
@@ -250,12 +250,12 @@ describe('engagement', () => {
     })
 
     it('should handle API errors gracefully for project mode', async () => {
-      config.project = '1'
+      config.project = 1
       config.issueNumber = 0
 
       mockOctokit.rest.issues.listForRepo.mockRejectedValue(new Error('API Error'))
 
-      const result = await calculateEngagementScores(config)
+      const result = await calculateEngagementScores(config, mockOctokit)
 
       expect(result.totalItems).toBe(0)
       expect(result.items).toHaveLength(0)
@@ -266,7 +266,7 @@ describe('engagement', () => {
   describe('updateProjectWithScores', () => {
     it('should skip update when applyScores is false', async () => {
       config.applyScores = false
-      config.project = '1'
+      config.project = 1
 
       const response = {
         items: [
@@ -285,7 +285,7 @@ describe('engagement', () => {
 
     it('should skip update when no project is specified', async () => {
       config.applyScores = true
-      config.project = ''
+      config.project = 0
 
       const response = {
         items: [
@@ -304,7 +304,7 @@ describe('engagement', () => {
 
     it('should update project with engagement scores using GraphQL', async () => {
       config.applyScores = true
-      config.project = '1'
+      config.project = 1
 
       const response = {
         items: [
@@ -355,7 +355,7 @@ describe('engagement', () => {
 
     it('should handle missing project gracefully', async () => {
       config.applyScores = true
-      config.project = '1'
+      config.project = 1
 
       const response = {
         items: [
@@ -380,7 +380,7 @@ describe('engagement', () => {
 
     it('should handle missing engagement field gracefully', async () => {
       config.applyScores = true
-      config.project = '1'
+      config.project = 1
 
       const response = {
         items: [
@@ -412,7 +412,7 @@ describe('engagement', () => {
 
     it('should handle individual issue update failures gracefully', async () => {
       config.applyScores = true
-      config.project = '1'
+      config.project = 1
 
       const response = {
         items: [
@@ -473,7 +473,7 @@ describe('engagement', () => {
 
     it('should fallback to logging when GraphQL fails', async () => {
       config.applyScores = true
-      config.project = '1'
+      config.project = 1
 
       const response = {
         items: [
@@ -498,7 +498,7 @@ describe('engagement', () => {
   describe('engagement scoring algorithm', () => {
     it('should calculate higher scores for more engaged issues', async () => {
       config.issueNumber = 123
-      config.project = ''
+      config.project = 0
 
       // High engagement issue
       const highEngagementIssue = {
@@ -526,7 +526,7 @@ describe('engagement', () => {
       mockOctokit.rest.issues.get.mockResolvedValue({ data: highEngagementIssue })
       mockOctokit.rest.issues.listComments.mockResolvedValue({ data: highEngagementComments })
 
-      const highResult = await calculateEngagementScores(config)
+      const highResult = await calculateEngagementScores(config, mockOctokit)
 
       // Reset mocks for low engagement issue
       jest.clearAllMocks()
@@ -552,14 +552,14 @@ describe('engagement', () => {
       mockOctokit.rest.issues.listComments.mockResolvedValue({ data: [] })
 
       config.issueNumber = 124
-      const lowResult = await calculateEngagementScores(config)
+      const lowResult = await calculateEngagementScores(config, mockOctokit)
 
       expect(highResult.items[0].engagement.score).toBeGreaterThan(lowResult.items[0].engagement.score)
     })
 
     it('should handle duplicate contributors correctly', async () => {
       config.issueNumber = 123
-      config.project = ''
+      config.project = 0
 
       const mockIssue = {
         id: 123,
@@ -600,7 +600,7 @@ describe('engagement', () => {
       mockOctokit.rest.issues.get.mockResolvedValue({ data: mockIssue })
       mockOctokit.rest.issues.listComments.mockResolvedValue({ data: mockComments })
 
-      const result = await calculateEngagementScores(config)
+      const result = await calculateEngagementScores(config, mockOctokit)
 
       // Should count unique contributors: author, assignee1, commenter1 = 3
       // Score = 3*5 (comments) + 1*6 (reactions) + 2*3 (contributors) + time factors
@@ -609,7 +609,7 @@ describe('engagement', () => {
 
     it('should weight different engagement factors correctly', async () => {
       config.issueNumber = 123
-      config.project = ''
+      config.project = 0
 
       const mockIssue = {
         id: 123,
@@ -638,7 +638,7 @@ describe('engagement', () => {
       mockOctokit.rest.issues.get.mockResolvedValue({ data: mockIssue })
       mockOctokit.rest.issues.listComments.mockResolvedValue({ data: mockComments })
 
-      const result = await calculateEngagementScores(config)
+      const result = await calculateEngagementScores(config, mockOctokit)
 
       // Expected score calculation:
       // Comments: 10 * 3 = 30
@@ -650,7 +650,7 @@ describe('engagement', () => {
 
     it('should handle issues with no engagement correctly', async () => {
       config.issueNumber = 123
-      config.project = ''
+      config.project = 0
 
       const mockIssue = {
         id: 123,
@@ -670,7 +670,7 @@ describe('engagement', () => {
       mockOctokit.rest.issues.get.mockResolvedValue({ data: mockIssue })
       mockOctokit.rest.issues.listComments.mockResolvedValue({ data: [] })
 
-      const result = await calculateEngagementScores(config)
+      const result = await calculateEngagementScores(config, mockOctokit)
 
       // Should still have some score from the single contributor (author) and time factors
       expect(result.items[0].engagement.score).toBeGreaterThan(0)
@@ -681,7 +681,7 @@ describe('engagement', () => {
   describe('classification logic', () => {
     it('should classify issues as Hot when score increases', async () => {
       config.issueNumber = 123
-      config.project = ''
+      config.project = 0
 
       const mockIssue = {
         id: 123,
@@ -701,7 +701,7 @@ describe('engagement', () => {
       mockOctokit.rest.issues.get.mockResolvedValue({ data: mockIssue })
       mockOctokit.rest.issues.listComments.mockResolvedValue({ data: [] })
 
-      const result = await calculateEngagementScores(config)
+      const result = await calculateEngagementScores(config, mockOctokit)
 
       // Since previousScore is always 0 and current score > 0, should be Hot
       expect(result.items[0].engagement.classification).toBe('Hot')
@@ -711,7 +711,7 @@ describe('engagement', () => {
       // This would require mocking the calculatePreviousScore function
       // For now, we test that the classification logic exists
       config.issueNumber = 123
-      config.project = ''
+      config.project = 0
 
       const mockIssue = {
         id: 123,
@@ -731,7 +731,7 @@ describe('engagement', () => {
       mockOctokit.rest.issues.get.mockResolvedValue({ data: mockIssue })
       mockOctokit.rest.issues.listComments.mockResolvedValue({ data: [] })
 
-      const result = await calculateEngagementScores(config)
+      const result = await calculateEngagementScores(config, mockOctokit)
 
       // With minimal engagement, should still be Hot since previousScore is 0
       expect(result.items[0].engagement.classification).toBe('Hot')

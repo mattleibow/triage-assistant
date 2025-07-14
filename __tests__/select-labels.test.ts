@@ -296,7 +296,7 @@ describe('runTriageWorkflow', () => {
     applyComment: false,
     applyLabels: false,
     commentFooter: '',
-    project: '',
+    project: 0,
     projectColumn: 'Engagement Score',
     applyScores: false
   }

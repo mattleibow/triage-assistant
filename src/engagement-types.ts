@@ -5,7 +5,13 @@ export interface EngagementScore {
 }
 
 export interface EngagementItem {
-  issueNumber: number
+  id: string
+  issue: {
+    id: number
+    owner: string
+    repo: string
+    number: number
+  }
   engagement: EngagementScore
 }
 
@@ -22,18 +28,15 @@ export interface IssueDetails {
   state: string
   created_at: string
   updated_at: string
-  closed_at: string | null
-  comments: number
-  reactions: {
-    total_count: number
-  }
-  comments_data?: CommentData[]
   user: {
     login: string
   }
   assignees: Array<{
     login: string
   }>
+  comments: CommentData[]
+  reactions: any[]
+  commentReactions: any[]
 }
 
 export interface CommentData {
@@ -42,7 +45,5 @@ export interface CommentData {
     login: string
   }
   created_at: string
-  reactions: {
-    total_count: number
-  }
+  updated_at: string
 }

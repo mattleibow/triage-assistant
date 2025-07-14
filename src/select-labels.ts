@@ -67,7 +67,6 @@ export async function runTriageWorkflow(config: TriageConfig): Promise<string> {
   const shouldAddLabels = config.template ? true : false
   const shouldAddSummary = config.applyLabels || config.applyComment
   const shouldAddReactions = shouldAddLabels || shouldAddSummary
-  let shouldRemoveReactions = shouldAddSummary
 
   let responseFile = ''
 
@@ -89,12 +88,9 @@ export async function runTriageWorkflow(config: TriageConfig): Promise<string> {
 
     return responseFile
   } catch (error) {
-    shouldRemoveReactions = false // Don't remove reactions on error
     throw error
   } finally {
-    // Remove eyes reaction at the end if needed
-    if (shouldRemoveReactions) {
-      await manageReactions(config, false)
-    }
+    // Always remove eyes reaction at the end
+    await manageReactions(config, false)
   }
 }

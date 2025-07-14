@@ -40,7 +40,7 @@ export interface ApplyConfig extends SummaryPromptConfig, GitHubConfig {
 }
 
 export interface EngagementConfig extends GitHubConfig {
-  project: string
+  project: number
   projectColumn: string
   token: string
   applyScores: boolean

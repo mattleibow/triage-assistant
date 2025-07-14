@@ -60,7 +60,7 @@ export async function run(): Promise<void> {
       token: core.getInput('token') || process.env.TRIAGE_GITHUB_TOKEN || process.env.GITHUB_TOKEN || '',
       label: core.getInput('label'),
       labelPrefix: core.getInput('label-prefix'),
-      project,
+      project: project ? parseInt(project, 10) : 0,
       projectColumn: core.getInput('project-column'),
       applyScores: core.getBooleanInput('apply-scores')
     }
