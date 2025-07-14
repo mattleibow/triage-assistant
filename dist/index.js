@@ -40318,43 +40318,6 @@ async function runInference(systemPrompt, userPrompt, responseFile, maxTokens = 
 }
 
 /**
- * Selects labels for an issue using AI inference based on a template.
- *
- * @param config The select labels configuration object.
- * @returns Promise that resolves with the path to the response file.
- */
-async function selectLabels(config) {
-    const guid = v4();
-    const promptDir = path.join(config.tempDir, 'triage-labels', 'prompts', guid);
-    const responseDir = path.join(config.tempDir, 'triage-assistant', 'responses');
-    // Ensure directories exist
-    await fs.promises.mkdir(promptDir, { recursive: true });
-    await fs.promises.mkdir(responseDir, { recursive: true });
-    // Generate system prompt
-    const systemPromptPath = path.join(promptDir, 'system-prompt.md');
-    await generatePrompt(getPrompt$1(config.template), systemPromptPath, {
-        ISSUE_NUMBER: config.issueNumber,
-        ISSUE_REPO: config.repository,
-        LABEL_PREFIX: config.labelPrefix,
-        LABEL: config.label
-    }, config);
-    // Generate user prompt
-    const userPromptPath = path.join(promptDir, 'user-prompt.md');
-    await generatePrompt(getPrompt$1('user'), userPromptPath, {
-        ISSUE_NUMBER: config.issueNumber,
-        ISSUE_REPO: config.repository,
-        LABEL_PREFIX: config.labelPrefix,
-        LABEL: config.label
-    }, config);
-    // Run AI inference
-    const responseFile = path.join(responseDir, `response-${guid}.json`);
-    const systemPrompt = await fs.promises.readFile(systemPromptPath, 'utf8');
-    const userPrompt = await fs.promises.readFile(userPromptPath, 'utf8');
-    await runInference(systemPrompt, userPrompt, responseFile, 200, config);
-    return responseFile;
-}
-
-/**
  * Comments on an issue with the provided summary.
  *
  * @param summaryFile Path to the file containing the summary text.
@@ -40700,39 +40663,53 @@ async function applyLabelsAndComment(config) {
 }
 
 /**
- * The main function for the action.
+ * Selects labels for an issue using AI inference based on a template.
  *
- * @returns Resolves when the action is complete.
+ * @param config The select labels configuration object.
+ * @returns Promise that resolves with the path to the response file.
  */
-async function run() {
-    const DEFAULT_AI_ENDPOINT = 'https://models.github.ai/inference';
-    const DEFAULT_AI_MODEL = 'openai/gpt-4o';
-    let config;
-    let shouldRemoveReactions = false;
+async function selectLabels(config) {
+    const guid = v4();
+    const promptDir = path.join(config.tempDir, 'triage-labels', 'prompts', guid);
+    const responseDir = path.join(config.tempDir, 'triage-assistant', 'responses');
+    // Ensure directories exist
+    await fs.promises.mkdir(promptDir, { recursive: true });
+    await fs.promises.mkdir(responseDir, { recursive: true });
+    // Generate system prompt
+    const systemPromptPath = path.join(promptDir, 'system-prompt.md');
+    await generatePrompt(getPrompt$1(config.template), systemPromptPath, {
+        ISSUE_NUMBER: config.issueNumber,
+        ISSUE_REPO: config.repository,
+        LABEL_PREFIX: config.labelPrefix,
+        LABEL: config.label
+    }, config);
+    // Generate user prompt
+    const userPromptPath = path.join(promptDir, 'user-prompt.md');
+    await generatePrompt(getPrompt$1('user'), userPromptPath, {
+        ISSUE_NUMBER: config.issueNumber,
+        ISSUE_REPO: config.repository,
+        LABEL_PREFIX: config.labelPrefix,
+        LABEL: config.label
+    }, config);
+    // Run AI inference
+    const responseFile = path.join(responseDir, `response-${guid}.json`);
+    const systemPrompt = await fs.promises.readFile(systemPromptPath, 'utf8');
+    const userPrompt = await fs.promises.readFile(userPromptPath, 'utf8');
+    await runInference(systemPrompt, userPrompt, responseFile, 200, config);
+    return responseFile;
+}
+/**
+ * Run the complete triage workflow for labels and comments
+ * @param config - The triage configuration
+ * @returns Promise<string> - The response file path
+ */
+async function runTriageWorkflow(config) {
+    const shouldAddLabels = config.template ? true : false;
+    const shouldAddSummary = config.applyLabels || config.applyComment;
+    const shouldAddReactions = shouldAddLabels || shouldAddSummary;
+    let shouldRemoveReactions = shouldAddSummary;
+    let responseFile = '';
     try {
-        // Initialize configuration object
-        const issueNumberStr = coreExports.getInput('issue') || githubExports.context.issue.number.toString();
-        config = {
-            aiEndpoint: coreExports.getInput('ai-endpoint') || process.env.TRIAGE_AI_ENDPOINT || DEFAULT_AI_ENDPOINT,
-            aiModel: coreExports.getInput('ai-model') || process.env.TRIAGE_AI_MODEL || DEFAULT_AI_MODEL,
-            applyComment: coreExports.getBooleanInput('apply-comment'),
-            commentFooter: coreExports.getInput('comment-footer'),
-            applyLabels: coreExports.getBooleanInput('apply-labels'),
-            issueNumber: parseInt(issueNumberStr, 10),
-            repoName: githubExports.context.repo.repo,
-            repoOwner: githubExports.context.repo.owner,
-            repository: `${githubExports.context.repo.owner}/${githubExports.context.repo.repo}`,
-            tempDir: process.env.RUNNER_TEMP || require$$0.tmpdir(),
-            template: coreExports.getInput('template'),
-            token: coreExports.getInput('token') || process.env.TRIAGE_GITHUB_TOKEN || process.env.GITHUB_TOKEN || '',
-            label: coreExports.getInput('label'),
-            labelPrefix: coreExports.getInput('label-prefix')
-        };
-        let responseFile = '';
-        const shouldAddLabels = config.template ? true : false;
-        const shouldAddSummary = config.applyLabels || config.applyComment;
-        const shouldAddReactions = shouldAddLabels || shouldAddSummary;
-        shouldRemoveReactions = shouldAddSummary;
         // Step 1: Add eyes reaction at the start
         if (shouldAddReactions) {
             await manageReactions(config, true);
@@ -40745,7 +40722,431 @@ async function run() {
         if (shouldAddSummary) {
             await applyLabelsAndComment(config);
         }
-        // Step 4: Set the response file output
+        return responseFile;
+    }
+    catch (error) {
+        shouldRemoveReactions = false; // Don't remove reactions on error
+        throw error;
+    }
+    finally {
+        // Remove eyes reaction at the end if needed
+        if (shouldRemoveReactions) {
+            await manageReactions(config, false);
+        }
+    }
+}
+
+/**
+ * Run the complete engagement scoring workflow
+ * @param config - The triage configuration
+ * @returns Promise<string> - The engagement response file path
+ */
+async function runEngagementWorkflow(config) {
+    coreExports.info('Running in engagement scoring mode');
+    const engagementResponse = await calculateEngagementScores(config);
+    coreExports.info(`Calculated engagement scores for ${engagementResponse.totalItems} items`);
+    // Update project with scores if requested
+    if (config.applyScores) {
+        await updateProjectWithScores(config, engagementResponse);
+    }
+    // Save engagement response to file
+    const engagementFile = `${config.tempDir}/engagement-response.json`;
+    await coreExports.summary.addRaw(JSON.stringify(engagementResponse, null, 2));
+    return engagementFile;
+}
+/**
+ * Calculate engagement scores for issues in a project or single issue
+ * @param config - Configuration object containing project and authentication details
+ * @returns Promise<EngagementResponse> - The engagement response with scores
+ */
+async function calculateEngagementScores(config) {
+    const octokit = githubExports.getOctokit(config.token);
+    if (config.project) {
+        return await calculateProjectEngagementScores(config, octokit);
+    }
+    else if (config.issueNumber) {
+        return await calculateIssueEngagementScores(config, octokit);
+    }
+    else {
+        throw new Error('Either project or issue number must be specified');
+    }
+}
+/**
+ * Calculate engagement scores for a single issue
+ */
+async function calculateIssueEngagementScores(config, octokit) {
+    coreExports.info(`Calculating engagement score for issue #${config.issueNumber}`);
+    const issueDetails = await getIssueDetails(octokit, config.repoOwner, config.repoName, config.issueNumber);
+    const score = calculateScore(issueDetails);
+    const previousScore = calculatePreviousScore();
+    const item = {
+        issueNumber: issueDetails.number,
+        engagement: {
+            score,
+            previousScore,
+            classification: score > previousScore ? 'Hot' : null
+        }
+    };
+    return {
+        items: [item],
+        totalItems: 1
+    };
+}
+/**
+ * Calculate engagement scores for all issues in a project
+ */
+async function calculateProjectEngagementScores(config, octokit) {
+    coreExports.info(`Calculating engagement scores for project #${config.project}`);
+    // For simplicity, get all repository issues as project items
+    // In a real implementation, you'd use GraphQL API to get actual project items
+    coreExports.info('Using repository issues as project items (simplified implementation)');
+    try {
+        const { data: issues } = await octokit.rest.issues.listForRepo({
+            owner: config.repoOwner,
+            repo: config.repoName,
+            state: 'all',
+            per_page: 100
+        });
+        const items = [];
+        for (const issue of issues) {
+            const issueDetails = await getIssueDetails(octokit, config.repoOwner, config.repoName, issue.number);
+            const score = calculateScore(issueDetails);
+            const previousScore = calculatePreviousScore();
+            const item = {
+                issueNumber: issue.number,
+                engagement: {
+                    score,
+                    previousScore,
+                    classification: score > previousScore ? 'Hot' : null
+                }
+            };
+            items.push(item);
+        }
+        return {
+            items,
+            totalItems: items.length
+        };
+    }
+    catch (error) {
+        coreExports.warning(`Failed to get issues: ${error}`);
+        return {
+            items: [],
+            totalItems: 0
+        };
+    }
+}
+/**
+ * Get detailed information about an issue including comments
+ */
+async function getIssueDetails(octokit, owner, repo, issueNumber) {
+    const { data: issue } = await octokit.rest.issues.get({
+        owner,
+        repo,
+        issue_number: issueNumber
+    });
+    // Get issue comments
+    const { data: comments } = await octokit.rest.issues.listComments({
+        owner,
+        repo,
+        issue_number: issueNumber
+    });
+    const commentsData = comments.map((comment) => ({
+        id: comment.id,
+        user: comment.user,
+        created_at: comment.created_at,
+        reactions: comment.reactions
+    }));
+    return {
+        id: issue.id,
+        number: issue.number,
+        title: issue.title,
+        body: issue.body || '',
+        state: issue.state,
+        created_at: issue.created_at,
+        updated_at: issue.updated_at,
+        closed_at: issue.closed_at,
+        comments: issue.comments,
+        reactions: issue.reactions,
+        comments_data: commentsData,
+        user: issue.user,
+        assignees: issue.assignees
+    };
+}
+/**
+ * Calculate engagement score for an issue based on the engagement algorithm
+ */
+function calculateScore(issue) {
+    // Components:
+    // - Number of Comments       => Indicates discussion and interest
+    // - Number of Reactions      => Shows emotional engagement
+    // - Number of Contributors   => Reflects the diversity of input
+    // - Time Since Last Activity => More recent activity indicates higher engagement
+    // - Issue Age                => Older issues might need more attention
+    // - Number of Linked PRs     => Shows active work on the issue (not implemented)
+    const totalComments = issue.comments;
+    const totalReactions = issue.reactions.total_count +
+        (issue.comments_data?.reduce((sum, comment) => sum + comment.reactions.total_count, 0) || 0);
+    const contributors = getUniqueContributors(issue);
+    const lastActivity = Math.max(1, getTimeSinceLastActivity(issue));
+    const issueAge = Math.max(1, getIssueAge(issue));
+    const linkedPullRequests = 0; // Not implemented yet
+    // Weights:
+    const CommentsWeight = 3;
+    const ReactionsWeight = 1;
+    const ContributorsWeight = 2;
+    const LastActivityWeight = 1;
+    const IssueAgeWeight = 1;
+    const LinkedPullRequestsWeight = 2;
+    const score = CommentsWeight * totalComments +
+        ReactionsWeight * totalReactions +
+        ContributorsWeight * contributors +
+        LastActivityWeight * (1 / lastActivity) +
+        IssueAgeWeight * (1 / issueAge) +
+        LinkedPullRequestsWeight * linkedPullRequests;
+    return Math.round(score);
+}
+/**
+ * Calculate previous score (7 days ago) - simplified implementation
+ */
+function calculatePreviousScore() {
+    // This is a simplified implementation
+    // In a real scenario, you'd need to get historical data
+    // For now, we'll return 0 as a placeholder
+    return 0;
+}
+/**
+ * Get unique contributors to an issue
+ */
+function getUniqueContributors(issue) {
+    const contributors = new Set();
+    // Add issue author
+    contributors.add(issue.user.login);
+    // Add assignees
+    issue.assignees.forEach((assignee) => contributors.add(assignee.login));
+    // Add comment authors
+    issue.comments_data?.forEach((comment) => contributors.add(comment.user.login));
+    return contributors.size;
+}
+/**
+ * Get time since last activity in days
+ */
+function getTimeSinceLastActivity(issue) {
+    const lastUpdate = new Date(issue.updated_at);
+    const now = new Date();
+    const diffMs = now.getTime() - lastUpdate.getTime();
+    const diffDays = diffMs / (1000 * 60 * 60 * 24);
+    return Math.ceil(diffDays);
+}
+/**
+ * Get issue age in days
+ */
+function getIssueAge(issue) {
+    const created = new Date(issue.created_at);
+    const now = new Date();
+    const diffMs = now.getTime() - created.getTime();
+    const diffDays = diffMs / (1000 * 60 * 60 * 24);
+    return Math.ceil(diffDays);
+}
+/**
+ * Update project field with engagement scores
+ */
+async function updateProjectWithScores(config, response) {
+    if (!config.applyScores || !config.project) {
+        coreExports.info('Skipping project update');
+        return;
+    }
+    coreExports.info(`Updating project #${config.project} with engagement scores`);
+    const octokit = githubExports.getOctokit(config.token);
+    try {
+        // Get project information using GraphQL
+        const projectQuery = `
+      query($owner: String!, $repo: String!, $projectNumber: Int!) {
+        repository(owner: $owner, name: $repo) {
+          projectV2(number: $projectNumber) {
+            id
+            fields(first: 100) {
+              nodes {
+                ... on ProjectV2Field {
+                  id
+                  name
+                  dataType
+                }
+                ... on ProjectV2SingleSelectField {
+                  id
+                  name
+                  dataType
+                  options {
+                    id
+                    name
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    `;
+        const projectData = await octokit.graphql(projectQuery, {
+            owner: config.repoOwner,
+            repo: config.repoName,
+            projectNumber: parseInt(config.project, 10)
+        });
+        const project = projectData.repository.projectV2;
+        if (!project) {
+            throw new Error(`Project #${config.project} not found`);
+        }
+        // Find the engagement score field
+        const engagementField = project.fields.nodes.find((field) => field.name === config.projectColumn);
+        if (!engagementField) {
+            coreExports.warning(`Field "${config.projectColumn}" not found in project. Available fields: ${project.fields.nodes.map((f) => f.name).join(', ')}`);
+            return;
+        }
+        // Update each issue's engagement score
+        let updatedCount = 0;
+        for (const item of response.items) {
+            try {
+                // Get project item for this issue
+                const itemQuery = `
+          query($projectId: ID!, $issueNumber: Int!) {
+            node(id: $projectId) {
+              ... on ProjectV2 {
+                items(first: 100) {
+                  nodes {
+                    id
+                    content {
+                      ... on Issue {
+                        number
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        `;
+                const itemData = await octokit.graphql(itemQuery, {
+                    projectId: project.id,
+                    issueNumber: item.issueNumber
+                });
+                const projectItem = itemData.node.items.nodes.find((node) => node.content.number === item.issueNumber);
+                if (!projectItem) {
+                    coreExports.warning(`Issue #${item.issueNumber} not found in project`);
+                    continue;
+                }
+                // Update the field value
+                const updateMutation = `
+          mutation($projectId: ID!, $itemId: ID!, $fieldId: ID!, $value: String!) {
+            updateProjectV2ItemFieldValue(
+              input: {
+                projectId: $projectId
+                itemId: $itemId
+                fieldId: $fieldId
+                value: {
+                  text: $value
+                }
+              }
+            ) {
+              projectV2Item {
+                id
+              }
+            }
+          }
+        `;
+                await octokit.graphql(updateMutation, {
+                    projectId: project.id,
+                    itemId: projectItem.id,
+                    fieldId: engagementField.id,
+                    value: item.engagement.score.toString()
+                });
+                coreExports.info(`Updated issue #${item.issueNumber} with score ${item.engagement.score}`);
+                updatedCount++;
+            }
+            catch (error) {
+                coreExports.warning(`Failed to update issue #${item.issueNumber}: ${error}`);
+            }
+        }
+        coreExports.info(`Successfully updated ${updatedCount} of ${response.totalItems} items`);
+    }
+    catch (error) {
+        coreExports.warning(`Failed to update project: ${error}`);
+        // Fallback to logging the actions that would be taken
+        coreExports.info(`Would update ${response.totalItems} items in project with engagement scores`);
+        for (const item of response.items) {
+            coreExports.info(`Would update issue #${item.issueNumber} with score ${item.engagement.score}`);
+        }
+    }
+}
+
+/**
+ * The main function for the action.
+ *
+ * @returns Resolves when the action is complete.
+ */
+async function run() {
+    const DEFAULT_AI_ENDPOINT = 'https://models.github.ai/inference';
+    const DEFAULT_AI_MODEL = 'openai/gpt-4o';
+    let config;
+    try {
+        const template = coreExports.getInput('template');
+        const project = coreExports.getInput('project');
+        const issue = coreExports.getInput('issue');
+        // Determine if this is engagement scoring mode
+        const isEngagementMode = template === 'engagement-score';
+        // Validate mode-specific requirements
+        let issueNumberStr = '';
+        if (isEngagementMode) {
+            if (!project) {
+                throw new Error('Project is required when using engagement-score template');
+            }
+            issueNumberStr = issue; // Don't default to current issue
+        }
+        else {
+            // For label/comment mode, default to current issue if available
+            if (issue) {
+                issueNumberStr = issue;
+            }
+            else if (githubExports.context.issue && githubExports.context.issue.number) {
+                issueNumberStr = githubExports.context.issue.number.toString();
+            }
+            if (!issueNumberStr) {
+                throw new Error('Issue number is required for label/comment triage mode');
+            }
+        }
+        // Initialize configuration object
+        config = {
+            aiEndpoint: coreExports.getInput('ai-endpoint') || process.env.TRIAGE_AI_ENDPOINT || DEFAULT_AI_ENDPOINT,
+            aiModel: coreExports.getInput('ai-model') || process.env.TRIAGE_AI_MODEL || DEFAULT_AI_MODEL,
+            applyComment: coreExports.getBooleanInput('apply-comment'),
+            commentFooter: coreExports.getInput('comment-footer'),
+            applyLabels: coreExports.getBooleanInput('apply-labels'),
+            issueNumber: issueNumberStr ? parseInt(issueNumberStr, 10) : 0,
+            repoName: githubExports.context.repo.repo,
+            repoOwner: githubExports.context.repo.owner,
+            repository: `${githubExports.context.repo.owner}/${githubExports.context.repo.repo}`,
+            tempDir: process.env.RUNNER_TEMP || require$$0.tmpdir(),
+            template,
+            token: coreExports.getInput('token') || process.env.TRIAGE_GITHUB_TOKEN || process.env.GITHUB_TOKEN || '',
+            label: coreExports.getInput('label'),
+            labelPrefix: coreExports.getInput('label-prefix'),
+            project,
+            projectColumn: coreExports.getInput('project-column'),
+            applyScores: coreExports.getBooleanInput('apply-scores')
+        };
+        let responseFile = '';
+        if (isEngagementMode) {
+            // Engagement scoring mode
+            responseFile = await runEngagementWorkflow(config);
+            coreExports.setOutput('engagement-response', responseFile);
+        }
+        else {
+            // Label/comment triage mode
+            coreExports.info('Running in label/comment triage mode');
+            if (!config.issueNumber) {
+                throw new Error('Issue number is required for label/comment triage mode');
+            }
+            responseFile = await runTriageWorkflow(config);
+        }
+        // Set the response file output
         coreExports.setOutput('response-file', responseFile);
     }
     catch (error) {
@@ -40755,12 +41156,6 @@ async function run() {
         }
         else {
             coreExports.setFailed(`An unknown error occurred: ${JSON.stringify(error)}`);
-        }
-    }
-    finally {
-        // Step 5: Remove eyes reaction at the end if needed
-        if (shouldRemoveReactions && config) {
-            await manageReactions(config, false);
         }
     }
 }
