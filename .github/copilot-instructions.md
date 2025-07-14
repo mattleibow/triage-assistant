@@ -76,7 +76,9 @@ The action uses a two-tier prompt system for label/comment triage:
 - **Duplicate Handling**: Uses Set to ensure unique contributor counting
 - **Classification**: Issues with increasing scores are marked as "Hot"
 - **Project Integration**: Full GraphQL API integration for GitHub Projects v2 with comprehensive error handling
-- **Fallback**: Graceful degradation to logging when GraphQL operations fail
+- **Historic Scoring**: Implements calculatePreviousScore to compare engagement levels over time (7-day lookback)
+- **Workflow**: Get projects → Get project items → Calculate scores → Update project fields
+- **Pagination**: Handles large projects with cursor-based pagination
 
 ## Development Patterns
 
@@ -97,13 +99,15 @@ The action uses a two-tier prompt system for label/comment triage:
 
 - Jest with ES modules support
 - Test files in `__tests__/` directory with comprehensive test coverage
-- Fixtures in `__fixtures__/` for mock data
+- Fixtures in `__fixtures__/` for mock data (avoid leaking mocks between tests)
 - Tests must cover both modes and their specific functionality
 - Mock GitHub API responses in tests
 - Coverage reporting with badge generation
 - **Comprehensive workflow testing**: Tests for main.ts, select-labels.ts workflow, and engagement.ts workflow
 - **Real scenario testing**: Tests cover actual scoring algorithms, duplicate handling, and error conditions
 - **Integration testing**: Tests verify proper interaction between components
+- **Function-specific testing**: Dedicated tests for calculateScore and calculatePreviousScore functions
+- **Test isolation**: Each test should mock only what it needs to avoid cross-test contamination
 
 ### Build and Distribution
 
@@ -146,7 +150,7 @@ The action uses a two-tier prompt system for label/comment triage:
 ### Engagement Scoring Mode Requirements
 
 - `template`: Must be `engagement-score`
-- `project`: Required - specifies which project to analyze
+- `project`: Required - specifies which project to analyze (must be integer)
 - `issue`: Should NOT be defaulted - only used if explicitly provided for filtering
 - `apply-scores`: Controls whether to update project items with scores
 
@@ -208,6 +212,12 @@ if (isEngagementMode) {
 - Test error conditions for missing requirements in each mode
 - Test workflow functions (`runTriageWorkflow`, `runEngagementWorkflow`)
 - Test engagement scoring algorithm with various issue configurations
+- **Test Patterns**: 
+  - Use `__tests__/engagement-scoring.test.ts` as reference for pure function testing
+  - Pass octokit as parameter to functions for easier mocking
+  - Mock GitHub API responses in test setup, not in fixtures
+  - Test historic scoring with realistic date scenarios
+  - Ensure project type is number, not string in tests
 
 ### Build Process
 
