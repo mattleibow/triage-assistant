@@ -17,6 +17,11 @@ on:
         description: 'Issue number to triage'
         required: true
         type: number
+      dry_run:
+        description: 'Whether to run in dry run mode'
+        required: false
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -81,3 +86,4 @@ jobs:
           issue: ${{ steps.get-number.outputs.number }}
           apply-labels: true
           apply-comment: true
+          dry-run: ${{ inputs.dry_run }}
