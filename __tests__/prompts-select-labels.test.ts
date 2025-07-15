@@ -1,31 +1,34 @@
 /**
- * Unit tests for the select-labels functionality, src/select-labels.ts
+ * Unit tests for the select label prompt generation functionality, src/prompts-select-labels.ts
  */
 import { jest } from '@jest/globals'
 import * as core from '../__fixtures__/actions-core.js'
 import * as exec from '../__fixtures__/exec.js'
+import * as prompts from '../__fixtures__/prompts.js'
 import * as ai from '../__fixtures__/ai.js'
 import * as fs from 'fs'
 import * as path from 'path'
 import { SelectLabelsPromptConfig } from '../src/triage-config.js'
-import { FileSystemMock } from '../__tests__/helpers/filesystem-mock.js'
+import { FileSystemMock } from './helpers/filesystem-mock.js'
 
 // Mock dependencies using fixtures
 jest.unstable_mockModule('@actions/core', () => core)
 jest.unstable_mockModule('@actions/exec', () => exec)
+jest.unstable_mockModule('../src/prompts.js', () => prompts)
 jest.unstable_mockModule('../src/ai.js', () => ai)
 jest.unstable_mockModule('uuid', () => ({
   v4: jest.fn(() => 'test-guid-123')
 }))
 
 // Import the module being tested and mocked dependencies
-const { selectLabels } = await import('../src/select-labels.js')
+const { selectLabels } = await import('../src/prompts-select-labels.js')
 const { getPrompt, TEMPLATE_NAMES } = await import('../src/prompts/select-labels/index.js')
 
 describe('selectLabels', () => {
   const mockConfig: SelectLabelsPromptConfig = {
     aiEndpoint: 'https://test-ai-endpoint.com',
     aiModel: 'test-model',
+    aiToken: 'test-ai-token',
     token: 'test-token',
     tempDir: '/tmp/test',
     issueNumber: 123,
@@ -46,7 +49,7 @@ describe('selectLabels', () => {
     inMemoryFs.setup()
 
     // Mock generatePrompt to simulate the real behavior: process template and write to file
-    ai.generatePrompt.mockImplementation(async (template, outputPath) => {
+    prompts.generatePrompt.mockImplementation(async (template, outputPath) => {
       const processedContent = template.toString()
       if (outputPath) {
         await fs.promises.writeFile(outputPath, processedContent)
@@ -69,12 +72,12 @@ describe('selectLabels', () => {
       await selectLabels(mockConfig)
 
       // Verify generatePrompt was called twice (system and user prompts)
-      expect(ai.generatePrompt).toHaveBeenCalledTimes(2)
+      expect(prompts.generatePrompt).toHaveBeenCalledTimes(2)
 
       // Verify system prompt generation
       {
         const systemPromptPath = path.join('/tmp/test/triage-labels/prompts/test-guid-123/system-prompt.md')
-        expect(ai.generatePrompt).toHaveBeenNthCalledWith(
+        expect(prompts.generatePrompt).toHaveBeenNthCalledWith(
           1,
           getPrompt('single-label'),
           path.join('/tmp/test/triage-labels/prompts/test-guid-123/system-prompt.md'),
@@ -93,7 +96,7 @@ describe('selectLabels', () => {
       // Verify user prompt generation
       {
         const userPromptPath = path.join('/tmp/test/triage-labels/prompts/test-guid-123/user-prompt.md')
-        expect(ai.generatePrompt).toHaveBeenNthCalledWith(
+        expect(prompts.generatePrompt).toHaveBeenNthCalledWith(
           2,
           getPrompt('user'),
           path.join('/tmp/test/triage-labels/prompts/test-guid-123/user-prompt.md'),
@@ -121,7 +124,7 @@ describe('selectLabels', () => {
           await selectLabels(config)
 
           // Verify the correct template was loaded
-          expect(ai.generatePrompt).toHaveBeenCalledWith(
+          expect(prompts.generatePrompt).toHaveBeenCalledWith(
             getPrompt(template),
             path.join('/tmp/test/triage-labels/prompts/test-guid-123/system-prompt.md'),
             {
@@ -149,7 +152,7 @@ describe('selectLabels', () => {
       await selectLabels(customConfig)
 
       // Check both system and user prompt calls get the same replacements
-      const calls = ai.generatePrompt.mock.calls
+      const calls = prompts.generatePrompt.mock.calls
 
       calls.forEach((call) => {
         expect(call[2]).toEqual({
@@ -236,7 +239,7 @@ describe('selectLabels', () => {
     })
 
     it('should propagate generatePrompt errors', async () => {
-      ai.generatePrompt.mockRejectedValueOnce(new Error('Template processing failed'))
+      prompts.generatePrompt.mockRejectedValueOnce(new Error('Template processing failed'))
 
       await expect(selectLabels(mockConfig)).rejects.toThrow('Template processing failed')
     })
@@ -260,7 +263,7 @@ describe('selectLabels', () => {
 
         jest.clearAllMocks()
 
-        ai.generatePrompt.mockResolvedValue('content')
+        prompts.generatePrompt.mockResolvedValue('content')
         ai.runInference.mockResolvedValue(undefined)
       }
     })

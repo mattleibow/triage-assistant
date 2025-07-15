@@ -1,10 +1,9 @@
 import * as core from '@actions/core'
 import * as github from '@actions/github'
 import * as path from 'path'
-import { commentOnIssue, applyLabelsToIssue } from './issues.js'
+import { commentOnIssue, applyLabelsToIssue, addEyes, removeEyes } from './github-issues.js'
 import { ApplyConfig, ReactionsConfig } from './triage-config.js'
-import { addEyes, removeEyes } from './reactions.js'
-import { generateSummary, mergeResponses } from './summary.js'
+import { generateSummary, mergeResponses } from './prompts-summary.js'
 
 /**
  * Manages reactions (such as eyes) for an issue or PR.

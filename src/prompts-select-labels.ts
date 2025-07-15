@@ -2,7 +2,8 @@ import * as fs from 'fs'
 import * as path from 'path'
 import { v4 as uuidv4 } from 'uuid'
 import { getPrompt } from './prompts/select-labels/index.js'
-import { generatePrompt, runInference } from './ai.js'
+import { generatePrompt } from './prompts.js'
+import { runInference } from './ai.js'
 import { SelectLabelsPromptConfig } from './triage-config.js'
 
 /**
