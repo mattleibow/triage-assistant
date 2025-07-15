@@ -16,7 +16,7 @@ inputs:
   token:
     description: 'GitHub token for API access'
     required: false
-    default: ${{ github.token }}
+    default: ''
 
   # Label selection inputs
   template:
