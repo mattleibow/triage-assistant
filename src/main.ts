@@ -3,7 +3,7 @@ import * as github from '@actions/github'
 import * as os from 'os'
 import { selectLabels } from './prompts-select-labels.js'
 import { applyLabelsAndComment, manageReactions } from './github-apply.js'
-import { TriageConfig } from './triage-config.js'
+import { EverythingConfig } from './triage-config.js'
 
 /**
  * The main function for the action.
@@ -14,7 +14,7 @@ export async function run(): Promise<void> {
   const DEFAULT_AI_ENDPOINT = 'https://models.github.ai/inference'
   const DEFAULT_AI_MODEL = 'openai/gpt-4o'
 
-  let config: TriageConfig | undefined
+  let config: EverythingConfig | undefined
   let shouldRemoveReactions = false
 
   try {
@@ -42,7 +42,12 @@ export async function run(): Promise<void> {
       token: token,
       aiToken: aiToken,
       label: core.getInput('label'),
-      labelPrefix: core.getInput('label-prefix')
+      labelPrefix: core.getInput('label-prefix'),
+      dryRun: core.getBooleanInput('dry-run') || false
+    }
+
+    if (config.dryRun) {
+      core.info('Running in dry-run mode. No changes will be made.')
     }
 
     if (!config.token) {

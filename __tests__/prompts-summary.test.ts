@@ -10,6 +10,7 @@ import * as core from '../__fixtures__/actions-core.js'
 import * as github from '../__fixtures__/actions-github.js'
 import { jest } from '@jest/globals'
 import { FileSystemMock } from './helpers/filesystem-mock.js'
+import { InferenceConfig, SummaryPromptConfig, TriageConfig } from '../src/triage-config.js'
 
 // Mock dependencies using fixtures
 jest.unstable_mockModule('@actions/core', () => core)
@@ -413,12 +414,11 @@ describe('summary', () => {
   })
 
   describe('generateSummary', () => {
-    const mockConfig = {
+    const mockConfig: SummaryPromptConfig & InferenceConfig & TriageConfig = {
+      dryRun: false,
       tempDir: '/tmp/test',
       issueNumber: 123,
       repository: 'owner/repo',
-      repoName: 'repo',
-      repoOwner: 'owner',
       token: 'test-token',
       aiEndpoint: 'test-endpoint',
       aiModel: 'test-model',

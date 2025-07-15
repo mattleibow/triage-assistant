@@ -40333,26 +40333,30 @@ async function selectLabels(config) {
     await fs.promises.mkdir(responseDir, { recursive: true });
     // Generate system prompt
     const systemPromptPath = path.join(promptDir, 'system-prompt.md');
-    await generatePrompt(getPrompt$1(config.template), systemPromptPath, {
-        ISSUE_NUMBER: config.issueNumber,
-        ISSUE_REPO: config.repository,
-        LABEL_PREFIX: config.labelPrefix,
-        LABEL: config.label
-    }, config);
+    await generatePromptFile$1(config.template, config, systemPromptPath);
     // Generate user prompt
     const userPromptPath = path.join(promptDir, 'user-prompt.md');
-    await generatePrompt(getPrompt$1('user'), userPromptPath, {
+    await generatePromptFile$1('user', config, userPromptPath);
+    // Run AI inference to generate
+    const systemPrompt = await fs.promises.readFile(systemPromptPath, 'utf8');
+    const userPrompt = await fs.promises.readFile(userPromptPath, 'utf8');
+    const responseFile = path.join(responseDir, `response-${guid}.json`);
+    await runInference(systemPrompt, userPrompt, responseFile, 200, config);
+    return responseFile;
+}
+/** * Generates a prompt file based on the provided template and configuration.
+ *
+ * @param template The template prompt to use.
+ * @param config The configuration object containing template and replacements.
+ * @param systemPromptPath The path to write the generated system prompt file.
+ */
+async function generatePromptFile$1(template, config, systemPromptPath) {
+    await generatePrompt(getPrompt$1(template), systemPromptPath, {
         ISSUE_NUMBER: config.issueNumber,
         ISSUE_REPO: config.repository,
         LABEL_PREFIX: config.labelPrefix,
         LABEL: config.label
     }, config);
-    // Run AI inference
-    const responseFile = path.join(responseDir, `response-${guid}.json`);
-    const systemPrompt = await fs.promises.readFile(systemPromptPath, 'utf8');
-    const userPrompt = await fs.promises.readFile(userPromptPath, 'utf8');
-    await runInference(systemPrompt, userPrompt, responseFile, 200, config);
-    return responseFile;
 }
 
 /**
@@ -40369,6 +40373,13 @@ ${summary}
 
 ${footer}
 `;
+    if (commentBody.trim().length === 0) {
+        return;
+    }
+    if (config.dryRun) {
+        coreExports.info(`Dry run: Skipping commenting on issue: ${commentBody}`);
+        return;
+    }
     await octokit.rest.issues.createComment({
         owner: config.repoOwner,
         repo: config.repoName,
@@ -40385,14 +40396,19 @@ ${footer}
  */
 async function applyLabelsToIssue(octokit, mergedResponse, config) {
     const labels = mergedResponse.labels?.map((l) => l.label)?.filter(Boolean) || [];
-    if (labels.length > 0) {
-        await octokit.rest.issues.addLabels({
-            owner: config.repoOwner,
-            repo: config.repoName,
-            issue_number: config.issueNumber,
-            labels
-        });
+    if (labels.length === 0) {
+        return;
     }
+    if (config.dryRun) {
+        coreExports.info(`Dry run: Skipping applying labels: ${labels.join(', ')}`);
+        return;
+    }
+    await octokit.rest.issues.addLabels({
+        owner: config.repoOwner,
+        repo: config.repoName,
+        issue_number: config.issueNumber,
+        labels
+    });
 }
 /**
  * Adds an 'eyes' reaction to the specified issue using the provided Octokit instance and config.
@@ -40402,6 +40418,10 @@ async function applyLabelsToIssue(octokit, mergedResponse, config) {
  * @param config - The configuration for the repository and issue
  */
 async function addEyes(octokit, config) {
+    if (config.dryRun) {
+        coreExports.info('Dry run: Skipping adding eyes reaction.');
+        return;
+    }
     try {
         await octokit.rest.reactions.createForIssue({
             owner: config.repoOwner,
@@ -40424,6 +40444,10 @@ async function addEyes(octokit, config) {
  * @param config - The configuration for the repository and issue
  */
 async function removeEyes(octokit, config) {
+    if (config.dryRun) {
+        coreExports.info('Dry run: Skipping removing eyes reaction.');
+        return;
+    }
     const reactions = await octokit.rest.reactions.listForIssue({
         owner: config.repoOwner,
         repo: config.repoName,
@@ -40554,21 +40578,17 @@ function getPrompt(templateName) {
  */
 async function generateSummary(config, mergedResponseFile) {
     const summaryDir = path.join(config.tempDir, 'triage-apply', 'prompts');
-    await fs.promises.mkdir(summaryDir, { recursive: true });
-    const systemPromptPath = path.join(summaryDir, 'system-prompt.md');
-    await generatePrompt(getPrompt('system'), systemPromptPath, {
-        ISSUE_NUMBER: config.issueNumber.toString(),
-        ISSUE_REPO: config.repository,
-        MERGED_JSON: mergedResponseFile
-    }, config);
-    const userPromptPath = path.join(summaryDir, 'user-prompt.md');
-    await generatePrompt(getPrompt('user'), userPromptPath, {
-        ISSUE_NUMBER: config.issueNumber.toString(),
-        ISSUE_REPO: config.repository,
-        MERGED_JSON: mergedResponseFile
-    }, config);
     const summaryResponseFile = path.join(config.tempDir, 'triage-apply', 'responses', 'response.md');
+    // Ensure directories exist
+    await fs.promises.mkdir(summaryDir, { recursive: true });
     await fs.promises.mkdir(path.dirname(summaryResponseFile), { recursive: true });
+    // Generate system prompt
+    const systemPromptPath = path.join(summaryDir, 'system-prompt.md');
+    await generatePromptFile('system', systemPromptPath, config, mergedResponseFile);
+    // Generate user prompt
+    const userPromptPath = path.join(summaryDir, 'user-prompt.md');
+    await generatePromptFile('user', userPromptPath, config, mergedResponseFile);
+    // Run AI inference to generate the summary
     const systemPrompt = await fs.promises.readFile(systemPromptPath, 'utf8');
     const userPrompt = await fs.promises.readFile(userPromptPath, 'utf8');
     await runInference(systemPrompt, userPrompt, summaryResponseFile, 500, config);
@@ -40637,6 +40657,21 @@ async function mergeResponses(inputFiles, responseDir, outputPath) {
     return merged;
 }
 /**
+ * Generates a prompt file based on the provided template and configuration.
+ *
+ * @param template The template prompt to use.
+ * @param promptPath The path to write the generated prompt file.
+ * @param config The configuration object containing template and replacements.
+ * @param mergedResponseFile Path to the merged response JSON file.
+ */
+async function generatePromptFile(template, promptPath, config, mergedResponseFile) {
+    await generatePrompt(getPrompt(template), promptPath, {
+        ISSUE_NUMBER: config.issueNumber.toString(),
+        ISSUE_REPO: config.repository,
+        MERGED_JSON: mergedResponseFile
+    }, config);
+}
+/**
  * Helper function to read file contents and remove wrapping code blocks if present.
  *
  * @param file Path to the file to read.
@@ -40687,16 +40722,22 @@ async function applyLabelsAndComment(config) {
     const mergedResponse = await mergeResponses('', responseDir, mergedResponseFile);
     // Log the merged response for debugging
     coreExports.info(`Merged response: ${JSON.stringify(mergedResponse, null, 2)}`);
+    // Generate summary using AI
     if (config.applyComment) {
-        // Generate summary using AI
-        const summaryResponseFile = await generateSummary(config, mergedResponseFile);
-        // Comment on the issue
-        await commentOnIssue(octokit, summaryResponseFile, config, config.commentFooter);
+        await applyComment(octokit, mergedResponseFile, config);
     }
+    // Apply labels to the issue
     if (config.applyLabels) {
-        // Apply labels to the issue
-        await applyLabelsToIssue(octokit, mergedResponse, config);
+        await applyLabels(octokit, mergedResponse, config);
     }
+}
+async function applyComment(octokit, mergedResponseFile, config) {
+    const summaryResponseFile = await generateSummary(config, mergedResponseFile);
+    // Comment on the issue
+    await commentOnIssue(octokit, summaryResponseFile, config, config.commentFooter);
+}
+async function applyLabels(octokit, mergedResponse, config) {
+    await applyLabelsToIssue(octokit, mergedResponse, config);
 }
 
 /**
@@ -40733,8 +40774,12 @@ async function run() {
             token: token,
             aiToken: aiToken,
             label: coreExports.getInput('label'),
-            labelPrefix: coreExports.getInput('label-prefix')
+            labelPrefix: coreExports.getInput('label-prefix'),
+            dryRun: coreExports.getBooleanInput('dry-run') || false
         };
+        if (config.dryRun) {
+            coreExports.info('Running in dry-run mode. No changes will be made.');
+        }
         if (!config.token) {
             coreExports.info('No GitHub token provided.');
         }
