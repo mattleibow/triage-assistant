@@ -1,7 +1,8 @@
 import * as github from '@actions/github'
+import * as core from '@actions/core'
 import * as fs from 'fs'
 import { TriageResponse } from './triage-response.js'
-import { GitHubConfig, ReactionsConfig } from './triage-config.js'
+import { GitHubIssueConfig, TriageConfig } from './triage-config.js'
 
 /**
  * Comments on an issue with the provided summary.
@@ -13,7 +14,7 @@ import { GitHubConfig, ReactionsConfig } from './triage-config.js'
 export async function commentOnIssue(
   octokit: ReturnType<typeof github.getOctokit>,
   summaryFile: string,
-  config: GitHubConfig,
+  config: GitHubIssueConfig & TriageConfig,
   footer?: string
 ): Promise<void> {
   const summary = await fs.promises.readFile(summaryFile, 'utf8')
@@ -23,6 +24,15 @@ ${summary}
 
 ${footer}
 `
+
+  if (commentBody.trim().length === 0) {
+    return
+  }
+
+  if (config.dryRun) {
+    core.info(`Dry run: Skipping commenting on issue: ${commentBody}`)
+    return
+  }
 
   await octokit.rest.issues.createComment({
     owner: config.repoOwner,
@@ -42,18 +52,25 @@ ${footer}
 export async function applyLabelsToIssue(
   octokit: ReturnType<typeof github.getOctokit>,
   mergedResponse: TriageResponse,
-  config: GitHubConfig
+  config: GitHubIssueConfig & TriageConfig
 ): Promise<void> {
   const labels = mergedResponse.labels?.map((l) => l.label)?.filter(Boolean) || []
 
-  if (labels.length > 0) {
-    await octokit.rest.issues.addLabels({
-      owner: config.repoOwner,
-      repo: config.repoName,
-      issue_number: config.issueNumber,
-      labels
-    })
+  if (labels.length === 0) {
+    return
   }
+
+  if (config.dryRun) {
+    core.info(`Dry run: Skipping applying labels: ${labels.join(', ')}`)
+    return
+  }
+
+  await octokit.rest.issues.addLabels({
+    owner: config.repoOwner,
+    repo: config.repoName,
+    issue_number: config.issueNumber,
+    labels
+  })
 }
 
 /**
@@ -63,7 +80,12 @@ export async function applyLabelsToIssue(
  * @param octokit - An authenticated Octokit instance
  * @param config - The configuration for the repository and issue
  */
-export async function addEyes(octokit: ReturnType<typeof github.getOctokit>, config: ReactionsConfig) {
+export async function addEyes(octokit: ReturnType<typeof github.getOctokit>, config: GitHubIssueConfig & TriageConfig) {
+  if (config.dryRun) {
+    core.info('Dry run: Skipping adding eyes reaction.')
+    return
+  }
+
   try {
     await octokit.rest.reactions.createForIssue({
       owner: config.repoOwner,
@@ -85,7 +107,15 @@ export async function addEyes(octokit: ReturnType<typeof github.getOctokit>, con
  * @param octokit - An authenticated Octokit instance
  * @param config - The configuration for the repository and issue
  */
-export async function removeEyes(octokit: ReturnType<typeof github.getOctokit>, config: ReactionsConfig) {
+export async function removeEyes(
+  octokit: ReturnType<typeof github.getOctokit>,
+  config: GitHubIssueConfig & TriageConfig
+) {
+  if (config.dryRun) {
+    core.info('Dry run: Skipping removing eyes reaction.')
+    return
+  }
+
   const reactions = await octokit.rest.reactions.listForIssue({
     owner: config.repoOwner,
     repo: config.repoName,

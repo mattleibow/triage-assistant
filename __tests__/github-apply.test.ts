@@ -31,6 +31,7 @@ describe('apply', () => {
   }
 
   const mockConfig = {
+    dryRun: false,
     token: 'test-token',
     tempDir: testTempDir,
     issueNumber: 123,

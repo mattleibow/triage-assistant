@@ -8,7 +8,7 @@ import * as prompts from '../__fixtures__/prompts.js'
 import * as ai from '../__fixtures__/ai.js'
 import * as fs from 'fs'
 import * as path from 'path'
-import { SelectLabelsPromptConfig } from '../src/triage-config.js'
+import { InferenceConfig, SelectLabelsPromptConfig, TriageConfig } from '../src/triage-config.js'
 import { FileSystemMock } from './helpers/filesystem-mock.js'
 
 // Mock dependencies using fixtures
@@ -25,15 +25,14 @@ const { selectLabels } = await import('../src/prompts-select-labels.js')
 const { getPrompt, TEMPLATE_NAMES } = await import('../src/prompts/select-labels/index.js')
 
 describe('selectLabels', () => {
-  const mockConfig: SelectLabelsPromptConfig = {
+  const mockConfig: SelectLabelsPromptConfig & InferenceConfig & TriageConfig = {
+    dryRun: false,
     aiEndpoint: 'https://test-ai-endpoint.com',
     aiModel: 'test-model',
     aiToken: 'test-ai-token',
     token: 'test-token',
     tempDir: '/tmp/test',
     issueNumber: 123,
-    repoOwner: 'owner',
-    repoName: 'repo',
     repository: 'owner/repo',
     labelPrefix: 'type/',
     label: 'bug',

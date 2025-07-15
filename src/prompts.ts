@@ -1,7 +1,7 @@
 import * as core from '@actions/core'
 import * as exec from '@actions/exec'
 import * as fs from 'fs'
-import { PromptConfig } from './triage-config.js'
+import { PromptGenerationConfig } from './triage-config.js'
 
 /**
  * Generates a prompt from a template string or file by replacing placeholders and executing commands.
@@ -16,7 +16,7 @@ export async function generatePrompt(
   templateContent: string,
   outputPath: string | undefined,
   replacements: Record<string, unknown>,
-  config: PromptConfig
+  config: PromptGenerationConfig
 ): Promise<string> {
   core.debug(`Generating prompt from template:`)
   core.debug(templateContent)
