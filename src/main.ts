@@ -1,8 +1,8 @@
 import * as core from '@actions/core'
 import * as github from '@actions/github'
 import * as os from 'os'
-import { selectLabels } from './select-labels.js'
-import { applyLabelsAndComment, manageReactions } from './apply.js'
+import { selectLabels } from './prompts-select-labels.js'
+import { applyLabelsAndComment, manageReactions } from './github-apply.js'
 import { TriageConfig } from './triage-config.js'
 
 /**
@@ -20,6 +20,13 @@ export async function run(): Promise<void> {
   try {
     // Initialize configuration object
     const issueNumberStr = core.getInput('issue') || github.context.issue.number.toString()
+    const token =
+      core.getInput('token') ||
+      process.env.TRIAGE_GITHUB_TOKEN ||
+      process.env.GITHUB_TOKEN ||
+      core.getInput('fallback-token') ||
+      ''
+    const aiToken = core.getInput('ai-token') || process.env.TRIAGE_AI_TOKEN || token
     config = {
       aiEndpoint: core.getInput('ai-endpoint') || process.env.TRIAGE_AI_ENDPOINT || DEFAULT_AI_ENDPOINT,
       aiModel: core.getInput('ai-model') || process.env.TRIAGE_AI_MODEL || DEFAULT_AI_MODEL,
@@ -32,7 +39,8 @@ export async function run(): Promise<void> {
       repository: `${github.context.repo.owner}/${github.context.repo.repo}`,
       tempDir: process.env.RUNNER_TEMP || os.tmpdir(),
       template: core.getInput('template'),
-      token: core.getInput('token') || process.env.TRIAGE_GITHUB_TOKEN || core.getInput('fallback-token') || '',
+      token: token,
+      aiToken: aiToken,
       label: core.getInput('label'),
       labelPrefix: core.getInput('label-prefix')
     }

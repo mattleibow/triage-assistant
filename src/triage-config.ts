@@ -16,7 +16,7 @@ export interface PromptConfig {
 export interface InferenceConfig {
   aiEndpoint: string
   aiModel: string
-  token: string
+  aiToken: string
 }
 
 export interface AIConfig extends PromptConfig, InferenceConfig {

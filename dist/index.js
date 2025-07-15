@@ -31642,6 +31642,69 @@ function getPrompt$1(templateName) {
 
 var execExports = requireExec();
 
+/**
+ * Generates a prompt from a template string or file by replacing placeholders and executing commands.
+ *
+ * @param templateContent The template content as a string.
+ * @param outputPath Optional path where the generated prompt will be written.
+ * @param replacements Record of placeholder keys and their replacement values.
+ * @param config Configuration object containing token for external service access.
+ * @returns Promise that resolves to the generated prompt content.
+ */
+async function generatePrompt(templateContent, outputPath, replacements, config) {
+    coreExports.debug(`Generating prompt from template:`);
+    coreExports.debug(templateContent);
+    const lines = templateContent.split('\n');
+    const outputContent = [];
+    for (let line of lines) {
+        // Replace placeholders
+        for (const [key, value] of Object.entries(replacements)) {
+            line = line.replace(new RegExp(`{{${key}}}`, 'g'), String(value || ''));
+        }
+        // Check for EXEC: command prefix
+        const execMatch = line.match(/^EXEC:\s*(.+)$/);
+        if (execMatch) {
+            const command = execMatch[1];
+            coreExports.info(`Executing command: ${command}`);
+            try {
+                let output = '';
+                await execExports.exec('pwsh', ['-Command', command], {
+                    listeners: {
+                        stdout: (data) => {
+                            output += data.toString();
+                        }
+                    },
+                    env: {
+                        ...process.env,
+                        GH_TOKEN: config.token
+                    }
+                });
+                const result = output.trim().split('\n');
+                outputContent.push(...result);
+            }
+            catch (error) {
+                coreExports.setFailed(`Error executing command '${command}': ${error}`);
+                throw error;
+            }
+        }
+        else {
+            outputContent.push(line);
+        }
+    }
+    const output = outputContent.join('\n');
+    if (outputPath) {
+        coreExports.debug(`Writing generated prompt to file: ${outputPath}`);
+        await fs.promises.writeFile(outputPath, output);
+        // Log the created prompt for debugging
+        const createdContent = await fs.promises.readFile(outputPath, 'utf8');
+        coreExports.debug(`Generated prompt file contained:`);
+        coreExports.debug(createdContent);
+    }
+    coreExports.info(`Created prompt from template:`);
+    coreExports.info(output);
+    return output;
+}
+
 /******************************************************************************
 Copyright (c) Microsoft Corporation.
 
@@ -40203,68 +40266,6 @@ function getPathFromMapKey(mapKey) {
 }
 
 /**
- * Generates a prompt from a template string or file by replacing placeholders and executing commands.
- *
- * @param templateContent The template content as a string.
- * @param outputPath Optional path where the generated prompt will be written.
- * @param replacements Record of placeholder keys and their replacement values.
- * @param config Configuration object containing token for external service access.
- * @returns Promise that resolves to the generated prompt content.
- */
-async function generatePrompt(templateContent, outputPath, replacements, config) {
-    coreExports.debug(`Generating prompt from template:`);
-    coreExports.debug(templateContent);
-    const lines = templateContent.split('\n');
-    const outputContent = [];
-    for (let line of lines) {
-        // Replace placeholders
-        for (const [key, value] of Object.entries(replacements)) {
-            line = line.replace(new RegExp(`{{${key}}}`, 'g'), String(value || ''));
-        }
-        // Check for EXEC: command prefix
-        const execMatch = line.match(/^EXEC:\s*(.+)$/);
-        if (execMatch) {
-            const command = execMatch[1];
-            coreExports.info(`Executing command: ${command}`);
-            try {
-                let output = '';
-                await execExports.exec('pwsh', ['-Command', command], {
-                    listeners: {
-                        stdout: (data) => {
-                            output += data.toString();
-                        }
-                    },
-                    env: {
-                        ...process.env,
-                        GH_TOKEN: config.token
-                    }
-                });
-                const result = output.trim().split('\n');
-                outputContent.push(...result);
-            }
-            catch (error) {
-                coreExports.setFailed(`Error executing command '${command}': ${error}`);
-                throw error;
-            }
-        }
-        else {
-            outputContent.push(line);
-        }
-    }
-    const output = outputContent.join('\n');
-    if (outputPath) {
-        coreExports.debug(`Writing generated prompt to file: ${outputPath}`);
-        await fs.promises.writeFile(outputPath, output);
-        // Log the created prompt for debugging
-        const createdContent = await fs.promises.readFile(outputPath, 'utf8');
-        coreExports.debug(`Generated prompt file contained:`);
-        coreExports.debug(createdContent);
-    }
-    coreExports.info(`Created prompt from template:`);
-    coreExports.info(output);
-    return output;
-}
-/**
  * Runs AI inference to generate a response file.
  *
  * @param systemPrompt The system prompt content.
@@ -40277,7 +40278,7 @@ async function runInference(systemPrompt, userPrompt, responseFile, maxTokens = 
     coreExports.debug(`Running inference...`);
     try {
         // Create Azure AI client
-        const client = createClient(config.aiEndpoint, new AzureKeyCredential(config.token), {
+        const client = createClient(config.aiEndpoint, new AzureKeyCredential(config.aiToken), {
             userAgentOptions: { userAgentPrefix: 'github-actions-triage-assistant' }
         });
         // Make the AI inference request
@@ -40393,7 +40394,6 @@ async function applyLabelsToIssue(octokit, mergedResponse, config) {
         });
     }
 }
-
 /**
  * Adds an 'eyes' reaction to the specified issue using the provided Octokit instance and config.
  * Ignores errors if the reaction already exists or is successfully created.
@@ -40712,6 +40712,12 @@ async function run() {
     try {
         // Initialize configuration object
         const issueNumberStr = coreExports.getInput('issue') || githubExports.context.issue.number.toString();
+        const token = coreExports.getInput('token') ||
+            process.env.TRIAGE_GITHUB_TOKEN ||
+            process.env.GITHUB_TOKEN ||
+            coreExports.getInput('fallback-token') ||
+            '';
+        const aiToken = coreExports.getInput('ai-token') || process.env.TRIAGE_AI_TOKEN || token;
         config = {
             aiEndpoint: coreExports.getInput('ai-endpoint') || process.env.TRIAGE_AI_ENDPOINT || DEFAULT_AI_ENDPOINT,
             aiModel: coreExports.getInput('ai-model') || process.env.TRIAGE_AI_MODEL || DEFAULT_AI_MODEL,
@@ -40724,7 +40730,8 @@ async function run() {
             repository: `${githubExports.context.repo.owner}/${githubExports.context.repo.repo}`,
             tempDir: process.env.RUNNER_TEMP || require$$0.tmpdir(),
             template: coreExports.getInput('template'),
-            token: coreExports.getInput('token') || process.env.TRIAGE_GITHUB_TOKEN || coreExports.getInput('fallback-token') || '',
+            token: token,
+            aiToken: aiToken,
             label: coreExports.getInput('label'),
             labelPrefix: coreExports.getInput('label-prefix')
         };
