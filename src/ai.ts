@@ -48,7 +48,7 @@ export async function runInference(
     })
 
     if (isUnexpected(response)) {
-      if (response.body.error) {
+      if (response.body?.error) {
         throw response.body.error
       }
       throw new Error(`An error occurred while fetching the response (${response.status}): ${response.body}`)
