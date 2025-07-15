@@ -40709,15 +40709,12 @@ async function run() {
     const DEFAULT_AI_MODEL = 'openai/gpt-4o';
     let config;
     let shouldRemoveReactions = false;
-    Object.keys(process.env).forEach((element) => {
-        coreExports.info(`Environment variable: ${element}=${process.env[element]}`);
-    });
     try {
         // Initialize configuration object
         const issueNumberStr = coreExports.getInput('issue') || githubExports.context.issue.number.toString();
         config = {
-            aiEndpoint: coreExports.getInput('ai-endpoint') || process.env.TRIAGE_AI_ENDPOINT || DEFAULT_AI_ENDPOINT,
-            aiModel: coreExports.getInput('ai-model') || process.env.TRIAGE_AI_MODEL || DEFAULT_AI_MODEL,
+            aiEndpoint: coreExports.getInput('ai-endpoint') || DEFAULT_AI_ENDPOINT,
+            aiModel: coreExports.getInput('ai-model') || DEFAULT_AI_MODEL,
             applyComment: coreExports.getBooleanInput('apply-comment'),
             commentFooter: coreExports.getInput('comment-footer'),
             applyLabels: coreExports.getBooleanInput('apply-labels'),
@@ -40727,13 +40724,10 @@ async function run() {
             repository: `${githubExports.context.repo.owner}/${githubExports.context.repo.repo}`,
             tempDir: process.env.RUNNER_TEMP || require$$0.tmpdir(),
             template: coreExports.getInput('template'),
-            token: coreExports.getInput('token') || process.env.TRIAGE_GITHUB_TOKEN || process.env.ACTIONS_RUNTIME_TOKEN || '',
+            token: coreExports.getInput('token'),
             label: coreExports.getInput('label'),
             labelPrefix: coreExports.getInput('label-prefix')
         };
-        if (!config.token) {
-            throw new Error('GitHub token is required. Please provide a token or set the TRIAGE_GITHUB_TOKEN or GITHUB_TOKEN environment variable.');
-        }
         let responseFile = '';
         const shouldAddLabels = config.template ? true : false;
         const shouldAddSummary = config.applyLabels || config.applyComment;

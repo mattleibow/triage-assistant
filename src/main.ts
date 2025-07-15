@@ -17,16 +17,12 @@ export async function run(): Promise<void> {
   let config: TriageConfig | undefined
   let shouldRemoveReactions = false
 
-  Object.keys(process.env).forEach((element) => {
-    core.info(`Environment variable: ${element}=${process.env[element]}`)
-  })
-
   try {
     // Initialize configuration object
     const issueNumberStr = core.getInput('issue') || github.context.issue.number.toString()
     config = {
-      aiEndpoint: core.getInput('ai-endpoint') || process.env.TRIAGE_AI_ENDPOINT || DEFAULT_AI_ENDPOINT,
-      aiModel: core.getInput('ai-model') || process.env.TRIAGE_AI_MODEL || DEFAULT_AI_MODEL,
+      aiEndpoint: core.getInput('ai-endpoint') || DEFAULT_AI_ENDPOINT,
+      aiModel: core.getInput('ai-model') || DEFAULT_AI_MODEL,
       applyComment: core.getBooleanInput('apply-comment'),
       commentFooter: core.getInput('comment-footer'),
       applyLabels: core.getBooleanInput('apply-labels'),
@@ -36,15 +32,9 @@ export async function run(): Promise<void> {
       repository: `${github.context.repo.owner}/${github.context.repo.repo}`,
       tempDir: process.env.RUNNER_TEMP || os.tmpdir(),
       template: core.getInput('template'),
-      token: core.getInput('token') || process.env.TRIAGE_GITHUB_TOKEN || process.env.ACTIONS_RUNTIME_TOKEN || '',
+      token: core.getInput('token'),
       label: core.getInput('label'),
       labelPrefix: core.getInput('label-prefix')
-    }
-
-    if (!config.token) {
-      throw new Error(
-        'GitHub token is required. Please provide a token or set the TRIAGE_GITHUB_TOKEN or GITHUB_TOKEN environment variable.'
-      )
     }
 
     let responseFile = ''
