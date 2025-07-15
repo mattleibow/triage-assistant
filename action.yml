@@ -11,17 +11,21 @@ inputs:
   token:
     description: 'GitHub token for API access'
     required: false
-    default: ${{ secrets.TRIAGE_GITHUB_TOKEN || secrets.GITHUB_TOKEN }}
+    default: ''
+  fallback-token:
+    description: 'Fallback GitHub token for API access'
+    required: false
+    default: ${{ github.token }}
 
   # AI model and endpoint inputs
   ai-endpoint:
     description: 'AI endpoint to use for inference'
     required: false
-    default: ${{ env.TRIAGE_AI_ENDPOINT }}
+    default: ''
   ai-model:
     description: 'AI model to use for inference'
     required: false
-    default: ${{ env.TRIAGE_AI_MODEL }}
+    default: ''
 
   issue:
     description: 'The issue number of the issue to triage'
