@@ -3,10 +3,10 @@ name: 'Triage Issues and Pull Requests'
 on:
   # When someone opens a new issue
   issues:
-    types: [opened]
+    types: [opened, reopened]
   # When someone opens a new pull request
   pull_request:
-    types: [opened]
+    types: [opened, reopened, synchronize]
   # When someone adds the "/triage" comments
   issue_comment:
     types: [created, edited]

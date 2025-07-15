@@ -40724,7 +40724,7 @@ async function run() {
             repository: `${githubExports.context.repo.owner}/${githubExports.context.repo.repo}`,
             tempDir: process.env.RUNNER_TEMP || require$$0.tmpdir(),
             template: coreExports.getInput('template'),
-            token: coreExports.getInput('token') || process.env.TRIAGE_GITHUB_TOKEN || process.env.GITHUB_TOKEN || '',
+            token: coreExports.getInput('token') || process.env.TRIAGE_GITHUB_TOKEN || coreExports.getInput('fallback-token') || '',
             label: coreExports.getInput('label'),
             labelPrefix: coreExports.getInput('label-prefix')
         };

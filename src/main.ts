@@ -32,7 +32,7 @@ export async function run(): Promise<void> {
       repository: `${github.context.repo.owner}/${github.context.repo.repo}`,
       tempDir: process.env.RUNNER_TEMP || os.tmpdir(),
       template: core.getInput('template'),
-      token: core.getInput('token') || process.env.TRIAGE_GITHUB_TOKEN || process.env.GITHUB_TOKEN || '',
+      token: core.getInput('token') || process.env.TRIAGE_GITHUB_TOKEN || core.getInput('fallback-token') || '',
       label: core.getInput('label'),
       labelPrefix: core.getInput('label-prefix')
     }

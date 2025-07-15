@@ -7,16 +7,30 @@ branding:
   color: 'blue'
 
 inputs:
-  issue:
-    description: 'The issue number of the issue to triage'
-    required: false
-    default: ''
-
   # GitHub token input
   token:
     description: 'GitHub token for API access'
     required: false
+    default: ''
+  fallback-token:
+    description: 'Fallback GitHub token for API access'
+    required: false
     default: ${{ github.token }}
+
+  # AI model and endpoint inputs
+  ai-endpoint:
+    description: 'AI endpoint to use for inference'
+    required: false
+    default: ''
+  ai-model:
+    description: 'AI model to use for inference'
+    required: false
+    default: ''
+
+  issue:
+    description: 'The issue number of the issue to triage'
+    required: false
+    default: ''
 
   # Label selection inputs
   template:
