@@ -32,9 +32,15 @@ export async function run(): Promise<void> {
       repository: `${github.context.repo.owner}/${github.context.repo.repo}`,
       tempDir: process.env.RUNNER_TEMP || os.tmpdir(),
       template: core.getInput('template'),
-      token: core.getInput('token') || process.env.TRIAGE_GITHUB_TOKEN || process.env.GITHUB_TOKEN || 'bad-token',
+      token: core.getInput('token') || process.env.TRIAGE_GITHUB_TOKEN || process.env.GITHUB_TOKEN || '',
       label: core.getInput('label'),
       labelPrefix: core.getInput('label-prefix')
+    }
+
+    if (!config.token) {
+      throw new Error(
+        'GitHub token is required. Please provide a token or set the TRIAGE_GITHUB_TOKEN or GITHUB_TOKEN environment variable.'
+      )
     }
 
     let responseFile = ''

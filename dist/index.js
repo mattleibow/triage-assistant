@@ -40728,6 +40728,9 @@ async function run() {
             label: coreExports.getInput('label'),
             labelPrefix: coreExports.getInput('label-prefix')
         };
+        if (!config.token) {
+            throw new Error('GitHub token is required. Please provide a token or set the TRIAGE_GITHUB_TOKEN or GITHUB_TOKEN environment variable.');
+        }
         let responseFile = '';
         const shouldAddLabels = config.template ? true : false;
         const shouldAddSummary = config.applyLabels || config.applyComment;
