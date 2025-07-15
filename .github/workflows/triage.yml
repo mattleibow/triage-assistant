@@ -86,4 +86,4 @@ jobs:
           issue: ${{ steps.get-number.outputs.number }}
           apply-labels: true
           apply-comment: true
-          dry-run: ${{ inputs.dry_run }}
+          dry-run: ${{ inputs.dry_run || false }}
