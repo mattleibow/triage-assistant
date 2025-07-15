@@ -3,10 +3,10 @@ name: 'Triage Issues and Pull Requests'
 on:
   # When someone opens a new issue
   issues:
-    types: [opened]
+    types: [opened, reopened]
   # When someone opens a new pull request
   pull_request:
-    types: [opened]
+    types: [opened, reopened, synchronize]
   # When someone adds the "/triage" comments
   issue_comment:
     types: [created, edited]
@@ -17,6 +17,11 @@ on:
         description: 'Issue number to triage'
         required: true
         type: number
+      dry_run:
+        description: 'Whether to run in dry run mode'
+        required: false
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -81,3 +86,4 @@ jobs:
           issue: ${{ steps.get-number.outputs.number }}
           apply-labels: true
           apply-comment: true
+          dry-run: ${{ inputs.dry_run || false }}

@@ -1,5 +1,5 @@
 /**
- * Unit tests for the AI functionality, src/ai.ts
+ * Unit tests for the prompt functionality, src/prompts.ts
  */
 import { jest } from '@jest/globals'
 import * as core from '../__fixtures__/actions-core.js'
@@ -12,7 +12,7 @@ jest.unstable_mockModule('@actions/core', () => core)
 jest.unstable_mockModule('@actions/exec', () => exec)
 
 // Import the module being tested
-const { generatePrompt } = await import('../src/ai.js')
+const { generatePrompt } = await import('../src/prompts.js')
 
 describe('generatePrompt', () => {
   const mockConfig = {

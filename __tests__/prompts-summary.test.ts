@@ -1,22 +1,25 @@
 /**
- * Unit tests for the apply functionality, src/apply.ts
+ * Unit tests for the summary prompt generation functionality, src/prompts-summary.ts
  */
 
 import * as fs from 'fs'
 import * as path from 'path'
+import * as prompts from '../__fixtures__/prompts.js'
 import * as ai from '../__fixtures__/ai.js'
 import * as core from '../__fixtures__/actions-core.js'
 import * as github from '../__fixtures__/actions-github.js'
 import { jest } from '@jest/globals'
-import { FileSystemMock } from '../__tests__/helpers/filesystem-mock.js'
+import { FileSystemMock } from './helpers/filesystem-mock.js'
+import { InferenceConfig, SummaryPromptConfig, TriageConfig } from '../src/triage-config.js'
 
 // Mock dependencies using fixtures
 jest.unstable_mockModule('@actions/core', () => core)
 jest.unstable_mockModule('@actions/github', () => github)
+jest.unstable_mockModule('../src/prompts.js', () => prompts)
 jest.unstable_mockModule('../src/ai.js', () => ai)
 
 // Import the module being tested
-const { mergeResponses, generateSummary } = await import('../src/summary.js')
+const { mergeResponses, generateSummary } = await import('../src/prompts-summary.js')
 
 describe('summary', () => {
   const testMergedResponseFile = '/tmp/test/merged-response.json'
@@ -411,15 +414,15 @@ describe('summary', () => {
   })
 
   describe('generateSummary', () => {
-    const mockConfig = {
+    const mockConfig: SummaryPromptConfig & InferenceConfig & TriageConfig = {
+      dryRun: false,
       tempDir: '/tmp/test',
       issueNumber: 123,
       repository: 'owner/repo',
-      repoName: 'repo',
-      repoOwner: 'owner',
       token: 'test-token',
       aiEndpoint: 'test-endpoint',
-      aiModel: 'test-model'
+      aiModel: 'test-model',
+      aiToken: 'test-ai-token'
     }
 
     const expectedSummaryDir = path.join(mockConfig.tempDir, 'triage-apply', 'prompts')
@@ -430,7 +433,7 @@ describe('summary', () => {
 
     beforeEach(() => {
       // Mock generatePrompt to simulate the real behavior: process template and write to file
-      ai.generatePrompt.mockImplementation(async (template, outputPath) => {
+      prompts.generatePrompt.mockImplementation(async (template, outputPath) => {
         const processedContent = template.toString()
         if (outputPath) {
           await fs.promises.writeFile(outputPath, processedContent)
@@ -450,10 +453,10 @@ describe('summary', () => {
       expect(fs.promises.mkdir).toHaveBeenCalledWith(expectedResponseDir, { recursive: true })
 
       // Verify prompts are generated
-      expect(ai.generatePrompt).toHaveBeenCalledTimes(2)
+      expect(prompts.generatePrompt).toHaveBeenCalledTimes(2)
 
       // Verify system prompt generation
-      expect(ai.generatePrompt).toHaveBeenCalledWith(
+      expect(prompts.generatePrompt).toHaveBeenCalledWith(
         expect.stringContaining('summarize some actions and then prove to the user'),
         expectedSystemPromptPath,
         {
@@ -465,7 +468,7 @@ describe('summary', () => {
       )
 
       // Verify user prompt generation
-      expect(ai.generatePrompt).toHaveBeenCalledWith(
+      expect(prompts.generatePrompt).toHaveBeenCalledWith(
         expect.stringContaining('Please summarize the results of this triage.'),
         expectedUserPromptPath,
         {
@@ -503,7 +506,7 @@ describe('summary', () => {
       await generateSummary(customConfig, testMergedResponseFile)
 
       // Verify the issue number and repository are passed correctly
-      expect(ai.generatePrompt).toHaveBeenCalledWith(
+      expect(prompts.generatePrompt).toHaveBeenCalledWith(
         expect.any(String),
         expect.any(String),
         expect.objectContaining({
@@ -531,7 +534,7 @@ describe('summary', () => {
     })
 
     it('should propagate errors from AI operations', async () => {
-      ai.generatePrompt.mockRejectedValue(new Error('AI operation failed'))
+      prompts.generatePrompt.mockRejectedValue(new Error('AI operation failed'))
 
       await expect(generateSummary(mockConfig, testMergedResponseFile)).rejects.toThrow('AI operation failed')
     })

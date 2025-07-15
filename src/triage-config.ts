@@ -1,44 +1,67 @@
-export interface GitHubConfig {
-  issueNumber: number
-  repository: string
-  repoName: string
-  repoOwner: string
+// global configs
+
+export interface EverythingConfig
+  extends TriageConfig,
+    InferenceConfig,
+    PromptGenerationConfig,
+    SelectLabelsPromptConfig,
+    SummaryPromptConfig,
+    GitHubIssueConfig,
+    ApplyReactionsConfig,
+    ApplyLabelsConfig,
+    ApplySummaryCommentConfig {}
+
+export interface TriageConfig {
+  dryRun: boolean
+  tempDir: string
 }
 
-export interface ReactionsConfig extends GitHubConfig {
-  token: string
-}
-
-export interface PromptConfig {
-  token: string
-}
+// ai inference configs
 
 export interface InferenceConfig {
   aiEndpoint: string
   aiModel: string
+  aiToken: string
+}
+
+// prompt generation configs
+
+export interface PromptGenerationConfig {
   token: string
 }
 
-export interface AIConfig extends PromptConfig, InferenceConfig {
-  tempDir: string
-}
-
-export interface SelectLabelsPromptConfig extends AIConfig, GitHubConfig {
+export interface SelectLabelsPromptConfig extends PromptGenerationConfig {
+  issueNumber: number
+  repository: string
   template: string
   label: string
   labelPrefix: string
 }
 
-export interface SummaryPromptConfig extends AIConfig, GitHubConfig {
-  // no properties here, but may be later
+export interface SummaryPromptConfig extends PromptGenerationConfig {
+  repository: string
+  issueNumber: number
 }
 
-export interface ApplyConfig extends SummaryPromptConfig, GitHubConfig {
-  applyComment: boolean
+// GitHub interactions configs
+
+export interface GitHubIssueConfig {
+  repoOwner: string
+  repoName: string
+  issueNumber: number
+}
+
+export interface ApplyReactionsConfig extends GitHubIssueConfig {
+  token: string
+}
+
+export interface ApplyLabelsConfig extends GitHubIssueConfig {
+  token: string
   applyLabels: boolean
-  commentFooter: string
 }
 
-export interface TriageConfig extends SelectLabelsPromptConfig, SummaryPromptConfig, ApplyConfig {
-  // no properties here, but may be later
+export interface ApplySummaryCommentConfig extends GitHubIssueConfig, SummaryPromptConfig, InferenceConfig {
+  token: string
+  applyComment: boolean
+  commentFooter?: string
 }

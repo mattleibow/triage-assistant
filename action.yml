@@ -7,16 +7,34 @@ branding:
   color: 'blue'
 
 inputs:
-  issue:
-    description: 'The issue number of the issue to triage'
-    required: false
-    default: ''
-
   # GitHub token input
   token:
     description: 'GitHub token for API access'
     required: false
-    default: ${{ github.token }}
+    default: ''
+  fallback-token:
+    description: 'Fallback GitHub token for API access'
+    required: false
+    default: '${{ github.token }}'
+
+  # AI model and endpoint inputs
+  ai-endpoint:
+    description: 'Endpoint to use for AI inference'
+    required: false
+    default: ''
+  ai-model:
+    description: 'Model to use for AI inference'
+    required: false
+    default: ''
+  ai-token:
+    description: 'Token for AI inference'
+    required: false
+    default: ''
+
+  issue:
+    description: 'The issue number of the issue to triage'
+    required: false
+    default: ''
 
   # Label selection inputs
   template:
@@ -47,6 +65,10 @@ inputs:
     default:
       '_This entire triage process was automated by AI and mistakes may have been made. Please let us know so we can
       continue to improve._'
+  dry-run:
+    description: 'Whether to run the action in dry-run mode (no changes made)'
+    required: false
+    default: 'false'
 
 outputs:
   response-file:

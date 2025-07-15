@@ -1,9 +1,9 @@
 import * as core from '@actions/core'
 import * as github from '@actions/github'
 import * as os from 'os'
-import { selectLabels } from './select-labels.js'
-import { applyLabelsAndComment, manageReactions } from './apply.js'
-import { TriageConfig } from './triage-config.js'
+import { selectLabels } from './prompts-select-labels.js'
+import { applyLabelsAndComment, manageReactions } from './github-apply.js'
+import { EverythingConfig } from './triage-config.js'
 
 /**
  * The main function for the action.
@@ -14,12 +14,19 @@ export async function run(): Promise<void> {
   const DEFAULT_AI_ENDPOINT = 'https://models.github.ai/inference'
   const DEFAULT_AI_MODEL = 'openai/gpt-4o'
 
-  let config: TriageConfig | undefined
+  let config: EverythingConfig | undefined
   let shouldRemoveReactions = false
 
   try {
     // Initialize configuration object
     const issueNumberStr = core.getInput('issue') || github.context.issue.number.toString()
+    const token =
+      core.getInput('token') ||
+      process.env.TRIAGE_GITHUB_TOKEN ||
+      process.env.GITHUB_TOKEN ||
+      core.getInput('fallback-token') ||
+      ''
+    const aiToken = core.getInput('ai-token') || process.env.TRIAGE_AI_TOKEN || token
     config = {
       aiEndpoint: core.getInput('ai-endpoint') || process.env.TRIAGE_AI_ENDPOINT || DEFAULT_AI_ENDPOINT,
       aiModel: core.getInput('ai-model') || process.env.TRIAGE_AI_MODEL || DEFAULT_AI_MODEL,
@@ -32,9 +39,22 @@ export async function run(): Promise<void> {
       repository: `${github.context.repo.owner}/${github.context.repo.repo}`,
       tempDir: process.env.RUNNER_TEMP || os.tmpdir(),
       template: core.getInput('template'),
-      token: core.getInput('token') || process.env.TRIAGE_GITHUB_TOKEN || process.env.GITHUB_TOKEN || '',
+      token: token,
+      aiToken: aiToken,
       label: core.getInput('label'),
-      labelPrefix: core.getInput('label-prefix')
+      labelPrefix: core.getInput('label-prefix'),
+      dryRun: core.getBooleanInput('dry-run') || false
+    }
+
+    if (config.dryRun) {
+      core.info('Running in dry-run mode. No changes will be made.')
+    }
+
+    if (!config.token) {
+      core.info('No GitHub token provided.')
+    }
+    if (!config.aiToken) {
+      core.info('No specific AI token provided, using GitHub token as fallback.')
     }
 
     let responseFile = ''

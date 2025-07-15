@@ -1,23 +1,23 @@
 /**
- * Unit tests for the apply functionality, src/apply.ts
+ * Unit tests for the apply functionality, src/github-apply.ts
  */
 
 import * as path from 'path'
 import * as core from '../__fixtures__/actions-core.js'
 import * as github from '../__fixtures__/actions-github.js'
-import * as issues from '../__fixtures__/issues.js'
-import * as summary from '../__fixtures__/summary.js'
+import * as issues from '../__fixtures__/github-issues.js'
+import * as summary from '../__fixtures__/prompts-summary.js'
 import { jest } from '@jest/globals'
-import { FileSystemMock } from '../__tests__/helpers/filesystem-mock.js'
+import { FileSystemMock } from './helpers/filesystem-mock.js'
 
 // Mock dependencies using fixtures
 jest.unstable_mockModule('@actions/core', () => core)
 jest.unstable_mockModule('@actions/github', () => github)
-jest.unstable_mockModule('../src/issues.js', () => issues)
-jest.unstable_mockModule('../src/summary.js', () => summary)
+jest.unstable_mockModule('../src/github-issues.js', () => issues)
+jest.unstable_mockModule('../src/prompts-summary.js', () => summary)
 
 // Import the module being tested
-const { applyLabelsAndComment } = await import('../src/apply.js')
+const { applyLabelsAndComment } = await import('../src/github-apply.js')
 
 describe('apply', () => {
   const testTempDir = '/tmp/test'
@@ -31,6 +31,7 @@ describe('apply', () => {
   }
 
   const mockConfig = {
+    dryRun: false,
     token: 'test-token',
     tempDir: testTempDir,
     issueNumber: 123,
@@ -39,6 +40,7 @@ describe('apply', () => {
     repoOwner: 'owner',
     aiEndpoint: 'test-endpoint',
     aiModel: 'test-model',
+    aiToken: 'test-ai-token',
     applyComment: true,
     applyLabels: true,
     commentFooter: 'Test footer'

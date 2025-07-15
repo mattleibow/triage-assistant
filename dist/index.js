@@ -31642,6 +31642,69 @@ function getPrompt$1(templateName) {
 
 var execExports = requireExec();
 
+/**
+ * Generates a prompt from a template string or file by replacing placeholders and executing commands.
+ *
+ * @param templateContent The template content as a string.
+ * @param outputPath Optional path where the generated prompt will be written.
+ * @param replacements Record of placeholder keys and their replacement values.
+ * @param config Configuration object containing token for external service access.
+ * @returns Promise that resolves to the generated prompt content.
+ */
+async function generatePrompt(templateContent, outputPath, replacements, config) {
+    coreExports.debug(`Generating prompt from template:`);
+    coreExports.debug(templateContent);
+    const lines = templateContent.split('\n');
+    const outputContent = [];
+    for (let line of lines) {
+        // Replace placeholders
+        for (const [key, value] of Object.entries(replacements)) {
+            line = line.replace(new RegExp(`{{${key}}}`, 'g'), String(value || ''));
+        }
+        // Check for EXEC: command prefix
+        const execMatch = line.match(/^EXEC:\s*(.+)$/);
+        if (execMatch) {
+            const command = execMatch[1];
+            coreExports.info(`Executing command: ${command}`);
+            try {
+                let output = '';
+                await execExports.exec('pwsh', ['-Command', command], {
+                    listeners: {
+                        stdout: (data) => {
+                            output += data.toString();
+                        }
+                    },
+                    env: {
+                        ...process.env,
+                        GH_TOKEN: config.token
+                    }
+                });
+                const result = output.trim().split('\n');
+                outputContent.push(...result);
+            }
+            catch (error) {
+                coreExports.setFailed(`Error executing command '${command}': ${error}`);
+                throw error;
+            }
+        }
+        else {
+            outputContent.push(line);
+        }
+    }
+    const output = outputContent.join('\n');
+    if (outputPath) {
+        coreExports.debug(`Writing generated prompt to file: ${outputPath}`);
+        await fs.promises.writeFile(outputPath, output);
+        // Log the created prompt for debugging
+        const createdContent = await fs.promises.readFile(outputPath, 'utf8');
+        coreExports.debug(`Generated prompt file contained:`);
+        coreExports.debug(createdContent);
+    }
+    coreExports.info(`Created prompt from template:`);
+    coreExports.info(output);
+    return output;
+}
+
 /******************************************************************************
 Copyright (c) Microsoft Corporation.
 
@@ -40203,68 +40266,6 @@ function getPathFromMapKey(mapKey) {
 }
 
 /**
- * Generates a prompt from a template string or file by replacing placeholders and executing commands.
- *
- * @param templateContent The template content as a string.
- * @param outputPath Optional path where the generated prompt will be written.
- * @param replacements Record of placeholder keys and their replacement values.
- * @param config Configuration object containing token for external service access.
- * @returns Promise that resolves to the generated prompt content.
- */
-async function generatePrompt(templateContent, outputPath, replacements, config) {
-    coreExports.debug(`Generating prompt from template:`);
-    coreExports.debug(templateContent);
-    const lines = templateContent.split('\n');
-    const outputContent = [];
-    for (let line of lines) {
-        // Replace placeholders
-        for (const [key, value] of Object.entries(replacements)) {
-            line = line.replace(new RegExp(`{{${key}}}`, 'g'), String(value || ''));
-        }
-        // Check for EXEC: command prefix
-        const execMatch = line.match(/^EXEC:\s*(.+)$/);
-        if (execMatch) {
-            const command = execMatch[1];
-            coreExports.info(`Executing command: ${command}`);
-            try {
-                let output = '';
-                await execExports.exec('pwsh', ['-Command', command], {
-                    listeners: {
-                        stdout: (data) => {
-                            output += data.toString();
-                        }
-                    },
-                    env: {
-                        ...process.env,
-                        GH_TOKEN: config.token
-                    }
-                });
-                const result = output.trim().split('\n');
-                outputContent.push(...result);
-            }
-            catch (error) {
-                coreExports.setFailed(`Error executing command '${command}': ${error}`);
-                throw error;
-            }
-        }
-        else {
-            outputContent.push(line);
-        }
-    }
-    const output = outputContent.join('\n');
-    if (outputPath) {
-        coreExports.debug(`Writing generated prompt to file: ${outputPath}`);
-        await fs.promises.writeFile(outputPath, output);
-        // Log the created prompt for debugging
-        const createdContent = await fs.promises.readFile(outputPath, 'utf8');
-        coreExports.debug(`Generated prompt file contained:`);
-        coreExports.debug(createdContent);
-    }
-    coreExports.info(`Created prompt from template:`);
-    coreExports.info(output);
-    return output;
-}
-/**
  * Runs AI inference to generate a response file.
  *
  * @param systemPrompt The system prompt content.
@@ -40277,7 +40278,7 @@ async function runInference(systemPrompt, userPrompt, responseFile, maxTokens = 
     coreExports.debug(`Running inference...`);
     try {
         // Create Azure AI client
-        const client = createClient(config.aiEndpoint, new AzureKeyCredential(config.token), {
+        const client = createClient(config.aiEndpoint, new AzureKeyCredential(config.aiToken), {
             userAgentOptions: { userAgentPrefix: 'github-actions-triage-assistant' }
         });
         // Make the AI inference request
@@ -40298,7 +40299,7 @@ async function runInference(systemPrompt, userPrompt, responseFile, maxTokens = 
             }
         });
         if (isUnexpected(response)) {
-            if (response.body.error) {
+            if (response.body?.error) {
                 throw response.body.error;
             }
             throw new Error(`An error occurred while fetching the response (${response.status}): ${response.body}`);
@@ -40332,26 +40333,30 @@ async function selectLabels(config) {
     await fs.promises.mkdir(responseDir, { recursive: true });
     // Generate system prompt
     const systemPromptPath = path.join(promptDir, 'system-prompt.md');
-    await generatePrompt(getPrompt$1(config.template), systemPromptPath, {
-        ISSUE_NUMBER: config.issueNumber,
-        ISSUE_REPO: config.repository,
-        LABEL_PREFIX: config.labelPrefix,
-        LABEL: config.label
-    }, config);
+    await generatePromptFile$1(config.template, config, systemPromptPath);
     // Generate user prompt
     const userPromptPath = path.join(promptDir, 'user-prompt.md');
-    await generatePrompt(getPrompt$1('user'), userPromptPath, {
+    await generatePromptFile$1('user', config, userPromptPath);
+    // Run AI inference to generate
+    const systemPrompt = await fs.promises.readFile(systemPromptPath, 'utf8');
+    const userPrompt = await fs.promises.readFile(userPromptPath, 'utf8');
+    const responseFile = path.join(responseDir, `response-${guid}.json`);
+    await runInference(systemPrompt, userPrompt, responseFile, 200, config);
+    return responseFile;
+}
+/** * Generates a prompt file based on the provided template and configuration.
+ *
+ * @param template The template prompt to use.
+ * @param config The configuration object containing template and replacements.
+ * @param systemPromptPath The path to write the generated system prompt file.
+ */
+async function generatePromptFile$1(template, config, systemPromptPath) {
+    await generatePrompt(getPrompt$1(template), systemPromptPath, {
         ISSUE_NUMBER: config.issueNumber,
         ISSUE_REPO: config.repository,
         LABEL_PREFIX: config.labelPrefix,
         LABEL: config.label
     }, config);
-    // Run AI inference
-    const responseFile = path.join(responseDir, `response-${guid}.json`);
-    const systemPrompt = await fs.promises.readFile(systemPromptPath, 'utf8');
-    const userPrompt = await fs.promises.readFile(userPromptPath, 'utf8');
-    await runInference(systemPrompt, userPrompt, responseFile, 200, config);
-    return responseFile;
 }
 
 /**
@@ -40368,6 +40373,13 @@ ${summary}
 
 ${footer}
 `;
+    if (commentBody.trim().length === 0) {
+        return;
+    }
+    if (config.dryRun) {
+        coreExports.info(`Dry run: Skipping commenting on issue: ${commentBody}`);
+        return;
+    }
     await octokit.rest.issues.createComment({
         owner: config.repoOwner,
         repo: config.repoName,
@@ -40384,16 +40396,20 @@ ${footer}
  */
 async function applyLabelsToIssue(octokit, mergedResponse, config) {
     const labels = mergedResponse.labels?.map((l) => l.label)?.filter(Boolean) || [];
-    if (labels.length > 0) {
-        await octokit.rest.issues.addLabels({
-            owner: config.repoOwner,
-            repo: config.repoName,
-            issue_number: config.issueNumber,
-            labels
-        });
+    if (labels.length === 0) {
+        return;
     }
+    if (config.dryRun) {
+        coreExports.info(`Dry run: Skipping applying labels: ${labels.join(', ')}`);
+        return;
+    }
+    await octokit.rest.issues.addLabels({
+        owner: config.repoOwner,
+        repo: config.repoName,
+        issue_number: config.issueNumber,
+        labels
+    });
 }
-
 /**
  * Adds an 'eyes' reaction to the specified issue using the provided Octokit instance and config.
  * Ignores errors if the reaction already exists or is successfully created.
@@ -40402,6 +40418,10 @@ async function applyLabelsToIssue(octokit, mergedResponse, config) {
  * @param config - The configuration for the repository and issue
  */
 async function addEyes(octokit, config) {
+    if (config.dryRun) {
+        coreExports.info('Dry run: Skipping adding eyes reaction.');
+        return;
+    }
     try {
         await octokit.rest.reactions.createForIssue({
             owner: config.repoOwner,
@@ -40424,6 +40444,10 @@ async function addEyes(octokit, config) {
  * @param config - The configuration for the repository and issue
  */
 async function removeEyes(octokit, config) {
+    if (config.dryRun) {
+        coreExports.info('Dry run: Skipping removing eyes reaction.');
+        return;
+    }
     const reactions = await octokit.rest.reactions.listForIssue({
         owner: config.repoOwner,
         repo: config.repoName,
@@ -40554,21 +40578,17 @@ function getPrompt(templateName) {
  */
 async function generateSummary(config, mergedResponseFile) {
     const summaryDir = path.join(config.tempDir, 'triage-apply', 'prompts');
-    await fs.promises.mkdir(summaryDir, { recursive: true });
-    const systemPromptPath = path.join(summaryDir, 'system-prompt.md');
-    await generatePrompt(getPrompt('system'), systemPromptPath, {
-        ISSUE_NUMBER: config.issueNumber.toString(),
-        ISSUE_REPO: config.repository,
-        MERGED_JSON: mergedResponseFile
-    }, config);
-    const userPromptPath = path.join(summaryDir, 'user-prompt.md');
-    await generatePrompt(getPrompt('user'), userPromptPath, {
-        ISSUE_NUMBER: config.issueNumber.toString(),
-        ISSUE_REPO: config.repository,
-        MERGED_JSON: mergedResponseFile
-    }, config);
     const summaryResponseFile = path.join(config.tempDir, 'triage-apply', 'responses', 'response.md');
+    // Ensure directories exist
+    await fs.promises.mkdir(summaryDir, { recursive: true });
     await fs.promises.mkdir(path.dirname(summaryResponseFile), { recursive: true });
+    // Generate system prompt
+    const systemPromptPath = path.join(summaryDir, 'system-prompt.md');
+    await generatePromptFile('system', systemPromptPath, config, mergedResponseFile);
+    // Generate user prompt
+    const userPromptPath = path.join(summaryDir, 'user-prompt.md');
+    await generatePromptFile('user', userPromptPath, config, mergedResponseFile);
+    // Run AI inference to generate the summary
     const systemPrompt = await fs.promises.readFile(systemPromptPath, 'utf8');
     const userPrompt = await fs.promises.readFile(userPromptPath, 'utf8');
     await runInference(systemPrompt, userPrompt, summaryResponseFile, 500, config);
@@ -40637,6 +40657,21 @@ async function mergeResponses(inputFiles, responseDir, outputPath) {
     return merged;
 }
 /**
+ * Generates a prompt file based on the provided template and configuration.
+ *
+ * @param template The template prompt to use.
+ * @param promptPath The path to write the generated prompt file.
+ * @param config The configuration object containing template and replacements.
+ * @param mergedResponseFile Path to the merged response JSON file.
+ */
+async function generatePromptFile(template, promptPath, config, mergedResponseFile) {
+    await generatePrompt(getPrompt(template), promptPath, {
+        ISSUE_NUMBER: config.issueNumber.toString(),
+        ISSUE_REPO: config.repository,
+        MERGED_JSON: mergedResponseFile
+    }, config);
+}
+/**
  * Helper function to read file contents and remove wrapping code blocks if present.
  *
  * @param file Path to the file to read.
@@ -40687,16 +40722,22 @@ async function applyLabelsAndComment(config) {
     const mergedResponse = await mergeResponses('', responseDir, mergedResponseFile);
     // Log the merged response for debugging
     coreExports.info(`Merged response: ${JSON.stringify(mergedResponse, null, 2)}`);
+    // Generate summary using AI
     if (config.applyComment) {
-        // Generate summary using AI
-        const summaryResponseFile = await generateSummary(config, mergedResponseFile);
-        // Comment on the issue
-        await commentOnIssue(octokit, summaryResponseFile, config, config.commentFooter);
+        await applyComment(octokit, mergedResponseFile, config);
     }
+    // Apply labels to the issue
     if (config.applyLabels) {
-        // Apply labels to the issue
-        await applyLabelsToIssue(octokit, mergedResponse, config);
+        await applyLabels(octokit, mergedResponse, config);
     }
+}
+async function applyComment(octokit, mergedResponseFile, config) {
+    const summaryResponseFile = await generateSummary(config, mergedResponseFile);
+    // Comment on the issue
+    await commentOnIssue(octokit, summaryResponseFile, config, config.commentFooter);
+}
+async function applyLabels(octokit, mergedResponse, config) {
+    await applyLabelsToIssue(octokit, mergedResponse, config);
 }
 
 /**
@@ -40712,6 +40753,12 @@ async function run() {
     try {
         // Initialize configuration object
         const issueNumberStr = coreExports.getInput('issue') || githubExports.context.issue.number.toString();
+        const token = coreExports.getInput('token') ||
+            process.env.TRIAGE_GITHUB_TOKEN ||
+            process.env.GITHUB_TOKEN ||
+            coreExports.getInput('fallback-token') ||
+            '';
+        const aiToken = coreExports.getInput('ai-token') || process.env.TRIAGE_AI_TOKEN || token;
         config = {
             aiEndpoint: coreExports.getInput('ai-endpoint') || process.env.TRIAGE_AI_ENDPOINT || DEFAULT_AI_ENDPOINT,
             aiModel: coreExports.getInput('ai-model') || process.env.TRIAGE_AI_MODEL || DEFAULT_AI_MODEL,
@@ -40724,10 +40771,21 @@ async function run() {
             repository: `${githubExports.context.repo.owner}/${githubExports.context.repo.repo}`,
             tempDir: process.env.RUNNER_TEMP || require$$0.tmpdir(),
             template: coreExports.getInput('template'),
-            token: coreExports.getInput('token') || process.env.TRIAGE_GITHUB_TOKEN || process.env.GITHUB_TOKEN || '',
+            token: token,
+            aiToken: aiToken,
             label: coreExports.getInput('label'),
-            labelPrefix: coreExports.getInput('label-prefix')
+            labelPrefix: coreExports.getInput('label-prefix'),
+            dryRun: coreExports.getBooleanInput('dry-run') || false
         };
+        if (config.dryRun) {
+            coreExports.info('Running in dry-run mode. No changes will be made.');
+        }
+        if (!config.token) {
+            coreExports.info('No GitHub token provided.');
+        }
+        if (!config.aiToken) {
+            coreExports.info('No specific AI token provided, using GitHub token as fallback.');
+        }
         let responseFile = '';
         const shouldAddLabels = config.template ? true : false;
         const shouldAddSummary = config.applyLabels || config.applyComment;
