@@ -17,6 +17,10 @@ export async function run(): Promise<void> {
   let config: TriageConfig | undefined
   let shouldRemoveReactions = false
 
+  Object.keys(process.env).forEach((element) => {
+    core.info(`Environment variable: ${element}=${process.env[element]}`)
+  })
+
   try {
     // Initialize configuration object
     const issueNumberStr = core.getInput('issue') || github.context.issue.number.toString()
