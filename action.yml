@@ -19,11 +19,15 @@ inputs:
 
   # AI model and endpoint inputs
   ai-endpoint:
-    description: 'AI endpoint to use for inference'
+    description: 'Endpoint to use for AI inference'
     required: false
     default: ''
   ai-model:
-    description: 'AI model to use for inference'
+    description: 'Model to use for AI inference'
+    required: false
+    default: ''
+  ai-token:
+    description: 'Token for AI inference'
     required: false
     default: ''
 
