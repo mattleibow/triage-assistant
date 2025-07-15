@@ -45,6 +45,13 @@ export async function run(): Promise<void> {
       labelPrefix: core.getInput('label-prefix')
     }
 
+    if (!config.token) {
+      core.info('No GitHub token provided.')
+    }
+    if (!config.aiToken) {
+      core.info('No specific AI token provided, using GitHub token as fallback.')
+    }
+
     let responseFile = ''
 
     const shouldAddLabels = config.template ? true : false

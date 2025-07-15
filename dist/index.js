@@ -40735,6 +40735,12 @@ async function run() {
             label: coreExports.getInput('label'),
             labelPrefix: coreExports.getInput('label-prefix')
         };
+        if (!config.token) {
+            coreExports.info('No GitHub token provided.');
+        }
+        if (!config.aiToken) {
+            coreExports.info('No specific AI token provided, using GitHub token as fallback.');
+        }
         let responseFile = '';
         const shouldAddLabels = config.template ? true : false;
         const shouldAddSummary = config.applyLabels || config.applyComment;
