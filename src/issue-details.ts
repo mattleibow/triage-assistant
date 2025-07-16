@@ -127,3 +127,71 @@ export function getIssueAge(issue: IssueDetails): number {
   const diffDays = diffMs / (1000 * 60 * 60 * 24)
   return Math.ceil(diffDays)
 }
+
+/**
+ * Calculate engagement score for an issue based on the engagement algorithm
+ */
+export function calculateScore(issue: IssueDetails): number {
+  // Components based on C# reference implementation:
+  // - Number of Comments       => Indicates discussion and interest
+  // - Number of Reactions      => Shows emotional engagement
+  // - Number of Contributors   => Reflects the diversity of input
+  // - Time Since Last Activity => More recent activity indicates higher engagement
+  // - Issue Age                => Older issues might need more attention
+  // - Number of Linked PRs     => Shows active work on the issue (not implemented)
+
+  const totalComments = issue.comments
+  const totalReactions =
+    issue.reactions.total_count +
+    (issue.comments_data?.reduce((sum, comment) => sum + comment.reactions.total_count, 0) || 0)
+  const contributors = getUniqueContributors(issue)
+  const lastActivity = Math.max(1, getTimeSinceLastActivity(issue))
+  const issueAge = Math.max(1, getIssueAge(issue))
+  const linkedPullRequests = 0 // Not implemented yet
+
+  // Weights from C# implementation:
+  const CommentsWeight = 3
+  const ReactionsWeight = 1
+  const ContributorsWeight = 2
+  const LastActivityWeight = 1
+  const IssueAgeWeight = 1
+  const LinkedPullRequestsWeight = 2
+
+  const score =
+    CommentsWeight * totalComments +
+    ReactionsWeight * totalReactions +
+    ContributorsWeight * contributors +
+    LastActivityWeight * (1 / lastActivity) +
+    IssueAgeWeight * (1 / issueAge) +
+    LinkedPullRequestsWeight * linkedPullRequests
+
+  return Math.round(score)
+}
+
+/**
+ * Calculate previous score (7 days ago) based on C# reference implementation
+ */
+export async function calculatePreviousScore(issue: IssueDetails): Promise<number> {
+  const historicIssue = getHistoricalIssueDetails(issue)
+  return calculateScore(historicIssue)
+}
+
+/**
+ * Helper function to create engagement item - avoids code duplication
+ */
+export async function createEngagementItem(issueDetails: IssueDetails, projectItemId?: string): Promise<any> {
+  const score = calculateScore(issueDetails)
+  const previousScore = await calculatePreviousScore(issueDetails)
+
+  const item = {
+    ...(projectItemId && { id: projectItemId }),
+    issueNumber: issueDetails.number,
+    engagement: {
+      score,
+      previousScore,
+      classification: score > previousScore ? 'Hot' : null
+    }
+  }
+
+  return item
+}

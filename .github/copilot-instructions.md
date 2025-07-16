@@ -306,3 +306,47 @@ When modifying engagement scoring functionality:
 4. **Validate scoring logic** - Ensure scores correlate with actual community engagement
 5. **Handle edge cases** - Empty projects, issues without activity, missing permissions
 6. **Monitor API limits** - GitHub GraphQL API has rate limits and complexity costs
+
+## Testing Best Practices
+
+### Always Write Tests
+
+When adding new functionality, always write comprehensive tests:
+
+1. **Test each function individually** - Unit tests for all public functions
+2. **Test edge cases** - Empty inputs, null values, boundary conditions
+3. **Test common paths** - Normal usage scenarios with typical data
+4. **Test error scenarios** - Invalid inputs, API failures, missing data
+5. **Test integration** - End-to-end workflows and component interactions
+
+### Test Organization
+
+- Follow existing test patterns in `__tests__/` directory
+- Use fixtures in `__fixtures__/` for mock data
+- Mock external dependencies (GitHub API, file system)
+- Use descriptive test names that explain the scenario
+- Group related tests with `describe` blocks
+
+### Test Coverage Areas
+
+**For engagement scoring functions:**
+- Score calculation with various issue states
+- Historical data processing edge cases
+- Project item handling with missing data
+- GraphQL query and mutation error scenarios
+- Configuration validation and defaults
+
+**For issue processing functions:**
+- Date calculations with timezone handling
+- Contributor counting with duplicate users
+- Reaction processing across issues and comments
+- Empty or null data handling
+- Large dataset performance
+
+### Mock Strategy
+
+- Use Jest mocks for external APIs
+- Create realistic test data that mirrors actual GitHub responses
+- Test both success and failure scenarios
+- Mock system time for consistent date testing
+- Avoid over-mocking - test real logic where possible

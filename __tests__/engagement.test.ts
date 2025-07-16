@@ -1,6 +1,7 @@
 import { jest } from '@jest/globals'
 import * as github from '@actions/github'
-import { calculateScore, calculatePreviousScore, calculateEngagementScores } from '../src/engagement.js'
+import { calculateEngagementScores } from '../src/engagement.js'
+import { calculateScore, calculatePreviousScore } from '../src/issue-details.js'
 import { getUniqueContributors, getTimeSinceLastActivity, getIssueAge, IssueDetails } from '../src/issue-details.js'
 import { updateProjectWithScores } from '../src/github-projects.js'
 import { EngagementConfig } from '../src/triage-config.js'

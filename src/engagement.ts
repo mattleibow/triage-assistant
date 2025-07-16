@@ -2,15 +2,9 @@ import * as core from '@actions/core'
 import * as github from '@actions/github'
 import { EverythingConfig, EngagementConfig } from './triage-config.js'
 import { EngagementResponse, EngagementItem } from './engagement-types.js'
-import {
-  IssueDetails,
-  getHistoricalIssueDetails,
-  getUniqueContributors,
-  getTimeSinceLastActivity,
-  getIssueAge
-} from './issue-details.js'
 import { getIssueDetails } from './github-issues.js'
 import { getAllProjectItems, updateProjectWithScores } from './github-projects.js'
+import { createEngagementItem } from './issue-details.js'
 
 /**
  * Run the complete engagement scoring workflow
@@ -66,17 +60,7 @@ async function calculateIssueEngagementScores(
   core.info(`Calculating engagement score for issue #${config.issueNumber}`)
 
   const issueDetails = await getIssueDetails(octokit, config.repoOwner, config.repoName, config.issueNumber!)
-  const score = calculateScore(issueDetails)
-  const previousScore = await calculatePreviousScore(issueDetails)
-
-  const item: EngagementItem = {
-    issueNumber: issueDetails.number,
-    engagement: {
-      score,
-      previousScore,
-      classification: score > previousScore ? 'Hot' : null
-    }
-  }
+  const item = await createEngagementItem(issueDetails)
 
   return {
     items: [item],
@@ -106,19 +90,7 @@ async function calculateProjectEngagementScores(
         projectItem.content.repo,
         projectItem.content.number
       )
-      const score = calculateScore(issueDetails)
-      const previousScore = await calculatePreviousScore(issueDetails)
-
-      const item: EngagementItem = {
-        id: projectItem.id,
-        issueNumber: issueDetails.number,
-        engagement: {
-          score,
-          previousScore,
-          classification: score > previousScore ? 'Hot' : null
-        }
-      }
-
+      const item = await createEngagementItem(issueDetails, projectItem.id)
       items.push(item)
     }
   }
@@ -132,52 +104,4 @@ async function calculateProjectEngagementScores(
       number: projectNumber
     }
   }
-}
-
-/**
- * Calculate engagement score for an issue based on the engagement algorithm
- */
-export function calculateScore(issue: IssueDetails): number {
-  // Components based on C# reference implementation:
-  // - Number of Comments       => Indicates discussion and interest
-  // - Number of Reactions      => Shows emotional engagement
-  // - Number of Contributors   => Reflects the diversity of input
-  // - Time Since Last Activity => More recent activity indicates higher engagement
-  // - Issue Age                => Older issues might need more attention
-  // - Number of Linked PRs     => Shows active work on the issue (not implemented)
-
-  const totalComments = issue.comments
-  const totalReactions =
-    issue.reactions.total_count +
-    (issue.comments_data?.reduce((sum, comment) => sum + comment.reactions.total_count, 0) || 0)
-  const contributors = getUniqueContributors(issue)
-  const lastActivity = Math.max(1, getTimeSinceLastActivity(issue))
-  const issueAge = Math.max(1, getIssueAge(issue))
-  const linkedPullRequests = 0 // Not implemented yet
-
-  // Weights from C# implementation:
-  const CommentsWeight = 3
-  const ReactionsWeight = 1
-  const ContributorsWeight = 2
-  const LastActivityWeight = 1
-  const IssueAgeWeight = 1
-  const LinkedPullRequestsWeight = 2
-
-  const score =
-    CommentsWeight * totalComments +
-    ReactionsWeight * totalReactions +
-    ContributorsWeight * contributors +
-    LastActivityWeight * (1 / lastActivity) +
-    IssueAgeWeight * (1 / issueAge) +
-    LinkedPullRequestsWeight * linkedPullRequests
-
-  return Math.round(score)
-}
-
-/**
- * Calculate previous score (7 days ago) based on C# reference implementation
- */
-export async function calculatePreviousScore(issue: IssueDetails): Promise<number> {
-  const historicIssue = getHistoricalIssueDetails(issue)
-  return calculateScore(historicIssue)
 }
