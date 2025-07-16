@@ -58,7 +58,7 @@ async function calculateIssueEngagementScores(
 
   const issueDetails = await getIssueDetails(octokit, config.repoOwner, config.repoName, config.issueNumber)
   const score = calculateScore(issueDetails)
-  const previousScore = await calculatePreviousScore(issueDetails, octokit, config.repoOwner, config.repoName)
+  const previousScore = await calculatePreviousScore(issueDetails)
 
   const item: EngagementItem = {
     issueNumber: issueDetails.number,
@@ -98,7 +98,7 @@ async function calculateProjectEngagementScores(
         projectItem.content.number
       )
       const score = calculateScore(issueDetails)
-      const previousScore = await calculatePreviousScore(issueDetails, octokit, projectItem.content.owner, projectItem.content.repo)
+      const previousScore = await calculatePreviousScore(issueDetails)
 
       const item: EngagementItem = {
         id: projectItem.id,
@@ -133,7 +133,9 @@ async function getAllProjectItems(
   owner: string,
   repo: string,
   projectNumber: number
-): Promise<Array<{ id: string; projectId: string; content?: { type: string; owner: string; repo: string; number: number } }>> {
+): Promise<
+  Array<{ id: string; projectId: string; content?: { type: string; owner: string; repo: string; number: number } }>
+> {
   const query = `
     query($owner: String!, $repo: String!, $projectNumber: Int!, $cursor: String) {
       repository(owner: $owner, name: $repo) {
@@ -164,7 +166,11 @@ async function getAllProjectItems(
     }
   `
 
-  const allItems: Array<{ id: string; projectId: string; content?: { type: string; owner: string; repo: string; number: number } }> = []
+  const allItems: Array<{
+    id: string
+    projectId: string
+    content?: { type: string; owner: string; repo: string; number: number }
+  }> = []
   let cursor: string | undefined = undefined
 
   while (true) {
@@ -199,7 +205,7 @@ async function getAllProjectItems(
     }
 
     const { items } = response.repository.projectV2
-    
+
     for (const item of items.nodes) {
       if (item.content) {
         allItems.push({
@@ -314,31 +320,29 @@ export function calculateScore(issue: IssueDetails): number {
 /**
  * Calculate previous score (7 days ago) based on C# reference implementation
  */
-export async function calculatePreviousScore(
-  issue: IssueDetails,
-  octokit: ReturnType<typeof github.getOctokit>,
-  owner: string,
-  repo: string
-): Promise<number> {
+export async function calculatePreviousScore(issue: IssueDetails): Promise<number> {
   const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
   const issueCreatedAt = new Date(issue.created_at)
-  
+
   // If issue was created less than 7 days ago, return 0
   if (issueCreatedAt > sevenDaysAgo) {
     return 0
   }
 
   // Create historic snapshot by filtering comments and reactions to 7 days ago
-  const historicComments = issue.comments_data?.filter(comment => {
-    const commentDate = new Date(comment.created_at)
-    return commentDate <= sevenDaysAgo
-  }).map(comment => ({
-    ...comment,
-    reactions: {
-      ...comment.reactions,
-      total_count: 0 // Simplified - would need to get historic reactions
-    }
-  })) || []
+  const historicComments =
+    issue.comments_data
+      ?.filter((comment) => {
+        const commentDate = new Date(comment.created_at)
+        return commentDate <= sevenDaysAgo
+      })
+      .map((comment) => ({
+        ...comment,
+        reactions: {
+          ...comment.reactions,
+          total_count: 0 // Simplified - would need to get historic reactions
+        }
+      })) || []
 
   const historicIssue: IssueDetails = {
     ...issue,
@@ -410,7 +414,13 @@ export async function updateProjectWithScores(
   core.info(`Updating project #${config.project} with engagement scores`)
 
   const projectNumber = parseInt(config.project, 10)
-  const projectField = await getProjectField(octokit, config.repoOwner, config.repoName, projectNumber, config.projectColumn)
+  const projectField = await getProjectField(
+    octokit,
+    config.repoOwner,
+    config.repoName,
+    projectNumber,
+    config.projectColumn
+  )
 
   if (!projectField) {
     core.warning(`Field "${config.projectColumn}" not found in project`)
@@ -482,9 +492,9 @@ async function getProjectField(
   }
 
   const field = response.repository.projectV2.fields.nodes.find((f) => f.name === fieldName)
-  
+
   if (!field) {
-    const availableFields = response.repository.projectV2.fields.nodes.map(f => f.name).join(', ')
+    const availableFields = response.repository.projectV2.fields.nodes.map((f) => f.name).join(', ')
     core.warning(`Field "${fieldName}" not found. Available fields: ${availableFields}`)
     return null
   }

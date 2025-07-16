@@ -16,7 +16,7 @@ export async function run(): Promise<void> {
   const DEFAULT_AI_MODEL = 'openai/gpt-4o'
 
   let config: EverythingConfig | undefined
-  let shouldRemoveReactions = false
+  const shouldRemoveReactions = false
 
   try {
     // Get inputs for mode determination
@@ -48,7 +48,7 @@ export async function run(): Promise<void> {
       core.getInput('fallback-token') ||
       ''
     const aiToken = core.getInput('ai-token') || process.env.TRIAGE_AI_TOKEN || token
-    
+
     config = {
       aiEndpoint: core.getInput('ai-endpoint') || process.env.TRIAGE_AI_ENDPOINT || DEFAULT_AI_ENDPOINT,
       aiModel: core.getInput('ai-model') || process.env.TRIAGE_AI_MODEL || DEFAULT_AI_MODEL,

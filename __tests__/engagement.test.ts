@@ -1,18 +1,31 @@
 import { jest } from '@jest/globals'
-import { calculateScore, getUniqueContributors, getTimeSinceLastActivity, getIssueAge, calculatePreviousScore, calculateEngagementScores, updateProjectWithScores } from '../src/engagement.js'
+import * as github from '@actions/github'
+import {
+  calculateScore,
+  getUniqueContributors,
+  getTimeSinceLastActivity,
+  getIssueAge,
+  calculatePreviousScore,
+  calculateEngagementScores,
+  updateProjectWithScores
+} from '../src/engagement.js'
 import { IssueDetails } from '../src/engagement-types.js'
 import { EngagementConfig } from '../src/triage-config.js'
 
 // Mock GitHub API
+const mockGet = jest.fn() as jest.MockedFunction<(...args: unknown[]) => unknown>
+const mockListComments = jest.fn() as jest.MockedFunction<(...args: unknown[]) => unknown>
+const mockGraphql = jest.fn() as jest.MockedFunction<(...args: unknown[]) => unknown>
+
 const mockOctokit = {
   rest: {
     issues: {
-      get: jest.fn(),
-      listComments: jest.fn()
+      get: mockGet,
+      listComments: mockListComments
     }
   },
-  graphql: jest.fn()
-} as any
+  graphql: mockGraphql
+} as unknown as ReturnType<typeof github.getOctokit>
 
 // Mock @actions/github
 jest.mock('@actions/github', () => ({
@@ -54,7 +67,17 @@ describe('Engagement Scoring', () => {
             id: 1,
             user: { login: 'user1', id: 1, type: 'User' },
             created_at: '2023-01-01T12:00:00Z',
-            reactions: { total_count: 2, '+1': 1, '-1': 0, laugh: 0, hooray: 0, confused: 0, heart: 1, rocket: 0, eyes: 0 }
+            reactions: {
+              total_count: 2,
+              '+1': 1,
+              '-1': 0,
+              laugh: 0,
+              hooray: 0,
+              confused: 0,
+              heart: 1,
+              rocket: 0,
+              eyes: 0
+            }
           }
         ],
         user: { login: 'author', id: 100, type: 'User' },
@@ -62,7 +85,7 @@ describe('Engagement Scoring', () => {
       }
 
       const score = calculateScore(mockIssue)
-      
+
       // Verify score is calculated correctly
       expect(score).toBeGreaterThan(0)
       expect(typeof score).toBe('number')
@@ -96,7 +119,7 @@ describe('Engagement Scoring', () => {
       }
 
       const score = calculateScore(mockIssue)
-      
+
       // Should still calculate a score based on contributor and time factors
       expect(score).toBeGreaterThan(0)
     })
@@ -131,11 +154,11 @@ describe('Engagement Scoring', () => {
       // Test with comments (weight = 3)
       const issueWithComments = { ...baseIssue, comments: 1 }
       const scoreWithComments = calculateScore(issueWithComments)
-      
+
       // Test with reactions (weight = 1)
       const issueWithReactions = { ...baseIssue, reactions: { ...baseIssue.reactions, total_count: 1 } }
       const scoreWithReactions = calculateScore(issueWithReactions)
-      
+
       // Comments should have higher impact than reactions
       expect(scoreWithComments).toBeGreaterThan(scoreWithReactions)
     })
@@ -159,13 +182,33 @@ describe('Engagement Scoring', () => {
             id: 1,
             user: { login: 'user1', id: 1, type: 'User' },
             created_at: '2023-01-01T12:00:00Z',
-            reactions: { total_count: 0, '+1': 0, '-1': 0, laugh: 0, hooray: 0, confused: 0, heart: 0, rocket: 0, eyes: 0 }
+            reactions: {
+              total_count: 0,
+              '+1': 0,
+              '-1': 0,
+              laugh: 0,
+              hooray: 0,
+              confused: 0,
+              heart: 0,
+              rocket: 0,
+              eyes: 0
+            }
           },
           {
             id: 2,
             user: { login: 'user2', id: 2, type: 'User' },
             created_at: '2023-01-01T13:00:00Z',
-            reactions: { total_count: 0, '+1': 0, '-1': 0, laugh: 0, hooray: 0, confused: 0, heart: 0, rocket: 0, eyes: 0 }
+            reactions: {
+              total_count: 0,
+              '+1': 0,
+              '-1': 0,
+              laugh: 0,
+              hooray: 0,
+              confused: 0,
+              heart: 0,
+              rocket: 0,
+              eyes: 0
+            }
           }
         ],
         user: { login: 'author', id: 100, type: 'User' },
@@ -173,7 +216,7 @@ describe('Engagement Scoring', () => {
       }
 
       const contributors = getUniqueContributors(mockIssue)
-      
+
       // Should be 4: author + assignee1 + user1 + user2
       expect(contributors).toBe(4)
     })
@@ -195,7 +238,17 @@ describe('Engagement Scoring', () => {
             id: 1,
             user: { login: 'author', id: 100, type: 'User' }, // Same as issue author
             created_at: '2023-01-01T12:00:00Z',
-            reactions: { total_count: 0, '+1': 0, '-1': 0, laugh: 0, hooray: 0, confused: 0, heart: 0, rocket: 0, eyes: 0 }
+            reactions: {
+              total_count: 0,
+              '+1': 0,
+              '-1': 0,
+              laugh: 0,
+              hooray: 0,
+              confused: 0,
+              heart: 0,
+              rocket: 0,
+              eyes: 0
+            }
           }
         ],
         user: { login: 'author', id: 100, type: 'User' },
@@ -203,7 +256,7 @@ describe('Engagement Scoring', () => {
       }
 
       const contributors = getUniqueContributors(mockIssue)
-      
+
       // Should be 1: only the author (deduplicated)
       expect(contributors).toBe(1)
     })
@@ -229,7 +282,7 @@ describe('Engagement Scoring', () => {
       }
 
       const days = getTimeSinceLastActivity(mockIssue)
-      
+
       // Should be around 3 days (allowing for some variance due to timing)
       expect(days).toBeGreaterThanOrEqual(3)
       expect(days).toBeLessThanOrEqual(4)
@@ -256,7 +309,7 @@ describe('Engagement Scoring', () => {
       }
 
       const age = getIssueAge(mockIssue)
-      
+
       // Should be around 5 days (allowing for some variance due to timing)
       expect(age).toBeGreaterThanOrEqual(5)
       expect(age).toBeLessThanOrEqual(6)
@@ -282,15 +335,15 @@ describe('Engagement Scoring', () => {
         assignees: []
       }
 
-      const previousScore = await calculatePreviousScore(mockIssue, mockOctokit, 'owner', 'repo')
-      
+      const previousScore = await calculatePreviousScore(mockIssue)
+
       expect(previousScore).toBe(0)
     })
 
     it('should calculate historic score for older issues', async () => {
       const tenDaysAgo = new Date(Date.now() - 10 * 24 * 60 * 60 * 1000)
       const fiveDaysAgo = new Date(Date.now() - 5 * 24 * 60 * 60 * 1000)
-      
+
       const mockIssue: IssueDetails = {
         id: '1',
         number: 123,
@@ -307,15 +360,25 @@ describe('Engagement Scoring', () => {
             id: 1,
             user: { login: 'user1', id: 1, type: 'User' },
             created_at: fiveDaysAgo.toISOString(), // This comment is newer than 7 days ago
-            reactions: { total_count: 2, '+1': 1, '-1': 0, laugh: 0, hooray: 0, confused: 0, heart: 1, rocket: 0, eyes: 0 }
+            reactions: {
+              total_count: 2,
+              '+1': 1,
+              '-1': 0,
+              laugh: 0,
+              hooray: 0,
+              confused: 0,
+              heart: 1,
+              rocket: 0,
+              eyes: 0
+            }
           }
         ],
         user: { login: 'author', id: 100, type: 'User' },
         assignees: []
       }
 
-      const previousScore = await calculatePreviousScore(mockIssue, mockOctokit, 'owner', 'repo')
-      
+      const previousScore = await calculatePreviousScore(mockIssue)
+
       // Should be greater than 0 but less than current score (since it excludes newer comments)
       expect(previousScore).toBeGreaterThan(0)
     })
@@ -337,7 +400,7 @@ describe('Engagement Scoring', () => {
         applyScores: false
       }
 
-      mockOctokit.rest.issues.get.mockResolvedValue({
+      mockGet.mockResolvedValue({
         data: {
           id: 1,
           number: 123,
@@ -348,13 +411,23 @@ describe('Engagement Scoring', () => {
           updated_at: '2023-01-01T00:00:00Z',
           closed_at: null,
           comments: 0,
-          reactions: { total_count: 0, '+1': 0, '-1': 0, laugh: 0, hooray: 0, confused: 0, heart: 0, rocket: 0, eyes: 0 },
+          reactions: {
+            total_count: 0,
+            '+1': 0,
+            '-1': 0,
+            laugh: 0,
+            hooray: 0,
+            confused: 0,
+            heart: 0,
+            rocket: 0,
+            eyes: 0
+          },
           user: { login: 'author', id: 100, type: 'User' },
           assignees: []
         }
       })
 
-      mockOctokit.rest.issues.listComments.mockResolvedValue({
+      mockListComments.mockResolvedValue({
         data: []
       })
 
@@ -378,7 +451,7 @@ describe('Engagement Scoring', () => {
       }
 
       // Mock GraphQL response for project items
-      mockOctokit.graphql.mockResolvedValue({
+      mockGraphql.mockResolvedValue({
         repository: {
           projectV2: {
             id: 'project-id',
@@ -406,7 +479,7 @@ describe('Engagement Scoring', () => {
         }
       })
 
-      mockOctokit.rest.issues.get.mockResolvedValue({
+      mockGet.mockResolvedValue({
         data: {
           id: 1,
           number: 123,
@@ -417,13 +490,23 @@ describe('Engagement Scoring', () => {
           updated_at: '2023-01-01T00:00:00Z',
           closed_at: null,
           comments: 0,
-          reactions: { total_count: 0, '+1': 0, '-1': 0, laugh: 0, hooray: 0, confused: 0, heart: 0, rocket: 0, eyes: 0 },
+          reactions: {
+            total_count: 0,
+            '+1': 0,
+            '-1': 0,
+            laugh: 0,
+            hooray: 0,
+            confused: 0,
+            heart: 0,
+            rocket: 0,
+            eyes: 0
+          },
           user: { login: 'author', id: 100, type: 'User' },
           assignees: []
         }
       })
 
-      mockOctokit.rest.issues.listComments.mockResolvedValue({
+      mockListComments.mockResolvedValue({
         data: []
       })
 
@@ -505,7 +588,7 @@ describe('Engagement Scoring', () => {
       }
 
       // Mock GraphQL response for getting project field
-      mockOctokit.graphql.mockResolvedValueOnce({
+      mockGraphql.mockResolvedValueOnce({
         repository: {
           projectV2: {
             id: 'project-id',
@@ -523,7 +606,7 @@ describe('Engagement Scoring', () => {
       })
 
       // Mock GraphQL response for updating project item
-      mockOctokit.graphql.mockResolvedValueOnce({
+      mockGraphql.mockResolvedValueOnce({
         updateProjectV2ItemFieldValue: {
           projectV2Item: {
             id: 'item-1'
@@ -553,7 +636,7 @@ describe('Engagement Scoring', () => {
       }
 
       // Mock GraphQL response for getting project field (field not found)
-      mockOctokit.graphql.mockResolvedValueOnce({
+      mockGraphql.mockResolvedValueOnce({
         repository: {
           projectV2: {
             id: 'project-id',

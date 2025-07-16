@@ -40784,7 +40784,7 @@ async function calculateIssueEngagementScores(config, octokit) {
     coreExports.info(`Calculating engagement score for issue #${config.issueNumber}`);
     const issueDetails = await getIssueDetails(octokit, config.repoOwner, config.repoName, config.issueNumber);
     const score = calculateScore(issueDetails);
-    const previousScore = await calculatePreviousScore(issueDetails, octokit, config.repoOwner, config.repoName);
+    const previousScore = await calculatePreviousScore(issueDetails);
     const item = {
         issueNumber: issueDetails.number,
         engagement: {
@@ -40810,7 +40810,7 @@ async function calculateProjectEngagementScores(config, octokit) {
         if (projectItem.content?.type === 'Issue') {
             const issueDetails = await getIssueDetails(octokit, projectItem.content.owner, projectItem.content.repo, projectItem.content.number);
             const score = calculateScore(issueDetails);
-            const previousScore = await calculatePreviousScore(issueDetails, octokit, projectItem.content.owner, projectItem.content.repo);
+            const previousScore = await calculatePreviousScore(issueDetails);
             const item = {
                 id: projectItem.id,
                 issueNumber: issueDetails.number,
@@ -40968,7 +40968,7 @@ function calculateScore(issue) {
 /**
  * Calculate previous score (7 days ago) based on C# reference implementation
  */
-async function calculatePreviousScore(issue, octokit, owner, repo) {
+async function calculatePreviousScore(issue) {
     const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
     const issueCreatedAt = new Date(issue.created_at);
     // If issue was created less than 7 days ago, return 0
@@ -40976,10 +40976,12 @@ async function calculatePreviousScore(issue, octokit, owner, repo) {
         return 0;
     }
     // Create historic snapshot by filtering comments and reactions to 7 days ago
-    const historicComments = issue.comments_data?.filter(comment => {
+    const historicComments = issue.comments_data
+        ?.filter((comment) => {
         const commentDate = new Date(comment.created_at);
         return commentDate <= sevenDaysAgo;
-    }).map(comment => ({
+    })
+        .map((comment) => ({
         ...comment,
         reactions: {
             ...comment.reactions,
@@ -41089,7 +41091,7 @@ async function getProjectField(octokit, owner, repo, projectNumber, fieldName) {
     }
     const field = response.repository.projectV2.fields.nodes.find((f) => f.name === fieldName);
     if (!field) {
-        const availableFields = response.repository.projectV2.fields.nodes.map(f => f.name).join(', ');
+        const availableFields = response.repository.projectV2.fields.nodes.map((f) => f.name).join(', ');
         coreExports.warning(`Field "${fieldName}" not found. Available fields: ${availableFields}`);
         return null;
     }

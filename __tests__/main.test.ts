@@ -44,7 +44,7 @@ const mockRunEngagementWorkflow = runEngagementWorkflow as jest.MockedFunction<t
 describe('Main Dual Mode Functionality', () => {
   beforeEach(() => {
     jest.clearAllMocks()
-    
+
     // Default mock implementations
     core.getInput.mockImplementation((name: string) => {
       switch (name) {
@@ -56,7 +56,7 @@ describe('Main Dual Mode Functionality', () => {
           return ''
       }
     })
-    
+
     core.getBooleanInput.mockReturnValue(false)
     mockSelectLabels.mockResolvedValue('/tmp/response.json')
     mockApplyLabelsAndComment.mockResolvedValue()
