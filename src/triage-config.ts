@@ -9,11 +9,21 @@ export interface EverythingConfig
     GitHubIssueConfig,
     ApplyReactionsConfig,
     ApplyLabelsConfig,
-    ApplySummaryCommentConfig {}
+    ApplySummaryCommentConfig,
+    EngagementConfig {}
 
 export interface TriageConfig {
   dryRun: boolean
   tempDir: string
+}
+
+// engagement scoring configs
+
+export interface EngagementConfig extends GitHubIssueConfig {
+  token: string
+  project: string
+  projectColumn: string
+  applyScores: boolean
 }
 
 // ai inference configs
