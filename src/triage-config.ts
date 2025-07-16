@@ -21,7 +21,7 @@ export interface TriageConfig {
 
 export interface EngagementConfig extends GitHubIssueConfig {
   token: string
-  project: string
+  projectNumber?: number
   projectColumn: string
   applyScores: boolean
 }

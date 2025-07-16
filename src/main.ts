@@ -1,10 +1,13 @@
 import * as core from '@actions/core'
 import * as github from '@actions/github'
 import * as os from 'os'
-import { selectLabels } from './prompts-select-labels.js'
-import { applyLabelsAndComment, manageReactions } from './github-apply.js'
+import { runTriageWorkflow } from './triage.js'
+import { manageReactions } from './github-apply.js'
 import { runEngagementWorkflow } from './engagement.js'
 import { EverythingConfig } from './triage-config.js'
+import { TriageMode } from './triage-mode.js'
+
+const DEFAULT_PROJECT_COLUMN_NAME = 'Engagement Score'
 
 /**
  * The main function for the action.
@@ -21,15 +24,15 @@ export async function run(): Promise<void> {
   try {
     // Get inputs for mode determination
     const template = core.getInput('template')
-    const project = core.getInput('project')
+    const projectInput = core.getInput('project')
     const issue = core.getInput('issue')
 
-    // Determine if this is engagement scoring mode
-    const isEngagementMode = template === 'engagement-score'
+    // Determine triage mode
+    const triageMode = template === TriageMode.EngagementScore ? TriageMode.EngagementScore : TriageMode.IssueTriage
 
     // Validate inputs based on mode
-    if (isEngagementMode) {
-      if (!project && !issue) {
+    if (triageMode === TriageMode.EngagementScore) {
+      if (!projectInput && !issue) {
         throw new Error('Either project or issue must be specified when using engagement-score template')
       }
     } else {
@@ -41,6 +44,7 @@ export async function run(): Promise<void> {
 
     // Initialize configuration object
     const issueNumberStr = issue || (github.context.issue.number ? github.context.issue.number.toString() : '')
+    const projectNumber = projectInput ? parseInt(projectInput, 10) : 0
     const token =
       core.getInput('token') ||
       process.env.TRIAGE_GITHUB_TOKEN ||
@@ -67,8 +71,8 @@ export async function run(): Promise<void> {
       labelPrefix: core.getInput('label-prefix'),
       dryRun: core.getBooleanInput('dry-run') || false,
       // Engagement scoring config
-      project: project,
-      projectColumn: core.getInput('project-column') || 'Engagement Score',
+      projectNumber: projectNumber,
+      projectColumn: core.getInput('project-column') || DEFAULT_PROJECT_COLUMN_NAME,
       applyScores: core.getBooleanInput('apply-scores')
     }
 
@@ -85,7 +89,7 @@ export async function run(): Promise<void> {
 
     let responseFile = ''
 
-    if (isEngagementMode) {
+    if (triageMode === TriageMode.EngagementScore) {
       // Run engagement scoring workflow
       responseFile = await runEngagementWorkflow(config)
     } else {
@@ -104,47 +108,7 @@ export async function run(): Promise<void> {
     }
   } finally {
     // Remove eyes reaction at the end if needed (only for normal triage mode)
-    if (shouldRemoveReactions && config && config.template !== 'engagement-score') {
-      await manageReactions(config, false)
-    }
-  }
-}
-
-/**
- * Run the normal triage workflow
- */
-async function runTriageWorkflow(config: EverythingConfig): Promise<string> {
-  const shouldAddLabels = config.template ? true : false
-  const shouldAddSummary = config.applyLabels || config.applyComment
-  const shouldAddReactions = shouldAddLabels || shouldAddSummary
-  let shouldRemoveReactions = shouldAddSummary
-
-  let responseFile = ''
-
-  try {
-    // Step 1: Add eyes reaction at the start
-    if (shouldAddReactions) {
-      await manageReactions(config, true)
-    }
-
-    // Step 2: Select labels if template is provided
-    if (shouldAddLabels) {
-      responseFile = await selectLabels(config)
-    }
-
-    // Step 3: Apply labels and comment if requested
-    if (shouldAddSummary) {
-      await applyLabelsAndComment(config)
-    }
-
-    return responseFile
-  } catch (error) {
-    // Don't remove reactions on error
-    shouldRemoveReactions = false
-    throw error
-  } finally {
-    // Step 4: Remove eyes reaction at the end if needed
-    if (shouldRemoveReactions) {
+    if (shouldRemoveReactions && config && config.template !== TriageMode.EngagementScore) {
       await manageReactions(config, false)
     }
   }

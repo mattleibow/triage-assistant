@@ -86,7 +86,7 @@ describe('Main Dual Mode Functionality', () => {
       expect(mockRunEngagementWorkflow).toHaveBeenCalledWith(
         expect.objectContaining({
           template: 'engagement-score',
-          project: '1',
+          projectNumber: 1,
           projectColumn: 'Engagement Score',
           applyScores: false
         })
@@ -117,7 +117,7 @@ describe('Main Dual Mode Functionality', () => {
         expect.objectContaining({
           template: 'engagement-score',
           issueNumber: 456,
-          project: '',
+          projectNumber: 0,
           applyScores: false
         })
       )
@@ -326,7 +326,7 @@ describe('Main Dual Mode Functionality', () => {
       expect(mockRunEngagementWorkflow).toHaveBeenCalledWith(
         expect.objectContaining({
           template: 'engagement-score',
-          project: '1',
+          projectNumber: 1,
           projectColumn: 'Custom Score',
           applyScores: true,
           token: 'test-token',

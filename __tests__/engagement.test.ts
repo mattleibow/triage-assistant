@@ -1,21 +1,14 @@
 import { jest } from '@jest/globals'
 import * as github from '@actions/github'
-import {
-  calculateScore,
-  getUniqueContributors,
-  getTimeSinceLastActivity,
-  getIssueAge,
-  calculatePreviousScore,
-  calculateEngagementScores,
-  updateProjectWithScores
-} from '../src/engagement.js'
-import { IssueDetails } from '../src/engagement-types.js'
+import { calculateScore, calculatePreviousScore, calculateEngagementScores } from '../src/engagement.js'
+import { getUniqueContributors, getTimeSinceLastActivity, getIssueAge, IssueDetails } from '../src/issue-details.js'
+import { updateProjectWithScores } from '../src/github-projects.js'
 import { EngagementConfig } from '../src/triage-config.js'
 
 // Mock GitHub API
-const mockGet = jest.fn() as jest.MockedFunction<(...args: unknown[]) => unknown>
-const mockListComments = jest.fn() as jest.MockedFunction<(...args: unknown[]) => unknown>
-const mockGraphql = jest.fn() as jest.MockedFunction<(...args: unknown[]) => unknown>
+const mockGet = jest.fn()
+const mockListComments = jest.fn()
+const mockGraphql = jest.fn()
 
 const mockOctokit = {
   rest: {
@@ -395,7 +388,7 @@ describe('Engagement Scoring', () => {
         repoOwner: 'owner',
         repoName: 'repo',
         token: 'token',
-        project: '',
+        projectNumber: undefined,
         projectColumn: 'Engagement Score',
         applyScores: false
       }
@@ -445,7 +438,7 @@ describe('Engagement Scoring', () => {
         repoOwner: 'owner',
         repoName: 'repo',
         token: 'token',
-        project: '1',
+        projectNumber: 1,
         projectColumn: 'Engagement Score',
         applyScores: false
       }
@@ -524,7 +517,7 @@ describe('Engagement Scoring', () => {
         repoOwner: 'owner',
         repoName: 'repo',
         token: 'token',
-        project: '',
+        projectNumber: undefined,
         projectColumn: 'Engagement Score',
         applyScores: false
       }
@@ -546,7 +539,7 @@ describe('Engagement Scoring', () => {
         repoOwner: 'owner',
         repoName: 'repo',
         token: 'token',
-        project: '1',
+        projectNumber: 1,
         projectColumn: 'Engagement Score',
         applyScores: false
       }
@@ -567,7 +560,7 @@ describe('Engagement Scoring', () => {
         repoOwner: 'owner',
         repoName: 'repo',
         token: 'token',
-        project: '1',
+        projectNumber: 1,
         projectColumn: 'Engagement Score',
         applyScores: true
       }
@@ -625,7 +618,7 @@ describe('Engagement Scoring', () => {
         repoOwner: 'owner',
         repoName: 'repo',
         token: 'token',
-        project: '1',
+        projectNumber: 1,
         projectColumn: 'Nonexistent Field',
         applyScores: true
       }

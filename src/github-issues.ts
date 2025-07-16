@@ -3,6 +3,7 @@ import * as core from '@actions/core'
 import * as fs from 'fs'
 import { TriageResponse } from './triage-response.js'
 import { GitHubIssueConfig, TriageConfig } from './triage-config.js'
+import { IssueDetails, CommentData } from './issue-details.js'
 
 /**
  * Comments on an issue with the provided summary.
@@ -130,5 +131,51 @@ export async function removeEyes(
         reaction_id: reaction.id
       })
     }
+  }
+}
+
+/**
+ * Get detailed information about an issue including comments
+ */
+export async function getIssueDetails(
+  octokit: ReturnType<typeof github.getOctokit>,
+  owner: string,
+  repo: string,
+  issueNumber: number
+): Promise<IssueDetails> {
+  const { data: issue } = await octokit.rest.issues.get({
+    owner,
+    repo,
+    issue_number: issueNumber
+  })
+
+  // Get issue comments
+  const { data: comments } = await octokit.rest.issues.listComments({
+    owner,
+    repo,
+    issue_number: issueNumber
+  })
+
+  const commentsData: CommentData[] = comments.map((comment) => ({
+    id: comment.id,
+    user: comment.user!,
+    created_at: comment.created_at,
+    reactions: comment.reactions!
+  }))
+
+  return {
+    id: issue.id.toString(),
+    number: issue.number,
+    title: issue.title,
+    body: issue.body || '',
+    state: issue.state,
+    created_at: issue.created_at,
+    updated_at: issue.updated_at,
+    closed_at: issue.closed_at,
+    comments: issue.comments,
+    reactions: issue.reactions!,
+    comments_data: commentsData,
+    user: issue.user!,
+    assignees: issue.assignees!
   }
 }
