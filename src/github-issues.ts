@@ -3,7 +3,7 @@ import * as core from '@actions/core'
 import * as fs from 'fs'
 import { TriageResponse } from './triage-response.js'
 import { GitHubIssueConfig, TriageConfig } from './triage-config.js'
-import { IssueDetails, CommentData } from './issue-details.js'
+import { IssueDetails, CommentData, ReactionData } from './issue-details.js'
 
 /**
  * Comments on an issue with the provided summary.
@@ -135,7 +135,7 @@ export async function removeEyes(
 }
 
 /**
- * Get detailed information about an issue including comments
+ * Get detailed information about an issue including comments and reactions using GraphQL
  */
 export async function getIssueDetails(
   octokit: ReturnType<typeof github.getOctokit>,
@@ -143,39 +143,249 @@ export async function getIssueDetails(
   repo: string,
   issueNumber: number
 ): Promise<IssueDetails> {
-  const { data: issue } = await octokit.rest.issues.get({
+  const query = `
+    query($owner: String!, $repo: String!, $issueNumber: Int!, $commentsCursor: String, $reactionsCursor: String) {
+      repository(owner: $owner, name: $repo) {
+        issue(number: $issueNumber) {
+          id
+          number
+          title
+          body
+          state
+          createdAt
+          updatedAt
+          closedAt
+          author {
+            login
+            ... on User {
+              id
+            }
+          }
+          assignees(first: 100) {
+            nodes {
+              login
+              id
+            }
+          }
+          reactions(first: 100, after: $reactionsCursor) {
+            totalCount
+            pageInfo {
+              hasNextPage
+              endCursor
+            }
+            nodes {
+              id
+              content
+              createdAt
+              user {
+                login
+                id
+              }
+            }
+          }
+          comments(first: 100, after: $commentsCursor) {
+            totalCount
+            pageInfo {
+              hasNextPage
+              endCursor
+            }
+            nodes {
+              id
+              createdAt
+              author {
+                login
+                ... on User {
+                  id
+                }
+              }
+              reactions(first: 100) {
+                totalCount
+                pageInfo {
+                  hasNextPage
+                  endCursor
+                }
+                nodes {
+                  id
+                  content
+                  createdAt
+                  user {
+                    login
+                    id
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  `
+
+  // Get issue with first batch of comments and reactions
+  const result = await octokit.graphql<any>(query, {
     owner,
     repo,
-    issue_number: issueNumber
+    issueNumber,
+    commentsCursor: null,
+    reactionsCursor: null
   })
 
-  // Get issue comments
-  const { data: comments } = await octokit.rest.issues.listComments({
-    owner,
-    repo,
-    issue_number: issueNumber
+  const issue = result.repository.issue
+  
+  // Get all reactions for the issue
+  const allReactions: ReactionData[] = []
+  let reactionsCursor: string | null = null
+  let hasNextReactions = issue.reactions.pageInfo.hasNextPage
+
+  // Add first batch of reactions
+  issue.reactions.nodes.forEach((reaction: any) => {
+    allReactions.push({
+      id: reaction.id,
+      user: {
+        login: reaction.user.login,
+        id: reaction.user.id,
+        type: 'User'
+      },
+      reaction: reaction.content.toLowerCase(),
+      created_at: reaction.createdAt
+    })
   })
 
-  const commentsData: CommentData[] = comments.map((comment) => ({
-    id: comment.id,
-    user: comment.user!,
-    created_at: comment.created_at,
-    reactions: comment.reactions!
-  }))
+  reactionsCursor = issue.reactions.pageInfo.endCursor
+
+  // Paginate through remaining reactions
+  while (hasNextReactions) {
+    const nextResult = await octokit.graphql<any>(query, {
+      owner,
+      repo,
+      issueNumber,
+      commentsCursor: null,
+      reactionsCursor
+    })
+
+    const nextReactions = nextResult.repository.issue.reactions
+    nextReactions.nodes.forEach((reaction: any) => {
+      allReactions.push({
+        id: reaction.id,
+        user: {
+          login: reaction.user.login,
+          id: reaction.user.id,
+          type: 'User'
+        },
+        reaction: reaction.content.toLowerCase(),
+        created_at: reaction.createdAt
+      })
+    })
+
+    hasNextReactions = nextReactions.pageInfo.hasNextPage
+    reactionsCursor = nextReactions.pageInfo.endCursor
+  }
+
+  // Get all comments
+  const allComments: CommentData[] = []
+  let commentsCursor: string | null = null
+  let hasNextComments = issue.comments.pageInfo.hasNextPage
+
+  // Add first batch of comments
+  for (const comment of issue.comments.nodes) {
+    const commentReactions: ReactionData[] = []
+    
+    // Get comment reactions
+    comment.reactions.nodes.forEach((reaction: any) => {
+      commentReactions.push({
+        id: reaction.id,
+        user: {
+          login: reaction.user.login,
+          id: reaction.user.id,
+          type: 'User'
+        },
+        reaction: reaction.content.toLowerCase(),
+        created_at: reaction.createdAt
+      })
+    })
+
+    allComments.push({
+      id: parseInt(comment.id),
+      user: {
+        login: comment.author.login,
+        id: comment.author.id,
+        type: 'User'
+      },
+      created_at: comment.createdAt,
+      reactions: commentReactions.length,
+      reactions_data: commentReactions
+    })
+  }
+
+  commentsCursor = issue.comments.pageInfo.endCursor
+
+  // Paginate through remaining comments
+  while (hasNextComments) {
+    const nextResult = await octokit.graphql<any>(query, {
+      owner,
+      repo,
+      issueNumber,
+      commentsCursor,
+      reactionsCursor: null
+    })
+
+    const nextComments = nextResult.repository.issue.comments
+    for (const comment of nextComments.nodes) {
+      const commentReactions: ReactionData[] = []
+      
+      // Get comment reactions
+      comment.reactions.nodes.forEach((reaction: any) => {
+        commentReactions.push({
+          id: reaction.id,
+          user: {
+            login: reaction.user.login,
+            id: reaction.user.id,
+            type: 'User'
+          },
+          reaction: reaction.content.toLowerCase(),
+          created_at: reaction.createdAt
+        })
+      })
+
+      allComments.push({
+        id: parseInt(comment.id),
+        user: {
+          login: comment.author.login,
+          id: comment.author.id,
+          type: 'User'
+        },
+        created_at: comment.createdAt,
+        reactions: commentReactions.length,
+        reactions_data: commentReactions
+      })
+    }
+
+    hasNextComments = nextComments.pageInfo.hasNextPage
+    commentsCursor = nextComments.pageInfo.endCursor
+  }
 
   return {
-    id: issue.id.toString(),
+    id: issue.id,
     number: issue.number,
     title: issue.title,
     body: issue.body || '',
-    state: issue.state,
-    created_at: issue.created_at,
-    updated_at: issue.updated_at,
-    closed_at: issue.closed_at,
-    comments: issue.comments,
-    reactions: issue.reactions!,
-    comments_data: commentsData,
-    user: issue.user!,
-    assignees: issue.assignees!
+    state: issue.state.toLowerCase(),
+    created_at: issue.createdAt,
+    updated_at: issue.updatedAt,
+    closed_at: issue.closedAt,
+    comments: allComments.length,
+    reactions: allReactions.length,
+    reactions_data: allReactions,
+    comments_data: allComments,
+    user: {
+      login: issue.author.login,
+      id: issue.author.id,
+      type: 'User'
+    },
+    assignees: issue.assignees.nodes.map((assignee: any) => ({
+      login: assignee.login,
+      id: assignee.id,
+      type: 'User'
+    }))
   }
 }

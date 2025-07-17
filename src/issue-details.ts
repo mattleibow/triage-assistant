@@ -8,7 +8,8 @@ export interface IssueDetails {
   updated_at: string
   closed_at: string | null
   comments: number
-  reactions: ReactionsInfo
+  reactions: number
+  reactions_data: ReactionData[]
   comments_data: CommentData[]
   user: UserInfo
   assignees: UserInfo[]
@@ -18,19 +19,15 @@ export interface CommentData {
   id: number
   user: UserInfo
   created_at: string
-  reactions: ReactionsInfo
+  reactions: number
+  reactions_data: ReactionData[]
 }
 
-export interface ReactionsInfo {
-  total_count: number
-  '+1': number
-  '-1': number
-  laugh: number
-  hooray: number
-  confused: number
-  heart: number
-  rocket: number
-  eyes: number
+export interface ReactionData {
+  id: string
+  user: UserInfo
+  reaction: string
+  created_at: string
 }
 
 export interface UserInfo {
@@ -52,12 +49,16 @@ export function getHistoricalIssueDetails(issue: IssueDetails): IssueDetails {
       ...issue,
       comments: 0,
       comments_data: [],
-      reactions: {
-        ...issue.reactions,
-        total_count: 0
-      }
+      reactions: 0,
+      reactions_data: []
     }
   }
+
+  // Filter reactions to only include those created before 7 days ago
+  const historicReactions = issue.reactions_data.filter((reaction) => {
+    const reactionDate = new Date(reaction.created_at)
+    return reactionDate <= sevenDaysAgo
+  })
 
   // Create historic snapshot by filtering comments and reactions to 7 days ago
   const historicComments =
@@ -66,22 +67,26 @@ export function getHistoricalIssueDetails(issue: IssueDetails): IssueDetails {
         const commentDate = new Date(comment.created_at)
         return commentDate <= sevenDaysAgo
       })
-      .map((comment) => ({
-        ...comment,
-        reactions: {
-          ...comment.reactions,
-          total_count: 0 // Simplified - would need to get historic reactions
+      .map((comment) => {
+        // Filter comment reactions to only include those created before 7 days ago
+        const commentHistoricReactions = comment.reactions_data.filter((reaction) => {
+          const reactionDate = new Date(reaction.created_at)
+          return reactionDate <= sevenDaysAgo
+        })
+        
+        return {
+          ...comment,
+          reactions: commentHistoricReactions.length,
+          reactions_data: commentHistoricReactions
         }
-      })) || []
+      }) || []
 
   const historicIssue: IssueDetails = {
     ...issue,
     comments: historicComments.length,
     comments_data: historicComments,
-    reactions: {
-      ...issue.reactions,
-      total_count: 0 // Simplified - would need to get historic reactions
-    },
+    reactions: historicReactions.length,
+    reactions_data: historicReactions,
     updated_at: sevenDaysAgo.toISOString()
   }
 
@@ -142,8 +147,8 @@ export function calculateScore(issue: IssueDetails): number {
 
   const totalComments = issue.comments
   const totalReactions =
-    issue.reactions.total_count +
-    (issue.comments_data?.reduce((sum, comment) => sum + comment.reactions.total_count, 0) || 0)
+    issue.reactions +
+    (issue.comments_data?.reduce((sum, comment) => sum + comment.reactions, 0) || 0)
   const contributors = getUniqueContributors(issue)
   const lastActivity = Math.max(1, getTimeSinceLastActivity(issue))
   const issueAge = Math.max(1, getIssueAge(issue))
@@ -174,24 +179,4 @@ export function calculateScore(issue: IssueDetails): number {
 export async function calculatePreviousScore(issue: IssueDetails): Promise<number> {
   const historicIssue = getHistoricalIssueDetails(issue)
   return calculateScore(historicIssue)
-}
-
-/**
- * Helper function to create engagement item - avoids code duplication
- */
-export async function createEngagementItem(issueDetails: IssueDetails, projectItemId?: string): Promise<any> {
-  const score = calculateScore(issueDetails)
-  const previousScore = await calculatePreviousScore(issueDetails)
-
-  const item = {
-    ...(projectItemId && { id: projectItemId }),
-    issueNumber: issueDetails.number,
-    engagement: {
-      score,
-      previousScore,
-      classification: score > previousScore ? 'Hot' : null
-    }
-  }
-
-  return item
 }

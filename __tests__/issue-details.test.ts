@@ -6,9 +6,9 @@ import {
   getTimeSinceLastActivity,
   getIssueAge,
   calculateScore,
-  calculatePreviousScore,
-  createEngagementItem
+  calculatePreviousScore
 } from '../src/issue-details.js'
+import { createEngagementItem } from '../src/engagement.js'
 
 // Mock date for consistent testing
 const MOCK_NOW = new Date('2023-01-10T12:00:00Z')
@@ -24,49 +24,55 @@ const mockIssueDetails: IssueDetails = {
   updated_at: '2023-01-08T12:00:00Z',
   closed_at: null,
   comments: 5,
-  reactions: {
-    total_count: 10,
-    '+1': 5,
-    '-1': 0,
-    laugh: 2,
-    hooray: 1,
-    confused: 0,
-    heart: 1,
-    rocket: 1,
-    eyes: 0
-  },
+  reactions: 10,
+  reactions_data: [
+    {
+      id: 'reaction1',
+      user: { login: 'user1', id: 1, type: 'User' },
+      reaction: 'thumbs_up',
+      created_at: '2023-01-02T12:00:00Z'
+    },
+    {
+      id: 'reaction2',
+      user: { login: 'user2', id: 2, type: 'User' },
+      reaction: 'heart',
+      created_at: '2023-01-05T12:00:00Z'
+    }
+  ],
   comments_data: [
     {
       id: 1,
       user: { login: 'user1', id: 1, type: 'User' },
       created_at: '2023-01-02T12:00:00Z',
-      reactions: {
-        total_count: 2,
-        '+1': 1,
-        '-1': 0,
-        laugh: 0,
-        hooray: 0,
-        confused: 0,
-        heart: 1,
-        rocket: 0,
-        eyes: 0
-      }
+      reactions: 2,
+      reactions_data: [
+        {
+          id: 'comment_reaction1',
+          user: { login: 'user3', id: 3, type: 'User' },
+          reaction: 'thumbs_up',
+          created_at: '2023-01-02T13:00:00Z'
+        },
+        {
+          id: 'comment_reaction2',
+          user: { login: 'user4', id: 4, type: 'User' },
+          reaction: 'heart',
+          created_at: '2023-01-03T12:00:00Z'
+        }
+      ]
     },
     {
       id: 2,
       user: { login: 'user2', id: 2, type: 'User' },
       created_at: '2023-01-05T12:00:00Z',
-      reactions: {
-        total_count: 1,
-        '+1': 0,
-        '-1': 0,
-        laugh: 0,
-        hooray: 0,
-        confused: 0,
-        heart: 0,
-        rocket: 1,
-        eyes: 0
-      }
+      reactions: 1,
+      reactions_data: [
+        {
+          id: 'comment_reaction3',
+          user: { login: 'user5', id: 5, type: 'User' },
+          reaction: 'rocket',
+          created_at: '2023-01-05T13:00:00Z'
+        }
+      ]
     }
   ],
   user: { login: 'author', id: 100, type: 'User' },
@@ -97,7 +103,8 @@ describe('IssueDetails', () => {
 
       expect(result.comments).toBe(0)
       expect(result.comments_data).toEqual([])
-      expect(result.reactions.total_count).toBe(0)
+      expect(result.reactions).toBe(0)
+      expect(result.reactions_data).toEqual([])
     })
 
     it('should filter comments to 7 days ago for older issues', () => {
@@ -109,11 +116,17 @@ describe('IssueDetails', () => {
       expect(result.comments_data[0].user.login).toBe('user1')
     })
 
-    it('should set historic reaction counts to 0 (simplified)', () => {
+    it('should filter reactions correctly for historic snapshots', () => {
       const result = getHistoricalIssueDetails(mockIssueDetails)
 
-      expect(result.reactions.total_count).toBe(0)
-      expect(result.comments_data[0].reactions.total_count).toBe(0)
+      // Should only include reactions from before 7 days ago (2023-01-02)
+      expect(result.reactions).toBe(1)
+      expect(result.reactions_data).toHaveLength(1)
+      expect(result.reactions_data[0].id).toBe('reaction1')
+      
+      // Should filter comment reactions too
+      expect(result.comments_data[0].reactions).toBe(2)
+      expect(result.comments_data[0].reactions_data).toHaveLength(2)
     })
 
     it('should set updated_at to seven days ago', () => {
@@ -331,33 +344,15 @@ describe('IssueDetails', () => {
     it('should handle zero reactions', () => {
       const noReactionsIssue: IssueDetails = {
         ...mockIssueDetails,
-        reactions: {
-          total_count: 0,
-          '+1': 0,
-          '-1': 0,
-          laugh: 0,
-          hooray: 0,
-          confused: 0,
-          heart: 0,
-          rocket: 0,
-          eyes: 0
-        },
+        reactions: 0,
+        reactions_data: [],
         comments_data: [
           {
             id: 1,
             user: { login: 'user1', id: 1, type: 'User' },
             created_at: '2023-01-02T12:00:00Z',
-            reactions: {
-              total_count: 0,
-              '+1': 0,
-              '-1': 0,
-              laugh: 0,
-              hooray: 0,
-              confused: 0,
-              heart: 0,
-              rocket: 0,
-              eyes: 0
-            }
+            reactions: 0,
+            reactions_data: []
           }
         ]
       }
@@ -419,17 +414,8 @@ describe('IssueDetails', () => {
             id: 1,
             user: { login: 'user1', id: 1, type: 'User' },
             created_at: '2023-01-08T12:00:00Z', // All activity after 7 days ago
-            reactions: {
-              total_count: 0,
-              '+1': 0,
-              '-1': 0,
-              laugh: 0,
-              hooray: 0,
-              confused: 0,
-              heart: 0,
-              rocket: 0,
-              eyes: 0
-            }
+            reactions: 0,
+            reactions_data: []
           }
         ]
       }
@@ -474,13 +460,29 @@ describe('IssueDetails', () => {
         ...mockIssueDetails,
         created_at: '2023-01-01T12:00:00Z', // Old enough to have historic data
         comments: 10, // High activity
-        reactions: { ...mockIssueDetails.reactions, total_count: 20 },
+        reactions: 20,
+        reactions_data: [
+          {
+            id: 'reaction1',
+            user: { login: 'user1', id: 1, type: 'User' },
+            reaction: 'thumbs_up',
+            created_at: '2023-01-08T12:00:00Z'
+          }
+        ],
         comments_data: [
           {
             id: 1,
             user: { login: 'user1', id: 1, type: 'User' },
             created_at: '2023-01-08T12:00:00Z', // Recent comment
-            reactions: { ...mockIssueDetails.reactions, total_count: 5 }
+            reactions: 5,
+            reactions_data: [
+              {
+                id: 'comment_reaction1',
+                user: { login: 'user2', id: 2, type: 'User' },
+                reaction: 'heart',
+                created_at: '2023-01-08T13:00:00Z'
+              }
+            ]
           }
         ]
       }
@@ -496,33 +498,22 @@ describe('IssueDetails', () => {
         ...mockIssueDetails,
         created_at: '2022-12-01T12:00:00Z', // Very old issue
         comments: 1, // Low activity
-        reactions: { 
-          total_count: 1,
-          '+1': 1,
-          '-1': 0,
-          laugh: 0,
-          hooray: 0,
-          confused: 0,
-          heart: 0,
-          rocket: 0,
-          eyes: 0
-        },
+        reactions: 1,
+        reactions_data: [
+          {
+            id: 'reaction1',
+            user: { login: 'user1', id: 1, type: 'User' },
+            reaction: 'thumbs_up',
+            created_at: '2022-12-02T12:00:00Z'
+          }
+        ],
         comments_data: [
           {
             id: 1,
             user: { login: 'user1', id: 1, type: 'User' },
             created_at: '2022-12-02T12:00:00Z', // Old comment
-            reactions: { 
-              total_count: 0,
-              '+1': 0,
-              '-1': 0,
-              laugh: 0,
-              hooray: 0,
-              confused: 0,
-              heart: 0,
-              rocket: 0,
-              eyes: 0
-            }
+            reactions: 0,
+            reactions_data: []
           }
         ]
       }
@@ -551,17 +542,8 @@ describe('IssueDetails', () => {
         updated_at: '2023-01-01T12:00:00Z',
         closed_at: null,
         comments: 0,
-        reactions: {
-          total_count: 0,
-          '+1': 0,
-          '-1': 0,
-          laugh: 0,
-          hooray: 0,
-          confused: 0,
-          heart: 0,
-          rocket: 0,
-          eyes: 0
-        },
+        reactions: 0,
+        reactions_data: [],
         comments_data: [],
         user: { login: 'user', id: 1, type: 'User' },
         assignees: []

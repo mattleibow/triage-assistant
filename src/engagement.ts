@@ -4,7 +4,7 @@ import { EverythingConfig, EngagementConfig } from './triage-config.js'
 import { EngagementResponse, EngagementItem } from './engagement-types.js'
 import { getIssueDetails } from './github-issues.js'
 import { getAllProjectItems, updateProjectWithScores } from './github-projects.js'
-import { createEngagementItem } from './issue-details.js'
+import { IssueDetails, calculateScore, calculatePreviousScore } from './issue-details.js'
 
 /**
  * Run the complete engagement scoring workflow
@@ -104,4 +104,24 @@ async function calculateProjectEngagementScores(
       number: projectNumber
     }
   }
+}
+
+/**
+ * Helper function to create engagement item - avoids code duplication
+ */
+export async function createEngagementItem(issueDetails: IssueDetails, projectItemId?: string): Promise<any> {
+  const score = calculateScore(issueDetails)
+  const previousScore = await calculatePreviousScore(issueDetails)
+
+  const item = {
+    ...(projectItemId && { id: projectItemId }),
+    issueNumber: issueDetails.number,
+    engagement: {
+      score,
+      previousScore,
+      classification: score > previousScore ? 'Hot' : null
+    }
+  }
+
+  return item
 }
