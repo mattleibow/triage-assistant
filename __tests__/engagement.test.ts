@@ -154,7 +154,7 @@ describe('Engagement Scoring', () => {
           }
         }
       ])
-      
+
       mockGetIssueDetails.mockResolvedValue({
         id: 'issue-1',
         number: 123,
@@ -175,14 +175,9 @@ describe('Engagement Scoring', () => {
       })
 
       const result = await runEngagementWorkflow(mockConfig)
-      
+
       expect(result).toMatch(/engagement-response\.json$/)
-      expect(mockGetAllProjectItems).toHaveBeenCalledWith(
-        expect.any(Object),
-        'test-owner',
-        'test-repo',
-        1
-      )
+      expect(mockGetAllProjectItems).toHaveBeenCalledWith(expect.any(Object), 'test-owner', 'test-repo', 1)
     })
 
     it('should handle single issue mode correctly', async () => {
@@ -211,14 +206,9 @@ describe('Engagement Scoring', () => {
       })
 
       const result = await runEngagementWorkflow(singleIssueConfig)
-      
+
       expect(result).toMatch(/engagement-response\.json$/)
-      expect(mockGetIssueDetails).toHaveBeenCalledWith(
-        expect.any(Object),
-        'test-owner',
-        'test-repo',
-        123
-      )
+      expect(mockGetIssueDetails).toHaveBeenCalledWith(expect.any(Object), 'test-owner', 'test-repo', 123)
     })
   })
 })

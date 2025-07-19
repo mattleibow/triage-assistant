@@ -12,7 +12,7 @@ issue/PR content using large language models (LLMs) to automatically apply appro
 - **`src/main.ts`** - Entry point that orchestrates the multi-mode triage process
 - **`src/config.ts`** - Configuration interface and input parsing
 - **`src/triage/triage.ts`** - Traditional issue triage workflow
-- **`src/engagement/engagement.ts`** - Engagement scoring workflow  
+- **`src/engagement/engagement.ts`** - Engagement scoring workflow
 - **`src/github/projects.ts`** - GitHub Projects v2 API interactions
 - **`src/github/issues.ts`** - GitHub Issues API interactions
 - **`src/github/issue-details.ts`** - Issue data processing and scoring algorithms
@@ -314,13 +314,15 @@ When modifying engagement scoring functionality:
 When adding new functionality, always write comprehensive tests that follow existing patterns:
 
 **Test Categories to Include:**
+
 1. **Unit Tests** - Test each function individually with various inputs
-2. **Integration Tests** - Test component interactions and workflows  
+2. **Integration Tests** - Test component interactions and workflows
 3. **Edge Cases** - Empty inputs, null values, boundary conditions
 4. **Error Scenarios** - Invalid inputs, API failures, missing data
 5. **Common Paths** - Normal usage scenarios with typical data
 
 **Test Organization Patterns:**
+
 - Group related tests with `describe` blocks
 - Use descriptive test names that explain the scenario
 - Follow existing mock patterns in `__tests__/` directory
@@ -328,6 +330,7 @@ When adding new functionality, always write comprehensive tests that follow exis
 - Test both success and failure scenarios consistently
 
 **Mock Strategy Guidelines:**
+
 - Use Jest mocks for external APIs and file system operations
 - Create comprehensive mock data that covers real-world scenarios
 - Mock at the module level, not individual function level when possible
@@ -335,6 +338,7 @@ When adding new functionality, always write comprehensive tests that follow exis
 - Use fixtures for complex mock data to improve maintainability
 
 **Specific Testing Requirements:**
+
 - **Score Calculation Functions** - Test with various issue states, activity levels, and edge cases
 - **GraphQL Operations** - Mock query responses and test error handling
 - **File Processing** - Test with different file formats and empty files

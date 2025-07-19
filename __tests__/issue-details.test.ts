@@ -27,13 +27,11 @@ const mockIssueDetails: IssueDetails = {
   reactions: 10,
   reactions_data: [
     {
-      
       user: { login: 'user1', type: 'User' },
       reaction: 'thumbs_up',
       created_at: '2023-01-02T12:00:00Z'
     },
     {
-      
       user: { login: 'user2', type: 'User' },
       reaction: 'heart',
       created_at: '2023-01-05T12:00:00Z'
@@ -41,7 +39,6 @@ const mockIssueDetails: IssueDetails = {
   ],
   comments_data: [
     {
-      id: 1,
       user: { login: 'user1', type: 'User' },
       created_at: '2023-01-02T12:00:00Z',
       reactions: 2,
@@ -59,7 +56,6 @@ const mockIssueDetails: IssueDetails = {
       ]
     },
     {
-      id: 2,
       user: { login: 'user2', type: 'User' },
       created_at: '2023-01-05T12:00:00Z',
       reactions: 1,
@@ -345,7 +341,6 @@ describe('IssueDetails', () => {
         reactions_data: [],
         comments_data: [
           {
-            id: 1,
             user: { login: 'user1', type: 'User' },
             created_at: '2023-01-02T12:00:00Z',
             reactions: 0,
@@ -408,7 +403,6 @@ describe('IssueDetails', () => {
         ...mockIssueDetails,
         comments_data: [
           {
-            id: 1,
             user: { login: 'user1', type: 'User' },
             created_at: '2023-01-08T12:00:00Z', // All activity after 7 days ago
             reactions: 0,
@@ -460,7 +454,6 @@ describe('IssueDetails', () => {
         reactions: 20,
         reactions_data: [
           {
-            
             user: { login: 'user1', type: 'User' },
             reaction: 'thumbs_up',
             created_at: '2023-01-08T12:00:00Z'
@@ -468,7 +461,6 @@ describe('IssueDetails', () => {
         ],
         comments_data: [
           {
-            id: 1,
             user: { login: 'user1', type: 'User' },
             created_at: '2023-01-08T12:00:00Z', // Recent comment
             reactions: 5,
@@ -497,7 +489,6 @@ describe('IssueDetails', () => {
         reactions: 1,
         reactions_data: [
           {
-            
             user: { login: 'user1', type: 'User' },
             reaction: 'thumbs_up',
             created_at: '2022-12-02T12:00:00Z'
@@ -505,7 +496,6 @@ describe('IssueDetails', () => {
         ],
         comments_data: [
           {
-            id: 1,
             user: { login: 'user1', type: 'User' },
             created_at: '2022-12-02T12:00:00Z', // Old comment
             reactions: 0,
