@@ -7,7 +7,7 @@ import {
   getIssueAge,
   calculateScore,
   calculatePreviousScore
-} from '../src/issue-details.js'
+} from '../src/github/issue-details.js'
 import { createEngagementItem } from '../src/engagement.js'
 
 // Mock date for consistent testing
@@ -123,7 +123,7 @@ describe('IssueDetails', () => {
       expect(result.reactions).toBe(1)
       expect(result.reactions_data).toHaveLength(1)
       expect(result.reactions_data[0].id).toBe('reaction1')
-      
+
       // Should filter comment reactions too
       expect(result.comments_data[0].reactions).toBe(2)
       expect(result.comments_data[0].reactions_data).toHaveLength(2)
@@ -520,7 +520,7 @@ describe('IssueDetails', () => {
 
       const currentScore = calculateScore(testIssue)
       const previousScore = await calculatePreviousScore(testIssue)
-      
+
       const result = await createEngagementItem(testIssue)
 
       // The test passes if current score <= previous score

@@ -1,0 +1,29 @@
+schema:
+  # - https://api.github.com/graphql:
+  #     headers:
+  #       Authorization: 'Bearer GITHUB_TOKEN'
+  #       User-Agent: 'Triage Assistant'
+  - schemas/github.schema.graphql
+
+documents: 'src/**/*.graphql'
+
+generates:
+  src/generated/graphql.ts:
+    plugins:
+      - typescript
+      - typescript-operations
+      - typescript-graphql-request
+      - add:
+          content: |
+            // This file is auto-generated. Do not edit directly.
+            // @ts-nocheck
+            /* eslint-disable */
+            // prettier-ignore
+
+  schemas/github.schema.graphql:
+    plugins:
+      - schema-ast
+
+  schemas/github.schema.json:
+    plugins:
+      - introspection

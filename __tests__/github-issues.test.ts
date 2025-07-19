@@ -2,13 +2,7 @@ import { jest } from '@jest/globals'
 import * as github from '@actions/github'
 import * as core from '@actions/core'
 import * as fs from 'fs'
-import {
-  commentOnIssue,
-  applyLabelsToIssue,
-  addEyes,
-  removeEyes,
-  getIssueDetails
-} from '../src/github-issues.js'
+import { commentOnIssue, applyLabelsToIssue, addEyes, removeEyes, getIssueDetails } from '../src/github-issues.js'
 import { TriageResponse } from '../src/triage-response.js'
 import { GitHubIssueConfig, TriageConfig } from '../src/triage-config.js'
 
@@ -109,9 +103,7 @@ ${mockFooter}
       await commentOnIssue(mockOctokit, '/tmp/summary.txt', dryRunConfig, 'Footer')
 
       expect(mockCreateComment).not.toHaveBeenCalled()
-      expect(core.info).toHaveBeenCalledWith(
-        expect.stringContaining('Dry run: Skipping commenting on issue')
-      )
+      expect(core.info).toHaveBeenCalledWith(expect.stringContaining('Dry run: Skipping commenting on issue'))
     })
 
     it('should handle comment without footer', async () => {
@@ -135,18 +127,14 @@ undefined
     it('should handle file read errors', async () => {
       ;(fs.promises.readFile as jest.Mock).mockRejectedValue(new Error('File not found'))
 
-      await expect(
-        commentOnIssue(mockOctokit, '/tmp/summary.txt', mockConfig)
-      ).rejects.toThrow('File not found')
+      await expect(commentOnIssue(mockOctokit, '/tmp/summary.txt', mockConfig)).rejects.toThrow('File not found')
     })
 
     it('should handle GitHub API errors', async () => {
       ;(fs.promises.readFile as jest.Mock).mockResolvedValue('Test summary')
       mockCreateComment.mockRejectedValue(new Error('API error'))
 
-      await expect(
-        commentOnIssue(mockOctokit, '/tmp/summary.txt', mockConfig)
-      ).rejects.toThrow('API error')
+      await expect(commentOnIssue(mockOctokit, '/tmp/summary.txt', mockConfig)).rejects.toThrow('API error')
     })
   })
 
@@ -213,17 +201,13 @@ undefined
       await applyLabelsToIssue(mockOctokit, mockTriageResponse, dryRunConfig)
 
       expect(mockAddLabels).not.toHaveBeenCalled()
-      expect(core.info).toHaveBeenCalledWith(
-        'Dry run: Skipping applying labels: bug, priority:high'
-      )
+      expect(core.info).toHaveBeenCalledWith('Dry run: Skipping applying labels: bug, priority:high')
     })
 
     it('should handle GitHub API errors', async () => {
       mockAddLabels.mockRejectedValue(new Error('API error'))
 
-      await expect(
-        applyLabelsToIssue(mockOctokit, mockTriageResponse, mockConfig)
-      ).rejects.toThrow('API error')
+      await expect(applyLabelsToIssue(mockOctokit, mockTriageResponse, mockConfig)).rejects.toThrow('API error')
     })
   })
 
@@ -522,18 +506,14 @@ undefined
     it('should handle GitHub API errors for issue', async () => {
       mockGetIssue.mockRejectedValue(new Error('Issue not found'))
 
-      await expect(
-        getIssueDetails(mockOctokit, 'test-owner', 'test-repo', 456)
-      ).rejects.toThrow('Issue not found')
+      await expect(getIssueDetails(mockOctokit, 'test-owner', 'test-repo', 456)).rejects.toThrow('Issue not found')
     })
 
     it('should handle GitHub API errors for comments', async () => {
       mockGetIssue.mockResolvedValue({ data: mockIssueData })
       mockListComments.mockRejectedValue(new Error('Comments not found'))
 
-      await expect(
-        getIssueDetails(mockOctokit, 'test-owner', 'test-repo', 456)
-      ).rejects.toThrow('Comments not found')
+      await expect(getIssueDetails(mockOctokit, 'test-owner', 'test-repo', 456)).rejects.toThrow('Comments not found')
     })
 
     it('should handle closed issue', async () => {

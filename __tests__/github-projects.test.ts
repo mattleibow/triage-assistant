@@ -285,9 +285,9 @@ describe('GitHub Projects', () => {
         }
       })
 
-      await expect(
-        getAllProjectItems(mockOctokit, 'test-owner', 'test-repo', 123)
-      ).rejects.toThrow('Project #123 not found')
+      await expect(getAllProjectItems(mockOctokit, 'test-owner', 'test-repo', 123)).rejects.toThrow(
+        'Project #123 not found'
+      )
     })
 
     it('should handle cross-repository project items', async () => {
@@ -425,22 +425,17 @@ describe('GitHub Projects', () => {
 
       await updateProjectItem(mockOctokit, 'item-123', 'field-456', '50')
 
-      expect(mockGraphql).toHaveBeenCalledWith(
-        expect.stringContaining('mutation'),
-        {
-          itemId: 'item-123',
-          fieldId: 'field-456',
-          value: '50'
-        }
-      )
+      expect(mockGraphql).toHaveBeenCalledWith(expect.stringContaining('mutation'), {
+        itemId: 'item-123',
+        fieldId: 'field-456',
+        value: '50'
+      })
     })
 
     it('should handle GraphQL errors', async () => {
       mockGraphql.mockRejectedValueOnce(new Error('GraphQL error'))
 
-      await expect(
-        updateProjectItem(mockOctokit, 'item-123', 'field-456', '50')
-      ).rejects.toThrow('GraphQL error')
+      await expect(updateProjectItem(mockOctokit, 'item-123', 'field-456', '50')).rejects.toThrow('GraphQL error')
     })
 
     it('should handle empty value', async () => {
@@ -454,14 +449,11 @@ describe('GitHub Projects', () => {
 
       await updateProjectItem(mockOctokit, 'item-123', 'field-456', '')
 
-      expect(mockGraphql).toHaveBeenCalledWith(
-        expect.stringContaining('mutation'),
-        {
-          itemId: 'item-123',
-          fieldId: 'field-456',
-          value: ''
-        }
-      )
+      expect(mockGraphql).toHaveBeenCalledWith(expect.stringContaining('mutation'), {
+        itemId: 'item-123',
+        fieldId: 'field-456',
+        value: ''
+      })
     })
   })
 

@@ -330,6 +330,7 @@ When adding new functionality, always write comprehensive tests:
 ### Test Coverage Areas
 
 **For engagement scoring functions:**
+
 - Score calculation with various issue states
 - Historical data processing edge cases
 - Project item handling with missing data
@@ -337,6 +338,7 @@ When adding new functionality, always write comprehensive tests:
 - Configuration validation and defaults
 
 **For issue processing functions:**
+
 - Date calculations with timezone handling
 - Contributor counting with duplicate users
 - Reaction processing across issues and comments

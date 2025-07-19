@@ -2,8 +2,8 @@
  * Unit tests for the prompt functionality, src/prompts.ts
  */
 import { jest } from '@jest/globals'
-import * as core from '../__fixtures__/actions-core.js'
-import * as exec from '../__fixtures__/exec.js'
+import * as core from '../__fixtures__/actions/core.js'
+import * as exec from '../__fixtures__/actions/exec.js'
 import * as fs from 'fs'
 import * as path from 'path'
 
@@ -12,7 +12,7 @@ jest.unstable_mockModule('@actions/core', () => core)
 jest.unstable_mockModule('@actions/exec', () => exec)
 
 // Import the module being tested
-const { generatePrompt } = await import('../src/prompts.js')
+const { generatePrompt } = await import('../src/prompts/prompts.js')
 
 describe('generatePrompt', () => {
   const mockConfig = {
