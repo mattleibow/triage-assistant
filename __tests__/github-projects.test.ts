@@ -6,12 +6,12 @@ import {
   updateProjectWithScores,
   getProjectField,
   updateProjectItem
-} from '../src/github-projects.js'
-import { EngagementConfig } from '../src/triage-config.js'
-import { EngagementResponse } from '../src/engagement-types.js'
+} from '../src/github/projects.js'
+import { EngagementConfig } from '../src/config.js'
+import { EngagementResponse, EngagementClassification } from '../src/engagement/engagement-types.js'
 
 // Mock GitHub API
-const mockGraphql = jest.fn()
+const mockGraphql = jest.fn() as jest.MockedFunction<any>
 const mockOctokit = {
   graphql: mockGraphql
 } as unknown as ReturnType<typeof github.getOctokit>
@@ -25,6 +25,7 @@ jest.mock('@actions/core', () => ({
 const mockConfig: EngagementConfig = {
   repoOwner: 'test-owner',
   repoName: 'test-repo',
+  issueNumber: 123,
   projectNumber: 123,
   projectColumn: 'Engagement Score',
   applyScores: true,
@@ -35,20 +36,30 @@ const mockEngagementResponse: EngagementResponse = {
   items: [
     {
       id: 'project-item-1',
-      issueNumber: 1,
+      issue: {
+        id: 'issue-1',
+        owner: 'test-owner',
+        repo: 'test-repo',
+        number: 1
+      },
       engagement: {
         score: 50,
         previousScore: 30,
-        classification: 'Hot'
+        classification: EngagementClassification.Hot
       }
     },
     {
       id: 'project-item-2',
-      issueNumber: 2,
+      issue: {
+        id: 'issue-2',
+        owner: 'test-owner',
+        repo: 'test-repo',
+        number: 2
+      },
       engagement: {
         score: 20,
         previousScore: 25,
-        classification: null
+        classification: undefined
       }
     }
   ],
@@ -535,11 +546,16 @@ describe('GitHub Projects', () => {
       const responseWithoutId: EngagementResponse = {
         items: [
           {
-            issueNumber: 1,
+            issue: {
+              id: 'issue-1',
+              owner: 'test-owner',
+              repo: 'test-repo',
+              number: 1
+            },
             engagement: {
               score: 50,
               previousScore: 30,
-              classification: 'Hot'
+              classification: EngagementClassification.Hot
             }
           }
         ],

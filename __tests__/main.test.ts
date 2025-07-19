@@ -1,5 +1,5 @@
 import { jest } from '@jest/globals'
-import * as core from '../__fixtures__/actions-core.js'
+import * as core from '../__fixtures__/actions/core.js'
 
 // Mock dependencies using fixtures
 jest.unstable_mockModule('@actions/core', () => core)
@@ -16,32 +16,24 @@ jest.unstable_mockModule('@actions/github', () => ({
 }))
 
 // Mock dependencies
-jest.unstable_mockModule('../src/prompts-select-labels.js', () => ({
-  selectLabels: jest.fn()
+jest.unstable_mockModule('../src/triage/triage.js', () => ({
+  runTriageWorkflow: jest.fn()
 }))
 
-jest.unstable_mockModule('../src/github-apply.js', () => ({
-  applyLabelsAndComment: jest.fn(),
-  manageReactions: jest.fn()
-}))
-
-jest.unstable_mockModule('../src/engagement.js', () => ({
+jest.unstable_mockModule('../src/engagement/engagement.js', () => ({
   runEngagementWorkflow: jest.fn()
 }))
 
 // Import the module being tested
 const { run } = await import('../src/main.js')
-const { selectLabels } = await import('../src/prompts-select-labels.js')
-const { applyLabelsAndComment, manageReactions } = await import('../src/github-apply.js')
-const { runEngagementWorkflow } = await import('../src/engagement.js')
+const { runTriageWorkflow } = await import('../src/triage/triage.js')
+const { runEngagementWorkflow } = await import('../src/engagement/engagement.js')
 
 // Type the mocks
-const mockSelectLabels = selectLabels as jest.MockedFunction<typeof selectLabels>
-const mockApplyLabelsAndComment = applyLabelsAndComment as jest.MockedFunction<typeof applyLabelsAndComment>
-const mockManageReactions = manageReactions as jest.MockedFunction<typeof manageReactions>
+const mockRunTriageWorkflow = runTriageWorkflow as jest.MockedFunction<typeof runTriageWorkflow>
 const mockRunEngagementWorkflow = runEngagementWorkflow as jest.MockedFunction<typeof runEngagementWorkflow>
 
-describe('Main Dual Mode Functionality', () => {
+describe('Main Multi-Mode Functionality', () => {
   beforeEach(() => {
     jest.clearAllMocks()
 
@@ -58,9 +50,7 @@ describe('Main Dual Mode Functionality', () => {
     })
 
     core.getBooleanInput.mockReturnValue(false)
-    mockSelectLabels.mockResolvedValue('/tmp/response.json')
-    mockApplyLabelsAndComment.mockResolvedValue()
-    mockManageReactions.mockResolvedValue()
+    mockRunTriageWorkflow.mockResolvedValue('/tmp/response.json')
     mockRunEngagementWorkflow.mockResolvedValue('/tmp/engagement-response.json')
   })
 
@@ -91,9 +81,7 @@ describe('Main Dual Mode Functionality', () => {
           applyScores: false
         })
       )
-      expect(mockSelectLabels).not.toHaveBeenCalled()
-      expect(mockApplyLabelsAndComment).not.toHaveBeenCalled()
-      expect(mockManageReactions).not.toHaveBeenCalled()
+      expect(mockRunTriageWorkflow).not.toHaveBeenCalled()
       expect(core.setOutput).toHaveBeenCalledWith('response-file', '/tmp/engagement-response.json')
     })
 
@@ -190,13 +178,11 @@ describe('Main Dual Mode Functionality', () => {
 
       await run()
 
-      expect(mockSelectLabels).toHaveBeenCalledWith(
+      expect(mockRunTriageWorkflow).toHaveBeenCalledWith(
         expect.objectContaining({
           template: 'multi-label'
         })
       )
-      expect(mockApplyLabelsAndComment).toHaveBeenCalled()
-      expect(mockManageReactions).toHaveBeenCalledTimes(2) // Start and end
       expect(mockRunEngagementWorkflow).not.toHaveBeenCalled()
       expect(core.setOutput).toHaveBeenCalledWith('response-file', '/tmp/response.json')
     })
@@ -215,7 +201,7 @@ describe('Main Dual Mode Functionality', () => {
 
       await run()
 
-      expect(mockSelectLabels).toHaveBeenCalledWith(
+      expect(mockRunTriageWorkflow).toHaveBeenCalledWith(
         expect.objectContaining({
           issueNumber: 123 // From mocked context
         })
@@ -238,14 +224,14 @@ describe('Main Dual Mode Functionality', () => {
 
       await run()
 
-      expect(mockSelectLabels).toHaveBeenCalledWith(
+      expect(mockRunTriageWorkflow).toHaveBeenCalledWith(
         expect.objectContaining({
           issueNumber: 999
         })
       )
     })
 
-    it('should not remove reactions on error', async () => {
+    it('should handle workflow errors correctly', async () => {
       core.getInput.mockImplementation((name: string) => {
         switch (name) {
           case 'template':
@@ -261,12 +247,11 @@ describe('Main Dual Mode Functionality', () => {
         return name === 'apply-labels'
       })
 
-      mockSelectLabels.mockRejectedValue(new Error('Test error'))
+      mockRunTriageWorkflow.mockRejectedValue(new Error('Test error'))
 
       await run()
 
       expect(core.setFailed).toHaveBeenCalledWith('Test error')
-      expect(mockManageReactions).toHaveBeenCalledTimes(1) // Only start, not end
     })
 
     it('should handle no template provided', async () => {
@@ -281,9 +266,7 @@ describe('Main Dual Mode Functionality', () => {
 
       await run()
 
-      expect(mockSelectLabels).not.toHaveBeenCalled()
-      expect(mockApplyLabelsAndComment).not.toHaveBeenCalled()
-      expect(mockManageReactions).not.toHaveBeenCalled()
+      expect(mockRunTriageWorkflow).toHaveBeenCalled()
       expect(mockRunEngagementWorkflow).not.toHaveBeenCalled()
     })
   })

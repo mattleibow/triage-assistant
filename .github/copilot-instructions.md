@@ -9,15 +9,14 @@ issue/PR content using large language models (LLMs) to automatically apply appro
 
 ### Core Structure
 
-- **`src/main.ts`** - Entry point that orchestrates the triage process
-- **`src/triage-config.ts`** - Configuration interface and input parsing
-- **`src/select-labels.ts`** - Core triage logic and LLM interaction
-- **`src/apply.ts`** - GitHub API interactions for applying labels/comments
-- **`src/ai.ts`** - AI model client abstraction
-- **`src/issues.ts`** - Issue data retrieval and formatting
+- **`src/main.ts`** - Entry point that orchestrates the multi-mode triage process
+- **`src/config.ts`** - Configuration interface and input parsing
+- **`src/triage/triage.ts`** - Traditional issue triage workflow
+- **`src/engagement/engagement.ts`** - Engagement scoring workflow  
+- **`src/github/projects.ts`** - GitHub Projects v2 API interactions
+- **`src/github/issues.ts`** - GitHub Issues API interactions
+- **`src/github/issue-details.ts`** - Issue data processing and scoring algorithms
 - **`src/prompts/`** - AI prompt templates organized by functionality
-- **`src/engagement.ts`** - Engagement scoring algorithm and project management
-- **`src/engagement-types.ts`** - Type definitions for engagement scoring
 
 ### Prompt Engineering Architecture
 
@@ -28,12 +27,12 @@ The action uses a two-tier prompt system:
 - **User prompts** (`src/prompts/select-labels/user-prompt.ts`) - Format issue content for analysis
 - **Templates**: `single-label`, `multi-label`, `regression`, `missing-info`, `engagement-score`
 
-### Engagement Scoring Architecture
+### Multi-Mode Operation Architecture
 
-The action includes an advanced engagement scoring system that calculates numerical scores for issues based on community
-activity:
+The action operates in multiple modes to handle different triage scenarios:
 
-- **Dual Mode Operation** - The action operates in two modes: traditional AI triage or engagement scoring
+- **Issue Triage Mode** - Traditional AI-powered label application and commenting
+- **Engagement Scoring Mode** - Calculates numerical scores for GitHub issues based on community activity
 - **Scoring Algorithm** - Uses weighted factors: Comments (3x), Reactions (1x), Contributors (2x), Time factors (1x),
   PRs (2x)
 - **Historic Comparison** - Calculates previous week scores for trend analysis
@@ -56,10 +55,11 @@ activity:
 
 ### Testing Strategy
 
-- Jest with ES modules support
-- Test files in `__tests__/` directory
-- Fixtures in `__fixtures__/` for mock data
-- Coverage reporting with badge generation
+- **Comprehensive Test Suite** - Jest with ES modules support for all functionality
+- **Test Organization** - Tests organized by module in `__tests__/` directory
+- **Mock Infrastructure** - Complete GitHub API mocking for reliable testing
+- **Integration Testing** - Full workflow testing for all modes
+- **Edge Case Coverage** - Robust testing for boundary conditions and error scenarios
 
 ### Build and Distribution
 
@@ -309,46 +309,34 @@ When modifying engagement scoring functionality:
 
 ## Testing Best Practices
 
-### Always Write Tests
+### Always Write Comprehensive Tests
 
-When adding new functionality, always write comprehensive tests:
+When adding new functionality, always write comprehensive tests that follow existing patterns:
 
-1. **Test each function individually** - Unit tests for all public functions
-2. **Test edge cases** - Empty inputs, null values, boundary conditions
-3. **Test common paths** - Normal usage scenarios with typical data
-4. **Test error scenarios** - Invalid inputs, API failures, missing data
-5. **Test integration** - End-to-end workflows and component interactions
+**Test Categories to Include:**
+1. **Unit Tests** - Test each function individually with various inputs
+2. **Integration Tests** - Test component interactions and workflows  
+3. **Edge Cases** - Empty inputs, null values, boundary conditions
+4. **Error Scenarios** - Invalid inputs, API failures, missing data
+5. **Common Paths** - Normal usage scenarios with typical data
 
-### Test Organization
-
-- Follow existing test patterns in `__tests__/` directory
-- Use fixtures in `__fixtures__/` for mock data
-- Mock external dependencies (GitHub API, file system)
-- Use descriptive test names that explain the scenario
+**Test Organization Patterns:**
 - Group related tests with `describe` blocks
-
-### Test Coverage Areas
-
-**For engagement scoring functions:**
-
-- Score calculation with various issue states
-- Historical data processing edge cases
-- Project item handling with missing data
-- GraphQL query and mutation error scenarios
-- Configuration validation and defaults
-
-**For issue processing functions:**
-
-- Date calculations with timezone handling
-- Contributor counting with duplicate users
-- Reaction processing across issues and comments
-- Empty or null data handling
-- Large dataset performance
-
-### Mock Strategy
-
-- Use Jest mocks for external APIs
+- Use descriptive test names that explain the scenario
+- Follow existing mock patterns in `__tests__/` directory
 - Create realistic test data that mirrors actual GitHub responses
-- Test both success and failure scenarios
-- Mock system time for consistent date testing
-- Avoid over-mocking - test real logic where possible
+- Test both success and failure scenarios consistently
+
+**Mock Strategy Guidelines:**
+- Use Jest mocks for external APIs and file system operations
+- Create comprehensive mock data that covers real-world scenarios
+- Mock at the module level, not individual function level when possible
+- Avoid over-mocking - test real logic where appropriate
+- Use fixtures for complex mock data to improve maintainability
+
+**Specific Testing Requirements:**
+- **Score Calculation Functions** - Test with various issue states, activity levels, and edge cases
+- **GraphQL Operations** - Mock query responses and test error handling
+- **File Processing** - Test with different file formats and empty files
+- **API Integrations** - Test rate limiting, timeouts, and network failures
+- **Configuration Parsing** - Test all input combinations and validation logic

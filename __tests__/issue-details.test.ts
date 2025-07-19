@@ -8,7 +8,7 @@ import {
   calculateScore,
   calculatePreviousScore
 } from '../src/github/issue-details.js'
-import { createEngagementItem } from '../src/engagement.js'
+import { createEngagementItem } from '../src/engagement/engagement.js'
 
 // Mock date for consistent testing
 const MOCK_NOW = new Date('2023-01-10T12:00:00Z')
@@ -27,14 +27,14 @@ const mockIssueDetails: IssueDetails = {
   reactions: 10,
   reactions_data: [
     {
-      id: 'reaction1',
-      user: { login: 'user1', id: 1, type: 'User' },
+      
+      user: { login: 'user1', type: 'User' },
       reaction: 'thumbs_up',
       created_at: '2023-01-02T12:00:00Z'
     },
     {
-      id: 'reaction2',
-      user: { login: 'user2', id: 2, type: 'User' },
+      
+      user: { login: 'user2', type: 'User' },
       reaction: 'heart',
       created_at: '2023-01-05T12:00:00Z'
     }
@@ -42,19 +42,17 @@ const mockIssueDetails: IssueDetails = {
   comments_data: [
     {
       id: 1,
-      user: { login: 'user1', id: 1, type: 'User' },
+      user: { login: 'user1', type: 'User' },
       created_at: '2023-01-02T12:00:00Z',
       reactions: 2,
       reactions_data: [
         {
-          id: 'comment_reaction1',
-          user: { login: 'user3', id: 3, type: 'User' },
+          user: { login: 'user3', type: 'User' },
           reaction: 'thumbs_up',
           created_at: '2023-01-02T13:00:00Z'
         },
         {
-          id: 'comment_reaction2',
-          user: { login: 'user4', id: 4, type: 'User' },
+          user: { login: 'user4', type: 'User' },
           reaction: 'heart',
           created_at: '2023-01-03T12:00:00Z'
         }
@@ -62,23 +60,22 @@ const mockIssueDetails: IssueDetails = {
     },
     {
       id: 2,
-      user: { login: 'user2', id: 2, type: 'User' },
+      user: { login: 'user2', type: 'User' },
       created_at: '2023-01-05T12:00:00Z',
       reactions: 1,
       reactions_data: [
         {
-          id: 'comment_reaction3',
-          user: { login: 'user5', id: 5, type: 'User' },
+          user: { login: 'user5', type: 'User' },
           reaction: 'rocket',
           created_at: '2023-01-05T13:00:00Z'
         }
       ]
     }
   ],
-  user: { login: 'author', id: 100, type: 'User' },
+  user: { login: 'author', type: 'User' },
   assignees: [
-    { login: 'assignee1', id: 200, type: 'User' },
-    { login: 'assignee2', id: 201, type: 'User' }
+    { login: 'assignee1', type: 'User' },
+    { login: 'assignee2', type: 'User' }
   ]
 }
 
@@ -171,9 +168,9 @@ describe('IssueDetails', () => {
     it('should handle duplicate contributors', () => {
       const issueWithDuplicates: IssueDetails = {
         ...mockIssueDetails,
-        user: { login: 'user1', id: 1, type: 'User' }, // Same as comment author
+        user: { login: 'user1', type: 'User' }, // Same as comment author
         assignees: [
-          { login: 'user2', id: 2, type: 'User' } // Same as comment author
+          { login: 'user2', type: 'User' } // Same as comment author
         ]
       }
 
@@ -349,7 +346,7 @@ describe('IssueDetails', () => {
         comments_data: [
           {
             id: 1,
-            user: { login: 'user1', id: 1, type: 'User' },
+            user: { login: 'user1', type: 'User' },
             created_at: '2023-01-02T12:00:00Z',
             reactions: 0,
             reactions_data: []
@@ -412,7 +409,7 @@ describe('IssueDetails', () => {
         comments_data: [
           {
             id: 1,
-            user: { login: 'user1', id: 1, type: 'User' },
+            user: { login: 'user1', type: 'User' },
             created_at: '2023-01-08T12:00:00Z', // All activity after 7 days ago
             reactions: 0,
             reactions_data: []
@@ -463,8 +460,8 @@ describe('IssueDetails', () => {
         reactions: 20,
         reactions_data: [
           {
-            id: 'reaction1',
-            user: { login: 'user1', id: 1, type: 'User' },
+            
+            user: { login: 'user1', type: 'User' },
             reaction: 'thumbs_up',
             created_at: '2023-01-08T12:00:00Z'
           }
@@ -472,13 +469,12 @@ describe('IssueDetails', () => {
         comments_data: [
           {
             id: 1,
-            user: { login: 'user1', id: 1, type: 'User' },
+            user: { login: 'user1', type: 'User' },
             created_at: '2023-01-08T12:00:00Z', // Recent comment
             reactions: 5,
             reactions_data: [
               {
-                id: 'comment_reaction1',
-                user: { login: 'user2', id: 2, type: 'User' },
+                user: { login: 'user2', type: 'User' },
                 reaction: 'heart',
                 created_at: '2023-01-08T13:00:00Z'
               }
@@ -501,8 +497,8 @@ describe('IssueDetails', () => {
         reactions: 1,
         reactions_data: [
           {
-            id: 'reaction1',
-            user: { login: 'user1', id: 1, type: 'User' },
+            
+            user: { login: 'user1', type: 'User' },
             reaction: 'thumbs_up',
             created_at: '2022-12-02T12:00:00Z'
           }
@@ -510,7 +506,7 @@ describe('IssueDetails', () => {
         comments_data: [
           {
             id: 1,
-            user: { login: 'user1', id: 1, type: 'User' },
+            user: { login: 'user1', type: 'User' },
             created_at: '2022-12-02T12:00:00Z', // Old comment
             reactions: 0,
             reactions_data: []
@@ -545,13 +541,13 @@ describe('IssueDetails', () => {
         reactions: 0,
         reactions_data: [],
         comments_data: [],
-        user: { login: 'user', id: 1, type: 'User' },
+        user: { login: 'user', type: 'User' },
         assignees: []
       }
 
       const result = await createEngagementItem(minimalIssue)
 
-      expect(result.issueNumber).toBe(1)
+      expect(result.issue.number).toBe(1)
       expect(result.engagement.score).toBeGreaterThan(0)
       expect(result.engagement.previousScore).toBeGreaterThanOrEqual(0)
     })

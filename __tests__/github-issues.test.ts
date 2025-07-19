@@ -2,14 +2,14 @@ import { jest } from '@jest/globals'
 import * as github from '@actions/github'
 import * as core from '@actions/core'
 import * as fs from 'fs'
-import { commentOnIssue, applyLabelsToIssue, addEyes, removeEyes, getIssueDetails } from '../src/github-issues.js'
-import { TriageResponse } from '../src/triage-response.js'
-import { GitHubIssueConfig, TriageConfig } from '../src/triage-config.js'
+import { commentOnIssue, applyLabelsToIssue, addEyes, removeEyes, getIssueDetails } from '../src/github/issues.js'
+import { TriageResponse } from '../src/triage/triage-response.js'
+import { EverythingConfig } from '../src/config.js'
 
 // Mock fs
 jest.mock('fs', () => ({
   promises: {
-    readFile: jest.fn()
+    readFile: jest.fn() as jest.MockedFunction<any>
   }
 }))
 
@@ -44,7 +44,7 @@ jest.mock('@actions/core', () => ({
   warning: jest.fn()
 }))
 
-const mockConfig: GitHubIssueConfig & TriageConfig = {
+const mockConfig: Partial<EverythingConfig> = {
   repoOwner: 'test-owner',
   repoName: 'test-repo',
   issueNumber: 123,
@@ -54,12 +54,12 @@ const mockConfig: GitHubIssueConfig & TriageConfig = {
 }
 
 const mockTriageResponse: TriageResponse = {
+  remarks: [],
+  regression: null,
   labels: [
-    { label: 'bug', confidence: 0.9 },
-    { label: 'priority:high', confidence: 0.8 }
-  ],
-  comment: 'This looks like a bug',
-  needsMoreInfo: false
+    { label: 'bug', reason: 'This appears to be a bug' },
+    { label: 'priority:high', reason: 'High priority issue' }
+  ]
 }
 
 describe('GitHub Issues', () => {
