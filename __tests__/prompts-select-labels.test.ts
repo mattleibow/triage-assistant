@@ -2,26 +2,26 @@
  * Unit tests for the select label prompt generation functionality, src/prompts-select-labels.ts
  */
 import { jest } from '@jest/globals'
-import * as core from '../__fixtures__/actions-core.js'
-import * as exec from '../__fixtures__/exec.js'
-import * as prompts from '../__fixtures__/prompts.js'
-import * as ai from '../__fixtures__/ai.js'
+import * as core from '../__fixtures__/actions/core.js'
+import * as exec from '../__fixtures__/actions/exec.js'
+import * as prompts from '../__fixtures__/prompts/prompts.js'
+import * as ai from '../__fixtures__/ai/ai.js'
 import * as fs from 'fs'
 import * as path from 'path'
-import { InferenceConfig, SelectLabelsPromptConfig, TriageConfig } from '../src/triage-config.js'
+import { InferenceConfig, SelectLabelsPromptConfig, TriageConfig } from '../src/config.js'
 import { FileSystemMock } from './helpers/filesystem-mock.js'
 
 // Mock dependencies using fixtures
 jest.unstable_mockModule('@actions/core', () => core)
 jest.unstable_mockModule('@actions/exec', () => exec)
-jest.unstable_mockModule('../src/prompts.js', () => prompts)
-jest.unstable_mockModule('../src/ai.js', () => ai)
+jest.unstable_mockModule('../src/prompts/prompts.js', () => prompts)
+jest.unstable_mockModule('../src/ai/ai.js', () => ai)
 jest.unstable_mockModule('uuid', () => ({
   v4: jest.fn(() => 'test-guid-123')
 }))
 
 // Import the module being tested and mocked dependencies
-const { selectLabels } = await import('../src/prompts-select-labels.js')
+const { selectLabels } = await import('../src/prompts/select-labels.js')
 const { getPrompt, TEMPLATE_NAMES } = await import('../src/prompts/select-labels/index.js')
 
 describe('selectLabels', () => {

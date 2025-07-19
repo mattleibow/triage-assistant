@@ -4,22 +4,23 @@
 
 import * as fs from 'fs'
 import * as path from 'path'
-import * as prompts from '../__fixtures__/prompts.js'
-import * as ai from '../__fixtures__/ai.js'
-import * as core from '../__fixtures__/actions-core.js'
-import * as github from '../__fixtures__/actions-github.js'
+import * as prompts from '../__fixtures__/prompts/prompts.js'
+import * as ai from '../__fixtures__/ai/ai.js'
+import * as core from '../__fixtures__/actions/core.js'
+import * as github from '../__fixtures__/actions/github.js'
 import { jest } from '@jest/globals'
 import { FileSystemMock } from './helpers/filesystem-mock.js'
-import { InferenceConfig, SummaryPromptConfig, TriageConfig } from '../src/triage-config.js'
+import { InferenceConfig, SummaryPromptConfig, TriageConfig } from '../src/config.js'
 
 // Mock dependencies using fixtures
 jest.unstable_mockModule('@actions/core', () => core)
 jest.unstable_mockModule('@actions/github', () => github)
-jest.unstable_mockModule('../src/prompts.js', () => prompts)
-jest.unstable_mockModule('../src/ai.js', () => ai)
+jest.unstable_mockModule('../src/prompts/prompts.js', () => prompts)
+jest.unstable_mockModule('../src/ai/ai.js', () => ai)
 
 // Import the module being tested
-const { mergeResponses, generateSummary } = await import('../src/prompts-summary.js')
+const { generateSummary } = await import('../src/prompts/summary.js')
+const { mergeResponses } = await import('../src/triage/merge.js')
 
 describe('summary', () => {
   const testMergedResponseFile = '/tmp/test/merged-response.json'
