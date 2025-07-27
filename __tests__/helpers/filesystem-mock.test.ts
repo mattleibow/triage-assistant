@@ -58,6 +58,18 @@ describe('FileSystemMock', () => {
       expect(content).toBe('test content')
     })
 
+    it('should write and read empty files correctly', async () => {
+      // Create directory first
+      await fs.promises.mkdir('/test', { recursive: true })
+
+      // Write file
+      await fs.promises.writeFile('/test/file.txt', '')
+
+      // Read file
+      const content = await fs.promises.readFile('/test/file.txt')
+      expect(content).toBe('')
+    })
+
     it('should throw error when reading non-existent file', async () => {
       await expect(fs.promises.readFile('/non-existent.txt')).rejects.toThrow('File not found: /non-existent.txt')
     })

@@ -1,18 +1,16 @@
 import type * as github from '@actions/github'
 import { jest } from '@jest/globals'
 
-// export const getOctokit = jest.fn()
-
 // Mock GitHub API
-const mockCreateComment = jest.fn()
-const mockAddLabels = jest.fn()
-const mockCreateForIssue = jest.fn()
-const mockListForIssue = jest.fn()
-const mockDeleteForIssue = jest.fn()
-const mockGetIssue = jest.fn()
-const mockListComments = jest.fn()
+const mockCreateComment = jest.fn<typeof octokit.rest.issues.createComment>()
+const mockAddLabels = jest.fn<typeof octokit.rest.issues.addLabels>()
+const mockCreateForIssue = jest.fn<typeof octokit.rest.reactions.createForIssue>()
+const mockListForIssue = jest.fn<typeof octokit.rest.reactions.listForIssue>()
+const mockDeleteForIssue = jest.fn<typeof octokit.rest.reactions.deleteForIssue>()
+const mockGetIssue = jest.fn<typeof octokit.rest.issues.get>()
+const mockListComments = jest.fn<typeof octokit.rest.issues.listComments>()
 
-export const octokit = {
+export const mockOctokit = {
   rest: {
     issues: {
       createComment: mockCreateComment,
@@ -26,4 +24,6 @@ export const octokit = {
       deleteForIssue: mockDeleteForIssue
     }
   }
-} as unknown as ReturnType<typeof github.getOctokit>
+}
+
+export const octokit = mockOctokit as unknown as ReturnType<typeof github.getOctokit>

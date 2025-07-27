@@ -6,28 +6,25 @@ export interface IssueDetails {
   title: string
   body: string
   state: string
-  created_at: string
-  updated_at: string
-  closed_at: string | null
-  comments: number
-  reactions: number
-  reactions_data: ReactionData[]
-  comments_data: CommentData[]
+  createdAt: Date
+  updatedAt: Date
+  closedAt: Date | null
+  reactions: ReactionData[]
+  comments: CommentData[]
   user: UserInfo
   assignees: UserInfo[]
 }
 
 export interface CommentData {
   user: UserInfo
-  created_at: string
-  reactions: number
-  reactions_data: ReactionData[]
+  createdAt: Date
+  reactions: ReactionData[]
 }
 
 export interface ReactionData {
   user: UserInfo
   reaction: string
-  created_at: string
+  createdAt: Date
 }
 
 export interface UserInfo {
@@ -43,50 +40,41 @@ export function getHistoricalIssueDetails(issue: IssueDetails): IssueDetails {
   const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)
 
   // If the issue is newer than 7 days, return it as-is
-  if (new Date(issue.created_at) > sevenDaysAgo) {
+  if (issue.createdAt > sevenDaysAgo) {
     return {
       ...issue,
-      comments: 0,
-      comments_data: [],
-      reactions: 0,
-      reactions_data: []
+      comments: [],
+      reactions: []
     }
   }
 
   // Filter reactions to only include those created before 7 days ago
-  const historicReactions = issue.reactions_data.filter((reaction) => {
-    const reactionDate = new Date(reaction.created_at)
-    return reactionDate <= sevenDaysAgo
+  const historicReactions = issue.reactions.filter((reaction) => {
+    return reaction.createdAt <= sevenDaysAgo
   })
 
   // Create historic snapshot by filtering comments and reactions to 7 days ago
-  const historicComments =
-    issue.comments_data
-      ?.filter((comment) => {
-        const commentDate = new Date(comment.created_at)
-        return commentDate <= sevenDaysAgo
+  const historicComments = issue.comments
+    .filter((comment) => {
+      return comment.createdAt <= sevenDaysAgo
+    })
+    .map((comment) => {
+      // Filter comment reactions to only include those created before 7 days ago
+      const commentHistoricReactions = comment.reactions.filter((reaction) => {
+        return reaction.createdAt <= sevenDaysAgo
       })
-      .map((comment) => {
-        // Filter comment reactions to only include those created before 7 days ago
-        const commentHistoricReactions = comment.reactions_data.filter((reaction) => {
-          const reactionDate = new Date(reaction.created_at)
-          return reactionDate <= sevenDaysAgo
-        })
 
-        return {
-          ...comment,
-          reactions: commentHistoricReactions.length,
-          reactions_data: commentHistoricReactions
-        }
-      }) || []
+      return {
+        ...comment,
+        reactions: commentHistoricReactions
+      }
+    })
 
   const historicIssue: IssueDetails = {
     ...issue,
-    comments: historicComments.length,
-    comments_data: historicComments,
-    reactions: historicReactions.length,
-    reactions_data: historicReactions,
-    updated_at: sevenDaysAgo.toISOString()
+    comments: historicComments || [],
+    reactions: historicReactions || [],
+    updatedAt: sevenDaysAgo
   }
 
   return historicIssue
@@ -95,7 +83,7 @@ export function getHistoricalIssueDetails(issue: IssueDetails): IssueDetails {
 /**
  * Get unique contributors to an issue
  */
-export function getUniqueContributors(issue: IssueDetails): number {
+export function getUniqueContributorsCount(issue: IssueDetails): number {
   const contributors = new Set<string>()
 
   // Add issue author
@@ -105,7 +93,7 @@ export function getUniqueContributors(issue: IssueDetails): number {
   issue.assignees.forEach((assignee) => contributors.add(assignee.login))
 
   // Add comment authors
-  issue.comments_data?.forEach((comment) => contributors.add(comment.user.login))
+  issue.comments?.forEach((comment) => contributors.add(comment.user.login))
 
   return contributors.size
 }
@@ -113,8 +101,8 @@ export function getUniqueContributors(issue: IssueDetails): number {
 /**
  * Get time since last activity in days
  */
-export function getTimeSinceLastActivity(issue: IssueDetails): number {
-  const lastUpdate = new Date(issue.updated_at)
+export function getDaysSinceLastActivity(issue: IssueDetails): number {
+  const lastUpdate = issue.updatedAt
   const now = new Date()
   const diffMs = now.getTime() - lastUpdate.getTime()
   const diffDays = diffMs / (1000 * 60 * 60 * 24)
@@ -124,8 +112,8 @@ export function getTimeSinceLastActivity(issue: IssueDetails): number {
 /**
  * Get issue age in days
  */
-export function getIssueAge(issue: IssueDetails): number {
-  const created = new Date(issue.created_at)
+export function getDaysSinceCreation(issue: IssueDetails): number {
+  const created = issue.createdAt
   const now = new Date()
   const diffMs = now.getTime() - created.getTime()
   const diffDays = diffMs / (1000 * 60 * 60 * 24)
@@ -136,7 +124,7 @@ export function getIssueAge(issue: IssueDetails): number {
  * Calculate engagement score for an issue based on the engagement algorithm
  */
 export function calculateScore(issue: IssueDetails): number {
-  // Components based on C# reference implementation:
+  // Components:
   // - Number of Comments       => Indicates discussion and interest
   // - Number of Reactions      => Shows emotional engagement
   // - Number of Contributors   => Reflects the diversity of input
@@ -144,15 +132,15 @@ export function calculateScore(issue: IssueDetails): number {
   // - Issue Age                => Older issues might need more attention
   // - Number of Linked PRs     => Shows active work on the issue (not implemented)
 
-  const totalComments = issue.comments
-  const totalCommentReactions = issue.comments_data?.reduce((sum, comment) => sum + comment.reactions, 0) || 0
-  const totalReactions = issue.reactions + totalCommentReactions
-  const contributors = getUniqueContributors(issue)
-  const lastActivity = Math.max(1, getTimeSinceLastActivity(issue))
-  const issueAge = Math.max(1, getIssueAge(issue))
+  const totalComments = issue.comments.length
+  const totalCommentReactions = issue.comments.reduce((sum, comment) => sum + comment.reactions.length, 0)
+  const totalReactions = issue.reactions.length + totalCommentReactions
+  const contributors = getUniqueContributorsCount(issue)
+  const lastActivity = Math.max(1, getDaysSinceLastActivity(issue))
+  const issueAge = Math.max(1, getDaysSinceCreation(issue))
   const linkedPullRequests = 0 // Not implemented yet
 
-  // Weights from C# implementation:
+  // Weights
   const CommentsWeight = 3
   const ReactionsWeight = 1
   const ContributorsWeight = 2
@@ -172,9 +160,9 @@ export function calculateScore(issue: IssueDetails): number {
 }
 
 /**
- * Calculate previous score (7 days ago) based on C# reference implementation
+ * Calculate previous score (7 days ago) based on historical issue details
  */
-export async function calculatePreviousScore(issue: IssueDetails): Promise<number> {
+export async function calculateHistoricalScore(issue: IssueDetails): Promise<number> {
   const historicIssue = getHistoricalIssueDetails(issue)
   return calculateScore(historicIssue)
 }

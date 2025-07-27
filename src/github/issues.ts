@@ -1,6 +1,7 @@
 import * as github from '@actions/github'
 import * as core from '@actions/core'
 import * as fs from 'fs'
+import * as path from 'path'
 import { GetIssueDetailsQuery, Sdk as GraphQLSdk } from '../generated/graphql.js'
 import { GitHubIssueConfig, TriageConfig } from '../config.js'
 import { IssueDetails, CommentData, ReactionData, UserInfo } from './issue-details.js'
@@ -27,15 +28,16 @@ export async function commentOnIssue(
   config: GitHubIssueConfig & TriageConfig,
   footer?: string
 ): Promise<void> {
-  const summary = await fs.promises.readFile(summaryFile, 'utf8')
+  const summary = await fs.promises.readFile(path.join(summaryFile), 'utf8')
 
   const commentBody = `
 ${summary}
 
-${footer}
-`
+${footer ?? ''}
+`.trim()
 
-  if (commentBody.trim().length === 0) {
+  // If the comment body is empty, do not post an empty comment
+  if (commentBody.length === 0) {
     return
   }
 
@@ -61,10 +63,14 @@ ${footer}
  */
 export async function applyLabelsToIssue(
   octokit: Octokit,
-  labels: string[],
+  labels: string[] | undefined,
   config: GitHubIssueConfig & TriageConfig
 ): Promise<void> {
-  if (labels.length === 0) {
+  // Filter out empty labels
+  labels = labels?.filter((label) => label.trim().length > 0)
+
+  // If no labels to apply, return early
+  if (!labels || labels.length === 0) {
     return
   }
 
@@ -162,7 +168,7 @@ export async function getIssueDetails(
   // Get all comments
   const allComments: CommentData[] = await getIssueComments(graphql, issue, owner, repo, issueNumber)
 
-  return {
+  const issueDetails: IssueDetails = {
     id: issue.id,
     owner: owner,
     repo: repo,
@@ -170,19 +176,19 @@ export async function getIssueDetails(
     title: issue.title,
     body: issue.body,
     state: issue.state.toLowerCase(),
-    created_at: issue.createdAt,
-    updated_at: issue.updatedAt,
-    closed_at: issue.closedAt,
-    comments: allComments.length,
-    reactions: allReactions.length,
-    reactions_data: allReactions,
-    comments_data: allComments,
+    createdAt: new Date(issue.createdAt),
+    updatedAt: new Date(issue.updatedAt),
+    closedAt: issue.closedAt ? new Date(issue.closedAt) : null,
+    comments: allComments,
+    reactions: allReactions,
     user: {
       login: issue.author?.login || '',
       type: issue.author?.__typename || ''
     },
     assignees: getAssignees(issue)
   }
+
+  return issueDetails
 }
 
 function getAssignees(issue: GetIssueDetailsQueryIssue): UserInfo[] {
@@ -285,7 +291,7 @@ function addReactions(
         type: reaction.user?.__typename || ''
       },
       reaction: reaction.content.toLowerCase(),
-      created_at: reaction.createdAt
+      createdAt: new Date(reaction.createdAt)
     })
   })
 
@@ -317,9 +323,8 @@ function addComments(
         login: comment.author?.login || '',
         type: comment.author?.__typename || ''
       },
-      created_at: comment.createdAt,
-      reactions: comment.reactions.totalCount,
-      reactions_data: allReactions
+      createdAt: new Date(comment.createdAt),
+      reactions: allReactions
     })
   })
 

@@ -1,20 +1,14 @@
-/**
- * Unit tests for the apply functionality, src/github-apply.ts
- */
-
 import * as path from 'path'
+import { jest } from '@jest/globals'
+import { FileSystemMock } from '../helpers/filesystem-mock.js'
 import * as core from '../../__fixtures__/actions/core.js'
-// import * as github from '@actions/github'
 import { octokit } from '../../__fixtures__/actions/github.js'
 import * as issues from '../../__fixtures__/github/issues.js'
 import * as summary from '../../__fixtures__/prompts/summary.js'
 import * as merge from '../../__fixtures__/triage/merge.js'
-import { jest } from '@jest/globals'
-import { FileSystemMock } from '../helpers/filesystem-mock.js'
 
 // Mock dependencies using fixtures
 jest.unstable_mockModule('@actions/core', () => core)
-// jest.unstable_mockModule('@actions/github', () => github)
 jest.unstable_mockModule('../../src/github/issues.js', () => issues)
 jest.unstable_mockModule('../../src/prompts/summary.js', () => summary)
 jest.unstable_mockModule('../../src/triage/merge.js', () => merge)

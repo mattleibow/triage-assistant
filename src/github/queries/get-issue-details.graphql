@@ -7,6 +7,12 @@ query GetIssueDetails(
   $reactionsCursor: String
 ) {
   repository(owner: $owner, name: $repo) {
+    owner {
+      login
+      __typename
+    }
+    name
+    nameWithOwner
     issue(number: $issueNumber) {
       id
       number
@@ -18,10 +24,12 @@ query GetIssueDetails(
       closedAt
       author {
         login
+        __typename
       }
       assignees(first: 100) {
         nodes {
           login
+          __typename
         }
       }
       reactions(first: 100, after: $reactionsCursor) {
@@ -35,6 +43,7 @@ query GetIssueDetails(
           createdAt
           user {
             login
+            __typename
           }
         }
       }
@@ -48,6 +57,7 @@ query GetIssueDetails(
           createdAt
           author {
             login
+            __typename
           }
           reactions(first: 100) {
             totalCount
@@ -60,6 +70,7 @@ query GetIssueDetails(
               createdAt
               user {
                 login
+                __typename
               }
             }
           }

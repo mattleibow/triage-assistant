@@ -61,7 +61,6 @@ before you can develop your action.
    TypeScript action locally without having to commit and push your changes to a repository.
 
    The `local-action` utility can be run in the following ways:
-
    - Visual Studio Code Debugger
 
      Make sure to review and, if needed, update [`.vscode/launch.json`](./.vscode/launch.json)
