@@ -410,7 +410,7 @@ ${mockFooter}
           nameWithOwner: 'mattleibow/triage-assistant',
           issue: {
             ...realIssues.issue32.repository!.issue!,
-            body: null
+            body: ''
           }
         }
       }
@@ -424,6 +424,7 @@ ${mockFooter}
         ...realIssues.issue32,
         repository: {
           ...realIssues.issue32.repository,
+          owner: realIssues.issue32.repository!.owner,
           name: 'triage-assistant',
           nameWithOwner: 'mattleibow/triage-assistant',
           issue: {
@@ -454,6 +455,7 @@ ${mockFooter}
         ...realIssues.issue32,
         repository: {
           ...realIssues.issue32.repository,
+          owner: realIssues.issue32.repository!.owner,
           name: 'triage-assistant',
           nameWithOwner: 'mattleibow/triage-assistant',
           issue: null
@@ -468,6 +470,7 @@ ${mockFooter}
         ...realIssues.issue32,
         repository: {
           ...realIssues.issue32.repository,
+          owner: realIssues.issue32.repository!.owner,
           name: 'triage-assistant',
           nameWithOwner: 'mattleibow/triage-assistant',
           issue: {
@@ -488,6 +491,7 @@ ${mockFooter}
         ...realIssues.issue32,
         repository: {
           ...realIssues.issue32.repository,
+          owner: realIssues.issue32.repository!.owner,
           name: 'triage-assistant',
           nameWithOwner: 'mattleibow/triage-assistant',
           issue: {
@@ -507,7 +511,7 @@ ${mockFooter}
       const manyComments = Array.from({ length: 100 }, (_, i) => ({
         author: {
           login: `commenter${i + 1}`,
-          __typename: 'User'
+          __typename: 'User' as const
         },
         createdAt: '2023-01-01T12:00:00Z',
         reactions: {
@@ -524,6 +528,7 @@ ${mockFooter}
         ...realIssues.issue32,
         repository: {
           ...realIssues.issue32.repository,
+          owner: realIssues.issue32.repository!.owner,
           name: 'triage-assistant',
           nameWithOwner: 'mattleibow/triage-assistant',
           issue: {
