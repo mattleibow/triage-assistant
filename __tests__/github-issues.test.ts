@@ -400,72 +400,151 @@ ${mockFooter}
       })
     })
 
-    //   it('should handle issue without body', async () => {
-    //     const issueWithoutBody = { ...mockIssueData, body: null }
-    //     mockGetIssue.mockResolvedValue({ data: issueWithoutBody })
-    //     mockListComments.mockResolvedValue({ data: [] })
-    //     const result = await getIssueDetails(octokit, 'owner', 'repo', 456)
-    //     expect(result.body).toBe('')
-    //   })
-    //   it('should handle issue without comments', async () => {
-    //     mockGetIssue.mockResolvedValue({ data: mockIssueData })
-    //     mockListComments.mockResolvedValue({ data: [] })
-    //     const result = await getIssueDetails(octokit, 'owner', 'repo', 456)
-    //     expect(result.comments_data).toEqual([])
-    //   })
-    //   it('should handle GitHub API errors for issue', async () => {
-    //     mockGetIssue.mockRejectedValue(new Error('Issue not found'))
-    //     await expect(getIssueDetails(octokit, 'owner', 'repo', 456)).rejects.toThrow('Issue not found')
-    //   })
-    //   it('should handle GitHub API errors for comments', async () => {
-    //     mockGetIssue.mockResolvedValue({ data: mockIssueData })
-    //     mockListComments.mockRejectedValue(new Error('Comments not found'))
-    //     await expect(getIssueDetails(octokit, 'owner', 'repo', 456)).rejects.toThrow('Comments not found')
-    //   })
-    //   it('should handle closed issue', async () => {
-    //     const closedIssue = {
-    //       ...mockIssueData,
-    //       state: 'closed',
-    //       closed_at: '2023-01-03T00:00:00Z'
-    //     }
-    //     mockGetIssue.mockResolvedValue({ data: closedIssue })
-    //     mockListComments.mockResolvedValue({ data: [] })
-    //     const result = await getIssueDetails(octokit, 'owner', 'repo', 456)
-    //     expect(result.state).toBe('closed')
-    //     expect(result.closed_at).toBe('2023-01-03T00:00:00Z')
-    //   })
-    //   it('should handle issue without assignees', async () => {
-    //     const issueWithoutAssignees = { ...mockIssueData, assignees: [] }
-    //     mockGetIssue.mockResolvedValue({ data: issueWithoutAssignees })
-    //     mockListComments.mockResolvedValue({ data: [] })
-    //     const result = await getIssueDetails(octokit, 'owner', 'repo', 456)
-    //     expect(result.assignees).toEqual([])
-    //   })
-    //   it('should handle large number of comments', async () => {
-    //     const manyComments = Array.from({ length: 100 }, (_, i) => ({
-    //       id: i + 1,
-    //       user: {
-    //         login: `commenter${i + 1}`,
-    //         id: 300 + i,
-    //         type: 'User'
-    //       },
-    //       created_at: '2023-01-01T12:00:00Z',
-    //       reactions: {
-    //         total_count: 0,
-    //         '+1': 0,
-    //         '-1': 0,
-    //         laugh: 0,
-    //         hooray: 0,
-    //         confused: 0,
-    //         heart: 0,
-    //         rocket: 0,
-    //         eyes: 0
-    //       }
-    //     }))
-    //     mockGetIssue.mockResolvedValue({ data: mockIssueData })
-    //     mockListComments.mockResolvedValue({ data: manyComments })
-    //     const result = await getIssueDetails(octokit, 'owner', 'repo', 456)
-    //     expect(result.comments_data).toHaveLength(100)
-    //   })
+    it('should handle issue without body', async () => {
+      const issueWithoutBody = {
+        ...realIssues.issue32,
+        repository: {
+          ...realIssues.issue32.repository,
+          owner: realIssues.issue32.repository!.owner,
+          name: 'triage-assistant',
+          nameWithOwner: 'mattleibow/triage-assistant',
+          issue: {
+            ...realIssues.issue32.repository!.issue!,
+            body: null
+          }
+        }
+      }
+      mockGetSdk.GetIssueDetails.mockResolvedValue(issueWithoutBody)
+
+      const result = await getIssueDetails(getSdk, 'mattleibow', 'triage-assistant', 32)
+      expect(result.body).toBe('')
+    })
+    it('should handle issue without comments', async () => {
+      const issueWithoutComments = {
+        ...realIssues.issue32,
+        repository: {
+          ...realIssues.issue32.repository,
+          name: 'triage-assistant',
+          nameWithOwner: 'mattleibow/triage-assistant',
+          issue: {
+            ...realIssues.issue32.repository!.issue!,
+            comments: {
+              totalCount: 0,
+              pageInfo: {
+                hasNextPage: false,
+                endCursor: null
+              },
+              nodes: []
+            }
+          }
+        }
+      }
+      mockGetSdk.GetIssueDetails.mockResolvedValue(issueWithoutComments)
+
+      const result = await getIssueDetails(getSdk, 'mattleibow', 'triage-assistant', 32)
+      expect(result.comments).toEqual([])
+    })
+    it('should handle GitHub API errors for issue', async () => {
+      mockGetSdk.GetIssueDetails.mockRejectedValue(new Error('Issue not found'))
+
+      await expect(getIssueDetails(getSdk, 'owner', 'repo', 456)).rejects.toThrow('Issue not found')
+    })
+    it('should handle GraphQL errors for missing issue', async () => {
+      const responseWithoutIssue = {
+        ...realIssues.issue32,
+        repository: {
+          ...realIssues.issue32.repository,
+          name: 'triage-assistant',
+          nameWithOwner: 'mattleibow/triage-assistant',
+          issue: null
+        }
+      }
+      mockGetSdk.GetIssueDetails.mockResolvedValue(responseWithoutIssue)
+
+      await expect(getIssueDetails(getSdk, 'owner', 'repo', 456)).rejects.toThrow('Issue not found: owner/repo#456')
+    })
+    it('should handle closed issue', async () => {
+      const closedIssue = {
+        ...realIssues.issue32,
+        repository: {
+          ...realIssues.issue32.repository,
+          name: 'triage-assistant',
+          nameWithOwner: 'mattleibow/triage-assistant',
+          issue: {
+            ...realIssues.issue32.repository!.issue!,
+            state: 'CLOSED' as any,
+            closedAt: '2023-01-03T00:00:00Z'
+          }
+        }
+      }
+      mockGetSdk.GetIssueDetails.mockResolvedValue(closedIssue)
+
+      const result = await getIssueDetails(getSdk, 'mattleibow', 'triage-assistant', 32)
+      expect(result.state).toBe('closed')
+      expect(result.closedAt).toEqual(new Date('2023-01-03T00:00:00Z'))
+    })
+    it('should handle issue without assignees', async () => {
+      const issueWithoutAssignees = {
+        ...realIssues.issue32,
+        repository: {
+          ...realIssues.issue32.repository,
+          name: 'triage-assistant',
+          nameWithOwner: 'mattleibow/triage-assistant',
+          issue: {
+            ...realIssues.issue32.repository!.issue!,
+            assignees: {
+              nodes: []
+            }
+          }
+        }
+      }
+      mockGetSdk.GetIssueDetails.mockResolvedValue(issueWithoutAssignees)
+
+      const result = await getIssueDetails(getSdk, 'mattleibow', 'triage-assistant', 32)
+      expect(result.assignees).toEqual([])
+    })
+    it('should handle large number of comments', async () => {
+      const manyComments = Array.from({ length: 100 }, (_, i) => ({
+        author: {
+          login: `commenter${i + 1}`,
+          __typename: 'User'
+        },
+        createdAt: '2023-01-01T12:00:00Z',
+        reactions: {
+          totalCount: 0,
+          pageInfo: {
+            hasNextPage: false,
+            endCursor: null
+          },
+          nodes: []
+        }
+      }))
+
+      const issueWithManyComments = {
+        ...realIssues.issue32,
+        repository: {
+          ...realIssues.issue32.repository,
+          name: 'triage-assistant',
+          nameWithOwner: 'mattleibow/triage-assistant',
+          issue: {
+            ...realIssues.issue32.repository!.issue!,
+            comments: {
+              totalCount: 100,
+              pageInfo: {
+                hasNextPage: false,
+                endCursor: null
+              },
+              nodes: manyComments
+            }
+          }
+        }
+      }
+      mockGetSdk.GetIssueDetails.mockResolvedValue(issueWithManyComments)
+
+      const result = await getIssueDetails(getSdk, 'mattleibow', 'triage-assistant', 32)
+      expect(result.comments).toHaveLength(100)
+      expect(result.comments[0].user.login).toBe('commenter1')
+      expect(result.comments[99].user.login).toBe('commenter100')
+    })
   })
 })

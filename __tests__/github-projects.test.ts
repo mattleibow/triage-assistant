@@ -1,159 +1,168 @@
-// import { jest } from '@jest/globals'
-// import * as github from '@actions/github'
-// import * as core from '@actions/core'
-// import {
-//   getAllProjectItems,
-//   updateProjectWithScores,
-//   getProjectField,
-//   updateProjectItem
-// } from '../src/github/projects.js'
-// import { EngagementConfig } from '../src/config.js'
-// import { EngagementResponse, EngagementClassification } from '../src/engagement/engagement-types.js'
+import { jest } from '@jest/globals'
+import * as github from '@actions/github'
+import * as core from '@actions/core'
+import {
+  getAllProjectItems,
+  updateProjectWithScores,
+  getProjectField,
+  updateProjectItem
+} from '../src/github/projects.js'
+import { EverythingConfig } from '../src/config.js'
+import { EngagementResponse, EngagementClassification } from '../src/engagement/engagement-types.js'
 
-// // Mock GitHub API
-// const mockGraphql = jest.fn() as jest.MockedFunction<any>
-// const mockOctokit = {
-//   graphql: mockGraphql
-// } as unknown as ReturnType<typeof github.getOctokit>
+// Mock GitHub API
+const mockGraphql = jest.fn() as jest.MockedFunction<any>
+const mockOctokit = {
+  graphql: mockGraphql
+} as unknown as ReturnType<typeof github.getOctokit>
 
-// // Mock @actions/core
-// jest.mock('@actions/core', () => ({
-//   info: jest.fn(),
-//   warning: jest.fn()
-// }))
+// Mock @actions/core
+jest.mock('@actions/core', () => ({
+  info: jest.fn(),
+  warning: jest.fn()
+}))
 
-// const mockConfig: EngagementConfig = {
-//   repoOwner: 'test-owner',
-//   repoName: 'test-repo',
-//   issueNumber: 123,
-//   projectNumber: 123,
-//   projectColumn: 'Engagement Score',
-//   applyScores: true,
-//   token: 'test-token'
-// }
+const mockConfig: EverythingConfig = {
+  dryRun: false,
+  repoOwner: 'test-owner',
+  repoName: 'test-repo',
+  issueNumber: 123,
+  projectNumber: 123,
+  projectColumn: 'Engagement Score',
+  applyScores: true,
+  token: 'test-token',
+  tempDir: '/tmp',
+  repository: 'test-owner/test-repo',
+  aiEndpoint: 'test-endpoint',
+  aiModel: 'test-model',
+  aiToken: 'test-ai-token',
+  applyComment: true,
+  applyLabels: true,
+  commentFooter: 'Test footer'
+}
 
-// const mockEngagementResponse: EngagementResponse = {
-//   items: [
-//     {
-//       id: 'project-item-1',
-//       issue: {
-//         id: 'issue-1',
-//         owner: 'test-owner',
-//         repo: 'test-repo',
-//         number: 1
-//       },
-//       engagement: {
-//         score: 50,
-//         previousScore: 30,
-//         classification: EngagementClassification.Hot
-//       }
-//     },
-//     {
-//       id: 'project-item-2',
-//       issue: {
-//         id: 'issue-2',
-//         owner: 'test-owner',
-//         repo: 'test-repo',
-//         number: 2
-//       },
-//       engagement: {
-//         score: 20,
-//         previousScore: 25,
-//         classification: undefined
-//       }
-//     }
-//   ],
-//   totalItems: 2
-// }
+const mockEngagementResponse: EngagementResponse = {
+  items: [
+    {
+      id: 'project-item-1',
+      issue: {
+        id: 'issue-1',
+        owner: 'test-owner',
+        repo: 'test-repo',
+        number: 1
+      },
+      engagement: {
+        score: 50,
+        previousScore: 30,
+        classification: EngagementClassification.Hot
+      }
+    },
+    {
+      id: 'project-item-2',
+      issue: {
+        id: 'issue-2',
+        owner: 'test-owner',
+        repo: 'test-repo',
+        number: 2
+      },
+      engagement: {
+        score: 20,
+        previousScore: 25,
+        classification: undefined
+      }
+    }
+  ],
+  totalItems: 2
+}
 
-// describe('GitHub Projects', () => {
-//   beforeEach(() => {
-//     jest.clearAllMocks()
-//   })
+describe('GitHub Projects', () => {
+  beforeEach(() => {
+    jest.clearAllMocks()
+  })
 
-//   describe('getAllProjectItems', () => {
-//     it('should fetch all project items with pagination', async () => {
-//       // Mock first page
-//       mockGraphql
-//         .mockResolvedValueOnce({
-//           repository: {
-//             projectV2: {
-//               id: 'project-123',
-//               items: {
-//                 pageInfo: {
-//                   hasNextPage: true,
-//                   endCursor: 'cursor-1'
-//                 },
-//                 nodes: [
-//                   {
-//                     id: 'item-1',
-//                     content: {
-//                       number: 1,
-//                       repository: {
-//                         name: 'test-repo',
-//                         owner: { login: 'test-owner' }
-//                       }
-//                     }
-//                   }
-//                 ]
-//               }
-//             }
-//           }
-//         })
-//         // Mock second page
-//         .mockResolvedValueOnce({
-//           repository: {
-//             projectV2: {
-//               id: 'project-123',
-//               items: {
-//                 pageInfo: {
-//                   hasNextPage: false,
-//                   endCursor: null
-//                 },
-//                 nodes: [
-//                   {
-//                     id: 'item-2',
-//                     content: {
-//                       number: 2,
-//                       repository: {
-//                         name: 'test-repo',
-//                         owner: { login: 'test-owner' }
-//                       }
-//                     }
-//                   }
-//                 ]
-//               }
-//             }
-//           }
-//         })
+  describe('getAllProjectItems', () => {
+    it('should fetch all project items with pagination', async () => {
+      // Mock first page
+      mockGraphql
+        .mockResolvedValueOnce({
+          repository: {
+            projectV2: {
+              id: 'project-123',
+              items: {
+                pageInfo: {
+                  hasNextPage: true,
+                  endCursor: 'cursor-1'
+                },
+                nodes: [
+                  {
+                    id: 'item-1',
+                    content: {
+                      number: 1,
+                      repository: {
+                        name: 'test-repo',
+                        owner: { login: 'test-owner' }
+                      }
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        })
+        // Mock second page
+        .mockResolvedValueOnce({
+          repository: {
+            projectV2: {
+              id: 'project-123',
+              items: {
+                pageInfo: {
+                  hasNextPage: false,
+                  endCursor: null
+                },
+                nodes: [
+                  {
+                    id: 'item-2',
+                    content: {
+                      number: 2,
+                      repository: {
+                        name: 'test-repo',
+                        owner: { login: 'test-owner' }
+                      }
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        })
 
-//       const result = await getAllProjectItems(mockOctokit, 'test-owner', 'test-repo', 123)
+      const result = await getAllProjectItems(mockOctokit, 'test-owner', 'test-repo', 123)
 
-//       expect(result).toEqual([
-//         {
-//           id: 'item-1',
-//           projectId: 'project-123',
-//           content: {
-//             type: 'issue',
-//             owner: 'test-owner',
-//             repo: 'test-repo',
-//             number: 1
-//           }
-//         },
-//         {
-//           id: 'item-2',
-//           projectId: 'project-123',
-//           content: {
-//             type: 'issue',
-//             owner: 'test-owner',
-//             repo: 'test-repo',
-//             number: 2
-//           }
-//         }
-//       ])
+      expect(result).toEqual([
+        {
+          id: 'item-1',
+          projectId: 'project-123',
+          content: {
+            type: 'issue',
+            owner: 'test-owner',
+            repo: 'test-repo',
+            number: 1
+          }
+        },
+        {
+          id: 'item-2',
+          projectId: 'project-123',
+          content: {
+            type: 'issue',
+            owner: 'test-owner',
+            repo: 'test-repo',
+            number: 2
+          }
+        }
+      ])
 
-//       expect(mockGraphql).toHaveBeenCalledTimes(2)
-//     })
+      expect(mockGraphql).toHaveBeenCalledTimes(2)
+    })
 
 //     it('should handle single page results', async () => {
 //       mockGraphql.mockResolvedValueOnce({
