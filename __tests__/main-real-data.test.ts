@@ -25,9 +25,6 @@ import {
   featureRequestResponse,
   regressionResponse
 } from '../__fixtures__/real-ai-responses.js'
-import { 
-  dryRunConfig
-} from '../__fixtures__/real-configs.js'
 import { FileSystemMock } from './helpers/filesystem-mock.js'
 
 // Import the module being tested
@@ -46,7 +43,7 @@ describe('Main Entry Point with Real Data', () => {
         listForIssue: jest.fn()
       }
     }
-  }
+  } as any
 
   beforeEach(() => {
     jest.clearAllMocks()
@@ -58,7 +55,7 @@ describe('Main Entry Point with Real Data', () => {
     ai.runInference.mockResolvedValue(undefined)
     promptsSummary.mergeResponses.mockResolvedValue(bugReportResponse)
     promptsSummary.generateSummary.mockResolvedValue('/tmp/test/summary.md')
-    mockOctokit.rest.reactions.listForIssue.mockResolvedValue({ data: [] } as any)
+    mockOctokit.rest.reactions.listForIssue.mockResolvedValue({ data: [] })
 
     // Mock Action inputs
     core.getInput.mockImplementation((name: string) => {

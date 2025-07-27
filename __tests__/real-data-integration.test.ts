@@ -7,8 +7,6 @@ import { jest } from '@jest/globals'
 import * as core from '../__fixtures__/actions-core.js'
 import * as github from '../__fixtures__/actions-github.js'
 import * as issues from '../__fixtures__/github-issues.js'
-import * as fs from 'fs'
-import * as path from 'path'
 
 // Mock dependencies
 jest.unstable_mockModule('@actions/core', () => core)
