@@ -5,3 +5,4 @@ node_modules/
 coverage/
 schemas/
 src/generated/
+CONTRIBUTING.md
