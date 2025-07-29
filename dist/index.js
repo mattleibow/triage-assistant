@@ -47799,6 +47799,7 @@ var EngagementClassification;
  * Get all items from a project
  */
 async function getAllProjectItems(octokit, owner, repo, projectNumber) {
+    coreExports.info(`Fetching all items from project #${projectNumber}`);
     const query = `
     query($owner: String!, $repo: String!, $projectNumber: Int!, $cursor: String) {
       repository(owner: $owner, name: $repo) {
@@ -48136,6 +48137,7 @@ async function calculateProjectEngagementScores(config, octokit, graphql) {
     const projectNumber = config.projectNumber;
     const projectItems = await getAllProjectItems(octokit, config.repoOwner, config.repoName, projectNumber);
     const items = [];
+    coreExports.info(`Found ${projectItems.length} items in project #${projectNumber}`);
     for (const projectItem of projectItems) {
         if (projectItem.content?.type === 'Issue') {
             const issueDetails = await getIssueDetails(graphql, projectItem.content.owner, projectItem.content.repo, projectItem.content.number);

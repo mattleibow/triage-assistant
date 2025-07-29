@@ -16,6 +16,8 @@ export async function getAllProjectItems(
 ): Promise<
   Array<{ id: string; projectId: string; content?: { type: string; owner: string; repo: string; number: number } }>
 > {
+  core.info(`Fetching all items from project #${projectNumber}`)
+
   const query = `
     query($owner: String!, $repo: String!, $projectNumber: Int!, $cursor: String) {
       repository(owner: $owner, name: $repo) {

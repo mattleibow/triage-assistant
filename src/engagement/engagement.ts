@@ -96,6 +96,8 @@ async function calculateProjectEngagementScores(
 
   const items: EngagementItem[] = []
 
+  core.info(`Found ${projectItems.length} items in project #${projectNumber}`)
+
   for (const projectItem of projectItems) {
     if (projectItem.content?.type === 'Issue') {
       const issueDetails = await getIssueDetails(
