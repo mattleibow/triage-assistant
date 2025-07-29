@@ -10,72 +10,68 @@
 // } from '../src/github/issue-details.js'
 // import { createEngagementItem } from '../src/engagement/engagement.js'
 
-// // Mock date for consistent testing
-// const MOCK_NOW = new Date('2023-01-10T12:00:00Z')
-// const MOCK_SEVEN_DAYS_AGO = new Date('2023-01-03T12:00:00Z')
-
-// const mockIssueDetails: IssueDetails = {
-//   id: '1',
-//   number: 123,
-//   title: 'Test Issue',
-//   body: 'Test issue body',
-//   state: 'open',
-//   created_at: '2023-01-01T12:00:00Z',
-//   updated_at: '2023-01-08T12:00:00Z',
-//   closed_at: null,
-//   comments: 5,
-//   reactions: 10,
-//   reactions_data: [
-//     {
-//       user: { login: 'user1', type: 'User' },
-//       reaction: 'thumbs_up',
-//       created_at: '2023-01-02T12:00:00Z'
-//     },
-//     {
-//       user: { login: 'user2', type: 'User' },
-//       reaction: 'heart',
-//       created_at: '2023-01-05T12:00:00Z'
-//     }
-//   ],
-//   comments_data: [
-//     {
-//       user: { login: 'user1', type: 'User' },
-//       created_at: '2023-01-02T12:00:00Z',
-//       reactions: 2,
-//       reactions_data: [
-//         {
-//           user: { login: 'user3', type: 'User' },
-//           reaction: 'thumbs_up',
-//           created_at: '2023-01-02T13:00:00Z'
-//         },
-//         {
-//           user: { login: 'user4', type: 'User' },
-//           reaction: 'heart',
-//           created_at: '2023-01-03T12:00:00Z'
-//         }
-//       ]
-//     },
-//     {
-//       user: { login: 'user2', type: 'User' },
-//       created_at: '2023-01-05T12:00:00Z',
-//       reactions: 1,
-//       reactions_data: [
-//         {
-//           user: { login: 'user5', type: 'User' },
-//           reaction: 'rocket',
-//           created_at: '2023-01-05T13:00:00Z'
-//         }
-//       ]
-//     }
-//   ],
-//   user: { login: 'author', type: 'User' },
-//   assignees: [
-//     { login: 'assignee1', type: 'User' },
-//     { login: 'assignee2', type: 'User' }
-//   ]
-// }
-
 // describe('IssueDetails', () => {
+//   // Mock date for consistent testing
+//   const MOCK_NOW = new Date('2023-01-10T12:00:00Z')
+//   const MOCK_SEVEN_DAYS_AGO = new Date('2023-01-03T12:00:00Z')
+
+//   const mockIssueDetails: IssueDetails = {
+//     id: '1',
+//     number: 123,
+//     title: 'Test Issue',
+//     body: 'Test issue body',
+//     state: 'open',
+//     created_at: '2023-01-01T12:00:00Z',
+//     updated_at: '2023-01-08T12:00:00Z',
+//     closed_at: null,
+//     reactions: [
+//       {
+//         user: { login: 'user1', type: 'User' },
+//         reaction: 'thumbs_up',
+//         createdAt: '2023-01-02T12:00:00Z'
+//       },
+//       {
+//         user: { login: 'user2', type: 'User' },
+//         reaction: 'heart',
+//         createdAt: '2023-01-05T12:00:00Z'
+//       }
+//     ],
+//     comments: [
+//       {
+//         user: { login: 'user1', type: 'User' },
+//         created_at: '2023-01-02T12:00:00Z',
+//         reactions: [
+//           {
+//             user: { login: 'user3', type: 'User' },
+//             reaction: 'thumbs_up',
+//             createdAt: '2023-01-02T13:00:00Z'
+//           },
+//           {
+//             user: { login: 'user4', type: 'User' },
+//             reaction: 'heart',
+//             createdAt: '2023-01-03T12:00:00Z'
+//           }
+//         ]
+//       },
+//       {
+//         user: { login: 'user2', type: 'User' },
+//         created_at: '2023-01-05T12:00:00Z',
+//         reactions: [
+//           {
+//             user: { login: 'user5', type: 'User' },
+//             reaction: 'rocket',
+//             createdAt: '2023-01-05T13:00:00Z'
+//           }
+//         ]
+//       }
+//     ],
+//     user: { login: 'author', type: 'User' },
+//     assignees: [
+//       { login: 'assignee1', type: 'User' },
+//       { login: 'assignee2', type: 'User' }
+//     ]
+//   }
+
 //   beforeEach(() => {
 //     jest.useFakeTimers()
 //     jest.setSystemTime(MOCK_NOW)
