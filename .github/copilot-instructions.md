@@ -233,7 +233,7 @@ describe('engagement workflow', () => {
 3. **Implement Core Logic** - Write the main functionality with proper error handling
 4. **Write Comprehensive Tests** - Cover all scenarios (unit, integration, edge cases)
 5. **Update Configuration** - Add new inputs to `action.yml` and config interfaces
-6. **Document Usage** - Update README and provide usage examples
+6. **Document Usage** - Update readme and provide usage examples
 7. **Validate Integration** - Test with `npm run local-action` using `.env` file
 
 **Example: Adding a New Scoring Factor**
@@ -301,9 +301,9 @@ describe('calculateScore with new factor', () => {
 
 ### File and Module Organization
 
-- **kebab-case** - File names use kebab-case (e.g., `issue-details.ts`)
+- **kebab-case** - Filenames use kebab-case (e.g., `issue-details.ts`)
 - **camelCase** - Variable and function names use camelCase
-- **Domain Modules** - Organize by domain (engagement, triage, github)
+- **Domain Modules** - Organize by domain (engagement, triage, GitHub)
 - **Clear Exports** - Explicit exports with clear interfaces
 
 ### Error Handling Patterns

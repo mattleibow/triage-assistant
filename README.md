@@ -208,7 +208,7 @@ Calculate engagement score for a specific issue:
 
 The engagement score is calculated using the following formula:
 
-```
+```pwsh
 Score = (Comments × 3) + (Reactions × 1) + (Contributors × 2) + (Time Factors × 1) + (Pull Requests × 2)
 ```
 
