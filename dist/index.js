@@ -1,6 +1,6 @@
 import * as require$$0 from 'os';
 import require$$0__default from 'os';
-import require$$0$1, { randomUUID as randomUUID$4 } from 'crypto';
+import require$$0$1 from 'crypto';
 import * as fs from 'fs';
 import fs__default from 'fs';
 import * as path from 'path';
@@ -16,7 +16,7 @@ import require$$0$5, { Readable } from 'stream';
 import require$$7 from 'buffer';
 import require$$8 from 'querystring';
 import require$$14 from 'stream/web';
-import require$$0$7, { Transform, Readable as Readable$1 } from 'node:stream';
+import require$$0$7, { Transform } from 'node:stream';
 import require$$1$2, { inspect as inspect$1 } from 'node:util';
 import require$$0$6 from 'node:events';
 import require$$0$8 from 'worker_threads';
@@ -33,12 +33,11 @@ import require$$6$1 from 'timers';
 import * as os from 'node:os';
 import { EOL } from 'node:os';
 import * as process$1 from 'node:process';
+import { randomUUID as randomUUID$2 } from 'node:crypto';
 import require$$1$4 from 'tty';
 import * as http from 'node:http';
 import * as https from 'node:https';
 import * as zlib from 'node:zlib';
-import { randomUUID as randomUUID$3 } from 'node:crypto';
-import path$1 from 'path/win32';
 
 var commonjsGlobal = typeof globalThis !== 'undefined' ? globalThis : typeof window !== 'undefined' ? window : typeof global !== 'undefined' ? global : typeof self !== 'undefined' ? self : {};
 
@@ -27293,15 +27292,15 @@ var coreExports = requireCore();
 
 var github = {};
 
-var context$1 = {};
+var context$2 = {};
 
 var hasRequiredContext;
 
 function requireContext () {
-	if (hasRequiredContext) return context$1;
+	if (hasRequiredContext) return context$2;
 	hasRequiredContext = 1;
-	Object.defineProperty(context$1, "__esModule", { value: true });
-	context$1.Context = void 0;
+	Object.defineProperty(context$2, "__esModule", { value: true });
+	context$2.Context = void 0;
 	const fs_1 = fs__default;
 	const os_1 = require$$0__default;
 	class Context {
@@ -27353,9 +27352,9 @@ function requireContext () {
 	        throw new Error("context.repo requires a GITHUB_REPOSITORY environment variable like 'owner/repo'");
 	    }
 	}
-	context$1.Context = Context;
+	context$2.Context = Context;
 	
-	return context$1;
+	return context$2;
 }
 
 var utils$1 = {};
@@ -28482,13 +28481,28 @@ const createTokenAuth = function createTokenAuth2(token) {
 // pkg/dist-src/index.js
 
 // pkg/dist-src/version.js
-var VERSION$2 = "5.2.0";
+var VERSION$2 = "5.2.2";
 
 // pkg/dist-src/index.js
 var noop = () => {
 };
 var consoleWarn = console.warn.bind(console);
 var consoleError = console.error.bind(console);
+function createLogger(logger = {}) {
+  if (typeof logger.debug !== "function") {
+    logger.debug = noop;
+  }
+  if (typeof logger.info !== "function") {
+    logger.info = noop;
+  }
+  if (typeof logger.warn !== "function") {
+    logger.warn = consoleWarn;
+  }
+  if (typeof logger.error !== "function") {
+    logger.error = consoleError;
+  }
+  return logger;
+}
 var userAgentTrail = `octokit-core.js/${VERSION$2} ${getUserAgent()}`;
 var Octokit = class {
   static {
@@ -28562,15 +28576,7 @@ var Octokit = class {
     }
     this.request = request.defaults(requestDefaults);
     this.graphql = withCustomRequest(this.request).defaults(requestDefaults);
-    this.log = Object.assign(
-      {
-        debug: noop,
-        info: noop,
-        warn: consoleWarn,
-        error: consoleError
-      },
-      options.log
-    );
+    this.log = createLogger(options.log);
     this.hook = hook;
     if (!options.authStrategy) {
       if (!options.auth) {
@@ -31281,9 +31287,9 @@ function rng() {
   return getRandomValues(rnds8);
 }
 
-var randomUUID$2 = typeof crypto !== 'undefined' && crypto.randomUUID && crypto.randomUUID.bind(crypto);
+var randomUUID$1 = typeof crypto !== 'undefined' && crypto.randomUUID && crypto.randomUUID.bind(crypto);
 var native = {
-  randomUUID: randomUUID$2
+  randomUUID: randomUUID$1
 };
 
 function v4(options, buf, offset) {
@@ -31828,74 +31834,74 @@ let AbortError$1 = class AbortError extends Error {
 
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
-function log$1(message, ...args) {
+function log(message, ...args) {
     process$1.stderr.write(`${require$$1$2.format(message, ...args)}${EOL}`);
 }
 
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
-const debugEnvVariable$1 = (typeof process !== "undefined" && process.env && process.env.DEBUG) || undefined;
-let enabledString$1;
-let enabledNamespaces$1 = [];
-let skippedNamespaces$1 = [];
-const debuggers$1 = [];
-if (debugEnvVariable$1) {
-    enable$1(debugEnvVariable$1);
+const debugEnvVariable = (typeof process !== "undefined" && process.env && process.env.DEBUG) || undefined;
+let enabledString;
+let enabledNamespaces = [];
+let skippedNamespaces = [];
+const debuggers = [];
+if (debugEnvVariable) {
+    enable(debugEnvVariable);
 }
-const debugObj$1 = Object.assign((namespace) => {
-    return createDebugger$1(namespace);
+const debugObj = Object.assign((namespace) => {
+    return createDebugger(namespace);
 }, {
-    enable: enable$1,
-    enabled: enabled$1,
-    disable: disable$1,
-    log: log$1,
+    enable,
+    enabled,
+    disable,
+    log,
 });
-function enable$1(namespaces) {
-    enabledString$1 = namespaces;
-    enabledNamespaces$1 = [];
-    skippedNamespaces$1 = [];
+function enable(namespaces) {
+    enabledString = namespaces;
+    enabledNamespaces = [];
+    skippedNamespaces = [];
     const wildcard = /\*/g;
     const namespaceList = namespaces.split(",").map((ns) => ns.trim().replace(wildcard, ".*?"));
     for (const ns of namespaceList) {
         if (ns.startsWith("-")) {
-            skippedNamespaces$1.push(new RegExp(`^${ns.substr(1)}$`));
+            skippedNamespaces.push(new RegExp(`^${ns.substr(1)}$`));
         }
         else {
-            enabledNamespaces$1.push(new RegExp(`^${ns}$`));
+            enabledNamespaces.push(new RegExp(`^${ns}$`));
         }
     }
-    for (const instance of debuggers$1) {
-        instance.enabled = enabled$1(instance.namespace);
+    for (const instance of debuggers) {
+        instance.enabled = enabled(instance.namespace);
     }
 }
-function enabled$1(namespace) {
+function enabled(namespace) {
     if (namespace.endsWith("*")) {
         return true;
     }
-    for (const skipped of skippedNamespaces$1) {
+    for (const skipped of skippedNamespaces) {
         if (skipped.test(namespace)) {
             return false;
         }
     }
-    for (const enabledNamespace of enabledNamespaces$1) {
+    for (const enabledNamespace of enabledNamespaces) {
         if (enabledNamespace.test(namespace)) {
             return true;
         }
     }
     return false;
 }
-function disable$1() {
-    const result = enabledString$1 || "";
-    enable$1("");
+function disable() {
+    const result = enabledString || "";
+    enable("");
     return result;
 }
-function createDebugger$1(namespace) {
+function createDebugger(namespace) {
     const newDebugger = Object.assign(debug, {
-        enabled: enabled$1(namespace),
-        destroy: destroy$1,
-        log: debugObj$1.log,
+        enabled: enabled(namespace),
+        destroy,
+        log: debugObj.log,
         namespace,
-        extend: extend$1,
+        extend,
     });
     function debug(...args) {
         if (!newDebugger.enabled) {
@@ -31906,19 +31912,19 @@ function createDebugger$1(namespace) {
         }
         newDebugger.log(...args);
     }
-    debuggers$1.push(newDebugger);
+    debuggers.push(newDebugger);
     return newDebugger;
 }
-function destroy$1() {
-    const index = debuggers$1.indexOf(this);
+function destroy() {
+    const index = debuggers.indexOf(this);
     if (index >= 0) {
-        debuggers$1.splice(index, 1);
+        debuggers.splice(index, 1);
         return true;
     }
     return false;
 }
-function extend$1(namespace) {
-    const newDebugger = createDebugger$1(`${this.namespace}:${namespace}`);
+function extend(namespace) {
+    const newDebugger = createDebugger(`${this.namespace}:${namespace}`);
     newDebugger.log = this.log;
     return newDebugger;
 }
@@ -31926,13 +31932,13 @@ function extend$1(namespace) {
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 const TYPESPEC_RUNTIME_LOG_LEVELS = ["verbose", "info", "warning", "error"];
-const levelMap$1 = {
+const levelMap = {
     verbose: 400,
     info: 300,
     warning: 200,
     error: 100,
 };
-function patchLogMethod$1(parent, child) {
+function patchLogMethod(parent, child) {
     child.log = (...args) => {
         parent.log(...args);
     };
@@ -31950,94 +31956,91 @@ function createLoggerContext(options) {
     const logLevelFromEnv = (typeof process !== "undefined" && process.env && process.env[options.logLevelEnvVarName]) ||
         undefined;
     let logLevel;
-    const clientLogger = debugObj$1(options.namespace);
+    const clientLogger = debugObj(options.namespace);
     clientLogger.log = (...args) => {
-        debugObj$1.log(...args);
+        debugObj.log(...args);
     };
+    function contextSetLogLevel(level) {
+        if (level && !isTypeSpecRuntimeLogLevel(level)) {
+            throw new Error(`Unknown log level '${level}'. Acceptable values: ${TYPESPEC_RUNTIME_LOG_LEVELS.join(",")}`);
+        }
+        logLevel = level;
+        const enabledNamespaces = [];
+        for (const logger of registeredLoggers) {
+            if (shouldEnable(logger)) {
+                enabledNamespaces.push(logger.namespace);
+            }
+        }
+        debugObj.enable(enabledNamespaces.join(","));
+    }
     if (logLevelFromEnv) {
         // avoid calling setLogLevel because we don't want a mis-set environment variable to crash
         if (isTypeSpecRuntimeLogLevel(logLevelFromEnv)) {
-            setLogLevel$1(logLevelFromEnv);
+            contextSetLogLevel(logLevelFromEnv);
         }
         else {
             console.error(`${options.logLevelEnvVarName} set to unknown log level '${logLevelFromEnv}'; logging is not enabled. Acceptable values: ${TYPESPEC_RUNTIME_LOG_LEVELS.join(", ")}.`);
         }
     }
     function shouldEnable(logger) {
-        return Boolean(logLevel && levelMap$1[logger.level] <= levelMap$1[logLevel]);
+        return Boolean(logLevel && levelMap[logger.level] <= levelMap[logLevel]);
     }
     function createLogger(parent, level) {
         const logger = Object.assign(parent.extend(level), {
             level,
         });
-        patchLogMethod$1(parent, logger);
+        patchLogMethod(parent, logger);
         if (shouldEnable(logger)) {
-            const enabledNamespaces = debugObj$1.disable();
-            debugObj$1.enable(enabledNamespaces + "," + logger.namespace);
+            const enabledNamespaces = debugObj.disable();
+            debugObj.enable(enabledNamespaces + "," + logger.namespace);
         }
         registeredLoggers.add(logger);
         return logger;
     }
+    function contextGetLogLevel() {
+        return logLevel;
+    }
+    function contextCreateClientLogger(namespace) {
+        const clientRootLogger = clientLogger.extend(namespace);
+        patchLogMethod(clientLogger, clientRootLogger);
+        return {
+            error: createLogger(clientRootLogger, "error"),
+            warning: createLogger(clientRootLogger, "warning"),
+            info: createLogger(clientRootLogger, "info"),
+            verbose: createLogger(clientRootLogger, "verbose"),
+        };
+    }
     return {
-        setLogLevel(level) {
-            if (level && !isTypeSpecRuntimeLogLevel(level)) {
-                throw new Error(`Unknown log level '${level}'. Acceptable values: ${TYPESPEC_RUNTIME_LOG_LEVELS.join(",")}`);
-            }
-            logLevel = level;
-            const enabledNamespaces = [];
-            for (const logger of registeredLoggers) {
-                if (shouldEnable(logger)) {
-                    enabledNamespaces.push(logger.namespace);
-                }
-            }
-            debugObj$1.enable(enabledNamespaces.join(","));
-        },
-        getLogLevel() {
-            return logLevel;
-        },
-        createClientLogger(namespace) {
-            const clientRootLogger = clientLogger.extend(namespace);
-            patchLogMethod$1(clientLogger, clientRootLogger);
-            return {
-                error: createLogger(clientRootLogger, "error"),
-                warning: createLogger(clientRootLogger, "warning"),
-                info: createLogger(clientRootLogger, "info"),
-                verbose: createLogger(clientRootLogger, "verbose"),
-            };
-        },
+        setLogLevel: contextSetLogLevel,
+        getLogLevel: contextGetLogLevel,
+        createClientLogger: contextCreateClientLogger,
         logger: clientLogger,
     };
 }
-const context = createLoggerContext({
+const context$1 = createLoggerContext({
     logLevelEnvVarName: "TYPESPEC_RUNTIME_LOG_LEVEL",
     namespace: "typeSpecRuntime",
 });
-/**
- * Retrieves the currently specified log level.
- */
-function setLogLevel$1(logLevel) {
-    context.setLogLevel(logLevel);
-}
 /**
  * Creates a logger for use by the SDKs that inherits from `TypeSpecRuntimeLogger`.
  * @param namespace - The name of the SDK package.
  * @hidden
  */
 function createClientLogger$1(namespace) {
-    return context.createClientLogger(namespace);
+    return context$1.createClientLogger(namespace);
 }
 
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
-function normalizeName$1(name) {
+function normalizeName(name) {
     return name.toLowerCase();
 }
-function* headerIterator$1(map) {
+function* headerIterator(map) {
     for (const entry of map.values()) {
         yield [entry.name, entry.value];
     }
 }
-let HttpHeadersImpl$1 = class HttpHeadersImpl {
+class HttpHeadersImpl {
     constructor(rawHeaders) {
         this._headersMap = new Map();
         if (rawHeaders) {
@@ -32053,7 +32056,7 @@ let HttpHeadersImpl$1 = class HttpHeadersImpl {
      * @param value - The value of the header to set.
      */
     set(name, value) {
-        this._headersMap.set(normalizeName$1(name), { name, value: String(value).trim() });
+        this._headersMap.set(normalizeName(name), { name, value: String(value).trim() });
     }
     /**
      * Get the header value for the provided header name, or undefined if no header exists in this
@@ -32062,21 +32065,21 @@ let HttpHeadersImpl$1 = class HttpHeadersImpl {
      */
     get(name) {
         var _a;
-        return (_a = this._headersMap.get(normalizeName$1(name))) === null || _a === void 0 ? void 0 : _a.value;
+        return (_a = this._headersMap.get(normalizeName(name))) === null || _a === void 0 ? void 0 : _a.value;
     }
     /**
      * Get whether or not this header collection contains a header entry for the provided header name.
      * @param name - The name of the header to set. This value is case-insensitive.
      */
     has(name) {
-        return this._headersMap.has(normalizeName$1(name));
+        return this._headersMap.has(normalizeName(name));
     }
     /**
      * Remove the header with the provided headerName.
      * @param name - The name of the header to remove.
      */
     delete(name) {
-        this._headersMap.delete(normalizeName$1(name));
+        this._headersMap.delete(normalizeName(name));
     }
     /**
      * Get the JSON object representation of this HTTP header collection.
@@ -32105,31 +32108,31 @@ let HttpHeadersImpl$1 = class HttpHeadersImpl {
      * Iterate over tuples of header [name, value] pairs.
      */
     [Symbol.iterator]() {
-        return headerIterator$1(this._headersMap);
+        return headerIterator(this._headersMap);
     }
-};
+}
 /**
  * Creates an object that satisfies the `HttpHeaders` interface.
  * @param rawHeaders - A simple object representing initial headers
  */
-function createHttpHeaders$1(rawHeaders) {
-    return new HttpHeadersImpl$1(rawHeaders);
+function createHttpHeaders(rawHeaders) {
+    return new HttpHeadersImpl(rawHeaders);
 }
 
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
-var _a$3;
+var _a$1;
 // NOTE: This is a workaround until we can use `globalThis.crypto.randomUUID` in Node.js 19+.
-const uuidFunction$1 = typeof ((_a$3 = globalThis === null || globalThis === void 0 ? void 0 : globalThis.crypto) === null || _a$3 === void 0 ? void 0 : _a$3.randomUUID) === "function"
+const uuidFunction = typeof ((_a$1 = globalThis === null || globalThis === void 0 ? void 0 : globalThis.crypto) === null || _a$1 === void 0 ? void 0 : _a$1.randomUUID) === "function"
     ? globalThis.crypto.randomUUID.bind(globalThis.crypto)
-    : randomUUID$3;
+    : randomUUID$2;
 /**
  * Generated Universally Unique Identifier
  *
  * @returns RFC4122 v4 UUID.
  */
-function randomUUID$1() {
-    return uuidFunction$1();
+function randomUUID() {
+    return uuidFunction();
 }
 
 // Copyright (c) Microsoft Corporation.
@@ -32139,7 +32142,7 @@ class PipelineRequestImpl {
         var _a, _b, _c, _d, _e, _f, _g;
         this.url = options.url;
         this.body = options.body;
-        this.headers = (_a = options.headers) !== null && _a !== void 0 ? _a : createHttpHeaders$1();
+        this.headers = (_a = options.headers) !== null && _a !== void 0 ? _a : createHttpHeaders();
         this.method = (_b = options.method) !== null && _b !== void 0 ? _b : "GET";
         this.timeout = (_c = options.timeout) !== null && _c !== void 0 ? _c : 0;
         this.multipartBody = options.multipartBody;
@@ -32151,10 +32154,11 @@ class PipelineRequestImpl {
         this.abortSignal = options.abortSignal;
         this.onUploadProgress = options.onUploadProgress;
         this.onDownloadProgress = options.onDownloadProgress;
-        this.requestId = options.requestId || randomUUID$1();
+        this.requestId = options.requestId || randomUUID();
         this.allowInsecureConnection = (_f = options.allowInsecureConnection) !== null && _f !== void 0 ? _f : false;
         this.enableBrowserStreams = (_g = options.enableBrowserStreams) !== null && _g !== void 0 ? _g : false;
         this.requestOverrides = options.requestOverrides;
+        this.authSchemes = options.authSchemes;
     }
 }
 /**
@@ -32168,13 +32172,13 @@ function createPipelineRequest(options) {
 
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
-const ValidPhaseNames$1 = new Set(["Deserialize", "Serialize", "Retry", "Sign"]);
+const ValidPhaseNames = new Set(["Deserialize", "Serialize", "Retry", "Sign"]);
 /**
  * A private implementation of Pipeline.
  * Do not export this class from the package.
  * @internal
  */
-let HttpPipeline$1 = class HttpPipeline {
+class HttpPipeline {
     constructor(policies) {
         var _a;
         this._policies = [];
@@ -32185,10 +32189,10 @@ let HttpPipeline$1 = class HttpPipeline {
         if (options.phase && options.afterPhase) {
             throw new Error("Policies inside a phase cannot specify afterPhase.");
         }
-        if (options.phase && !ValidPhaseNames$1.has(options.phase)) {
+        if (options.phase && !ValidPhaseNames.has(options.phase)) {
             throw new Error(`Invalid phase name: ${options.phase}`);
         }
-        if (options.afterPhase && !ValidPhaseNames$1.has(options.afterPhase)) {
+        if (options.afterPhase && !ValidPhaseNames.has(options.afterPhase)) {
             throw new Error(`Invalid afterPhase name: ${options.afterPhase}`);
         }
         this._policies.push({
@@ -32419,13 +32423,13 @@ let HttpPipeline$1 = class HttpPipeline {
         }
         return result;
     }
-};
+}
 /**
  * Creates a totally empty pipeline.
  * Useful for testing or creating a custom one.
  */
 function createEmptyPipeline$1() {
-    return HttpPipeline$1.create();
+    return HttpPipeline.create();
 }
 
 // Copyright (c) Microsoft Corporation.
@@ -32434,7 +32438,7 @@ function createEmptyPipeline$1() {
  * Helper to determine when an input is a generic JS object.
  * @returns true when input is an object type that is not null, Array, RegExp, or Date.
  */
-function isObject$1(input) {
+function isObject(input) {
     return (typeof input === "object" &&
         input !== null &&
         !Array.isArray(input) &&
@@ -32449,7 +32453,7 @@ function isObject$1(input) {
  * @param e - Something caught by a catch clause.
  */
 function isError$1(e) {
-    if (isObject$1(e)) {
+    if (isObject(e)) {
         const hasName = typeof e.name === "string";
         const hasMessage = typeof e.message === "string";
         return hasName && hasMessage;
@@ -32459,13 +32463,13 @@ function isError$1(e) {
 
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
-const custom$1 = inspect$1.custom;
+const custom = inspect$1.custom;
 
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
-const RedactedString$1 = "REDACTED";
+const RedactedString = "REDACTED";
 // Make sure this list is up-to-date with the one under core/logger/Readme#Keyconcepts
-const defaultAllowedHeaderNames$1 = [
+const defaultAllowedHeaderNames = [
     "x-ms-client-request-id",
     "x-ms-return-client-request-id",
     "x-ms-useragent",
@@ -32506,14 +32510,14 @@ const defaultAllowedHeaderNames$1 = [
     "User-Agent",
     "WWW-Authenticate",
 ];
-const defaultAllowedQueryParameters$1 = ["api-version"];
+const defaultAllowedQueryParameters = ["api-version"];
 /**
  * A utility class to sanitize objects for logging.
  */
-let Sanitizer$1 = class Sanitizer {
+class Sanitizer {
     constructor({ additionalAllowedHeaderNames: allowedHeaderNames = [], additionalAllowedQueryParameters: allowedQueryParameters = [], } = {}) {
-        allowedHeaderNames = defaultAllowedHeaderNames$1.concat(allowedHeaderNames);
-        allowedQueryParameters = defaultAllowedQueryParameters$1.concat(allowedQueryParameters);
+        allowedHeaderNames = defaultAllowedHeaderNames.concat(allowedHeaderNames);
+        allowedQueryParameters = defaultAllowedQueryParameters.concat(allowedQueryParameters);
         this.allowedHeaderNames = new Set(allowedHeaderNames.map((n) => n.toLowerCase()));
         this.allowedQueryParameters = new Set(allowedQueryParameters.map((p) => p.toLowerCase()));
     }
@@ -32551,7 +32555,7 @@ let Sanitizer$1 = class Sanitizer {
                 // field with the autorest spec. No need to log it.
                 return undefined;
             }
-            else if (Array.isArray(value) || isObject$1(value)) {
+            else if (Array.isArray(value) || isObject(value)) {
                 if (seen.has(value)) {
                     return "[Circular]";
                 }
@@ -32575,7 +32579,7 @@ let Sanitizer$1 = class Sanitizer {
         }
         for (const [key] of url.searchParams) {
             if (!this.allowedQueryParameters.has(key.toLowerCase())) {
-                url.searchParams.set(key, RedactedString$1);
+                url.searchParams.set(key, RedactedString);
             }
         }
         return url.toString();
@@ -32587,7 +32591,7 @@ let Sanitizer$1 = class Sanitizer {
                 sanitized[key] = obj[key];
             }
             else {
-                sanitized[key] = RedactedString$1;
+                sanitized[key] = RedactedString;
             }
         }
         return sanitized;
@@ -32602,20 +32606,20 @@ let Sanitizer$1 = class Sanitizer {
                 sanitized[k] = value[k];
             }
             else {
-                sanitized[k] = RedactedString$1;
+                sanitized[k] = RedactedString;
             }
         }
         return sanitized;
     }
-};
+}
 
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
-const errorSanitizer$1 = new Sanitizer$1();
+const errorSanitizer = new Sanitizer();
 /**
  * A custom error type for failed pipeline requests.
  */
-let RestError$1 = class RestError extends Error {
+class RestError extends Error {
     constructor(message, options = {}) {
         super(message);
         this.name = "RestError";
@@ -32628,34 +32632,34 @@ let RestError$1 = class RestError extends Error {
         Object.defineProperty(this, "request", { value: options.request, enumerable: false });
         Object.defineProperty(this, "response", { value: options.response, enumerable: false });
         // Logging method for util.inspect in Node
-        Object.defineProperty(this, custom$1, {
+        Object.defineProperty(this, custom, {
             value: () => {
                 // Extract non-enumerable properties and add them back. This is OK since in this output the request and
                 // response get sanitized.
-                return `RestError: ${this.message} \n ${errorSanitizer$1.sanitize(Object.assign(Object.assign({}, this), { request: this.request, response: this.response }))}`;
+                return `RestError: ${this.message} \n ${errorSanitizer.sanitize(Object.assign(Object.assign({}, this), { request: this.request, response: this.response }))}`;
             },
             enumerable: false,
         });
         Object.setPrototypeOf(this, RestError.prototype);
     }
-};
+}
 /**
  * Something went wrong when making the request.
  * This means the actual request failed for some reason,
  * such as a DNS issue or the connection being lost.
  */
-RestError$1.REQUEST_SEND_ERROR = "REQUEST_SEND_ERROR";
+RestError.REQUEST_SEND_ERROR = "REQUEST_SEND_ERROR";
 /**
  * This means that parsing the response from the server failed.
  * It may have been malformed.
  */
-RestError$1.PARSE_ERROR = "PARSE_ERROR";
+RestError.PARSE_ERROR = "PARSE_ERROR";
 /**
  * Typeguard for RestError
  * @param e - Something caught by a catch clause.
  */
 function isRestError$1(e) {
-    if (e instanceof RestError$1) {
+    if (e instanceof RestError) {
         return true;
     }
     return isError$1(e) && e.name === "RestError";
@@ -32678,7 +32682,7 @@ function uint8ArrayToString(bytes, format) {
  * @param format - the format we use to decode the value
  * @returns a uint8array
  */
-function stringToUint8Array$1(value, format) {
+function stringToUint8Array(value, format) {
     return Buffer.from(value, format);
 }
 
@@ -32760,7 +32764,7 @@ class NodeHttpClient {
         let timeoutId;
         if (request.timeout > 0) {
             timeoutId = setTimeout(() => {
-                const sanitizer = new Sanitizer$1();
+                const sanitizer = new Sanitizer();
                 logger$2.info(`request to '${sanitizer.sanitizeUrl(request.url)}' timed out. canceling...`);
                 abortController.abort();
             }, request.timeout);
@@ -32868,7 +32872,7 @@ class NodeHttpClient {
             const req = isInsecure ? http.request(options, resolve) : https.request(options, resolve);
             req.once("error", (err) => {
                 var _a;
-                reject(new RestError$1(err.message, { code: (_a = err.code) !== null && _a !== void 0 ? _a : RestError$1.REQUEST_SEND_ERROR, request }));
+                reject(new RestError(err.message, { code: (_a = err.code) !== null && _a !== void 0 ? _a : RestError.REQUEST_SEND_ERROR, request }));
             });
             abortController.signal.addEventListener("abort", () => {
                 const abortError = new AbortError$1("The operation was aborted. Rejecting from abort signal callback while making request.");
@@ -32887,7 +32891,7 @@ class NodeHttpClient {
                 }
                 else {
                     logger$2.error("Unrecognized body type", body);
-                    reject(new RestError$1("Unrecognized body type"));
+                    reject(new RestError("Unrecognized body type"));
                 }
             }
             else {
@@ -32935,7 +32939,7 @@ class NodeHttpClient {
     }
 }
 function getResponseHeaders(res) {
-    const headers = createHttpHeaders$1();
+    const headers = createHttpHeaders();
     for (const header of Object.keys(res.headers)) {
         const value = res.headers[header];
         if (Array.isArray(value)) {
@@ -32982,8 +32986,8 @@ function streamToText(stream) {
                 reject(e);
             }
             else {
-                reject(new RestError$1(`Error reading response as text: ${e.message}`, {
-                    code: RestError$1.PARSE_ERROR,
+                reject(new RestError(`Error reading response as text: ${e.message}`, {
+                    code: RestError.PARSE_ERROR,
                 }));
             }
         });
@@ -33032,7 +33036,7 @@ function createDefaultHttpClient() {
 /**
  * The programmatic identifier of the logPolicy.
  */
-const logPolicyName$1 = "logPolicy";
+const logPolicyName = "logPolicy";
 /**
  * A policy that logs all requests and responses.
  * @param options - Options to configure logPolicy.
@@ -33040,12 +33044,12 @@ const logPolicyName$1 = "logPolicy";
 function logPolicy$1(options = {}) {
     var _a;
     const logger = (_a = options.logger) !== null && _a !== void 0 ? _a : logger$2.info;
-    const sanitizer = new Sanitizer$1({
+    const sanitizer = new Sanitizer({
         additionalAllowedHeaderNames: options.additionalAllowedHeaderNames,
         additionalAllowedQueryParameters: options.additionalAllowedQueryParameters,
     });
     return {
-        name: logPolicyName$1,
+        name: logPolicyName,
         async sendRequest(request, next) {
             if (!logger.enabled) {
                 return next(request);
@@ -33064,11 +33068,11 @@ function logPolicy$1(options = {}) {
 /**
  * The programmatic identifier of the redirectPolicy.
  */
-const redirectPolicyName$1 = "redirectPolicy";
+const redirectPolicyName = "redirectPolicy";
 /**
  * Methods that are allowed to follow redirects 301 and 302
  */
-const allowedRedirect$1 = ["GET", "HEAD"];
+const allowedRedirect = ["GET", "HEAD"];
 /**
  * A policy to follow Location headers from the server in order
  * to support server-side redirection.
@@ -33078,20 +33082,20 @@ const allowedRedirect$1 = ["GET", "HEAD"];
 function redirectPolicy$1(options = {}) {
     const { maxRetries = 20 } = options;
     return {
-        name: redirectPolicyName$1,
+        name: redirectPolicyName,
         async sendRequest(request, next) {
             const response = await next(request);
-            return handleRedirect$1(next, response, maxRetries);
+            return handleRedirect(next, response, maxRetries);
         },
     };
 }
-async function handleRedirect$1(next, response, maxRetries, currentRetries = 0) {
+async function handleRedirect(next, response, maxRetries, currentRetries = 0) {
     const { request, status, headers } = response;
     const locationHeader = headers.get("location");
     if (locationHeader &&
         (status === 300 ||
-            (status === 301 && allowedRedirect$1.includes(request.method)) ||
-            (status === 302 && allowedRedirect$1.includes(request.method)) ||
+            (status === 301 && allowedRedirect.includes(request.method)) ||
+            (status === 302 && allowedRedirect.includes(request.method)) ||
             (status === 303 && request.method === "POST") ||
             status === 307) &&
         currentRetries < maxRetries) {
@@ -33106,7 +33110,7 @@ async function handleRedirect$1(next, response, maxRetries, currentRetries = 0) 
         }
         request.headers.delete("Authorization");
         const res = await next(request);
-        return handleRedirect$1(next, res, maxRetries, currentRetries + 1);
+        return handleRedirect(next, res, maxRetries, currentRetries + 1);
     }
     return response;
 }
@@ -33140,8 +33144,8 @@ async function setPlatformSpecificData$1(map) {
 
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
-const SDK_VERSION$2 = "0.2.2";
-const DEFAULT_RETRY_POLICY_COUNT$1 = 3;
+const SDK_VERSION$2 = "0.3.0";
+const DEFAULT_RETRY_POLICY_COUNT = 3;
 
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
@@ -33201,14 +33205,14 @@ function userAgentPolicy$1(options = {}) {
 /**
  * The programmatic identifier of the decompressResponsePolicy.
  */
-const decompressResponsePolicyName$1 = "decompressResponsePolicy";
+const decompressResponsePolicyName = "decompressResponsePolicy";
 /**
  * A policy to enable response decompression according to Accept-Encoding header
  * https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Accept-Encoding
  */
 function decompressResponsePolicy$1() {
     return {
-        name: decompressResponsePolicyName$1,
+        name: decompressResponsePolicyName,
         async sendRequest(request, next) {
             // HEAD requests have no body
             if (request.method !== "HEAD") {
@@ -33229,7 +33233,7 @@ function decompressResponsePolicy$1() {
  * @param min - The smallest integer value allowed.
  * @param max - The largest integer value allowed.
  */
-function getRandomIntegerInclusive$1(min, max) {
+function getRandomIntegerInclusive(min, max) {
     // Make sure inputs are integers.
     min = Math.ceil(min);
     max = Math.floor(max);
@@ -33248,14 +33252,14 @@ function getRandomIntegerInclusive$1(min, max) {
  * @param config - The exponential retry configuration.
  * @returns An object containing the calculated retry delay.
  */
-function calculateRetryDelay$1(retryAttempt, config) {
+function calculateRetryDelay(retryAttempt, config) {
     // Exponentially increase the delay each time
     const exponentialDelay = config.retryDelayInMs * Math.pow(2, retryAttempt);
     // Don't let the delay exceed the maximum
     const clampedDelay = Math.min(config.maxRetryDelayInMs, exponentialDelay);
     // Allow the final value to have some "jitter" (within 50% of the delay size) so
     // that retries across multiple clients don't occur simultaneously.
-    const retryAfterInMs = clampedDelay / 2 + getRandomIntegerInclusive$1(0, clampedDelay / 2);
+    const retryAfterInMs = clampedDelay / 2 + getRandomIntegerInclusive(0, clampedDelay / 2);
     return { retryAfterInMs };
 }
 
@@ -33306,7 +33310,7 @@ function delay$1(delayInMs, value, options) {
  * @internal
  * @returns the parsed value or undefined if the parsed value is invalid.
  */
-function parseHeaderValueAsNumber$1(response, headerName) {
+function parseHeaderValueAsNumber(response, headerName) {
     const value = response.headers.get(headerName);
     if (!value)
         return;
@@ -33322,7 +33326,7 @@ function parseHeaderValueAsNumber$1(response, headerName) {
  * The header that comes back from services representing
  * the amount of time (minimum) to wait to retry (in seconds or timestamp after which we can retry).
  */
-const RetryAfterHeader$1 = "Retry-After";
+const RetryAfterHeader = "Retry-After";
 /**
  * The headers that come back from services representing
  * the amount of time (minimum) to wait to retry.
@@ -33330,7 +33334,7 @@ const RetryAfterHeader$1 = "Retry-After";
  * "retry-after-ms", "x-ms-retry-after-ms" : milliseconds
  * "Retry-After" : seconds or timestamp
  */
-const AllRetryAfterHeaders$1 = ["retry-after-ms", "x-ms-retry-after-ms", RetryAfterHeader$1];
+const AllRetryAfterHeaders = ["retry-after-ms", "x-ms-retry-after-ms", RetryAfterHeader];
 /**
  * A response is a throttling retry response if it has a throttling status code (429 or 503),
  * as long as one of the [ "Retry-After" or "retry-after-ms" or "x-ms-retry-after-ms" ] headers has a valid value.
@@ -33340,22 +33344,22 @@ const AllRetryAfterHeaders$1 = ["retry-after-ms", "x-ms-retry-after-ms", RetryAf
  *
  * @internal
  */
-function getRetryAfterInMs$1(response) {
+function getRetryAfterInMs(response) {
     if (!(response && [429, 503].includes(response.status)))
         return undefined;
     try {
         // Headers: "retry-after-ms", "x-ms-retry-after-ms", "Retry-After"
-        for (const header of AllRetryAfterHeaders$1) {
-            const retryAfterValue = parseHeaderValueAsNumber$1(response, header);
+        for (const header of AllRetryAfterHeaders) {
+            const retryAfterValue = parseHeaderValueAsNumber(response, header);
             if (retryAfterValue === 0 || retryAfterValue) {
                 // "Retry-After" header ==> seconds
                 // "retry-after-ms", "x-ms-retry-after-ms" headers ==> milli-seconds
-                const multiplyingFactor = header === RetryAfterHeader$1 ? 1000 : 1;
+                const multiplyingFactor = header === RetryAfterHeader ? 1000 : 1;
                 return retryAfterValue * multiplyingFactor; // in milli-seconds
             }
         }
         // RetryAfterHeader ("Retry-After") has a special case where it might be formatted as a date instead of a number of seconds
-        const retryAfterHeader = response.headers.get(RetryAfterHeader$1);
+        const retryAfterHeader = response.headers.get(RetryAfterHeader);
         if (!retryAfterHeader)
             return;
         const date = Date.parse(retryAfterHeader);
@@ -33371,14 +33375,14 @@ function getRetryAfterInMs$1(response) {
  * A response is a retry response if it has a throttling status code (429 or 503),
  * as long as one of the [ "Retry-After" or "retry-after-ms" or "x-ms-retry-after-ms" ] headers has a valid value.
  */
-function isThrottlingRetryResponse$1(response) {
-    return Number.isFinite(getRetryAfterInMs$1(response));
+function isThrottlingRetryResponse(response) {
+    return Number.isFinite(getRetryAfterInMs(response));
 }
-function throttlingRetryStrategy$1() {
+function throttlingRetryStrategy() {
     return {
         name: "throttlingRetryStrategy",
         retry({ response }) {
-            const retryAfterInMs = getRetryAfterInMs$1(response);
+            const retryAfterInMs = getRetryAfterInMs(response);
             if (!Number.isFinite(retryAfterInMs)) {
                 return { skipStrategy: true };
             }
@@ -33392,32 +33396,32 @@ function throttlingRetryStrategy$1() {
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 // intervals are in milliseconds
-const DEFAULT_CLIENT_RETRY_INTERVAL$1 = 1000;
-const DEFAULT_CLIENT_MAX_RETRY_INTERVAL$1 = 1000 * 64;
+const DEFAULT_CLIENT_RETRY_INTERVAL = 1000;
+const DEFAULT_CLIENT_MAX_RETRY_INTERVAL = 1000 * 64;
 /**
  * A retry strategy that retries with an exponentially increasing delay in these two cases:
  * - When there are errors in the underlying transport layer (e.g. DNS lookup failures).
  * - Or otherwise if the outgoing request fails (408, greater or equal than 500, except for 501 and 505).
  */
-function exponentialRetryStrategy$1(options = {}) {
+function exponentialRetryStrategy(options = {}) {
     var _a, _b;
-    const retryInterval = (_a = options.retryDelayInMs) !== null && _a !== void 0 ? _a : DEFAULT_CLIENT_RETRY_INTERVAL$1;
-    const maxRetryInterval = (_b = options.maxRetryDelayInMs) !== null && _b !== void 0 ? _b : DEFAULT_CLIENT_MAX_RETRY_INTERVAL$1;
+    const retryInterval = (_a = options.retryDelayInMs) !== null && _a !== void 0 ? _a : DEFAULT_CLIENT_RETRY_INTERVAL;
+    const maxRetryInterval = (_b = options.maxRetryDelayInMs) !== null && _b !== void 0 ? _b : DEFAULT_CLIENT_MAX_RETRY_INTERVAL;
     return {
         name: "exponentialRetryStrategy",
         retry({ retryCount, response, responseError }) {
-            const matchedSystemError = isSystemError$1(responseError);
+            const matchedSystemError = isSystemError(responseError);
             const ignoreSystemErrors = matchedSystemError && options.ignoreSystemErrors;
-            const isExponential = isExponentialRetryResponse$1(response);
+            const isExponential = isExponentialRetryResponse(response);
             const ignoreExponentialResponse = isExponential && options.ignoreHttpStatusCodes;
-            const unknownResponse = response && (isThrottlingRetryResponse$1(response) || !isExponential);
+            const unknownResponse = response && (isThrottlingRetryResponse(response) || !isExponential);
             if (unknownResponse || ignoreExponentialResponse || ignoreSystemErrors) {
                 return { skipStrategy: true };
             }
             if (responseError && !matchedSystemError && !isExponential) {
                 return { errorToThrow: responseError };
             }
-            return calculateRetryDelay$1(retryCount, {
+            return calculateRetryDelay(retryCount, {
                 retryDelayInMs: retryInterval,
                 maxRetryDelayInMs: maxRetryInterval,
             });
@@ -33429,7 +33433,7 @@ function exponentialRetryStrategy$1(options = {}) {
  * - 408, or
  * - Greater or equal than 500, except for 501 and 505.
  */
-function isExponentialRetryResponse$1(response) {
+function isExponentialRetryResponse(response) {
     return Boolean(response &&
         response.status !== undefined &&
         (response.status >= 500 || response.status === 408) &&
@@ -33439,7 +33443,7 @@ function isExponentialRetryResponse$1(response) {
 /**
  * Determines whether an error from a pipeline response was triggered in the network layer.
  */
-function isSystemError$1(err) {
+function isSystemError(err) {
     if (!err) {
         return false;
     }
@@ -33453,18 +33457,18 @@ function isSystemError$1(err) {
 
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
-const retryPolicyLogger$1 = createClientLogger$1("ts-http-runtime retryPolicy");
+const retryPolicyLogger = createClientLogger$1("ts-http-runtime retryPolicy");
 /**
  * The programmatic identifier of the retryPolicy.
  */
-const retryPolicyName$1 = "retryPolicy";
+const retryPolicyName = "retryPolicy";
 /**
  * retryPolicy is a generic policy to enable retrying requests when certain conditions are met
  */
-function retryPolicy$1(strategies, options = { maxRetries: DEFAULT_RETRY_POLICY_COUNT$1 }) {
-    const logger = options.logger || retryPolicyLogger$1;
+function retryPolicy(strategies, options = { maxRetries: DEFAULT_RETRY_POLICY_COUNT }) {
+    const logger = options.logger || retryPolicyLogger;
     return {
-        name: retryPolicyName$1,
+        name: retryPolicyName,
         async sendRequest(request, next) {
             var _a, _b;
             let response;
@@ -33495,7 +33499,7 @@ function retryPolicy$1(strategies, options = { maxRetries: DEFAULT_RETRY_POLICY_
                     const abortError = new AbortError$1();
                     throw abortError;
                 }
-                if (retryCount >= ((_b = options.maxRetries) !== null && _b !== void 0 ? _b : DEFAULT_RETRY_POLICY_COUNT$1)) {
+                if (retryCount >= ((_b = options.maxRetries) !== null && _b !== void 0 ? _b : DEFAULT_RETRY_POLICY_COUNT)) {
                     logger.info(`Retry ${retryCount}: Maximum retries reached. Returning the last received response, or throwing the last received error.`);
                     if (responseError) {
                         throw responseError;
@@ -33557,7 +33561,7 @@ function retryPolicy$1(strategies, options = { maxRetries: DEFAULT_RETRY_POLICY_
 /**
  * Name of the {@link defaultRetryPolicy}
  */
-const defaultRetryPolicyName$1 = "defaultRetryPolicy";
+const defaultRetryPolicyName = "defaultRetryPolicy";
 /**
  * A policy that retries according to three strategies:
  * - When the server sends a 429 response with a Retry-After header.
@@ -33567,24 +33571,24 @@ const defaultRetryPolicyName$1 = "defaultRetryPolicy";
 function defaultRetryPolicy$1(options = {}) {
     var _a;
     return {
-        name: defaultRetryPolicyName$1,
-        sendRequest: retryPolicy$1([throttlingRetryStrategy$1(), exponentialRetryStrategy$1(options)], {
-            maxRetries: (_a = options.maxRetries) !== null && _a !== void 0 ? _a : DEFAULT_RETRY_POLICY_COUNT$1,
+        name: defaultRetryPolicyName,
+        sendRequest: retryPolicy([throttlingRetryStrategy(), exponentialRetryStrategy(options)], {
+            maxRetries: (_a = options.maxRetries) !== null && _a !== void 0 ? _a : DEFAULT_RETRY_POLICY_COUNT,
         }).sendRequest,
     };
 }
 
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
-var _a$2, _b$1, _c$1, _d$1;
+var _a, _b, _c, _d;
 /**
  * A constant that indicates whether the environment the code is running is a Web Worker.
  */
 typeof self === "object" &&
     typeof (self === null || self === void 0 ? void 0 : self.importScripts) === "function" &&
-    (((_a$2 = self.constructor) === null || _a$2 === void 0 ? void 0 : _a$2.name) === "DedicatedWorkerGlobalScope" ||
-        ((_b$1 = self.constructor) === null || _b$1 === void 0 ? void 0 : _b$1.name) === "ServiceWorkerGlobalScope" ||
-        ((_c$1 = self.constructor) === null || _c$1 === void 0 ? void 0 : _c$1.name) === "SharedWorkerGlobalScope");
+    (((_a = self.constructor) === null || _a === void 0 ? void 0 : _a.name) === "DedicatedWorkerGlobalScope" ||
+        ((_b = self.constructor) === null || _b === void 0 ? void 0 : _b.name) === "ServiceWorkerGlobalScope" ||
+        ((_c = self.constructor) === null || _c === void 0 ? void 0 : _c.name) === "SharedWorkerGlobalScope");
 /**
  * A constant that indicates whether the environment the code is running is Deno.
  */
@@ -33600,15 +33604,15 @@ typeof Bun !== "undefined" && typeof Bun.version !== "undefined";
  */
 const isNodeLike$1 = typeof globalThis.process !== "undefined" &&
     Boolean(globalThis.process.version) &&
-    Boolean((_d$1 = globalThis.process.versions) === null || _d$1 === void 0 ? void 0 : _d$1.node);
+    Boolean((_d = globalThis.process.versions) === null || _d === void 0 ? void 0 : _d.node);
 
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 /**
  * The programmatic identifier of the formDataPolicy.
  */
-const formDataPolicyName$1 = "formDataPolicy";
-function formDataToFormDataMap$1(formData) {
+const formDataPolicyName = "formDataPolicy";
+function formDataToFormDataMap(formData) {
     var _a;
     const formDataMap = {};
     for (const [key, value] of formData.entries()) {
@@ -33622,19 +33626,19 @@ function formDataToFormDataMap$1(formData) {
  */
 function formDataPolicy$1() {
     return {
-        name: formDataPolicyName$1,
+        name: formDataPolicyName,
         async sendRequest(request, next) {
             if (isNodeLike$1 && typeof FormData !== "undefined" && request.body instanceof FormData) {
-                request.formData = formDataToFormDataMap$1(request.body);
+                request.formData = formDataToFormDataMap(request.body);
                 request.body = undefined;
             }
             if (request.formData) {
                 const contentType = request.headers.get("Content-Type");
                 if (contentType && contentType.indexOf("application/x-www-form-urlencoded") !== -1) {
-                    request.body = wwwFormUrlEncode$1(request.formData);
+                    request.body = wwwFormUrlEncode(request.formData);
                 }
                 else {
-                    await prepareFormData$1(request.formData, request);
+                    await prepareFormData(request.formData, request);
                 }
                 request.formData = undefined;
             }
@@ -33642,7 +33646,7 @@ function formDataPolicy$1() {
         },
     };
 }
-function wwwFormUrlEncode$1(formData) {
+function wwwFormUrlEncode(formData) {
     const urlSearchParams = new URLSearchParams();
     for (const [key, value] of Object.entries(formData)) {
         if (Array.isArray(value)) {
@@ -33656,7 +33660,7 @@ function wwwFormUrlEncode$1(formData) {
     }
     return urlSearchParams.toString();
 }
-async function prepareFormData$1(formData, request) {
+async function prepareFormData(formData, request) {
     // validate content type (multipart/form-data)
     const contentType = request.headers.get("Content-Type");
     if (contentType && !contentType.startsWith("multipart/form-data")) {
@@ -33670,10 +33674,10 @@ async function prepareFormData$1(formData, request) {
         for (const value of Array.isArray(values) ? values : [values]) {
             if (typeof value === "string") {
                 parts.push({
-                    headers: createHttpHeaders$1({
+                    headers: createHttpHeaders({
                         "Content-Disposition": `form-data; name="${fieldName}"`,
                     }),
-                    body: stringToUint8Array$1(value, "utf-8"),
+                    body: stringToUint8Array(value, "utf-8"),
                 });
             }
             else if (value === undefined || value === null || typeof value !== "object") {
@@ -33682,7 +33686,7 @@ async function prepareFormData$1(formData, request) {
             else {
                 // using || instead of ?? here since if value.name is empty we should create a file name
                 const fileName = value.name || "blob";
-                const headers = createHttpHeaders$1();
+                const headers = createHttpHeaders();
                 headers.set("Content-Disposition", `form-data; name="${fieldName}"; filename="${fileName}"`);
                 // again, || is used since an empty value.type means the content type is unset
                 headers.set("Content-Type", value.type || "application/octet-stream");
@@ -35102,9 +35106,7 @@ function requireDist$2 () {
 		    // In order to properly update the socket pool, we need to call `getName()` on
 		    // the core `https.Agent` if it is a secureEndpoint.
 		    getName(options) {
-		        const secureEndpoint = typeof options.secureEndpoint === 'boolean'
-		            ? options.secureEndpoint
-		            : this.isSecureEndpoint(options);
+		        const secureEndpoint = this.isSecureEndpoint(options);
 		        if (secureEndpoint) {
 		            // @ts-expect-error `getName()` isn't defined in `@types/node`
 		            return https_1.Agent.prototype.getName.call(this, options);
@@ -35633,23 +35635,23 @@ var distExports = requireDist();
 
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
-const HTTPS_PROXY$1 = "HTTPS_PROXY";
-const HTTP_PROXY$1 = "HTTP_PROXY";
-const ALL_PROXY$1 = "ALL_PROXY";
-const NO_PROXY$1 = "NO_PROXY";
+const HTTPS_PROXY = "HTTPS_PROXY";
+const HTTP_PROXY = "HTTP_PROXY";
+const ALL_PROXY = "ALL_PROXY";
+const NO_PROXY = "NO_PROXY";
 /**
  * The programmatic identifier of the proxyPolicy.
  */
-const proxyPolicyName$1 = "proxyPolicy";
+const proxyPolicyName = "proxyPolicy";
 /**
  * Stores the patterns specified in NO_PROXY environment variable.
  * @internal
  */
-const globalNoProxyList$1 = [];
-let noProxyListLoaded$1 = false;
+const globalNoProxyList = [];
+let noProxyListLoaded = false;
 /** A cache of whether a host should bypass the proxy. */
-const globalBypassedMap$1 = new Map();
-function getEnvironmentValue$1(name) {
+const globalBypassedMap = new Map();
+function getEnvironmentValue(name) {
     if (process.env[name]) {
         return process.env[name];
     }
@@ -35658,13 +35660,13 @@ function getEnvironmentValue$1(name) {
     }
     return undefined;
 }
-function loadEnvironmentProxyValue$1() {
+function loadEnvironmentProxyValue() {
     if (!process) {
         return undefined;
     }
-    const httpsProxy = getEnvironmentValue$1(HTTPS_PROXY$1);
-    const allProxy = getEnvironmentValue$1(ALL_PROXY$1);
-    const httpProxy = getEnvironmentValue$1(HTTP_PROXY$1);
+    const httpsProxy = getEnvironmentValue(HTTPS_PROXY);
+    const allProxy = getEnvironmentValue(ALL_PROXY);
+    const httpProxy = getEnvironmentValue(HTTP_PROXY);
     return httpsProxy || allProxy || httpProxy;
 }
 /**
@@ -35672,7 +35674,7 @@ function loadEnvironmentProxyValue$1() {
  * If there's a match, any request sent to the same host shouldn't have the proxy settings set.
  * This implementation is a port of https://github.com/Azure/azure-sdk-for-net/blob/8cca811371159e527159c7eb65602477898683e2/sdk/core/Azure.Core/src/Pipeline/Internal/HttpEnvironmentProxy.cs#L210
  */
-function isBypassed$1(uri, noProxyList, bypassedMap) {
+function isBypassed(uri, noProxyList, bypassedMap) {
     if (noProxyList.length === 0) {
         return false;
     }
@@ -35703,9 +35705,9 @@ function isBypassed$1(uri, noProxyList, bypassedMap) {
     bypassedMap === null || bypassedMap === void 0 ? void 0 : bypassedMap.set(host, isBypassedFlag);
     return isBypassedFlag;
 }
-function loadNoProxy$1() {
-    const noProxy = getEnvironmentValue$1(NO_PROXY$1);
-    noProxyListLoaded$1 = true;
+function loadNoProxy() {
+    const noProxy = getEnvironmentValue(NO_PROXY);
+    noProxyListLoaded = true;
     if (noProxy) {
         return noProxy
             .split(",")
@@ -35718,11 +35720,11 @@ function loadNoProxy$1() {
  * This method attempts to parse a proxy URL from the environment
  * variables `HTTPS_PROXY` or `HTTP_PROXY`.
  */
-function getDefaultProxySettingsInternal$1() {
-    const envProxy = loadEnvironmentProxyValue$1();
+function getDefaultProxySettingsInternal() {
+    const envProxy = loadEnvironmentProxyValue();
     return envProxy ? new URL(envProxy) : undefined;
 }
-function getUrlFromProxySettings$1(settings) {
+function getUrlFromProxySettings(settings) {
     let parsedProxyUrl;
     try {
         parsedProxyUrl = new URL(settings.host);
@@ -35739,7 +35741,7 @@ function getUrlFromProxySettings$1(settings) {
     }
     return parsedProxyUrl;
 }
-function setProxyAgentOnRequest$1(request, cachedAgents, proxyUrl) {
+function setProxyAgentOnRequest(request, cachedAgents, proxyUrl) {
     // Custom Agent should take precedence so if one is present
     // we should skip to avoid overwriting it.
     if (request.agent) {
@@ -35772,24 +35774,24 @@ function setProxyAgentOnRequest$1(request, cachedAgents, proxyUrl) {
  * @param options - additional settings, for example, custom NO_PROXY patterns
  */
 function proxyPolicy$1(proxySettings, options) {
-    if (!noProxyListLoaded$1) {
-        globalNoProxyList$1.push(...loadNoProxy$1());
+    if (!noProxyListLoaded) {
+        globalNoProxyList.push(...loadNoProxy());
     }
     const defaultProxy = proxySettings
-        ? getUrlFromProxySettings$1(proxySettings)
-        : getDefaultProxySettingsInternal$1();
+        ? getUrlFromProxySettings(proxySettings)
+        : getDefaultProxySettingsInternal();
     const cachedAgents = {};
     return {
-        name: proxyPolicyName$1,
+        name: proxyPolicyName,
         async sendRequest(request, next) {
             var _a;
             if (!request.proxySettings &&
                 defaultProxy &&
-                !isBypassed$1(request.url, (_a = void 0 ) !== null && _a !== void 0 ? _a : globalNoProxyList$1, globalBypassedMap$1)) {
-                setProxyAgentOnRequest$1(request, cachedAgents, defaultProxy);
+                !isBypassed(request.url, (_a = void 0 ) !== null && _a !== void 0 ? _a : globalNoProxyList, globalBypassedMap)) {
+                setProxyAgentOnRequest(request, cachedAgents, defaultProxy);
             }
             else if (request.proxySettings) {
-                setProxyAgentOnRequest$1(request, cachedAgents, getUrlFromProxySettings$1(request.proxySettings));
+                setProxyAgentOnRequest(request, cachedAgents, getUrlFromProxySettings(request.proxySettings));
             }
             return next(request);
         },
@@ -35801,13 +35803,13 @@ function proxyPolicy$1(proxySettings, options) {
 /**
  * Name of the Agent Policy
  */
-const agentPolicyName$1 = "agentPolicy";
+const agentPolicyName = "agentPolicy";
 /**
  * Gets a pipeline policy that sets http.agent
  */
 function agentPolicy$1(agent) {
     return {
-        name: agentPolicyName$1,
+        name: agentPolicyName,
         sendRequest: async (req, next) => {
             // Users may define an agent on the request, honor it over the client level one
             if (!req.agent) {
@@ -35823,13 +35825,13 @@ function agentPolicy$1(agent) {
 /**
  * Name of the TLS Policy
  */
-const tlsPolicyName$1 = "tlsPolicy";
+const tlsPolicyName = "tlsPolicy";
 /**
  * Gets a pipeline policy that adds the client certificate to the HttpClient agent for authentication.
  */
 function tlsPolicy$1(tlsSettings) {
     return {
-        name: tlsPolicyName$1,
+        name: tlsPolicyName,
         sendRequest: async (req, next) => {
             // Users may define a request tlsSettings, honor those over the client level one
             if (!req.tlsSettings) {
@@ -35860,13 +35862,13 @@ function isBinaryBody(body) {
 function isReadableStream(x) {
     return isNodeReadableStream(x) || isWebReadableStream(x);
 }
-function isBlob$1(x) {
+function isBlob(x) {
     return typeof x.stream === "function";
 }
 
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
-function streamAsyncIterator$1() {
+function streamAsyncIterator() {
     return __asyncGenerator(this, arguments, function* streamAsyncIterator_1() {
         const reader = this.getReader();
         try {
@@ -35883,32 +35885,32 @@ function streamAsyncIterator$1() {
         }
     });
 }
-function makeAsyncIterable$1(webStream) {
+function makeAsyncIterable(webStream) {
     if (!webStream[Symbol.asyncIterator]) {
-        webStream[Symbol.asyncIterator] = streamAsyncIterator$1.bind(webStream);
+        webStream[Symbol.asyncIterator] = streamAsyncIterator.bind(webStream);
     }
     if (!webStream.values) {
-        webStream.values = streamAsyncIterator$1.bind(webStream);
+        webStream.values = streamAsyncIterator.bind(webStream);
     }
 }
-function ensureNodeStream$1(stream) {
+function ensureNodeStream(stream) {
     if (stream instanceof ReadableStream) {
-        makeAsyncIterable$1(stream);
+        makeAsyncIterable(stream);
         return Readable.fromWeb(stream);
     }
     else {
         return stream;
     }
 }
-function toStream$1(source) {
+function toStream(source) {
     if (source instanceof Uint8Array) {
         return Readable.from(Buffer.from(source));
     }
-    else if (isBlob$1(source)) {
-        return ensureNodeStream$1(source.stream());
+    else if (isBlob(source)) {
+        return ensureNodeStream(source.stream());
     }
     else {
-        return ensureNodeStream$1(source);
+        return ensureNodeStream(source);
     }
 }
 /**
@@ -35920,9 +35922,9 @@ function toStream$1(source) {
  *
  * @internal
  */
-async function concat$1(sources) {
+async function concat(sources) {
     return function () {
-        const streams = sources.map((x) => (typeof x === "function" ? x() : x)).map(toStream$1);
+        const streams = sources.map((x) => (typeof x === "function" ? x() : x)).map(toStream);
         return Readable.from((function () {
             return __asyncGenerator(this, arguments, function* () {
                 var _a, e_1, _b, _c;
@@ -35950,21 +35952,21 @@ async function concat$1(sources) {
 
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
-function generateBoundary$1() {
-    return `----AzSDKFormBoundary${randomUUID$1()}`;
+function generateBoundary() {
+    return `----AzSDKFormBoundary${randomUUID()}`;
 }
-function encodeHeaders$1(headers) {
+function encodeHeaders(headers) {
     let result = "";
     for (const [key, value] of headers) {
         result += `${key}: ${value}\r\n`;
     }
     return result;
 }
-function getLength$1(source) {
+function getLength(source) {
     if (source instanceof Uint8Array) {
         return source.byteLength;
     }
-    else if (isBlob$1(source)) {
+    else if (isBlob(source)) {
         // if was created using createFile then -1 means we have an unknown size
         return source.size === -1 ? undefined : source.size;
     }
@@ -35972,10 +35974,10 @@ function getLength$1(source) {
         return undefined;
     }
 }
-function getTotalLength$1(sources) {
+function getTotalLength(sources) {
     let total = 0;
     for (const source of sources) {
-        const partLength = getLength$1(source);
+        const partLength = getLength(source);
         if (partLength === undefined) {
             return undefined;
         }
@@ -35985,35 +35987,35 @@ function getTotalLength$1(sources) {
     }
     return total;
 }
-async function buildRequestBody$1(request, parts, boundary) {
+async function buildRequestBody(request, parts, boundary) {
     const sources = [
-        stringToUint8Array$1(`--${boundary}`, "utf-8"),
+        stringToUint8Array(`--${boundary}`, "utf-8"),
         ...parts.flatMap((part) => [
-            stringToUint8Array$1("\r\n", "utf-8"),
-            stringToUint8Array$1(encodeHeaders$1(part.headers), "utf-8"),
-            stringToUint8Array$1("\r\n", "utf-8"),
+            stringToUint8Array("\r\n", "utf-8"),
+            stringToUint8Array(encodeHeaders(part.headers), "utf-8"),
+            stringToUint8Array("\r\n", "utf-8"),
             part.body,
-            stringToUint8Array$1(`\r\n--${boundary}`, "utf-8"),
+            stringToUint8Array(`\r\n--${boundary}`, "utf-8"),
         ]),
-        stringToUint8Array$1("--\r\n\r\n", "utf-8"),
+        stringToUint8Array("--\r\n\r\n", "utf-8"),
     ];
-    const contentLength = getTotalLength$1(sources);
+    const contentLength = getTotalLength(sources);
     if (contentLength) {
         request.headers.set("Content-Length", contentLength);
     }
-    request.body = await concat$1(sources);
+    request.body = await concat(sources);
 }
 /**
  * Name of multipart policy
  */
 const multipartPolicyName$1 = "multipartPolicy";
-const maxBoundaryLength$1 = 70;
-const validBoundaryCharacters$1 = new Set(`abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'()+,-./:=?`);
-function assertValidBoundary$1(boundary) {
-    if (boundary.length > maxBoundaryLength$1) {
+const maxBoundaryLength = 70;
+const validBoundaryCharacters = new Set(`abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'()+,-./:=?`);
+function assertValidBoundary(boundary) {
+    if (boundary.length > maxBoundaryLength) {
         throw new Error(`Multipart boundary "${boundary}" exceeds maximum length of 70 characters`);
     }
-    if (Array.from(boundary).some((x) => !validBoundaryCharacters$1.has(x))) {
+    if (Array.from(boundary).some((x) => !validBoundaryCharacters.has(x))) {
         throw new Error(`Multipart boundary "${boundary}" contains invalid characters`);
     }
 }
@@ -36043,13 +36045,13 @@ function multipartPolicy$1() {
             }
             boundary !== null && boundary !== void 0 ? boundary : (boundary = parsedBoundary);
             if (boundary) {
-                assertValidBoundary$1(boundary);
+                assertValidBoundary(boundary);
             }
             else {
-                boundary = generateBoundary$1();
+                boundary = generateBoundary();
             }
             request.headers.set("Content-Type", `${contentType}; boundary=${boundary}`);
-            await buildRequestBody$1(request, request.multipartBody.parts, boundary);
+            await buildRequestBody(request, request.multipartBody.parts, boundary);
             request.multipartBody = undefined;
             return next(request);
         },
@@ -36241,7 +36243,7 @@ function basicAuthenticationPolicy(options) {
                 return next(request);
             }
             const { username, password } = options.credential;
-            const headerValue = uint8ArrayToString(stringToUint8Array$1(`${username}:${password}`, "utf-8"), "base64");
+            const headerValue = uint8ArrayToString(stringToUint8Array(`${username}:${password}`, "utf-8"), "base64");
             request.headers.set("Authorization", `Basic ${headerValue}`);
             return next(request);
         },
@@ -36430,19 +36432,19 @@ function normalizeBody(body, contentType) {
         return body;
     }
     if (typeof body === "string" || typeof body === "number" || typeof body === "boolean") {
-        return stringToUint8Array$1(String(body), "utf-8");
+        return stringToUint8Array(String(body), "utf-8");
     }
     // stringify objects for JSON-ish content types e.g. application/json, application/merge-patch+json, application/vnd.oci.manifest.v1+json, application.json; charset=UTF-8
     if (contentType && /application\/(.+\+)?json(;.+)?/i.test(String(contentType))) {
-        return stringToUint8Array$1(JSON.stringify(body), "utf-8");
+        return stringToUint8Array(JSON.stringify(body), "utf-8");
     }
-    throw new RestError$1(`Unsupported body/content-type combination: ${body}, ${contentType}`);
+    throw new RestError(`Unsupported body/content-type combination: ${body}, ${contentType}`);
 }
 function buildBodyPart(descriptor) {
     var _a;
     const contentType = getPartContentType(descriptor);
     const contentDisposition = getContentDisposition(descriptor);
-    const headers = createHttpHeaders$1((_a = descriptor.headers) !== null && _a !== void 0 ? _a : {});
+    const headers = createHttpHeaders((_a = descriptor.headers) !== null && _a !== void 0 ? _a : {});
     if (contentType) {
         headers.set("content-type", contentType);
     }
@@ -36537,7 +36539,7 @@ function buildPipelineRequest(method, url, options = {}) {
     const requestContentType = getRequestContentType(options);
     const { body, multipartBody } = getRequestBody$1(options.body, requestContentType);
     const hasContent = body !== undefined || multipartBody !== undefined;
-    const headers = createHttpHeaders$1(Object.assign(Object.assign(Object.assign({}, (options.headers ? options.headers : {})), { accept: (_c = (_a = options.accept) !== null && _a !== void 0 ? _a : (_b = options.headers) === null || _b === void 0 ? void 0 : _b.accept) !== null && _c !== void 0 ? _c : "application/json" }), (hasContent &&
+    const headers = createHttpHeaders(Object.assign(Object.assign(Object.assign({}, (options.headers ? options.headers : {})), { accept: (_c = (_a = options.accept) !== null && _a !== void 0 ? _a : (_b = options.headers) === null || _b === void 0 ? void 0 : _b.accept) !== null && _c !== void 0 ? _c : "application/json" }), (hasContent &&
         requestContentType && {
         "content-type": requestContentType,
     })));
@@ -36622,8 +36624,8 @@ function getResponseBody(response) {
 function createParseError(response, err) {
     var _a;
     const msg = `Error "${err}" occurred while parsing the response body - ${response.bodyAsText}.`;
-    const errCode = (_a = err.code) !== null && _a !== void 0 ? _a : RestError$1.PARSE_ERROR;
-    return new RestError$1(msg, {
+    const errCode = (_a = err.code) !== null && _a !== void 0 ? _a : RestError.PARSE_ERROR;
+    return new RestError(msg, {
         code: errCode,
         statusCode: response.status,
         request: response.request,
@@ -36869,452 +36871,27 @@ function buildOperation(method, url, pipeline, options, allowInsecureConnection,
 
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
-const ValidPhaseNames = new Set(["Deserialize", "Serialize", "Retry", "Sign"]);
-/**
- * A private implementation of Pipeline.
- * Do not export this class from the package.
- * @internal
- */
-class HttpPipeline {
-    constructor(policies) {
-        var _a;
-        this._policies = [];
-        this._policies = (_a = policies === null || policies === void 0 ? void 0 : policies.slice(0)) !== null && _a !== void 0 ? _a : [];
-        this._orderedPolicies = undefined;
-    }
-    addPolicy(policy, options = {}) {
-        if (options.phase && options.afterPhase) {
-            throw new Error("Policies inside a phase cannot specify afterPhase.");
-        }
-        if (options.phase && !ValidPhaseNames.has(options.phase)) {
-            throw new Error(`Invalid phase name: ${options.phase}`);
-        }
-        if (options.afterPhase && !ValidPhaseNames.has(options.afterPhase)) {
-            throw new Error(`Invalid afterPhase name: ${options.afterPhase}`);
-        }
-        this._policies.push({
-            policy,
-            options,
-        });
-        this._orderedPolicies = undefined;
-    }
-    removePolicy(options) {
-        const removedPolicies = [];
-        this._policies = this._policies.filter((policyDescriptor) => {
-            if ((options.name && policyDescriptor.policy.name === options.name) ||
-                (options.phase && policyDescriptor.options.phase === options.phase)) {
-                removedPolicies.push(policyDescriptor.policy);
-                return false;
-            }
-            else {
-                return true;
-            }
-        });
-        this._orderedPolicies = undefined;
-        return removedPolicies;
-    }
-    sendRequest(httpClient, request) {
-        const policies = this.getOrderedPolicies();
-        const pipeline = policies.reduceRight((next, policy) => {
-            return (req) => {
-                return policy.sendRequest(req, next);
-            };
-        }, (req) => httpClient.sendRequest(req));
-        return pipeline(request);
-    }
-    getOrderedPolicies() {
-        if (!this._orderedPolicies) {
-            this._orderedPolicies = this.orderPolicies();
-        }
-        return this._orderedPolicies;
-    }
-    clone() {
-        return new HttpPipeline(this._policies);
-    }
-    static create() {
-        return new HttpPipeline();
-    }
-    orderPolicies() {
-        /**
-         * The goal of this method is to reliably order pipeline policies
-         * based on their declared requirements when they were added.
-         *
-         * Order is first determined by phase:
-         *
-         * 1. Serialize Phase
-         * 2. Policies not in a phase
-         * 3. Deserialize Phase
-         * 4. Retry Phase
-         * 5. Sign Phase
-         *
-         * Within each phase, policies are executed in the order
-         * they were added unless they were specified to execute
-         * before/after other policies or after a particular phase.
-         *
-         * To determine the final order, we will walk the policy list
-         * in phase order multiple times until all dependencies are
-         * satisfied.
-         *
-         * `afterPolicies` are the set of policies that must be
-         * executed before a given policy. This requirement is
-         * considered satisfied when each of the listed policies
-         * have been scheduled.
-         *
-         * `beforePolicies` are the set of policies that must be
-         * executed after a given policy. Since this dependency
-         * can be expressed by converting it into a equivalent
-         * `afterPolicies` declarations, they are normalized
-         * into that form for simplicity.
-         *
-         * An `afterPhase` dependency is considered satisfied when all
-         * policies in that phase have scheduled.
-         *
-         */
-        const result = [];
-        // Track all policies we know about.
-        const policyMap = new Map();
-        function createPhase(name) {
-            return {
-                name,
-                policies: new Set(),
-                hasRun: false,
-                hasAfterPolicies: false,
-            };
-        }
-        // Track policies for each phase.
-        const serializePhase = createPhase("Serialize");
-        const noPhase = createPhase("None");
-        const deserializePhase = createPhase("Deserialize");
-        const retryPhase = createPhase("Retry");
-        const signPhase = createPhase("Sign");
-        // a list of phases in order
-        const orderedPhases = [serializePhase, noPhase, deserializePhase, retryPhase, signPhase];
-        // Small helper function to map phase name to each Phase
-        function getPhase(phase) {
-            if (phase === "Retry") {
-                return retryPhase;
-            }
-            else if (phase === "Serialize") {
-                return serializePhase;
-            }
-            else if (phase === "Deserialize") {
-                return deserializePhase;
-            }
-            else if (phase === "Sign") {
-                return signPhase;
-            }
-            else {
-                return noPhase;
-            }
-        }
-        // First walk each policy and create a node to track metadata.
-        for (const descriptor of this._policies) {
-            const policy = descriptor.policy;
-            const options = descriptor.options;
-            const policyName = policy.name;
-            if (policyMap.has(policyName)) {
-                throw new Error("Duplicate policy names not allowed in pipeline");
-            }
-            const node = {
-                policy,
-                dependsOn: new Set(),
-                dependants: new Set(),
-            };
-            if (options.afterPhase) {
-                node.afterPhase = getPhase(options.afterPhase);
-                node.afterPhase.hasAfterPolicies = true;
-            }
-            policyMap.set(policyName, node);
-            const phase = getPhase(options.phase);
-            phase.policies.add(node);
-        }
-        // Now that each policy has a node, connect dependency references.
-        for (const descriptor of this._policies) {
-            const { policy, options } = descriptor;
-            const policyName = policy.name;
-            const node = policyMap.get(policyName);
-            if (!node) {
-                throw new Error(`Missing node for policy ${policyName}`);
-            }
-            if (options.afterPolicies) {
-                for (const afterPolicyName of options.afterPolicies) {
-                    const afterNode = policyMap.get(afterPolicyName);
-                    if (afterNode) {
-                        // Linking in both directions helps later
-                        // when we want to notify dependants.
-                        node.dependsOn.add(afterNode);
-                        afterNode.dependants.add(node);
-                    }
-                }
-            }
-            if (options.beforePolicies) {
-                for (const beforePolicyName of options.beforePolicies) {
-                    const beforeNode = policyMap.get(beforePolicyName);
-                    if (beforeNode) {
-                        // To execute before another node, make it
-                        // depend on the current node.
-                        beforeNode.dependsOn.add(node);
-                        node.dependants.add(beforeNode);
-                    }
-                }
-            }
-        }
-        function walkPhase(phase) {
-            phase.hasRun = true;
-            // Sets iterate in insertion order
-            for (const node of phase.policies) {
-                if (node.afterPhase && (!node.afterPhase.hasRun || node.afterPhase.policies.size)) {
-                    // If this node is waiting on a phase to complete,
-                    // we need to skip it for now.
-                    // Even if the phase is empty, we should wait for it
-                    // to be walked to avoid re-ordering policies.
-                    continue;
-                }
-                if (node.dependsOn.size === 0) {
-                    // If there's nothing else we're waiting for, we can
-                    // add this policy to the result list.
-                    result.push(node.policy);
-                    // Notify anything that depends on this policy that
-                    // the policy has been scheduled.
-                    for (const dependant of node.dependants) {
-                        dependant.dependsOn.delete(node);
-                    }
-                    policyMap.delete(node.policy.name);
-                    phase.policies.delete(node);
-                }
-            }
-        }
-        function walkPhases() {
-            for (const phase of orderedPhases) {
-                walkPhase(phase);
-                // if the phase isn't complete
-                if (phase.policies.size > 0 && phase !== noPhase) {
-                    if (!noPhase.hasRun) {
-                        // Try running noPhase to see if that unblocks this phase next tick.
-                        // This can happen if a phase that happens before noPhase
-                        // is waiting on a noPhase policy to complete.
-                        walkPhase(noPhase);
-                    }
-                    // Don't proceed to the next phase until this phase finishes.
-                    return;
-                }
-                if (phase.hasAfterPolicies) {
-                    // Run any policies unblocked by this phase
-                    walkPhase(noPhase);
-                }
-            }
-        }
-        // Iterate until we've put every node in the result list.
-        let iteration = 0;
-        while (policyMap.size > 0) {
-            iteration++;
-            const initialResultLength = result.length;
-            // Keep walking each phase in order until we can order every node.
-            walkPhases();
-            // The result list *should* get at least one larger each time
-            // after the first full pass.
-            // Otherwise, we're going to loop forever.
-            if (result.length <= initialResultLength && iteration > 1) {
-                throw new Error("Cannot satisfy policy dependencies due to requirements cycle.");
-            }
-        }
-        return result;
-    }
-}
 /**
  * Creates a totally empty pipeline.
  * Useful for testing or creating a custom one.
  */
 function createEmptyPipeline() {
-    return HttpPipeline.create();
+    return createEmptyPipeline$1();
 }
 
 // Copyright (c) Microsoft Corporation.
-// Licensed under the MIT license.
-function log(message, ...args) {
-    process$1.stderr.write(`${require$$1$2.format(message, ...args)}${EOL}`);
-}
-
-// Copyright (c) Microsoft Corporation.
-// Licensed under the MIT license.
-const debugEnvVariable = (typeof process !== "undefined" && process.env && process.env.DEBUG) || undefined;
-let enabledString;
-let enabledNamespaces = [];
-let skippedNamespaces = [];
-const debuggers = [];
-if (debugEnvVariable) {
-    enable(debugEnvVariable);
-}
-const debugObj = Object.assign((namespace) => {
-    return createDebugger(namespace);
-}, {
-    enable,
-    enabled,
-    disable,
-    log,
+// Licensed under the MIT License.
+const context = createLoggerContext({
+    logLevelEnvVarName: "AZURE_LOG_LEVEL",
+    namespace: "azure",
 });
-function enable(namespaces) {
-    enabledString = namespaces;
-    enabledNamespaces = [];
-    skippedNamespaces = [];
-    const wildcard = /\*/g;
-    const namespaceList = namespaces.split(",").map((ns) => ns.trim().replace(wildcard, ".*?"));
-    for (const ns of namespaceList) {
-        if (ns.startsWith("-")) {
-            skippedNamespaces.push(new RegExp(`^${ns.substr(1)}$`));
-        }
-        else {
-            enabledNamespaces.push(new RegExp(`^${ns}$`));
-        }
-    }
-    for (const instance of debuggers) {
-        instance.enabled = enabled(instance.namespace);
-    }
-}
-function enabled(namespace) {
-    if (namespace.endsWith("*")) {
-        return true;
-    }
-    for (const skipped of skippedNamespaces) {
-        if (skipped.test(namespace)) {
-            return false;
-        }
-    }
-    for (const enabledNamespace of enabledNamespaces) {
-        if (enabledNamespace.test(namespace)) {
-            return true;
-        }
-    }
-    return false;
-}
-function disable() {
-    const result = enabledString || "";
-    enable("");
-    return result;
-}
-function createDebugger(namespace) {
-    const newDebugger = Object.assign(debug, {
-        enabled: enabled(namespace),
-        destroy,
-        log: debugObj.log,
-        namespace,
-        extend,
-    });
-    function debug(...args) {
-        if (!newDebugger.enabled) {
-            return;
-        }
-        if (args.length > 0) {
-            args[0] = `${namespace} ${args[0]}`;
-        }
-        newDebugger.log(...args);
-    }
-    debuggers.push(newDebugger);
-    return newDebugger;
-}
-function destroy() {
-    const index = debuggers.indexOf(this);
-    if (index >= 0) {
-        debuggers.splice(index, 1);
-        return true;
-    }
-    return false;
-}
-function extend(namespace) {
-    const newDebugger = createDebugger(`${this.namespace}:${namespace}`);
-    newDebugger.log = this.log;
-    return newDebugger;
-}
-
-// Copyright (c) Microsoft Corporation.
-// Licensed under the MIT license.
-const registeredLoggers = new Set();
-const logLevelFromEnv = (typeof process !== "undefined" && process.env && process.env.AZURE_LOG_LEVEL) || undefined;
-let azureLogLevel;
-/**
- * The AzureLogger provides a mechanism for overriding where logs are output to.
- * By default, logs are sent to stderr.
- * Override the `log` method to redirect logs to another location.
- */
-const AzureLogger = debugObj("azure");
-AzureLogger.log = (...args) => {
-    debugObj.log(...args);
-};
-const AZURE_LOG_LEVELS = ["verbose", "info", "warning", "error"];
-if (logLevelFromEnv) {
-    // avoid calling setLogLevel because we don't want a mis-set environment variable to crash
-    if (isAzureLogLevel(logLevelFromEnv)) {
-        setLogLevel(logLevelFromEnv);
-    }
-    else {
-        console.error(`AZURE_LOG_LEVEL set to unknown log level '${logLevelFromEnv}'; logging is not enabled. Acceptable values: ${AZURE_LOG_LEVELS.join(", ")}.`);
-    }
-}
-/**
- * Immediately enables logging at the specified log level. If no level is specified, logging is disabled.
- * @param level - The log level to enable for logging.
- * Options from most verbose to least verbose are:
- * - verbose
- * - info
- * - warning
- * - error
- */
-function setLogLevel(level) {
-    if (level && !isAzureLogLevel(level)) {
-        throw new Error(`Unknown log level '${level}'. Acceptable values: ${AZURE_LOG_LEVELS.join(",")}`);
-    }
-    azureLogLevel = level;
-    const enabledNamespaces = [];
-    for (const logger of registeredLoggers) {
-        if (shouldEnable(logger)) {
-            enabledNamespaces.push(logger.namespace);
-        }
-    }
-    debugObj.enable(enabledNamespaces.join(","));
-}
-const levelMap = {
-    verbose: 400,
-    info: 300,
-    warning: 200,
-    error: 100,
-};
 /**
  * Creates a logger for use by the Azure SDKs that inherits from `AzureLogger`.
  * @param namespace - The name of the SDK package.
  * @hidden
  */
 function createClientLogger(namespace) {
-    const clientRootLogger = AzureLogger.extend(namespace);
-    patchLogMethod(AzureLogger, clientRootLogger);
-    return {
-        error: createLogger(clientRootLogger, "error"),
-        warning: createLogger(clientRootLogger, "warning"),
-        info: createLogger(clientRootLogger, "info"),
-        verbose: createLogger(clientRootLogger, "verbose"),
-    };
-}
-function patchLogMethod(parent, child) {
-    child.log = (...args) => {
-        parent.log(...args);
-    };
-}
-function createLogger(parent, level) {
-    const logger = Object.assign(parent.extend(level), {
-        level,
-    });
-    patchLogMethod(parent, logger);
-    if (shouldEnable(logger)) {
-        const enabledNamespaces = debugObj.disable();
-        debugObj.enable(enabledNamespaces + "," + logger.namespace);
-    }
-    registeredLoggers.add(logger);
-    return logger;
-}
-function shouldEnable(logger) {
-    return Boolean(azureLogLevel && levelMap[logger.level] <= levelMap[azureLogLevel]);
-}
-function isAzureLogLevel(logLevel) {
-    return AZURE_LOG_LEVELS.includes(logLevel);
+    return context.createClientLogger(namespace);
 }
 
 // Copyright (c) Microsoft Corporation.
@@ -37322,403 +36899,17 @@ function isAzureLogLevel(logLevel) {
 const logger$1 = createClientLogger("core-rest-pipeline");
 
 // Copyright (c) Microsoft Corporation.
-// Licensed under the MIT license.
-/**
- * This error is thrown when an asynchronous operation has been aborted.
- * Check for this error by testing the `name` that the name property of the
- * error matches `"AbortError"`.
- *
- * @example
- * ```ts
- * const controller = new AbortController();
- * controller.abort();
- * try {
- *   doAsyncWork(controller.signal)
- * } catch (e) {
- *   if (e.name === 'AbortError') {
- *     // handle abort error here.
- *   }
- * }
- * ```
- */
-class AbortError extends Error {
-    constructor(message) {
-        super(message);
-        this.name = "AbortError";
-    }
-}
-
-// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
-/**
- * Returns a random integer value between a lower and upper bound,
- * inclusive of both bounds.
- * Note that this uses Math.random and isn't secure. If you need to use
- * this for any kind of security purpose, find a better source of random.
- * @param min - The smallest integer value allowed.
- * @param max - The largest integer value allowed.
- */
-function getRandomIntegerInclusive(min, max) {
-    // Make sure inputs are integers.
-    min = Math.ceil(min);
-    max = Math.floor(max);
-    // Pick a random offset from zero to the size of the range.
-    // Since Math.random() can never return 1, we have to make the range one larger
-    // in order to be inclusive of the maximum value after we take the floor.
-    const offset = Math.floor(Math.random() * (max - min + 1));
-    return offset + min;
-}
-
-// Copyright (c) Microsoft Corporation.
-// Licensed under the MIT License.
-/**
- * Calculates the delay interval for retry attempts using exponential delay with jitter.
- * @param retryAttempt - The current retry attempt number.
- * @param config - The exponential retry configuration.
- * @returns An object containing the calculated retry delay.
- */
-function calculateRetryDelay(retryAttempt, config) {
-    // Exponentially increase the delay each time
-    const exponentialDelay = config.retryDelayInMs * Math.pow(2, retryAttempt);
-    // Don't let the delay exceed the maximum
-    const clampedDelay = Math.min(config.maxRetryDelayInMs, exponentialDelay);
-    // Allow the final value to have some "jitter" (within 50% of the delay size) so
-    // that retries across multiple clients don't occur simultaneously.
-    const retryAfterInMs = clampedDelay / 2 + getRandomIntegerInclusive(0, clampedDelay / 2);
-    return { retryAfterInMs };
-}
-
-// Copyright (c) Microsoft Corporation.
-// Licensed under the MIT License.
-/**
- * Helper to determine when an input is a generic JS object.
- * @returns true when input is an object type that is not null, Array, RegExp, or Date.
- */
-function isObject(input) {
-    return (typeof input === "object" &&
-        input !== null &&
-        !Array.isArray(input) &&
-        !(input instanceof RegExp) &&
-        !(input instanceof Date));
-}
-
-// Copyright (c) Microsoft Corporation.
-// Licensed under the MIT License.
-/**
- * Typeguard for an error object shape (has name and message)
- * @param e - Something caught by a catch clause.
- */
-function isError(e) {
-    if (isObject(e)) {
-        const hasName = typeof e.name === "string";
-        const hasMessage = typeof e.message === "string";
-        return hasName && hasMessage;
-    }
-    return false;
-}
-/**
- * Given what is thought to be an error object, return the message if possible.
- * If the message is missing, returns a stringified version of the input.
- * @param e - Something thrown from a try block
- * @returns The error message or a string of the input
- */
-function getErrorMessage(e) {
-    if (isError(e)) {
-        return e.message;
-    }
-    else {
-        let stringified;
-        try {
-            if (typeof e === "object" && e) {
-                stringified = JSON.stringify(e);
-            }
-            else {
-                stringified = String(e);
-            }
-        }
-        catch (err) {
-            stringified = "[unable to stringify input]";
-        }
-        return `Unknown error ${stringified}`;
-    }
-}
-
-// Copyright (c) Microsoft Corporation.
-// Licensed under the MIT License.
-/**
- * Helper TypeGuard that checks if something is defined or not.
- * @param thing - Anything
- */
-function isDefined(thing) {
-    return typeof thing !== "undefined" && thing !== null;
-}
-/**
- * Helper TypeGuard that checks if the input is an object with the specified properties.
- * @param thing - Anything.
- * @param properties - The name of the properties that should appear in the object.
- */
-function isObjectWithProperties(thing, properties) {
-    if (!isDefined(thing) || typeof thing !== "object") {
-        return false;
-    }
-    for (const property of properties) {
-        if (!objectHasProperty(thing, property)) {
-            return false;
-        }
-    }
-    return true;
-}
-/**
- * Helper TypeGuard that checks if the input is an object with the specified property.
- * @param thing - Any object.
- * @param property - The name of the property that should appear in the object.
- */
-function objectHasProperty(thing, property) {
-    return (isDefined(thing) && typeof thing === "object" && property in thing);
-}
-
-// Copyright (c) Microsoft Corporation.
-// Licensed under the MIT License.
-var _a$1;
-// NOTE: This is a workaround until we can use `globalThis.crypto.randomUUID` in Node.js 19+.
-const uuidFunction = typeof ((_a$1 = globalThis === null || globalThis === void 0 ? void 0 : globalThis.crypto) === null || _a$1 === void 0 ? void 0 : _a$1.randomUUID) === "function"
-    ? globalThis.crypto.randomUUID.bind(globalThis.crypto)
-    : randomUUID$4;
-/**
- * Generated Universally Unique Identifier
- *
- * @returns RFC4122 v4 UUID.
- */
-function randomUUID() {
-    return uuidFunction();
-}
-
-// Copyright (c) Microsoft Corporation.
-// Licensed under the MIT License.
-var _a, _b, _c, _d;
-/**
- * A constant that indicates whether the environment the code is running is a Web Worker.
- */
-typeof self === "object" &&
-    typeof (self === null || self === void 0 ? void 0 : self.importScripts) === "function" &&
-    (((_a = self.constructor) === null || _a === void 0 ? void 0 : _a.name) === "DedicatedWorkerGlobalScope" ||
-        ((_b = self.constructor) === null || _b === void 0 ? void 0 : _b.name) === "ServiceWorkerGlobalScope" ||
-        ((_c = self.constructor) === null || _c === void 0 ? void 0 : _c.name) === "SharedWorkerGlobalScope");
-/**
- * A constant that indicates whether the environment the code is running is Deno.
- */
-typeof Deno !== "undefined" &&
-    typeof Deno.version !== "undefined" &&
-    typeof Deno.version.deno !== "undefined";
-/**
- * A constant that indicates whether the environment the code is running is Bun.sh.
- */
-typeof Bun !== "undefined" && typeof Bun.version !== "undefined";
-/**
- * A constant that indicates whether the environment the code is running is a Node.js compatible environment.
- */
-const isNodeLike = typeof globalThis.process !== "undefined" &&
-    Boolean(globalThis.process.version) &&
-    Boolean((_d = globalThis.process.versions) === null || _d === void 0 ? void 0 : _d.node);
-
-// Copyright (c) Microsoft Corporation.
-// Licensed under the MIT License.
-/**
- * The helper that transforms bytes with specific character encoding into string
- * @param bytes - the uint8array bytes
- * @param format - the format we use to encode the byte
- * @returns a string of the encoded string
- */
-/**
- * The helper that transforms string to specific character encoded bytes array.
- * @param value - the string to be converted
- * @param format - the format we use to decode the value
- * @returns a uint8array
- */
-function stringToUint8Array(value, format) {
-    return Buffer.from(value, format);
-}
-
-// Copyright (c) Microsoft Corporation.
-// Licensed under the MIT License.
-const RedactedString = "REDACTED";
-// Make sure this list is up-to-date with the one under core/logger/Readme#Keyconcepts
-const defaultAllowedHeaderNames = [
-    "x-ms-client-request-id",
-    "x-ms-return-client-request-id",
-    "x-ms-useragent",
-    "x-ms-correlation-request-id",
-    "x-ms-request-id",
-    "client-request-id",
-    "ms-cv",
-    "return-client-request-id",
-    "traceparent",
-    "Access-Control-Allow-Credentials",
-    "Access-Control-Allow-Headers",
-    "Access-Control-Allow-Methods",
-    "Access-Control-Allow-Origin",
-    "Access-Control-Expose-Headers",
-    "Access-Control-Max-Age",
-    "Access-Control-Request-Headers",
-    "Access-Control-Request-Method",
-    "Origin",
-    "Accept",
-    "Accept-Encoding",
-    "Cache-Control",
-    "Connection",
-    "Content-Length",
-    "Content-Type",
-    "Date",
-    "ETag",
-    "Expires",
-    "If-Match",
-    "If-Modified-Since",
-    "If-None-Match",
-    "If-Unmodified-Since",
-    "Last-Modified",
-    "Pragma",
-    "Request-Id",
-    "Retry-After",
-    "Server",
-    "Transfer-Encoding",
-    "User-Agent",
-    "WWW-Authenticate",
-];
-const defaultAllowedQueryParameters = ["api-version"];
-/**
- * @internal
- */
-class Sanitizer {
-    constructor({ additionalAllowedHeaderNames: allowedHeaderNames = [], additionalAllowedQueryParameters: allowedQueryParameters = [], } = {}) {
-        allowedHeaderNames = defaultAllowedHeaderNames.concat(allowedHeaderNames);
-        allowedQueryParameters = defaultAllowedQueryParameters.concat(allowedQueryParameters);
-        this.allowedHeaderNames = new Set(allowedHeaderNames.map((n) => n.toLowerCase()));
-        this.allowedQueryParameters = new Set(allowedQueryParameters.map((p) => p.toLowerCase()));
-    }
-    sanitize(obj) {
-        const seen = new Set();
-        return JSON.stringify(obj, (key, value) => {
-            // Ensure Errors include their interesting non-enumerable members
-            if (value instanceof Error) {
-                return Object.assign(Object.assign({}, value), { name: value.name, message: value.message });
-            }
-            if (key === "headers") {
-                return this.sanitizeHeaders(value);
-            }
-            else if (key === "url") {
-                return this.sanitizeUrl(value);
-            }
-            else if (key === "query") {
-                return this.sanitizeQuery(value);
-            }
-            else if (key === "body") {
-                // Don't log the request body
-                return undefined;
-            }
-            else if (key === "response") {
-                // Don't log response again
-                return undefined;
-            }
-            else if (key === "operationSpec") {
-                // When using sendOperationRequest, the request carries a massive
-                // field with the autorest spec. No need to log it.
-                return undefined;
-            }
-            else if (Array.isArray(value) || isObject(value)) {
-                if (seen.has(value)) {
-                    return "[Circular]";
-                }
-                seen.add(value);
-            }
-            return value;
-        }, 2);
-    }
-    sanitizeUrl(value) {
-        if (typeof value !== "string" || value === null || value === "") {
-            return value;
-        }
-        const url = new URL(value);
-        if (!url.search) {
-            return value;
-        }
-        for (const [key] of url.searchParams) {
-            if (!this.allowedQueryParameters.has(key.toLowerCase())) {
-                url.searchParams.set(key, RedactedString);
-            }
-        }
-        return url.toString();
-    }
-    sanitizeHeaders(obj) {
-        const sanitized = {};
-        for (const key of Object.keys(obj)) {
-            if (this.allowedHeaderNames.has(key.toLowerCase())) {
-                sanitized[key] = obj[key];
-            }
-            else {
-                sanitized[key] = RedactedString;
-            }
-        }
-        return sanitized;
-    }
-    sanitizeQuery(value) {
-        if (typeof value !== "object" || value === null) {
-            return value;
-        }
-        const sanitized = {};
-        for (const k of Object.keys(value)) {
-            if (this.allowedQueryParameters.has(k.toLowerCase())) {
-                sanitized[k] = value[k];
-            }
-            else {
-                sanitized[k] = RedactedString;
-            }
-        }
-        return sanitized;
-    }
-}
-
-// Copyright (c) Microsoft Corporation.
-// Licensed under the MIT License.
-/**
- * The programmatic identifier of the logPolicy.
- */
-const logPolicyName = "logPolicy";
 /**
  * A policy that logs all requests and responses.
  * @param options - Options to configure logPolicy.
  */
 function logPolicy(options = {}) {
-    var _a;
-    const logger = (_a = options.logger) !== null && _a !== void 0 ? _a : logger$1.info;
-    const sanitizer = new Sanitizer({
-        additionalAllowedHeaderNames: options.additionalAllowedHeaderNames,
-        additionalAllowedQueryParameters: options.additionalAllowedQueryParameters,
-    });
-    return {
-        name: logPolicyName,
-        async sendRequest(request, next) {
-            if (!logger.enabled) {
-                return next(request);
-            }
-            logger(`Request: ${sanitizer.sanitize(request)}`);
-            const response = await next(request);
-            logger(`Response status code: ${response.status}`);
-            logger(`Headers: ${sanitizer.sanitize(response.headers)}`);
-            return response;
-        },
-    };
+    return logPolicy$1(Object.assign({ logger: logger$1.info }, options));
 }
 
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
-/**
- * The programmatic identifier of the redirectPolicy.
- */
-const redirectPolicyName = "redirectPolicy";
-/**
- * Methods that are allowed to follow redirects 301 and 302
- */
-const allowedRedirect = ["GET", "HEAD"];
 /**
  * A policy to follow Location headers from the server in order
  * to support server-side redirection.
@@ -37726,39 +36917,7 @@ const allowedRedirect = ["GET", "HEAD"];
  * @param options - Options to control policy behavior.
  */
 function redirectPolicy(options = {}) {
-    const { maxRetries = 20 } = options;
-    return {
-        name: redirectPolicyName,
-        async sendRequest(request, next) {
-            const response = await next(request);
-            return handleRedirect(next, response, maxRetries);
-        },
-    };
-}
-async function handleRedirect(next, response, maxRetries, currentRetries = 0) {
-    const { request, status, headers } = response;
-    const locationHeader = headers.get("location");
-    if (locationHeader &&
-        (status === 300 ||
-            (status === 301 && allowedRedirect.includes(request.method)) ||
-            (status === 302 && allowedRedirect.includes(request.method)) ||
-            (status === 303 && request.method === "POST") ||
-            status === 307) &&
-        currentRetries < maxRetries) {
-        const url = new URL(locationHeader, request.url);
-        request.url = url.toString();
-        // POST request with Status code 303 should be converted into a
-        // redirected GET request if the redirect url is present in the location header
-        if (status === 303) {
-            request.method = "GET";
-            request.headers.delete("Content-Length");
-            delete request.body;
-        }
-        request.headers.delete("Authorization");
-        const res = await next(request);
-        return handleRedirect(next, res, maxRetries, currentRetries + 1);
-    }
-    return response;
+    return redirectPolicy$1(options);
 }
 
 // Copyright (c) Microsoft Corporation.
@@ -37790,8 +36949,7 @@ async function setPlatformSpecificData(map) {
 
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
-const SDK_VERSION$1 = "1.19.1";
-const DEFAULT_RETRY_POLICY_COUNT = 3;
+const SDK_VERSION$1 = "1.22.0";
 
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
@@ -37847,10 +37005,171 @@ function userAgentPolicy(options = {}) {
 }
 
 // Copyright (c) Microsoft Corporation.
-// Licensed under the MIT License.
-function isBlob(x) {
-    return typeof x.stream === "function";
+// Licensed under the MIT license.
+/**
+ * This error is thrown when an asynchronous operation has been aborted.
+ * Check for this error by testing the `name` that the name property of the
+ * error matches `"AbortError"`.
+ *
+ * @example
+ * ```ts
+ * const controller = new AbortController();
+ * controller.abort();
+ * try {
+ *   doAsyncWork(controller.signal)
+ * } catch (e) {
+ *   if (e.name === 'AbortError') {
+ *     // handle abort error here.
+ *   }
+ * }
+ * ```
+ */
+class AbortError extends Error {
+    constructor(message) {
+        super(message);
+        this.name = "AbortError";
+    }
 }
+
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+/**
+ * Creates an abortable promise.
+ * @param buildPromise - A function that takes the resolve and reject functions as parameters.
+ * @param options - The options for the abortable promise.
+ * @returns A promise that can be aborted.
+ */
+function createAbortablePromise(buildPromise, options) {
+    const { cleanupBeforeAbort, abortSignal, abortErrorMsg } = options !== null && options !== void 0 ? options : {};
+    return new Promise((resolve, reject) => {
+        function rejectOnAbort() {
+            reject(new AbortError(abortErrorMsg !== null && abortErrorMsg !== void 0 ? abortErrorMsg : "The operation was aborted."));
+        }
+        function removeListeners() {
+            abortSignal === null || abortSignal === void 0 ? void 0 : abortSignal.removeEventListener("abort", onAbort);
+        }
+        function onAbort() {
+            cleanupBeforeAbort === null || cleanupBeforeAbort === void 0 ? void 0 : cleanupBeforeAbort();
+            removeListeners();
+            rejectOnAbort();
+        }
+        if (abortSignal === null || abortSignal === void 0 ? void 0 : abortSignal.aborted) {
+            return rejectOnAbort();
+        }
+        try {
+            buildPromise((x) => {
+                removeListeners();
+                resolve(x);
+            }, (x) => {
+                removeListeners();
+                reject(x);
+            });
+        }
+        catch (err) {
+            reject(err);
+        }
+        abortSignal === null || abortSignal === void 0 ? void 0 : abortSignal.addEventListener("abort", onAbort);
+    });
+}
+
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+const StandardAbortMessage = "The delay was aborted.";
+/**
+ * A wrapper for setTimeout that resolves a promise after timeInMs milliseconds.
+ * @param timeInMs - The number of milliseconds to be delayed.
+ * @param options - The options for delay - currently abort options
+ * @returns Promise that is resolved after timeInMs
+ */
+function delay(timeInMs, options) {
+    let token;
+    const { abortSignal, abortErrorMsg } = {};
+    return createAbortablePromise((resolve) => {
+        token = setTimeout(resolve, timeInMs);
+    }, {
+        cleanupBeforeAbort: () => clearTimeout(token),
+        abortSignal,
+        abortErrorMsg: abortErrorMsg !== null && abortErrorMsg !== void 0 ? abortErrorMsg : StandardAbortMessage,
+    });
+}
+
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+/**
+ * Given what is thought to be an error object, return the message if possible.
+ * If the message is missing, returns a stringified version of the input.
+ * @param e - Something thrown from a try block
+ * @returns The error message or a string of the input
+ */
+function getErrorMessage(e) {
+    if (isError$1(e)) {
+        return e.message;
+    }
+    else {
+        let stringified;
+        try {
+            if (typeof e === "object" && e) {
+                stringified = JSON.stringify(e);
+            }
+            else {
+                stringified = String(e);
+            }
+        }
+        catch (err) {
+            stringified = "[unable to stringify input]";
+        }
+        return `Unknown error ${stringified}`;
+    }
+}
+
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+/**
+ * Helper TypeGuard that checks if something is defined or not.
+ * @param thing - Anything
+ */
+function isDefined(thing) {
+    return typeof thing !== "undefined" && thing !== null;
+}
+/**
+ * Helper TypeGuard that checks if the input is an object with the specified properties.
+ * @param thing - Anything.
+ * @param properties - The name of the properties that should appear in the object.
+ */
+function isObjectWithProperties(thing, properties) {
+    if (!isDefined(thing) || typeof thing !== "object") {
+        return false;
+    }
+    for (const property of properties) {
+        if (!objectHasProperty(thing, property)) {
+            return false;
+        }
+    }
+    return true;
+}
+/**
+ * Helper TypeGuard that checks if the input is an object with the specified property.
+ * @param thing - Any object.
+ * @param property - The name of the property that should appear in the object.
+ */
+function objectHasProperty(thing, property) {
+    return (isDefined(thing) && typeof thing === "object" && property in thing);
+}
+
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+/**
+ * Typeguard for an error object shape (has name and message)
+ *
+ * @param e - Something caught by a catch clause.
+ */
+function isError(e) {
+    return isError$1(e);
+}
+/**
+ * A constant that indicates whether the environment the code is running is a Node.js compatible environment.
+ */
+const isNodeLike = isNodeLike$1;
 
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
@@ -37869,13 +37188,16 @@ function isBlob(x) {
  * @internal
  */
 const rawContent = Symbol("rawContent");
+/**
+ * Type guard to check if a given object is a blob-like object with a raw content property.
+ */
 function hasRawContent(x) {
     return typeof x[rawContent] === "function";
 }
 /**
  * Extract the raw content from a given blob-like object. If the input was created using createFile
  * or createFileFromStream, the exact content passed into createFile/createFileFromStream will be used.
- * For true instances of Blob and File, returns the blob's content as a Web ReadableStream<Uint8Array>.
+ * For true instances of Blob and File, returns the actual blob.
  *
  * @internal
  */
@@ -37884,524 +37206,48 @@ function getRawContent(blob) {
         return blob[rawContent]();
     }
     else {
-        return blob.stream();
+        return blob;
     }
 }
 
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
-function streamAsyncIterator() {
-    return __asyncGenerator(this, arguments, function* streamAsyncIterator_1() {
-        const reader = this.getReader();
-        try {
-            while (true) {
-                const { done, value } = yield __await(reader.read());
-                if (done) {
-                    return yield __await(void 0);
-                }
-                yield yield __await(value);
-            }
-        }
-        finally {
-            reader.releaseLock();
-        }
-    });
-}
-function makeAsyncIterable(webStream) {
-    if (!webStream[Symbol.asyncIterator]) {
-        webStream[Symbol.asyncIterator] = streamAsyncIterator.bind(webStream);
-    }
-    if (!webStream.values) {
-        webStream.values = streamAsyncIterator.bind(webStream);
-    }
-}
-function ensureNodeStream(stream) {
-    if (stream instanceof ReadableStream) {
-        makeAsyncIterable(stream);
-        return Readable$1.fromWeb(stream);
-    }
-    else {
-        return stream;
-    }
-}
-function toStream(source) {
-    if (source instanceof Uint8Array) {
-        return Readable$1.from(Buffer.from(source));
-    }
-    else if (isBlob(source)) {
-        return toStream(getRawContent(source));
-    }
-    else {
-        return ensureNodeStream(source);
-    }
-}
-/**
- * Utility function that concatenates a set of binary inputs into one combined output.
- *
- * @param sources - array of sources for the concatenation
- * @returns - in Node, a (() =\> NodeJS.ReadableStream) which, when read, produces a concatenation of all the inputs.
- *           In browser, returns a `Blob` representing all the concatenated inputs.
- *
- * @internal
- */
-async function concat(sources) {
-    return function () {
-        const streams = sources.map((x) => (typeof x === "function" ? x() : x)).map(toStream);
-        return Readable$1.from((function () {
-            return __asyncGenerator(this, arguments, function* () {
-                var _a, e_1, _b, _c;
-                for (const stream of streams) {
-                    try {
-                        for (var _d = true, stream_1 = (e_1 = void 0, __asyncValues(stream)), stream_1_1; stream_1_1 = yield __await(stream_1.next()), _a = stream_1_1.done, !_a; _d = true) {
-                            _c = stream_1_1.value;
-                            _d = false;
-                            const chunk = _c;
-                            yield yield __await(chunk);
-                        }
-                    }
-                    catch (e_1_1) { e_1 = { error: e_1_1 }; }
-                    finally {
-                        try {
-                            if (!_d && !_a && (_b = stream_1.return)) yield __await(_b.call(stream_1));
-                        }
-                        finally { if (e_1) throw e_1.error; }
-                    }
-                }
-            });
-        })());
-    };
-}
-
-// Copyright (c) Microsoft Corporation.
-// Licensed under the MIT License.
-function generateBoundary() {
-    return `----AzSDKFormBoundary${randomUUID()}`;
-}
-function encodeHeaders(headers) {
-    let result = "";
-    for (const [key, value] of headers) {
-        result += `${key}: ${value}\r\n`;
-    }
-    return result;
-}
-function getLength(source) {
-    if (source instanceof Uint8Array) {
-        return source.byteLength;
-    }
-    else if (isBlob(source)) {
-        // if was created using createFile then -1 means we have an unknown size
-        return source.size === -1 ? undefined : source.size;
-    }
-    else {
-        return undefined;
-    }
-}
-function getTotalLength(sources) {
-    let total = 0;
-    for (const source of sources) {
-        const partLength = getLength(source);
-        if (partLength === undefined) {
-            return undefined;
-        }
-        else {
-            total += partLength;
-        }
-    }
-    return total;
-}
-async function buildRequestBody(request, parts, boundary) {
-    const sources = [
-        stringToUint8Array(`--${boundary}`, "utf-8"),
-        ...parts.flatMap((part) => [
-            stringToUint8Array("\r\n", "utf-8"),
-            stringToUint8Array(encodeHeaders(part.headers), "utf-8"),
-            stringToUint8Array("\r\n", "utf-8"),
-            part.body,
-            stringToUint8Array(`\r\n--${boundary}`, "utf-8"),
-        ]),
-        stringToUint8Array("--\r\n\r\n", "utf-8"),
-    ];
-    const contentLength = getTotalLength(sources);
-    if (contentLength) {
-        request.headers.set("Content-Length", contentLength);
-    }
-    request.body = await concat(sources);
-}
 /**
  * Name of multipart policy
  */
-const multipartPolicyName = "multipartPolicy";
-const maxBoundaryLength = 70;
-const validBoundaryCharacters = new Set(`abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'()+,-./:=?`);
-function assertValidBoundary(boundary) {
-    if (boundary.length > maxBoundaryLength) {
-        throw new Error(`Multipart boundary "${boundary}" exceeds maximum length of 70 characters`);
-    }
-    if (Array.from(boundary).some((x) => !validBoundaryCharacters.has(x))) {
-        throw new Error(`Multipart boundary "${boundary}" contains invalid characters`);
-    }
-}
+const multipartPolicyName = multipartPolicyName$1;
 /**
  * Pipeline policy for multipart requests
  */
 function multipartPolicy() {
+    const tspPolicy = multipartPolicy$1();
     return {
         name: multipartPolicyName,
-        async sendRequest(request, next) {
-            var _a;
-            if (!request.multipartBody) {
-                return next(request);
+        sendRequest: async (request, next) => {
+            if (request.multipartBody) {
+                for (const part of request.multipartBody.parts) {
+                    if (hasRawContent(part.body)) {
+                        part.body = getRawContent(part.body);
+                    }
+                }
             }
-            if (request.body) {
-                throw new Error("multipartBody and regular body cannot be set at the same time");
-            }
-            let boundary = request.multipartBody.boundary;
-            const contentTypeHeader = (_a = request.headers.get("Content-Type")) !== null && _a !== void 0 ? _a : "multipart/mixed";
-            const parsedHeader = contentTypeHeader.match(/^(multipart\/[^ ;]+)(?:; *boundary=(.+))?$/);
-            if (!parsedHeader) {
-                throw new Error(`Got multipart request body, but content-type header was not multipart: ${contentTypeHeader}`);
-            }
-            const [, contentType, parsedBoundary] = parsedHeader;
-            if (parsedBoundary && boundary && parsedBoundary !== boundary) {
-                throw new Error(`Multipart boundary was specified as ${parsedBoundary} in the header, but got ${boundary} in the request body`);
-            }
-            boundary !== null && boundary !== void 0 ? boundary : (boundary = parsedBoundary);
-            if (boundary) {
-                assertValidBoundary(boundary);
-            }
-            else {
-                boundary = generateBoundary();
-            }
-            request.headers.set("Content-Type", `${contentType}; boundary=${boundary}`);
-            await buildRequestBody(request, request.multipartBody.parts, boundary);
-            request.multipartBody = undefined;
-            return next(request);
+            return tspPolicy.sendRequest(request, next);
         },
     };
 }
 
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
-/**
- * The programmatic identifier of the decompressResponsePolicy.
- */
-const decompressResponsePolicyName = "decompressResponsePolicy";
 /**
  * A policy to enable response decompression according to Accept-Encoding header
  * https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Accept-Encoding
  */
 function decompressResponsePolicy() {
-    return {
-        name: decompressResponsePolicyName,
-        async sendRequest(request, next) {
-            // HEAD requests have no body
-            if (request.method !== "HEAD") {
-                request.headers.set("Accept-Encoding", "gzip,deflate");
-            }
-            return next(request);
-        },
-    };
+    return decompressResponsePolicy$1();
 }
 
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
-const StandardAbortMessage = "The operation was aborted.";
-/**
- * A wrapper for setTimeout that resolves a promise after delayInMs milliseconds.
- * @param delayInMs - The number of milliseconds to be delayed.
- * @param value - The value to be resolved with after a timeout of t milliseconds.
- * @param options - The options for delay - currently abort options
- *                  - abortSignal - The abortSignal associated with containing operation.
- *                  - abortErrorMsg - The abort error message associated with containing operation.
- * @returns Resolved promise
- */
-function delay(delayInMs, value, options) {
-    return new Promise((resolve, reject) => {
-        let timer = undefined;
-        let onAborted = undefined;
-        const rejectOnAbort = () => {
-            return reject(new AbortError((options === null || options === void 0 ? void 0 : options.abortErrorMsg) ? options === null || options === void 0 ? void 0 : options.abortErrorMsg : StandardAbortMessage));
-        };
-        const removeListeners = () => {
-            if ((options === null || options === void 0 ? void 0 : options.abortSignal) && onAborted) {
-                options.abortSignal.removeEventListener("abort", onAborted);
-            }
-        };
-        onAborted = () => {
-            if (timer) {
-                clearTimeout(timer);
-            }
-            removeListeners();
-            return rejectOnAbort();
-        };
-        if ((options === null || options === void 0 ? void 0 : options.abortSignal) && options.abortSignal.aborted) {
-            return rejectOnAbort();
-        }
-        timer = setTimeout(() => {
-            removeListeners();
-            resolve(value);
-        }, delayInMs);
-        if (options === null || options === void 0 ? void 0 : options.abortSignal) {
-            options.abortSignal.addEventListener("abort", onAborted);
-        }
-    });
-}
-/**
- * @internal
- * @returns the parsed value or undefined if the parsed value is invalid.
- */
-function parseHeaderValueAsNumber(response, headerName) {
-    const value = response.headers.get(headerName);
-    if (!value)
-        return;
-    const valueAsNum = Number(value);
-    if (Number.isNaN(valueAsNum))
-        return;
-    return valueAsNum;
-}
-
-// Copyright (c) Microsoft Corporation.
-// Licensed under the MIT License.
-/**
- * The header that comes back from Azure services representing
- * the amount of time (minimum) to wait to retry (in seconds or timestamp after which we can retry).
- */
-const RetryAfterHeader = "Retry-After";
-/**
- * The headers that come back from Azure services representing
- * the amount of time (minimum) to wait to retry.
- *
- * "retry-after-ms", "x-ms-retry-after-ms" : milliseconds
- * "Retry-After" : seconds or timestamp
- */
-const AllRetryAfterHeaders = ["retry-after-ms", "x-ms-retry-after-ms", RetryAfterHeader];
-/**
- * A response is a throttling retry response if it has a throttling status code (429 or 503),
- * as long as one of the [ "Retry-After" or "retry-after-ms" or "x-ms-retry-after-ms" ] headers has a valid value.
- *
- * Returns the `retryAfterInMs` value if the response is a throttling retry response.
- * If not throttling retry response, returns `undefined`.
- *
- * @internal
- */
-function getRetryAfterInMs(response) {
-    if (!(response && [429, 503].includes(response.status)))
-        return undefined;
-    try {
-        // Headers: "retry-after-ms", "x-ms-retry-after-ms", "Retry-After"
-        for (const header of AllRetryAfterHeaders) {
-            const retryAfterValue = parseHeaderValueAsNumber(response, header);
-            if (retryAfterValue === 0 || retryAfterValue) {
-                // "Retry-After" header ==> seconds
-                // "retry-after-ms", "x-ms-retry-after-ms" headers ==> milli-seconds
-                const multiplyingFactor = header === RetryAfterHeader ? 1000 : 1;
-                return retryAfterValue * multiplyingFactor; // in milli-seconds
-            }
-        }
-        // RetryAfterHeader ("Retry-After") has a special case where it might be formatted as a date instead of a number of seconds
-        const retryAfterHeader = response.headers.get(RetryAfterHeader);
-        if (!retryAfterHeader)
-            return;
-        const date = Date.parse(retryAfterHeader);
-        const diff = date - Date.now();
-        // negative diff would mean a date in the past, so retry asap with 0 milliseconds
-        return Number.isFinite(diff) ? Math.max(0, diff) : undefined;
-    }
-    catch (_a) {
-        return undefined;
-    }
-}
-/**
- * A response is a retry response if it has a throttling status code (429 or 503),
- * as long as one of the [ "Retry-After" or "retry-after-ms" or "x-ms-retry-after-ms" ] headers has a valid value.
- */
-function isThrottlingRetryResponse(response) {
-    return Number.isFinite(getRetryAfterInMs(response));
-}
-function throttlingRetryStrategy() {
-    return {
-        name: "throttlingRetryStrategy",
-        retry({ response }) {
-            const retryAfterInMs = getRetryAfterInMs(response);
-            if (!Number.isFinite(retryAfterInMs)) {
-                return { skipStrategy: true };
-            }
-            return {
-                retryAfterInMs,
-            };
-        },
-    };
-}
-
-// Copyright (c) Microsoft Corporation.
-// Licensed under the MIT License.
-// intervals are in milliseconds
-const DEFAULT_CLIENT_RETRY_INTERVAL = 1000;
-const DEFAULT_CLIENT_MAX_RETRY_INTERVAL = 1000 * 64;
-/**
- * A retry strategy that retries with an exponentially increasing delay in these two cases:
- * - When there are errors in the underlying transport layer (e.g. DNS lookup failures).
- * - Or otherwise if the outgoing request fails (408, greater or equal than 500, except for 501 and 505).
- */
-function exponentialRetryStrategy(options = {}) {
-    var _a, _b;
-    const retryInterval = (_a = options.retryDelayInMs) !== null && _a !== void 0 ? _a : DEFAULT_CLIENT_RETRY_INTERVAL;
-    const maxRetryInterval = (_b = options.maxRetryDelayInMs) !== null && _b !== void 0 ? _b : DEFAULT_CLIENT_MAX_RETRY_INTERVAL;
-    return {
-        name: "exponentialRetryStrategy",
-        retry({ retryCount, response, responseError }) {
-            const matchedSystemError = isSystemError(responseError);
-            const ignoreSystemErrors = matchedSystemError && options.ignoreSystemErrors;
-            const isExponential = isExponentialRetryResponse(response);
-            const ignoreExponentialResponse = isExponential && options.ignoreHttpStatusCodes;
-            const unknownResponse = response && (isThrottlingRetryResponse(response) || !isExponential);
-            if (unknownResponse || ignoreExponentialResponse || ignoreSystemErrors) {
-                return { skipStrategy: true };
-            }
-            if (responseError && !matchedSystemError && !isExponential) {
-                return { errorToThrow: responseError };
-            }
-            return calculateRetryDelay(retryCount, {
-                retryDelayInMs: retryInterval,
-                maxRetryDelayInMs: maxRetryInterval,
-            });
-        },
-    };
-}
-/**
- * A response is a retry response if it has status codes:
- * - 408, or
- * - Greater or equal than 500, except for 501 and 505.
- */
-function isExponentialRetryResponse(response) {
-    return Boolean(response &&
-        response.status !== undefined &&
-        (response.status >= 500 || response.status === 408) &&
-        response.status !== 501 &&
-        response.status !== 505);
-}
-/**
- * Determines whether an error from a pipeline response was triggered in the network layer.
- */
-function isSystemError(err) {
-    if (!err) {
-        return false;
-    }
-    return (err.code === "ETIMEDOUT" ||
-        err.code === "ESOCKETTIMEDOUT" ||
-        err.code === "ECONNREFUSED" ||
-        err.code === "ECONNRESET" ||
-        err.code === "ENOENT" ||
-        err.code === "ENOTFOUND");
-}
-
-// Copyright (c) Microsoft Corporation.
-// Licensed under the MIT License.
-const retryPolicyLogger = createClientLogger("core-rest-pipeline retryPolicy");
-/**
- * The programmatic identifier of the retryPolicy.
- */
-const retryPolicyName = "retryPolicy";
-/**
- * retryPolicy is a generic policy to enable retrying requests when certain conditions are met
- */
-function retryPolicy(strategies, options = { maxRetries: DEFAULT_RETRY_POLICY_COUNT }) {
-    const logger = options.logger || retryPolicyLogger;
-    return {
-        name: retryPolicyName,
-        async sendRequest(request, next) {
-            var _a, _b;
-            let response;
-            let responseError;
-            let retryCount = -1;
-            retryRequest: while (true) {
-                retryCount += 1;
-                response = undefined;
-                responseError = undefined;
-                try {
-                    logger.info(`Retry ${retryCount}: Attempting to send request`, request.requestId);
-                    response = await next(request);
-                    logger.info(`Retry ${retryCount}: Received a response from request`, request.requestId);
-                }
-                catch (e) {
-                    logger.error(`Retry ${retryCount}: Received an error from request`, request.requestId);
-                    // RestErrors are valid targets for the retry strategies.
-                    // If none of the retry strategies can work with them, they will be thrown later in this policy.
-                    // If the received error is not a RestError, it is immediately thrown.
-                    responseError = e;
-                    if (!e || responseError.name !== "RestError") {
-                        throw e;
-                    }
-                    response = responseError.response;
-                }
-                if ((_a = request.abortSignal) === null || _a === void 0 ? void 0 : _a.aborted) {
-                    logger.error(`Retry ${retryCount}: Request aborted.`);
-                    const abortError = new AbortError();
-                    throw abortError;
-                }
-                if (retryCount >= ((_b = options.maxRetries) !== null && _b !== void 0 ? _b : DEFAULT_RETRY_POLICY_COUNT)) {
-                    logger.info(`Retry ${retryCount}: Maximum retries reached. Returning the last received response, or throwing the last received error.`);
-                    if (responseError) {
-                        throw responseError;
-                    }
-                    else if (response) {
-                        return response;
-                    }
-                    else {
-                        throw new Error("Maximum retries reached with no response or error to throw");
-                    }
-                }
-                logger.info(`Retry ${retryCount}: Processing ${strategies.length} retry strategies.`);
-                strategiesLoop: for (const strategy of strategies) {
-                    const strategyLogger = strategy.logger || retryPolicyLogger;
-                    strategyLogger.info(`Retry ${retryCount}: Processing retry strategy ${strategy.name}.`);
-                    const modifiers = strategy.retry({
-                        retryCount,
-                        response,
-                        responseError,
-                    });
-                    if (modifiers.skipStrategy) {
-                        strategyLogger.info(`Retry ${retryCount}: Skipped.`);
-                        continue strategiesLoop;
-                    }
-                    const { errorToThrow, retryAfterInMs, redirectTo } = modifiers;
-                    if (errorToThrow) {
-                        strategyLogger.error(`Retry ${retryCount}: Retry strategy ${strategy.name} throws error:`, errorToThrow);
-                        throw errorToThrow;
-                    }
-                    if (retryAfterInMs || retryAfterInMs === 0) {
-                        strategyLogger.info(`Retry ${retryCount}: Retry strategy ${strategy.name} retries after ${retryAfterInMs}`);
-                        await delay(retryAfterInMs, undefined, { abortSignal: request.abortSignal });
-                        continue retryRequest;
-                    }
-                    if (redirectTo) {
-                        strategyLogger.info(`Retry ${retryCount}: Retry strategy ${strategy.name} redirects to ${redirectTo}`);
-                        request.url = redirectTo;
-                        continue retryRequest;
-                    }
-                }
-                if (responseError) {
-                    logger.info(`None of the retry strategies could work with the received error. Throwing it.`);
-                    throw responseError;
-                }
-                if (response) {
-                    logger.info(`None of the retry strategies could work with the received response. Returning it.`);
-                    return response;
-                }
-                // If all the retries skip and there's no response,
-                // we're still in the retry loop, so a new request will be sent
-                // until `maxRetries` is reached.
-            }
-        },
-    };
-}
-
-// Copyright (c) Microsoft Corporation.
-// Licensed under the MIT License.
-/**
- * Name of the {@link defaultRetryPolicy}
- */
-const defaultRetryPolicyName = "defaultRetryPolicy";
 /**
  * A policy that retries according to three strategies:
  * - When the server sends a 429 response with a Retry-After header.
@@ -38409,331 +37255,20 @@ const defaultRetryPolicyName = "defaultRetryPolicy";
  * - Or otherwise if the outgoing request fails, it will retry with an exponentially increasing delay.
  */
 function defaultRetryPolicy(options = {}) {
-    var _a;
-    return {
-        name: defaultRetryPolicyName,
-        sendRequest: retryPolicy([throttlingRetryStrategy(), exponentialRetryStrategy(options)], {
-            maxRetries: (_a = options.maxRetries) !== null && _a !== void 0 ? _a : DEFAULT_RETRY_POLICY_COUNT,
-        }).sendRequest,
-    };
+    return defaultRetryPolicy$1(options);
 }
 
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
-function normalizeName(name) {
-    return name.toLowerCase();
-}
-function* headerIterator(map) {
-    for (const entry of map.values()) {
-        yield [entry.name, entry.value];
-    }
-}
-class HttpHeadersImpl {
-    constructor(rawHeaders) {
-        this._headersMap = new Map();
-        if (rawHeaders) {
-            for (const headerName of Object.keys(rawHeaders)) {
-                this.set(headerName, rawHeaders[headerName]);
-            }
-        }
-    }
-    /**
-     * Set a header in this collection with the provided name and value. The name is
-     * case-insensitive.
-     * @param name - The name of the header to set. This value is case-insensitive.
-     * @param value - The value of the header to set.
-     */
-    set(name, value) {
-        this._headersMap.set(normalizeName(name), { name, value: String(value).trim() });
-    }
-    /**
-     * Get the header value for the provided header name, or undefined if no header exists in this
-     * collection with the provided name.
-     * @param name - The name of the header. This value is case-insensitive.
-     */
-    get(name) {
-        var _a;
-        return (_a = this._headersMap.get(normalizeName(name))) === null || _a === void 0 ? void 0 : _a.value;
-    }
-    /**
-     * Get whether or not this header collection contains a header entry for the provided header name.
-     * @param name - The name of the header to set. This value is case-insensitive.
-     */
-    has(name) {
-        return this._headersMap.has(normalizeName(name));
-    }
-    /**
-     * Remove the header with the provided headerName.
-     * @param name - The name of the header to remove.
-     */
-    delete(name) {
-        this._headersMap.delete(normalizeName(name));
-    }
-    /**
-     * Get the JSON object representation of this HTTP header collection.
-     */
-    toJSON(options = {}) {
-        const result = {};
-        if (options.preserveCase) {
-            for (const entry of this._headersMap.values()) {
-                result[entry.name] = entry.value;
-            }
-        }
-        else {
-            for (const [normalizedName, entry] of this._headersMap) {
-                result[normalizedName] = entry.value;
-            }
-        }
-        return result;
-    }
-    /**
-     * Get the string representation of this HTTP header collection.
-     */
-    toString() {
-        return JSON.stringify(this.toJSON({ preserveCase: true }));
-    }
-    /**
-     * Iterate over tuples of header [name, value] pairs.
-     */
-    [Symbol.iterator]() {
-        return headerIterator(this._headersMap);
-    }
-}
-/**
- * Creates an object that satisfies the `HttpHeaders` interface.
- * @param rawHeaders - A simple object representing initial headers
- */
-function createHttpHeaders(rawHeaders) {
-    return new HttpHeadersImpl(rawHeaders);
-}
-
-// Copyright (c) Microsoft Corporation.
-// Licensed under the MIT License.
-/**
- * The programmatic identifier of the formDataPolicy.
- */
-const formDataPolicyName = "formDataPolicy";
-function formDataToFormDataMap(formData) {
-    var _a;
-    const formDataMap = {};
-    for (const [key, value] of formData.entries()) {
-        (_a = formDataMap[key]) !== null && _a !== void 0 ? _a : (formDataMap[key] = []);
-        formDataMap[key].push(value);
-    }
-    return formDataMap;
-}
 /**
  * A policy that encodes FormData on the request into the body.
  */
 function formDataPolicy() {
-    return {
-        name: formDataPolicyName,
-        async sendRequest(request, next) {
-            if (isNodeLike && typeof FormData !== "undefined" && request.body instanceof FormData) {
-                request.formData = formDataToFormDataMap(request.body);
-                request.body = undefined;
-            }
-            if (request.formData) {
-                const contentType = request.headers.get("Content-Type");
-                if (contentType && contentType.indexOf("application/x-www-form-urlencoded") !== -1) {
-                    request.body = wwwFormUrlEncode(request.formData);
-                }
-                else {
-                    await prepareFormData(request.formData, request);
-                }
-                request.formData = undefined;
-            }
-            return next(request);
-        },
-    };
-}
-function wwwFormUrlEncode(formData) {
-    const urlSearchParams = new URLSearchParams();
-    for (const [key, value] of Object.entries(formData)) {
-        if (Array.isArray(value)) {
-            for (const subValue of value) {
-                urlSearchParams.append(key, subValue.toString());
-            }
-        }
-        else {
-            urlSearchParams.append(key, value.toString());
-        }
-    }
-    return urlSearchParams.toString();
-}
-async function prepareFormData(formData, request) {
-    // validate content type (multipart/form-data)
-    const contentType = request.headers.get("Content-Type");
-    if (contentType && !contentType.startsWith("multipart/form-data")) {
-        // content type is specified and is not multipart/form-data. Exit.
-        return;
-    }
-    request.headers.set("Content-Type", contentType !== null && contentType !== void 0 ? contentType : "multipart/form-data");
-    // set body to MultipartRequestBody using content from FormDataMap
-    const parts = [];
-    for (const [fieldName, values] of Object.entries(formData)) {
-        for (const value of Array.isArray(values) ? values : [values]) {
-            if (typeof value === "string") {
-                parts.push({
-                    headers: createHttpHeaders({
-                        "Content-Disposition": `form-data; name="${fieldName}"`,
-                    }),
-                    body: stringToUint8Array(value, "utf-8"),
-                });
-            }
-            else if (value === undefined || value === null || typeof value !== "object") {
-                throw new Error(`Unexpected value for key ${fieldName}: ${value}. Value should be serialized to string first.`);
-            }
-            else {
-                // using || instead of ?? here since if value.name is empty we should create a file name
-                const fileName = value.name || "blob";
-                const headers = createHttpHeaders();
-                headers.set("Content-Disposition", `form-data; name="${fieldName}"; filename="${fileName}"`);
-                // again, || is used since an empty value.type means the content type is unset
-                headers.set("Content-Type", value.type || "application/octet-stream");
-                parts.push({
-                    headers,
-                    body: value,
-                });
-            }
-        }
-    }
-    request.multipartBody = { parts };
+    return formDataPolicy$1();
 }
 
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
-const HTTPS_PROXY = "HTTPS_PROXY";
-const HTTP_PROXY = "HTTP_PROXY";
-const ALL_PROXY = "ALL_PROXY";
-const NO_PROXY = "NO_PROXY";
-/**
- * The programmatic identifier of the proxyPolicy.
- */
-const proxyPolicyName = "proxyPolicy";
-/**
- * Stores the patterns specified in NO_PROXY environment variable.
- * @internal
- */
-const globalNoProxyList = [];
-let noProxyListLoaded = false;
-/** A cache of whether a host should bypass the proxy. */
-const globalBypassedMap = new Map();
-function getEnvironmentValue(name) {
-    if (process.env[name]) {
-        return process.env[name];
-    }
-    else if (process.env[name.toLowerCase()]) {
-        return process.env[name.toLowerCase()];
-    }
-    return undefined;
-}
-function loadEnvironmentProxyValue() {
-    if (!process) {
-        return undefined;
-    }
-    const httpsProxy = getEnvironmentValue(HTTPS_PROXY);
-    const allProxy = getEnvironmentValue(ALL_PROXY);
-    const httpProxy = getEnvironmentValue(HTTP_PROXY);
-    return httpsProxy || allProxy || httpProxy;
-}
-/**
- * Check whether the host of a given `uri` matches any pattern in the no proxy list.
- * If there's a match, any request sent to the same host shouldn't have the proxy settings set.
- * This implementation is a port of https://github.com/Azure/azure-sdk-for-net/blob/8cca811371159e527159c7eb65602477898683e2/sdk/core/Azure.Core/src/Pipeline/Internal/HttpEnvironmentProxy.cs#L210
- */
-function isBypassed(uri, noProxyList, bypassedMap) {
-    if (noProxyList.length === 0) {
-        return false;
-    }
-    const host = new URL(uri).hostname;
-    if (bypassedMap === null || bypassedMap === void 0 ? void 0 : bypassedMap.has(host)) {
-        return bypassedMap.get(host);
-    }
-    let isBypassedFlag = false;
-    for (const pattern of noProxyList) {
-        if (pattern[0] === ".") {
-            // This should match either domain it self or any subdomain or host
-            // .foo.com will match foo.com it self or *.foo.com
-            if (host.endsWith(pattern)) {
-                isBypassedFlag = true;
-            }
-            else {
-                if (host.length === pattern.length - 1 && host === pattern.slice(1)) {
-                    isBypassedFlag = true;
-                }
-            }
-        }
-        else {
-            if (host === pattern) {
-                isBypassedFlag = true;
-            }
-        }
-    }
-    bypassedMap === null || bypassedMap === void 0 ? void 0 : bypassedMap.set(host, isBypassedFlag);
-    return isBypassedFlag;
-}
-function loadNoProxy() {
-    const noProxy = getEnvironmentValue(NO_PROXY);
-    noProxyListLoaded = true;
-    if (noProxy) {
-        return noProxy
-            .split(",")
-            .map((item) => item.trim())
-            .filter((item) => item.length);
-    }
-    return [];
-}
-/**
- * This method attempts to parse a proxy URL from the environment
- * variables `HTTPS_PROXY` or `HTTP_PROXY`.
- */
-function getDefaultProxySettingsInternal() {
-    const envProxy = loadEnvironmentProxyValue();
-    return envProxy ? new URL(envProxy) : undefined;
-}
-function getUrlFromProxySettings(settings) {
-    let parsedProxyUrl;
-    try {
-        parsedProxyUrl = new URL(settings.host);
-    }
-    catch (_a) {
-        throw new Error(`Expecting a valid host string in proxy settings, but found "${settings.host}".`);
-    }
-    parsedProxyUrl.port = String(settings.port);
-    if (settings.username) {
-        parsedProxyUrl.username = settings.username;
-    }
-    if (settings.password) {
-        parsedProxyUrl.password = settings.password;
-    }
-    return parsedProxyUrl;
-}
-function setProxyAgentOnRequest(request, cachedAgents, proxyUrl) {
-    // Custom Agent should take precedence so if one is present
-    // we should skip to avoid overwriting it.
-    if (request.agent) {
-        return;
-    }
-    const url = new URL(request.url);
-    const isInsecure = url.protocol !== "https:";
-    if (request.tlsSettings) {
-        logger$1.warning("TLS settings are not supported in combination with custom Proxy, certificates provided to the client will be ignored.");
-    }
-    const headers = request.headers.toJSON();
-    if (isInsecure) {
-        if (!cachedAgents.httpProxyAgent) {
-            cachedAgents.httpProxyAgent = new distExports.HttpProxyAgent(proxyUrl, { headers });
-        }
-        request.agent = cachedAgents.httpProxyAgent;
-    }
-    else {
-        if (!cachedAgents.httpsProxyAgent) {
-            cachedAgents.httpsProxyAgent = new distExports$1.HttpsProxyAgent(proxyUrl, { headers });
-        }
-        request.agent = cachedAgents.httpsProxyAgent;
-    }
-}
 /**
  * A policy that allows one to apply proxy settings to all requests.
  * If not passed static settings, they will be retrieved from the HTTPS_PROXY
@@ -38742,28 +37277,7 @@ function setProxyAgentOnRequest(request, cachedAgents, proxyUrl) {
  * @param options - additional settings, for example, custom NO_PROXY patterns
  */
 function proxyPolicy(proxySettings, options) {
-    if (!noProxyListLoaded) {
-        globalNoProxyList.push(...loadNoProxy());
-    }
-    const defaultProxy = proxySettings
-        ? getUrlFromProxySettings(proxySettings)
-        : getDefaultProxySettingsInternal();
-    const cachedAgents = {};
-    return {
-        name: proxyPolicyName,
-        async sendRequest(request, next) {
-            var _a;
-            if (!request.proxySettings &&
-                defaultProxy &&
-                !isBypassed(request.url, (_a = void 0 ) !== null && _a !== void 0 ? _a : globalNoProxyList, globalBypassedMap)) {
-                setProxyAgentOnRequest(request, cachedAgents, defaultProxy);
-            }
-            else if (request.proxySettings) {
-                setProxyAgentOnRequest(request, cachedAgents, getUrlFromProxySettings(request.proxySettings));
-            }
-            return next(request);
-        },
-    };
+    return proxyPolicy$1(proxySettings);
 }
 
 // Copyright (c) Microsoft Corporation.
@@ -38793,45 +37307,19 @@ function setClientRequestIdPolicy(requestIdHeaderName = "x-ms-client-request-id"
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 /**
- * Name of the Agent Policy
- */
-const agentPolicyName = "agentPolicy";
-/**
  * Gets a pipeline policy that sets http.agent
  */
 function agentPolicy(agent) {
-    return {
-        name: agentPolicyName,
-        sendRequest: async (req, next) => {
-            // Users may define an agent on the request, honor it over the client level one
-            if (!req.agent) {
-                req.agent = agent;
-            }
-            return next(req);
-        },
-    };
+    return agentPolicy$1(agent);
 }
 
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 /**
- * Name of the TLS Policy
- */
-const tlsPolicyName = "tlsPolicy";
-/**
  * Gets a pipeline policy that adds the client certificate to the HttpClient agent for authentication.
  */
 function tlsPolicy(tlsSettings) {
-    return {
-        name: tlsPolicyName,
-        sendRequest: async (req, next) => {
-            // Users may define a request tlsSettings, honor those over the client level one
-            if (!req.tlsSettings) {
-                req.tlsSettings = tlsSettings;
-            }
-            return next(req);
-        },
-    };
+    return tlsPolicy$1(tlsSettings);
 }
 
 // Copyright (c) Microsoft Corporation.
@@ -39042,57 +37530,12 @@ function createTracingClient(options) {
 
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
-const custom = inspect$1.custom;
-
-// Copyright (c) Microsoft Corporation.
-// Licensed under the MIT License.
-const errorSanitizer = new Sanitizer();
-/**
- * A custom error type for failed pipeline requests.
- */
-class RestError extends Error {
-    constructor(message, options = {}) {
-        super(message);
-        this.name = "RestError";
-        this.code = options.code;
-        this.statusCode = options.statusCode;
-        // The request and response may contain sensitive information in the headers or body.
-        // To help prevent this sensitive information being accidentally logged, the request and response
-        // properties are marked as non-enumerable here. This prevents them showing up in the output of
-        // JSON.stringify and console.log.
-        Object.defineProperty(this, "request", { value: options.request, enumerable: false });
-        Object.defineProperty(this, "response", { value: options.response, enumerable: false });
-        Object.setPrototypeOf(this, RestError.prototype);
-    }
-    /**
-     * Logging method for util.inspect in Node
-     */
-    [custom]() {
-        // Extract non-enumerable properties and add them back. This is OK since in this output the request and
-        // response get sanitized.
-        return `RestError: ${this.message} \n ${errorSanitizer.sanitize(Object.assign(Object.assign({}, this), { request: this.request, response: this.response }))}`;
-    }
-}
-/**
- * Something went wrong when making the request.
- * This means the actual request failed for some reason,
- * such as a DNS issue or the connection being lost.
- */
-RestError.REQUEST_SEND_ERROR = "REQUEST_SEND_ERROR";
-/**
- * This means that parsing the response from the server failed.
- * It may have been malformed.
- */
-RestError.PARSE_ERROR = "PARSE_ERROR";
 /**
  * Typeguard for RestError
  * @param e - Something caught by a catch clause.
  */
 function isRestError(e) {
-    if (e instanceof RestError) {
-        return true;
-    }
-    return isError(e) && e.name === "RestError";
+    return isRestError$1(e);
 }
 
 // Copyright (c) Microsoft Corporation.
@@ -39223,6 +37666,66 @@ function tryProcessResponse$1(span, response) {
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 /**
+ * Creates a native AbortSignal which reflects the state of the provided AbortSignalLike.
+ * If the AbortSignalLike is already a native AbortSignal, it is returned as is.
+ * @param abortSignalLike - The AbortSignalLike to wrap.
+ * @returns - An object containing the native AbortSignal and an optional cleanup function. The cleanup function should be called when the AbortSignal is no longer needed.
+ */
+function wrapAbortSignalLike(abortSignalLike) {
+    if (abortSignalLike instanceof AbortSignal) {
+        return { abortSignal: abortSignalLike };
+    }
+    if (abortSignalLike.aborted) {
+        return { abortSignal: AbortSignal.abort(abortSignalLike.reason) };
+    }
+    const controller = new AbortController();
+    let needsCleanup = true;
+    function cleanup() {
+        if (needsCleanup) {
+            abortSignalLike.removeEventListener("abort", listener);
+            needsCleanup = false;
+        }
+    }
+    function listener() {
+        controller.abort(abortSignalLike.reason);
+        cleanup();
+    }
+    abortSignalLike.addEventListener("abort", listener);
+    return { abortSignal: controller.signal, cleanup };
+}
+
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+const wrapAbortSignalLikePolicyName = "wrapAbortSignalLikePolicy";
+/**
+ * Policy that ensure that any AbortSignalLike is wrapped in a native AbortSignal for processing by the pipeline.
+ * Since the ts-http-runtime expects a native AbortSignal, this policy is used to ensure that any AbortSignalLike is wrapped in a native AbortSignal.
+ *
+ * @returns - created policy
+ */
+function wrapAbortSignalLikePolicy() {
+    return {
+        name: wrapAbortSignalLikePolicyName,
+        sendRequest: async (request, next) => {
+            if (!request.abortSignal) {
+                return next(request);
+            }
+            const { abortSignal, cleanup } = wrapAbortSignalLike(request.abortSignal);
+            // eslint-disable-next-line no-param-reassign
+            request.abortSignal = abortSignal;
+            try {
+                return await next(request);
+            }
+            finally {
+                cleanup === null || cleanup === void 0 ? void 0 : cleanup();
+            }
+        },
+    };
+}
+
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+/**
  * Create a new pipeline with a default set of customizable policies.
  * @param options - Options to configure a custom pipeline.
  */
@@ -39239,6 +37742,7 @@ function createPipelineFromOptions(options) {
         pipeline.addPolicy(proxyPolicy(options.proxyOptions));
         pipeline.addPolicy(decompressResponsePolicy());
     }
+    pipeline.addPolicy(wrapAbortSignalLikePolicy());
     pipeline.addPolicy(formDataPolicy(), { beforePolicies: [multipartPolicyName] });
     pipeline.addPolicy(userAgentPolicy(options.userAgentOptions));
     pipeline.addPolicy(setClientRequestIdPolicy((_a = options.telemetryOptions) === null || _a === void 0 ? void 0 : _a.clientRequestIdHeaderName));
@@ -40372,6 +38876,90 @@ async function generatePromptFile$1(template, config, systemPromptPath) {
 }
 
 /**
+ * Merges multiple response JSON files into a single response file.
+ *
+ * @param inputFiles Comma or newline separated list of input files.
+ * @param responsesDir The directory with response files.
+ * @param outputPath Path to write the merged response file.
+ * @returns Promise that resolves with the merged response data.
+ */
+async function mergeResponses(inputFiles, responsesDir, outputPath) {
+    const allFiles = [];
+    {
+        // Process all JSON files from responses directory
+        try {
+            const files = await fs.promises.readdir(path.join(responsesDir));
+            const jsonFilePaths = files
+                .filter((f) => f.endsWith('.json')) // get json files
+                .map((f) => path.join(responsesDir, f)); // construct full paths
+            allFiles.push(...jsonFilePaths);
+        }
+        catch {
+            // The directory may not exist, so we ignore the error
+        }
+    }
+    if (allFiles.length === 0) {
+        throw new Error('No input files specified for merging responses');
+    }
+    coreExports.info(`Merging files: ${allFiles.join(', ')}`);
+    const merged = {
+        remarks: [],
+        regression: null,
+        labels: []
+    };
+    for (const file of allFiles) {
+        try {
+            coreExports.info(`Processing file: ${file}`);
+            // Read and parse the JSON file
+            const fileContents = await getFileContents(file);
+            const json = JSON.parse(fileContents);
+            // Merge the JSON data
+            for (const [key, value] of Object.entries(json)) {
+                if (merged[key]) {
+                    if (Array.isArray(merged[key]) && Array.isArray(value)) {
+                        merged[key].push(...value);
+                    }
+                    else {
+                        merged[key] = value;
+                    }
+                }
+                else {
+                    merged[key] = value;
+                }
+            }
+        }
+        catch {
+            coreExports.warning(`Failed to read or parse file: ${file}`);
+        }
+    }
+    await fs.promises.mkdir(path.dirname(outputPath), { recursive: true });
+    await fs.promises.writeFile(outputPath, JSON.stringify(merged, null, 2));
+    coreExports.info(`Merged response written to: ${outputPath}`);
+    return merged;
+}
+/**
+ * Helper function to read file contents and remove wrapping code blocks if present.
+ *
+ * @param file Path to the file to read.
+ * @returns Promise that resolves with the file contents.
+ */
+async function getFileContents(file) {
+    let fileContents = await fs.promises.readFile(file, 'utf8');
+    // Break file contents into lines
+    const lines = fileContents.split('\n');
+    // Remove wrapping code blocks if present
+    if (lines[0]?.match(/^\s*```/)) {
+        lines.shift();
+    }
+    if (lines[lines.length - 1]?.match(/^\s*```/)) {
+        lines.pop();
+    }
+    // Combine lines back into a single string
+    fileContents = lines.join('\n');
+    return fileContents;
+}
+
+/**
  * Comments on an issue with the provided summary.
  *
  * @param summaryFile Path to the file containing the summary text.
@@ -40379,13 +38967,14 @@ async function generatePromptFile$1(template, config, systemPromptPath) {
  * @param octokit The GitHub API client.
  */
 async function commentOnIssue(octokit, summaryFile, config, footer) {
-    const summary = await fs.promises.readFile(summaryFile, 'utf8');
+    const summary = await fs.promises.readFile(path.join(summaryFile), 'utf8');
     const commentBody = `
 ${summary}
 
-${footer}
-`;
-    if (commentBody.trim().length === 0) {
+${footer ?? ''}
+`.trim();
+    // If the comment body is empty, do not post an empty comment
+    if (commentBody.length === 0) {
         return;
     }
     if (config.dryRun) {
@@ -40407,7 +38996,10 @@ ${footer}
  * @param octokit The GitHub API client.
  */
 async function applyLabelsToIssue(octokit, labels, config) {
-    if (labels.length === 0) {
+    // Filter out empty labels
+    labels = labels?.filter((label) => label.trim().length > 0);
+    // If no labels to apply, return early
+    if (!labels || labels.length === 0) {
         return;
     }
     if (config.dryRun) {
@@ -40487,85 +39079,72 @@ async function getIssueDetails(graphql, owner, repo, issueNumber) {
         throw new Error(`Issue not found: ${owner}/${repo}#${issueNumber}`);
     }
     // Get all reactions for the issue
-    const allReactions = [];
-    let reactionsCursor = null;
-    let hasNextReactions = issue.reactions.pageInfo.hasNextPage;
-    // Add first batch of reactions
-    issue.reactions.nodes?.forEach((reaction) => {
-        if (!reaction)
+    const allReactions = await getIssueReactions(graphql, issue, owner, repo, issueNumber);
+    // Get all comments
+    const allComments = await getIssueComments(graphql, issue, owner, repo, issueNumber);
+    const issueDetails = {
+        id: issue.id,
+        owner: owner,
+        repo: repo,
+        number: issue.number,
+        title: issue.title,
+        body: issue.body,
+        state: issue.state.toLowerCase(),
+        createdAt: new Date(issue.createdAt),
+        updatedAt: new Date(issue.updatedAt),
+        closedAt: issue.closedAt ? new Date(issue.closedAt) : null,
+        comments: allComments,
+        reactions: allReactions,
+        user: {
+            login: issue.author?.login || '',
+            type: issue.author?.__typename || ''
+        },
+        assignees: getAssignees(issue)
+    };
+    return issueDetails;
+}
+function getAssignees(issue) {
+    const allAssignees = [];
+    if (!issue.assignees.nodes) {
+        return allAssignees;
+    }
+    issue.assignees.nodes.map((assignee) => {
+        if (!assignee) {
             return;
-        allReactions.push({
-            id: reaction.id,
-            user: {
-                login: reaction.user.login,
-                id: reaction.user.id,
-                type: 'User'
-            },
-            reaction: reaction.content.toLowerCase(),
-            created_at: reaction.createdAt
+        }
+        allAssignees.push({
+            login: assignee.login,
+            type: assignee.__typename || ''
         });
     });
-    reactionsCursor = issue.reactions.pageInfo.endCursor;
+    return allAssignees;
+}
+async function getIssueReactions(graphql, issue, owner, repo, issueNumber) {
+    const allReactions = [];
+    // Add first batch of reactions
+    let reactionsCursor = addReactions(issue.reactions, allReactions);
     // Paginate through remaining reactions
-    while (hasNextReactions) {
-        const nextResult = await octokit.graphql(query, {
+    while (reactionsCursor) {
+        const nextResult = await graphql.GetIssueDetails({
             owner,
             repo,
             issueNumber,
             commentsCursor: null,
             reactionsCursor
         });
-        const nextReactions = nextResult.repository.issue.reactions;
-        nextReactions.nodes.forEach((reaction) => {
-            allReactions.push({
-                id: reaction.id,
-                user: {
-                    login: reaction.user.login,
-                    id: reaction.user.id,
-                    type: 'User'
-                },
-                reaction: reaction.content.toLowerCase(),
-                created_at: reaction.createdAt
-            });
-        });
-        hasNextReactions = nextReactions.pageInfo.hasNextPage;
-        reactionsCursor = nextReactions.pageInfo.endCursor;
+        reactionsCursor = addReactions(nextResult?.repository?.issue?.reactions, allReactions);
     }
-    // Get all comments
+    return allReactions;
+}
+async function getIssueComments(graphql, issue, owner, repo, issueNumber) {
     const allComments = [];
-    let commentsCursor = null;
-    let hasNextComments = issue.comments.pageInfo.hasNextPage;
-    // Add first batch of comments
-    for (const comment of issue.comments.nodes) {
-        const commentReactions = [];
-        // Get comment reactions
-        comment.reactions.nodes.forEach((reaction) => {
-            commentReactions.push({
-                id: reaction.id,
-                user: {
-                    login: reaction.user.login,
-                    id: reaction.user.id,
-                    type: 'User'
-                },
-                reaction: reaction.content.toLowerCase(),
-                created_at: reaction.createdAt
-            });
-        });
-        allComments.push({
-            id: comment.id,
-            user: {
-                login: comment.author.login,
-                id: comment.author.id,
-                type: 'User'
-            },
-            created_at: comment.createdAt,
-            reactions: commentReactions.length,
-            reactions_data: commentReactions
-        });
+    if (!issue.comments.nodes) {
+        return allComments;
     }
-    commentsCursor = issue.comments.pageInfo.endCursor;
+    // Add first batch of comments
+    let commentsCursor = addComments(issue.comments, allComments);
     // Paginate through remaining comments
-    while (hasNextComments) {
+    while (commentsCursor) {
         const nextResult = await graphql.GetIssueDetails({
             owner,
             repo,
@@ -40573,61 +39152,55 @@ async function getIssueDetails(graphql, owner, repo, issueNumber) {
             commentsCursor,
             reactionsCursor: null
         });
-        const nextComments = nextResult.repository.issue.comments;
-        for (const comment of nextComments.nodes) {
-            const commentReactions = [];
-            // Get comment reactions
-            comment.reactions.nodes.forEach((reaction) => {
-                commentReactions.push({
-                    id: reaction.id,
-                    user: {
-                        login: reaction.user.login,
-                        id: reaction.user.id,
-                        type: 'User'
-                    },
-                    reaction: reaction.content.toLowerCase(),
-                    created_at: reaction.createdAt
-                });
-            });
-            allComments.push({
-                id: comment.id,
-                user: {
-                    login: comment.author.login,
-                    id: comment.author.id,
-                    type: 'User'
-                },
-                created_at: comment.createdAt,
-                reactions: commentReactions.length,
-                reactions_data: commentReactions
-            });
-        }
-        hasNextComments = nextComments.pageInfo.hasNextPage;
-        commentsCursor = nextComments.pageInfo.endCursor;
+        commentsCursor = addComments(nextResult?.repository?.issue?.comments, allComments);
     }
-    return {
-        id: issue.id,
-        number: issue.number,
-        title: issue.title,
-        body: issue.body || '',
-        state: issue.state.toLowerCase(),
-        created_at: issue.createdAt,
-        updated_at: issue.updatedAt,
-        closed_at: issue.closedAt,
-        comments: allComments.length,
-        reactions: allReactions.length,
-        reactions_data: allReactions,
-        comments_data: allComments,
-        user: {
-            login: issue.author.login,
-            id: issue.author.id,
-            type: 'User'
-        },
-        assignees: issue.assignees.nodes.map((assignee) => ({
-            login: assignee.login,
-            id: assignee.id,
-            type: 'User'
-        }))
-    };
+    return allComments;
+}
+function addReactions(reactions, allReactions) {
+    if (!reactions?.nodes) {
+        return null;
+    }
+    reactions.nodes.forEach((reaction) => {
+        if (!reaction) {
+            return;
+        }
+        allReactions.push({
+            user: {
+                login: reaction.user?.login || '',
+                type: reaction.user?.__typename || ''
+            },
+            reaction: reaction.content.toLowerCase(),
+            createdAt: new Date(reaction.createdAt)
+        });
+    });
+    if (!reactions.pageInfo.hasNextPage) {
+        return null;
+    }
+    return reactions.pageInfo.endCursor;
+}
+function addComments(comments, allComments) {
+    if (!comments?.nodes) {
+        return null;
+    }
+    comments.nodes.forEach((comment) => {
+        if (!comment) {
+            return;
+        }
+        const allReactions = [];
+        addReactions(comment.reactions, allReactions);
+        allComments.push({
+            user: {
+                login: comment.author?.login || '',
+                type: comment.author?.__typename || ''
+            },
+            createdAt: new Date(comment.createdAt),
+            reactions: allReactions
+        });
+    });
+    if (!comments.pageInfo.hasNextPage) {
+        return null;
+    }
+    return comments.pageInfo.endCursor;
 }
 
 const systemPrompt = `
@@ -40776,139 +39349,10 @@ async function generatePromptFile(template, promptPath, config, mergedResponseFi
 }
 
 /**
- * Manages reactions (such as eyes) for an issue or PR.
- *
- * @param config The reactions configuration object.
- * @param addReaction If true, add the reaction; if false, remove it.
- */
-async function manageReactions(config, addReaction) {
-    const octokit = githubExports.getOctokit(config.token);
-    if (addReaction) {
-        await addEyes(octokit, config);
-    }
-    else {
-        await removeEyes(octokit, config);
-    }
-}
-/**
- * Applies labels and comments to an issue based on merged response data.
- *
- * @param config The triage configuration object.
- */
-async function applyLabelsAndComment(config, mergedResponse, mergedResponseFile) {
-    const octokit = githubExports.getOctokit(config.token);
-    // Log the merged response for debugging
-    coreExports.info(`Merged response: ${JSON.stringify(mergedResponse, null, 2)}`);
-    // Generate summary using AI
-    if (config.applyComment) {
-        await applyComment(octokit, mergedResponseFile, config);
-    }
-    // Apply labels to the issue
-    if (config.applyLabels) {
-        await applyLabels(octokit, mergedResponse, config);
-    }
-}
-async function applyComment(octokit, mergedResponseFile, config) {
-    // Generate summary response using AI
-    const summaryResponseFile = await generateSummary(config, mergedResponseFile);
-    // Comment on the issue
-    await commentOnIssue(octokit, summaryResponseFile, config, config.commentFooter);
-}
-async function applyLabels(octokit, mergedResponse, config) {
-    // Collect all the labels from the merged response
-    const labels = mergedResponse.labels?.map((l) => l.label)?.filter(Boolean) || [];
-    // Apply labels to the issue
-    await applyLabelsToIssue(octokit, labels, config);
-}
-
-/**
- * Merges multiple response JSON files into a single response file.
- *
- * @param inputFiles Comma or newline separated list of input files.
- * @param responsesDir The directory with response files.
- * @param outputPath Path to write the merged response file.
- * @returns Promise that resolves with the merged response data.
- */
-async function mergeResponses(inputFiles, responsesDir, outputPath) {
-    const allFiles = [];
-    {
-        // Process all JSON files from responses directory
-        try {
-            const files = await fs.promises.readdir(path.join(responsesDir));
-            const jsonFilePaths = files
-                .filter((f) => f.endsWith('.json')) // get json files
-                .map((f) => path.join(responsesDir, f)); // construct full paths
-            allFiles.push(...jsonFilePaths);
-        }
-        catch {
-            // The directory may not exist, so we ignore the error
-        }
-    }
-    if (allFiles.length === 0) {
-        throw new Error('No input files specified for merging responses');
-    }
-    coreExports.info(`Merging files: ${allFiles.join(', ')}`);
-    const merged = {
-        remarks: [],
-        regression: null,
-        labels: []
-    };
-    for (const file of allFiles) {
-        try {
-            coreExports.info(`Processing file: ${file}`);
-            // Read and parse the JSON file
-            const fileContents = await getFileContents(file);
-            const json = JSON.parse(fileContents);
-            // Merge the JSON data
-            for (const [key, value] of Object.entries(json)) {
-                if (merged[key]) {
-                    if (Array.isArray(merged[key]) && Array.isArray(value)) {
-                        merged[key].push(...value);
-                    }
-                    else {
-                        merged[key] = value;
-                    }
-                }
-                else {
-                    merged[key] = value;
-                }
-            }
-        }
-        catch {
-            coreExports.warning(`Failed to read or parse file: ${file}`);
-        }
-    }
-    await fs.promises.mkdir(path.dirname(outputPath), { recursive: true });
-    await fs.promises.writeFile(outputPath, JSON.stringify(merged, null, 2));
-    coreExports.info(`Merged response written to: ${outputPath}`);
-    return merged;
-}
-/**
- * Helper function to read file contents and remove wrapping code blocks if present.
- *
- * @param file Path to the file to read.
- * @returns Promise that resolves with the file contents.
- */
-async function getFileContents(file) {
-    let fileContents = await fs.promises.readFile(file, 'utf8');
-    // Break file contents into lines
-    const lines = fileContents.split('\n');
-    // Remove wrapping code blocks if present
-    if (lines[0]?.match(/^\s*```/)) {
-        lines.shift();
-    }
-    if (lines[lines.length - 1]?.match(/^\s*```/)) {
-        lines.pop();
-    }
-    // Combine lines back into a single string
-    fileContents = lines.join('\n');
-    return fileContents;
-}
-
-/**
  * Run the normal triage workflow
  */
 async function runTriageWorkflow(config) {
+    const octokit = githubExports.getOctokit(config.token);
     const shouldAddLabels = config.template ? true : false;
     const shouldAddSummary = config.applyLabels || config.applyComment;
     const shouldAddReactions = shouldAddLabels || shouldAddSummary;
@@ -40917,7 +39361,7 @@ async function runTriageWorkflow(config) {
         let responseFile = '';
         // Step 1: Add eyes reaction at the start
         if (shouldAddReactions) {
-            await manageReactions(config, true);
+            await addEyes(octokit, config);
         }
         // Step 2: Select labels if template is provided
         if (shouldAddLabels) {
@@ -40925,19 +39369,42 @@ async function runTriageWorkflow(config) {
         }
         // Step 3: Apply labels and comment if requested
         if (shouldAddSummary) {
-            // Merge response JSON files
-            const mergedResponseFile = path$1.join(config.tempDir, 'triage-assistant', 'responses.json');
-            const responsesDir = path$1.join(config.tempDir, 'triage-assistant', 'responses');
-            const mergedResponse = await mergeResponses('', responsesDir, mergedResponseFile);
-            await applyLabelsAndComment(config, mergedResponse, mergedResponseFile);
+            await mergeAndApplyTriage(octokit, config);
         }
         return responseFile;
     }
     finally {
         // Step 4: Remove eyes reaction at the end if needed
         if (shouldRemoveReactions) {
-            await manageReactions(config, false);
+            await removeEyes(octokit, config);
         }
+    }
+}
+/**
+ * Merges response JSON files and applies labels and comments to the issue.
+ *
+ * @param octokit The GitHub API client.
+ * @param config The triage configuration object.
+ * @returns Promise that resolves with the path to the merged response file.
+ */
+async function mergeAndApplyTriage(octokit, config) {
+    // Merge response JSON files
+    const mergedResponseFile = path.join(config.tempDir, 'triage-assistant', 'responses.json');
+    const responsesDir = path.join(config.tempDir, 'triage-assistant', 'responses');
+    const mergedResponse = await mergeResponses('', responsesDir, mergedResponseFile);
+    // Log the merged response for debugging
+    coreExports.info(`Merged response: ${JSON.stringify(mergedResponse, null, 2)}`);
+    if (config.applyComment) {
+        // Generate summary response using AI
+        const summaryResponseFile = await generateSummary(config, mergedResponseFile);
+        // Comment on the issue
+        await commentOnIssue(octokit, summaryResponseFile, config, config.commentFooter);
+    }
+    if (config.applyLabels) {
+        // Collect all the labels from the merged response
+        const labels = mergedResponse.labels?.map((l) => l.label)?.filter(Boolean) || [];
+        // Apply labels to the issue
+        await applyLabelsToIssue(octokit, labels, config);
     }
 }
 
@@ -45870,9 +44337,7 @@ var extras = {
 gql["default"] = gql;
 
 // This file is auto-generated. Do not edit directly.
-// @ts-nocheck
 /* eslint-disable */
-// prettier-ignore
 /** The actor's type. */
 var ActorType;
 (function (ActorType) {
@@ -46726,7 +45191,7 @@ var LabelOrderField;
     LabelOrderField["CreatedAt"] = "CREATED_AT";
     /** Order labels by issue count */
     LabelOrderField["IssueCount"] = "ISSUE_COUNT";
-    /** Order labels by name  */
+    /** Order labels by name */
     LabelOrderField["Name"] = "NAME";
 })(LabelOrderField || (LabelOrderField = {}));
 /** Properties by which language connections can be ordered. */
@@ -49241,80 +47706,72 @@ var WorkflowState;
     WorkflowState["DisabledManually"] = "DISABLED_MANUALLY";
 })(WorkflowState || (WorkflowState = {}));
 const GetIssueDetailsDocument = gql `
-  query GetIssueDetails(
-    $owner: String!
-    $repo: String!
-    $issueNumber: Int!
-    $commentsCursor: String
-    $reactionsCursor: String
-  ) {
-    repository(owner: $owner, name: $repo) {
-      issue(number: $issueNumber) {
-        id
-        number
-        title
-        body
-        state
-        createdAt
-        updatedAt
-        closedAt
-        author {
+    query GetIssueDetails($owner: String!, $repo: String!, $issueNumber: Int!, $commentsCursor: String, $reactionsCursor: String) {
+  repository(owner: $owner, name: $repo) {
+    owner {
+      login
+      __typename
+    }
+    name
+    nameWithOwner
+    issue(number: $issueNumber) {
+      id
+      number
+      title
+      body
+      state
+      createdAt
+      updatedAt
+      closedAt
+      author {
+        login
+        __typename
+      }
+      assignees(first: 100) {
+        nodes {
           login
-          ... on User {
-            id
-          }
+          __typename
         }
-        assignees(first: 100) {
-          nodes {
+      }
+      reactions(first: 100, after: $reactionsCursor) {
+        totalCount
+        pageInfo {
+          hasNextPage
+          endCursor
+        }
+        nodes {
+          content
+          createdAt
+          user {
             login
-            id
+            __typename
           }
         }
-        reactions(first: 100, after: $reactionsCursor) {
-          totalCount
-          pageInfo {
-            hasNextPage
-            endCursor
-          }
-          nodes {
-            id
-            content
-            createdAt
-            user {
-              login
-              id
-            }
-          }
+      }
+      comments(first: 100, after: $commentsCursor) {
+        totalCount
+        pageInfo {
+          hasNextPage
+          endCursor
         }
-        comments(first: 100, after: $commentsCursor) {
-          totalCount
-          pageInfo {
-            hasNextPage
-            endCursor
+        nodes {
+          createdAt
+          author {
+            login
+            __typename
           }
-          nodes {
-            id
-            createdAt
-            author {
-              login
-              ... on User {
-                id
-              }
+          reactions(first: 100) {
+            totalCount
+            pageInfo {
+              hasNextPage
+              endCursor
             }
-            reactions(first: 100) {
-              totalCount
-              pageInfo {
-                hasNextPage
-                endCursor
-              }
-              nodes {
-                id
-                content
-                createdAt
-                user {
-                  login
-                  id
-                }
+            nodes {
+              content
+              createdAt
+              user {
+                login
+                __typename
               }
             }
           }
@@ -49322,17 +47779,13 @@ const GetIssueDetailsDocument = gql `
       }
     }
   }
-`;
+}
+    `;
 const defaultWrapper = (action, _operationName, _operationType, _variables) => action();
 function getSdk(client, withWrapper = defaultWrapper) {
     return {
         GetIssueDetails(variables, requestHeaders, signal) {
-            return withWrapper((wrappedRequestHeaders) => client.request({
-                document: GetIssueDetailsDocument,
-                variables,
-                requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders },
-                signal
-            }), 'GetIssueDetails', 'query', variables);
+            return withWrapper((wrappedRequestHeaders) => client.request({ document: GetIssueDetailsDocument, variables, requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders }, signal }), 'GetIssueDetails', 'query', variables);
         }
     };
 }
@@ -49509,66 +47962,58 @@ function getHistoricalIssueDetails(issue) {
     const now = new Date();
     const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
     // If the issue is newer than 7 days, return it as-is
-    if (new Date(issue.created_at) > sevenDaysAgo) {
+    if (issue.createdAt > sevenDaysAgo) {
         return {
             ...issue,
-            comments: 0,
-            comments_data: [],
-            reactions: 0,
-            reactions_data: []
+            comments: [],
+            reactions: []
         };
     }
     // Filter reactions to only include those created before 7 days ago
-    const historicReactions = issue.reactions_data.filter((reaction) => {
-        const reactionDate = new Date(reaction.created_at);
-        return reactionDate <= sevenDaysAgo;
+    const historicReactions = (issue.reactions || []).filter((reaction) => {
+        return reaction.createdAt <= sevenDaysAgo;
     });
     // Create historic snapshot by filtering comments and reactions to 7 days ago
-    const historicComments = issue.comments_data
-        ?.filter((comment) => {
-        const commentDate = new Date(comment.created_at);
-        return commentDate <= sevenDaysAgo;
+    const historicComments = (issue.comments || [])
+        .filter((comment) => {
+        return comment.createdAt <= sevenDaysAgo;
     })
         .map((comment) => {
         // Filter comment reactions to only include those created before 7 days ago
-        const commentHistoricReactions = comment.reactions_data.filter((reaction) => {
-            const reactionDate = new Date(reaction.created_at);
-            return reactionDate <= sevenDaysAgo;
+        const commentHistoricReactions = (comment.reactions || []).filter((reaction) => {
+            return reaction.createdAt <= sevenDaysAgo;
         });
         return {
             ...comment,
-            reactions: commentHistoricReactions.length,
-            reactions_data: commentHistoricReactions
+            reactions: commentHistoricReactions
         };
-    }) || [];
+    });
     const historicIssue = {
         ...issue,
-        comments: historicComments.length,
-        comments_data: historicComments,
-        reactions: historicReactions.length,
-        reactions_data: historicReactions,
-        updated_at: sevenDaysAgo.toISOString()
+        comments: historicComments || [],
+        reactions: historicReactions || [],
+        updatedAt: sevenDaysAgo
     };
     return historicIssue;
 }
 /**
  * Get unique contributors to an issue
  */
-function getUniqueContributors(issue) {
+function getUniqueContributorsCount(issue) {
     const contributors = new Set();
     // Add issue author
     contributors.add(issue.user.login);
     // Add assignees
     issue.assignees.forEach((assignee) => contributors.add(assignee.login));
     // Add comment authors
-    issue.comments_data?.forEach((comment) => contributors.add(comment.user.login));
+    issue.comments?.forEach((comment) => contributors.add(comment.user.login));
     return contributors.size;
 }
 /**
  * Get time since last activity in days
  */
-function getTimeSinceLastActivity(issue) {
-    const lastUpdate = new Date(issue.updated_at);
+function getDaysSinceLastActivity(issue) {
+    const lastUpdate = issue.updatedAt;
     const now = new Date();
     const diffMs = now.getTime() - lastUpdate.getTime();
     const diffDays = diffMs / (1000 * 60 * 60 * 24);
@@ -49577,8 +48022,8 @@ function getTimeSinceLastActivity(issue) {
 /**
  * Get issue age in days
  */
-function getIssueAge(issue) {
-    const created = new Date(issue.created_at);
+function getDaysSinceCreation(issue) {
+    const created = issue.createdAt;
     const now = new Date();
     const diffMs = now.getTime() - created.getTime();
     const diffDays = diffMs / (1000 * 60 * 60 * 24);
@@ -49588,21 +48033,21 @@ function getIssueAge(issue) {
  * Calculate engagement score for an issue based on the engagement algorithm
  */
 function calculateScore(issue) {
-    // Components based on C# reference implementation:
+    // Components:
     // - Number of Comments       => Indicates discussion and interest
     // - Number of Reactions      => Shows emotional engagement
     // - Number of Contributors   => Reflects the diversity of input
     // - Time Since Last Activity => More recent activity indicates higher engagement
     // - Issue Age                => Older issues might need more attention
     // - Number of Linked PRs     => Shows active work on the issue (not implemented)
-    const totalComments = issue.comments;
-    const totalCommentReactions = issue.comments_data?.reduce((sum, comment) => sum + comment.reactions, 0) || 0;
-    const totalReactions = issue.reactions + totalCommentReactions;
-    const contributors = getUniqueContributors(issue);
-    const lastActivity = Math.max(1, getTimeSinceLastActivity(issue));
-    const issueAge = Math.max(1, getIssueAge(issue));
+    const totalComments = (issue.comments || []).length;
+    const totalCommentReactions = (issue.comments || []).reduce((sum, comment) => sum + (comment.reactions || []).length, 0);
+    const totalReactions = (issue.reactions || []).length + totalCommentReactions;
+    const contributors = getUniqueContributorsCount(issue);
+    const lastActivity = Math.max(1, getDaysSinceLastActivity(issue));
+    const issueAge = Math.max(1, getDaysSinceCreation(issue));
     const linkedPullRequests = 0; // Not implemented yet
-    // Weights from C# implementation:
+    // Weights
     const CommentsWeight = 3;
     const ReactionsWeight = 1;
     const ContributorsWeight = 2;
@@ -49618,9 +48063,9 @@ function calculateScore(issue) {
     return Math.round(score);
 }
 /**
- * Calculate previous score (7 days ago) based on C# reference implementation
+ * Calculate previous score (7 days ago) based on historical issue details
  */
-async function calculatePreviousScore(issue) {
+async function calculateHistoricalScore(issue) {
     const historicIssue = getHistoricalIssueDetails(issue);
     return calculateScore(historicIssue);
 }
@@ -49709,7 +48154,7 @@ async function calculateProjectEngagementScores(config, octokit, graphql) {
  */
 async function createEngagementItem(issueDetails, projectItemId) {
     const score = calculateScore(issueDetails);
-    const previousScore = await calculatePreviousScore(issueDetails);
+    const previousScore = await calculateHistoricalScore(issueDetails);
     const item = {
         ...(projectItemId && { id: projectItemId }),
         issue: {
