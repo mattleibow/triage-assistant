@@ -1,0 +1,37 @@
+name: Apply Engagement Scores to Project
+
+on:
+  # When the workflow is run manually
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: 'Whether to run in dry run mode'
+        required: false
+        type: boolean
+        default: false
+  # Run every 6 hours
+  schedule:
+    - cron: '0 */6 * * *'
+
+permissions:
+  contents: read
+  issues: read
+  pull-requests: read
+  projects: write
+
+jobs:
+  score:
+    name: Calculate Engagement Scores
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Apply Engagement Scores to Project
+        uses: ./
+        with:
+          template: engagement-score
+          project: 8
+          project-column: 'Engagement Score'
+          apply-scores: true
+          dry-run: ${{ inputs.dry_run || false }}
