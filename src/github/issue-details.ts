@@ -49,18 +49,18 @@ export function getHistoricalIssueDetails(issue: IssueDetails): IssueDetails {
   }
 
   // Filter reactions to only include those created before 7 days ago
-  const historicReactions = issue.reactions.filter((reaction) => {
+  const historicReactions = (issue.reactions || []).filter((reaction) => {
     return reaction.createdAt <= sevenDaysAgo
   })
 
   // Create historic snapshot by filtering comments and reactions to 7 days ago
-  const historicComments = issue.comments
+  const historicComments = (issue.comments || [])
     .filter((comment) => {
       return comment.createdAt <= sevenDaysAgo
     })
     .map((comment) => {
       // Filter comment reactions to only include those created before 7 days ago
-      const commentHistoricReactions = comment.reactions.filter((reaction) => {
+      const commentHistoricReactions = (comment.reactions || []).filter((reaction) => {
         return reaction.createdAt <= sevenDaysAgo
       })
 
@@ -132,9 +132,12 @@ export function calculateScore(issue: IssueDetails): number {
   // - Issue Age                => Older issues might need more attention
   // - Number of Linked PRs     => Shows active work on the issue (not implemented)
 
-  const totalComments = issue.comments.length
-  const totalCommentReactions = issue.comments.reduce((sum, comment) => sum + comment.reactions.length, 0)
-  const totalReactions = issue.reactions.length + totalCommentReactions
+  const totalComments = (issue.comments || []).length
+  const totalCommentReactions = (issue.comments || []).reduce(
+    (sum, comment) => sum + (comment.reactions || []).length,
+    0
+  )
+  const totalReactions = (issue.reactions || []).length + totalCommentReactions
   const contributors = getUniqueContributorsCount(issue)
   const lastActivity = Math.max(1, getDaysSinceLastActivity(issue))
   const issueAge = Math.max(1, getDaysSinceCreation(issue))
