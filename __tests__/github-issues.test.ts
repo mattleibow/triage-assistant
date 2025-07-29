@@ -6,6 +6,11 @@ import { getSdk, mockGetSdk } from '../__fixtures__/generated/graphql.js'
 import { FileSystemMock } from './helpers/filesystem-mock.js'
 
 import * as realIssues from './testData/issues.js'
+import { IssueState, GetIssueDetailsQuery } from '../src/generated/graphql.js'
+
+type GetIssueDetailsQueryIssueCommentNodes = NonNullable<
+  NonNullable<NonNullable<NonNullable<GetIssueDetailsQuery['repository']>['issue']>['comments']>['nodes']
+>
 
 // Mock dependencies using fixtures
 jest.unstable_mockModule('@actions/core', () => core)
@@ -327,7 +332,7 @@ ${mockFooter}
 
   describe('getIssueDetails', () => {
     it('should fetch issue details with comments', async () => {
-      mockGetSdk.GetIssueDetails.mockResolvedValue(realIssues.issue32)
+      mockGetSdk.GetIssueDetails.mockResolvedValue(realIssues.issue32())
 
       const result = await getIssueDetails(getSdk, 'mattleibow', 'triage-assistant', 32)
 
@@ -401,110 +406,72 @@ ${mockFooter}
     })
 
     it('should handle issue without body', async () => {
-      const issueWithoutBody = {
-        ...realIssues.issue32,
-        repository: {
-          ...realIssues.issue32.repository,
-          owner: realIssues.issue32.repository!.owner,
-          name: 'triage-assistant',
-          nameWithOwner: 'mattleibow/triage-assistant',
-          issue: {
-            ...realIssues.issue32.repository!.issue!,
-            body: null
-          }
-        }
-      }
+      const issueWithoutBody = realIssues.issue32()
+      issueWithoutBody.repository!.issue!.body = ''
       mockGetSdk.GetIssueDetails.mockResolvedValue(issueWithoutBody)
 
       const result = await getIssueDetails(getSdk, 'mattleibow', 'triage-assistant', 32)
+
       expect(result.body).toBe('')
     })
+
     it('should handle issue without comments', async () => {
-      const issueWithoutComments = {
-        ...realIssues.issue32,
-        repository: {
-          ...realIssues.issue32.repository,
-          name: 'triage-assistant',
-          nameWithOwner: 'mattleibow/triage-assistant',
-          issue: {
-            ...realIssues.issue32.repository!.issue!,
-            comments: {
-              totalCount: 0,
-              pageInfo: {
-                hasNextPage: false,
-                endCursor: null
-              },
-              nodes: []
-            }
-          }
-        }
+      const issueWithoutComments = realIssues.issue32()
+      issueWithoutComments.repository!.issue!.comments = {
+        totalCount: 0,
+        pageInfo: {
+          hasNextPage: false,
+          endCursor: null
+        },
+        nodes: []
       }
       mockGetSdk.GetIssueDetails.mockResolvedValue(issueWithoutComments)
 
       const result = await getIssueDetails(getSdk, 'mattleibow', 'triage-assistant', 32)
+
       expect(result.comments).toEqual([])
     })
+
     it('should handle GitHub API errors for issue', async () => {
       mockGetSdk.GetIssueDetails.mockRejectedValue(new Error('Issue not found'))
 
       await expect(getIssueDetails(getSdk, 'owner', 'repo', 456)).rejects.toThrow('Issue not found')
     })
+
     it('should handle GraphQL errors for missing issue', async () => {
-      const responseWithoutIssue = {
-        ...realIssues.issue32,
-        repository: {
-          ...realIssues.issue32.repository,
-          name: 'triage-assistant',
-          nameWithOwner: 'mattleibow/triage-assistant',
-          issue: null
-        }
-      }
+      const responseWithoutIssue = realIssues.issue32()
+      responseWithoutIssue.repository!.issue = null
       mockGetSdk.GetIssueDetails.mockResolvedValue(responseWithoutIssue)
 
       await expect(getIssueDetails(getSdk, 'owner', 'repo', 456)).rejects.toThrow('Issue not found: owner/repo#456')
     })
+
     it('should handle closed issue', async () => {
-      const closedIssue = {
-        ...realIssues.issue32,
-        repository: {
-          ...realIssues.issue32.repository,
-          name: 'triage-assistant',
-          nameWithOwner: 'mattleibow/triage-assistant',
-          issue: {
-            ...realIssues.issue32.repository!.issue!,
-            state: 'CLOSED' as any,
-            closedAt: '2023-01-03T00:00:00Z'
-          }
-        }
-      }
+      const closedIssue = realIssues.issue32()
+      closedIssue.repository!.issue!.state = IssueState.Closed
+      closedIssue.repository!.issue!.closedAt = '2023-01-03T00:00:00Z'
       mockGetSdk.GetIssueDetails.mockResolvedValue(closedIssue)
 
       const result = await getIssueDetails(getSdk, 'mattleibow', 'triage-assistant', 32)
+
       expect(result.state).toBe('closed')
       expect(result.closedAt).toEqual(new Date('2023-01-03T00:00:00Z'))
     })
+
     it('should handle issue without assignees', async () => {
-      const issueWithoutAssignees = {
-        ...realIssues.issue32,
-        repository: {
-          ...realIssues.issue32.repository,
-          name: 'triage-assistant',
-          nameWithOwner: 'mattleibow/triage-assistant',
-          issue: {
-            ...realIssues.issue32.repository!.issue!,
-            assignees: {
-              nodes: []
-            }
-          }
-        }
+      const issueWithoutAssignees = realIssues.issue32()
+      issueWithoutAssignees.repository!.issue!.assignees = {
+        nodes: []
       }
       mockGetSdk.GetIssueDetails.mockResolvedValue(issueWithoutAssignees)
 
       const result = await getIssueDetails(getSdk, 'mattleibow', 'triage-assistant', 32)
+
       expect(result.assignees).toEqual([])
     })
+
     it('should handle large number of comments', async () => {
-      const manyComments = Array.from({ length: 100 }, (_, i) => ({
+      const manyComments: GetIssueDetailsQueryIssueCommentNodes = Array.from({ length: 100 }, (_, i) => ({
         author: {
           login: `commenter${i + 1}`,
           __typename: 'User'
@@ -519,25 +486,14 @@ ${mockFooter}
           nodes: []
         }
       }))
-
-      const issueWithManyComments = {
-        ...realIssues.issue32,
-        repository: {
-          ...realIssues.issue32.repository,
-          name: 'triage-assistant',
-          nameWithOwner: 'mattleibow/triage-assistant',
-          issue: {
-            ...realIssues.issue32.repository!.issue!,
-            comments: {
-              totalCount: 100,
-              pageInfo: {
-                hasNextPage: false,
-                endCursor: null
-              },
-              nodes: manyComments
-            }
-          }
-        }
+      const issueWithManyComments = realIssues.issue32()
+      issueWithManyComments.repository!.issue!.comments = {
+        totalCount: 100,
+        pageInfo: {
+          hasNextPage: false,
+          endCursor: null
+        },
+        nodes: manyComments
       }
       mockGetSdk.GetIssueDetails.mockResolvedValue(issueWithManyComments)
 

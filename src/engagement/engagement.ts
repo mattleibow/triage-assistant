@@ -7,7 +7,7 @@ import { EverythingConfig, EngagementConfig } from '../config.js'
 import { EngagementResponse, EngagementItem, EngagementClassification } from './engagement-types.js'
 import { getIssueDetails } from '../github/issues.js'
 import { getAllProjectItems, updateProjectWithScores } from '../github/projects.js'
-import { IssueDetails, calculateScore, calculatePreviousScore } from '../github/issue-details.js'
+import { IssueDetails, calculateScore, calculateHistoricalScore } from '../github/issue-details.js'
 
 type Octokit = ReturnType<typeof github.getOctokit>
 
@@ -128,7 +128,7 @@ export async function createEngagementItem(
   projectItemId?: string
 ): Promise<EngagementItem> {
   const score = calculateScore(issueDetails)
-  const previousScore = await calculatePreviousScore(issueDetails)
+  const previousScore = await calculateHistoricalScore(issueDetails)
 
   const item: EngagementItem = {
     ...(projectItemId && { id: projectItemId }),
