@@ -16,9 +16,7 @@ generates:
       - add:
           content: |
             // This file is auto-generated. Do not edit directly.
-            // @ts-nocheck
             /* eslint-disable */
-            // prettier-ignore
 
   schemas/github.schema.graphql:
     plugins:

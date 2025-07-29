@@ -1,7 +1,5 @@
 // This file is auto-generated. Do not edit directly.
-// @ts-nocheck
 /* eslint-disable */
-// prettier-ignore
 
 import { GraphQLClient, RequestOptions } from 'graphql-request';
 import gql from 'graphql-tag';
