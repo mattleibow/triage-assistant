@@ -1,6 +1,6 @@
 ---
 name: "@azure-rest/core-client"
-version: 2.4.0
+version: 2.5.0
 type: npm
 summary: Core library for interfacing with Azure Rest Clients
 homepage: https://github.com/Azure/azure-sdk-for-js/blob/main/sdk/core/core-client-rest/

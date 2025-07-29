@@ -26,9 +26,8 @@ export class FileSystemMock {
       const file = this.cleanDirPath(filePath.toString())
       // console.log(`Reading file: ${file}`)
 
-      const content = this.files.get(file)
-      if (content) {
-        return content
+      if (this.files.has(file)) {
+        return this.files.get(file) || ''
       } else {
         throw new Error(`File not found: ${filePath}`)
       }
@@ -69,6 +68,19 @@ export class FileSystemMock {
 
   has(filePath: string): boolean {
     return this.files.has(filePath)
+  }
+
+  dump() {
+    const output: string[] = []
+    output.push('In-memory filesystem contents:')
+    this.files.forEach((_, filePath) => {
+      output.push(`  ${filePath}`)
+    })
+    output.push('Directories:')
+    this.directories.forEach((dir) => {
+      output.push(`  ${dir}`)
+    })
+    console.log(output.join('\n').trim())
   }
 
   private writeFile(filePath: string, content: string) {
