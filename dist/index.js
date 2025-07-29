@@ -47882,7 +47882,7 @@ async function updateProjectWithScores(config, response, octokit) {
     for (const item of response.items) {
         if (item.id) {
             try {
-                await updateProjectItem(octokit, item.id, projectField.id, item.engagement.score.toString());
+                await updateProjectItem(octokit, config, item.id, projectField.id, item.engagement.score.toString());
                 updatedCount++;
             }
             catch (error) {
@@ -47932,7 +47932,11 @@ async function getProjectField(octokit, owner, repo, projectNumber, fieldName) {
 /**
  * Update a project item field
  */
-async function updateProjectItem(octokit, itemId, fieldId, value) {
+async function updateProjectItem(octokit, config, itemId, fieldId, value) {
+    if (config.dryRun) {
+        coreExports.info(`Dry run: Skipping updating project item ${itemId} field ${fieldId} with value "${value}"`);
+        return;
+    }
     const mutation = `
     mutation($itemId: ID!, $fieldId: ID!, $value: String!) {
       updateProjectV2ItemFieldValue(input: {

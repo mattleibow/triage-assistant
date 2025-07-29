@@ -1,7 +1,7 @@
 import * as core from '@actions/core'
 import * as github from '@actions/github'
 import { EngagementResponse } from '../engagement/engagement-types.js'
-import { EngagementConfig } from '../config.js'
+import { EngagementConfig, TriageConfig } from '../config.js'
 
 type Octokit = ReturnType<typeof github.getOctokit>
 
@@ -120,7 +120,7 @@ export async function getAllProjectItems(
  * Update project field with engagement scores
  */
 export async function updateProjectWithScores(
-  config: EngagementConfig,
+  config: EngagementConfig & TriageConfig,
   response: EngagementResponse,
   octokit: Octokit
 ): Promise<void> {
@@ -149,7 +149,7 @@ export async function updateProjectWithScores(
   for (const item of response.items) {
     if (item.id) {
       try {
-        await updateProjectItem(octokit, item.id, projectField.id, item.engagement.score.toString())
+        await updateProjectItem(octokit, config, item.id, projectField.id, item.engagement.score.toString())
         updatedCount++
       } catch (error) {
         core.warning(`Failed to update item ${item.id}: ${error}`)
@@ -226,10 +226,16 @@ export async function getProjectField(
  */
 export async function updateProjectItem(
   octokit: Octokit,
+  config: EngagementConfig & TriageConfig,
   itemId: string,
   fieldId: string,
   value: string
 ): Promise<void> {
+  if (config.dryRun) {
+    core.info(`Dry run: Skipping updating project item ${itemId} field ${fieldId} with value "${value}"`)
+    return
+  }
+
   const mutation = `
     mutation($itemId: ID!, $fieldId: ID!, $value: String!) {
       updateProjectV2ItemFieldValue(input: {
