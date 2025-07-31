@@ -6,6 +6,26 @@ import { GetIssueDetailsQuery, Sdk as GraphQLSdk } from '../generated/graphql.js
 import { GitHubIssueConfig, TriageConfig } from '../config.js'
 import { IssueDetails, CommentData, ReactionData, UserInfo } from './issue-details.js'
 
+/**
+ * Sanitizes markdown content to prevent injection attacks
+ */
+function sanitizeMarkdownContent(content: string): string {
+  // Remove potentially dangerous HTML tags and scripts
+  return content
+    .replace(/<script[^>]*>.*?<\/script>/gims, '')
+    .replace(/<iframe[^>]*>.*?<\/iframe>/gims, '')
+    .replace(/<object[^>]*>.*?<\/object>/gims, '')
+    .replace(/<embed[^>]*>/gims, '')
+    .replace(/javascript:/gims, '')
+    .replace(/data:/gims, '')
+    // Limit line length to prevent abuse
+    .split('\n')
+    .map(line => line.substring(0, 2000))
+    .join('\n')
+    // Limit total content length
+    .substring(0, 65000)
+}
+
 type Octokit = ReturnType<typeof github.getOctokit>
 type GetIssueDetailsQueryIssue = NonNullable<NonNullable<GetIssueDetailsQuery['repository']>['issue']>
 type GetIssueDetailsQueryIssueReactions = NonNullable<
@@ -28,7 +48,33 @@ export async function commentOnIssue(
   config: GitHubIssueConfig & TriageConfig,
   footer?: string
 ): Promise<void> {
-  const summary = await fs.promises.readFile(path.join(summaryFile), 'utf8')
+  // Validate file path to prevent directory traversal
+  const resolvedPath = path.resolve(summaryFile)
+  const tempDirPath = path.resolve(config.tempDir || process.cwd())
+  
+  // Allow paths within temp directory or common temp locations for flexibility
+  const allowedPaths = [
+    tempDirPath,
+    '/tmp',
+    process.env.TMPDIR || '',
+    process.env.TEMP || '',
+    process.env.TMP || ''
+  ].filter(Boolean).map(p => path.resolve(p))
+  
+  const isAllowed = allowedPaths.some(allowedPath => resolvedPath.startsWith(allowedPath))
+  if (!isAllowed) {
+    throw new Error(`Invalid file path: File must be within allowed directories`)
+  }
+
+  let summary: string
+  try {
+    summary = await fs.promises.readFile(resolvedPath, 'utf8')
+  } catch (error) {
+    throw new Error(`Failed to read summary file: ${error instanceof Error ? error.message : 'Unknown error'}`)
+  }
+
+  // Sanitize summary content to prevent injection attacks
+  summary = sanitizeMarkdownContent(summary)
 
   const commentBody = `
 ${summary}
@@ -42,7 +88,8 @@ ${footer ?? ''}
   }
 
   if (config.dryRun) {
-    core.info(`Dry run: Skipping commenting on issue: ${commentBody}`)
+    core.info(`Dry run: Skipping commenting on issue`)
+    core.debug(`Comment body would be: ${commentBody}`)
     return
   }
 
@@ -66,12 +113,24 @@ export async function applyLabelsToIssue(
   labels: string[] | undefined,
   config: GitHubIssueConfig & TriageConfig
 ): Promise<void> {
-  // Filter out empty labels
-  labels = labels?.filter((label) => label.trim().length > 0)
+  // Filter out empty labels and validate them
+  labels = labels
+    ?.filter((label) => label.trim().length > 0)
+    ?.map((label) => label.trim())
+    ?.filter((label) => {
+      // Validate label format (GitHub allows alphanumeric, spaces, hyphens, underscores, periods)
+      return /^[a-zA-Z0-9\s\-_.]+$/.test(label) && label.length <= 50
+    })
 
   // If no labels to apply, return early
   if (!labels || labels.length === 0) {
     return
+  }
+
+  // Limit number of labels to prevent abuse
+  if (labels.length > 20) {
+    core.warning(`Too many labels (${labels.length}), limiting to first 20`)
+    labels = labels.slice(0, 20)
   }
 
   if (config.dryRun) {

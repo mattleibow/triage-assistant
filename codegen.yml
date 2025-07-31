@@ -17,6 +17,8 @@ generates:
           content: |
             // This file is auto-generated. Do not edit directly.
             /* eslint-disable */
+    config:
+      gqlImport: graphql-tag#gql
 
   schemas/github.schema.graphql:
     plugins:

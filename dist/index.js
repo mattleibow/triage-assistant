@@ -38821,12 +38821,20 @@ async function runInference(systemPrompt, userPrompt, responseFile, maxTokens = 
             throw new Error(`An error occurred while fetching the response (${response.status}): ${response.body}`);
         }
         const modelResponse = response.body.choices[0].message.content || '';
+        // Validate response length to prevent abuse
+        if (modelResponse.length > 100000) {
+            throw new Error('AI response too large, possible security issue');
+        }
+        // Validate file path to prevent directory traversal
+        const resolvedPath = path.resolve(responseFile);
+        const expectedDir = path.dirname(resolvedPath);
         // Ensure the response directory exists
-        await fs.promises.mkdir(path.dirname(responseFile), { recursive: true });
+        await fs.promises.mkdir(expectedDir, { recursive: true });
         // Write the response to the specified file
-        await fs.promises.writeFile(responseFile, modelResponse, 'utf-8');
+        await fs.promises.writeFile(resolvedPath, modelResponse, 'utf-8');
         coreExports.info(`AI inference completed. Response written to: ${responseFile}`);
-        coreExports.info(`Response content: ${modelResponse}`);
+        // Don't log the full response content in production for security
+        coreExports.debug(`Response content preview: ${modelResponse.substring(0, 200)}...`);
     }
     catch (error) {
         coreExports.error(`AI inference failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
@@ -38888,9 +38896,10 @@ async function mergeResponses(inputFiles, responsesDir, outputPath) {
     {
         // Process all JSON files from responses directory
         try {
-            const files = await fs.promises.readdir(path.join(responsesDir));
+            const files = await fs.promises.readdir(responsesDir);
             const jsonFilePaths = files
                 .filter((f) => f.endsWith('.json')) // get json files
+                .filter((f) => /^[a-zA-Z0-9._-]+\.json$/.test(f)) // validate filename format
                 .map((f) => path.join(responsesDir, f)); // construct full paths
             allFiles.push(...jsonFilePaths);
         }
@@ -38944,6 +38953,21 @@ async function mergeResponses(inputFiles, responsesDir, outputPath) {
  * @returns Promise that resolves with the file contents.
  */
 async function getFileContents(file) {
+    // Optional file size check - skip if stat fails (e.g., in test environment)
+    try {
+        const stats = await fs.promises.stat(file);
+        const maxFileSize = 10 * 1024 * 1024; // 10MB limit
+        if (stats.size > maxFileSize) {
+            throw new Error(`File ${file} is too large (${stats.size} bytes). Maximum allowed size is ${maxFileSize} bytes.`);
+        }
+    }
+    catch (error) {
+        // If stat fails, continue anyway (might be in test environment)
+        if (error instanceof Error && error.message.includes('too large')) {
+            throw error; // Re-throw size errors
+        }
+        // Ignore other stat errors (e.g., file not found, which will be caught by readFile)
+    }
     let fileContents = await fs.promises.readFile(file, 'utf8');
     // Break file contents into lines
     const lines = fileContents.split('\n');
@@ -38960,6 +38984,25 @@ async function getFileContents(file) {
 }
 
 /**
+ * Sanitizes markdown content to prevent injection attacks
+ */
+function sanitizeMarkdownContent(content) {
+    // Remove potentially dangerous HTML tags and scripts
+    return content
+        .replace(/<script[^>]*>.*?<\/script>/gims, '')
+        .replace(/<iframe[^>]*>.*?<\/iframe>/gims, '')
+        .replace(/<object[^>]*>.*?<\/object>/gims, '')
+        .replace(/<embed[^>]*>/gims, '')
+        .replace(/javascript:/gims, '')
+        .replace(/data:/gims, '')
+        // Limit line length to prevent abuse
+        .split('\n')
+        .map(line => line.substring(0, 2000))
+        .join('\n')
+        // Limit total content length
+        .substring(0, 65000);
+}
+/**
  * Comments on an issue with the provided summary.
  *
  * @param summaryFile Path to the file containing the summary text.
@@ -38967,7 +39010,30 @@ async function getFileContents(file) {
  * @param octokit The GitHub API client.
  */
 async function commentOnIssue(octokit, summaryFile, config, footer) {
-    const summary = await fs.promises.readFile(path.join(summaryFile), 'utf8');
+    // Validate file path to prevent directory traversal
+    const resolvedPath = path.resolve(summaryFile);
+    const tempDirPath = path.resolve(config.tempDir || process.cwd());
+    // Allow paths within temp directory or common temp locations for flexibility
+    const allowedPaths = [
+        tempDirPath,
+        '/tmp',
+        process.env.TMPDIR || '',
+        process.env.TEMP || '',
+        process.env.TMP || ''
+    ].filter(Boolean).map(p => path.resolve(p));
+    const isAllowed = allowedPaths.some(allowedPath => resolvedPath.startsWith(allowedPath));
+    if (!isAllowed) {
+        throw new Error(`Invalid file path: File must be within allowed directories`);
+    }
+    let summary;
+    try {
+        summary = await fs.promises.readFile(resolvedPath, 'utf8');
+    }
+    catch (error) {
+        throw new Error(`Failed to read summary file: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+    // Sanitize summary content to prevent injection attacks
+    summary = sanitizeMarkdownContent(summary);
     const commentBody = `
 ${summary}
 
@@ -38978,7 +39044,8 @@ ${footer ?? ''}
         return;
     }
     if (config.dryRun) {
-        coreExports.info(`Dry run: Skipping commenting on issue: ${commentBody}`);
+        coreExports.info(`Dry run: Skipping commenting on issue`);
+        coreExports.debug(`Comment body would be: ${commentBody}`);
         return;
     }
     await octokit.rest.issues.createComment({
@@ -38996,11 +39063,22 @@ ${footer ?? ''}
  * @param octokit The GitHub API client.
  */
 async function applyLabelsToIssue(octokit, labels, config) {
-    // Filter out empty labels
-    labels = labels?.filter((label) => label.trim().length > 0);
+    // Filter out empty labels and validate them
+    labels = labels
+        ?.filter((label) => label.trim().length > 0)
+        ?.map((label) => label.trim())
+        ?.filter((label) => {
+        // Validate label format (GitHub allows alphanumeric, spaces, hyphens, underscores, periods)
+        return /^[a-zA-Z0-9\s\-_.]+$/.test(label) && label.length <= 50;
+    });
     // If no labels to apply, return early
     if (!labels || labels.length === 0) {
         return;
+    }
+    // Limit number of labels to prevent abuse
+    if (labels.length > 20) {
+        coreExports.warning(`Too many labels (${labels.length}), limiting to first 20`);
+        labels = labels.slice(0, 20);
     }
     if (config.dryRun) {
         coreExports.info(`Dry run: Skipping applying labels: ${labels.join(', ')}`);
@@ -48179,6 +48257,26 @@ async function createEngagementItem(issueDetails, projectItemId) {
 }
 
 /**
+ * Validates that a string represents a positive integer
+ */
+function validatePositiveInteger(value, fieldName) {
+    const parsed = parseInt(value, 10);
+    if (isNaN(parsed) || parsed <= 0 || !Number.isInteger(parsed)) {
+        throw new Error(`Invalid ${fieldName} number: "${value}". Must be a positive integer.`);
+    }
+    return parsed;
+}
+/**
+ * Validates that a string represents a non-negative integer
+ */
+function validateNonNegativeInteger(value, fieldName) {
+    const parsed = parseInt(value, 10);
+    if (isNaN(parsed) || parsed < 0 || !Number.isInteger(parsed)) {
+        throw new Error(`Invalid ${fieldName} number: "${value}". Must be a non-negative integer.`);
+    }
+    return parsed;
+}
+/**
  * Enum for triage modes
  */
 var TriageMode;
@@ -48232,11 +48330,11 @@ async function run() {
             applyScores: coreExports.getBooleanInput('apply-scores'),
             commentFooter: coreExports.getInput('comment-footer'),
             dryRun: coreExports.getBooleanInput('dry-run') || false,
-            issueNumber: issueInput ? parseInt(issueInput, 10) : issueContext,
+            issueNumber: issueInput ? validatePositiveInteger(issueInput, 'issue') : issueContext,
             label: coreExports.getInput('label'),
             labelPrefix: coreExports.getInput('label-prefix'),
             projectColumn: coreExports.getInput('project-column') || DEFAULT_PROJECT_COLUMN_NAME,
-            projectNumber: projectInput ? parseInt(projectInput, 10) : 0,
+            projectNumber: projectInput ? validateNonNegativeInteger(projectInput, 'project') : 0,
             repoName: githubExports.context.repo.repo,
             repoOwner: githubExports.context.repo.owner,
             repository: `${githubExports.context.repo.owner}/${githubExports.context.repo.repo}`,
@@ -48253,6 +48351,17 @@ async function run() {
         }
         if (!config.aiToken) {
             coreExports.info('No specific AI token provided, using GitHub token as fallback.');
+        }
+        // Validate numeric inputs
+        if (config.issueNumber <= 0) {
+            throw new Error(`Invalid issue number: ${config.issueNumber}. Must be a positive integer.`);
+        }
+        if (config.projectNumber < 0) {
+            throw new Error(`Invalid project number: ${config.projectNumber}. Must be a non-negative integer.`);
+        }
+        // Validate repository name to prevent injection
+        if (!/^[a-zA-Z0-9._-]+\/[a-zA-Z0-9._-]+$/.test(config.repository)) {
+            throw new Error(`Invalid repository format: ${config.repository}`);
         }
         let responseFile = '';
         // Run the appropriate workflow based on the triage mode

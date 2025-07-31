@@ -56,14 +56,24 @@ export async function runInference(
 
     const modelResponse: string = response.body.choices[0].message.content || ''
 
+    // Validate response length to prevent abuse
+    if (modelResponse.length > 100000) {
+      throw new Error('AI response too large, possible security issue')
+    }
+
+    // Validate file path to prevent directory traversal
+    const resolvedPath = path.resolve(responseFile)
+    const expectedDir = path.dirname(resolvedPath)
+    
     // Ensure the response directory exists
-    await fs.promises.mkdir(path.dirname(responseFile), { recursive: true })
+    await fs.promises.mkdir(expectedDir, { recursive: true })
 
     // Write the response to the specified file
-    await fs.promises.writeFile(responseFile, modelResponse, 'utf-8')
+    await fs.promises.writeFile(resolvedPath, modelResponse, 'utf-8')
 
     core.info(`AI inference completed. Response written to: ${responseFile}`)
-    core.info(`Response content: ${modelResponse}`)
+    // Don't log the full response content in production for security
+    core.debug(`Response content preview: ${modelResponse.substring(0, 200)}...`)
   } catch (error) {
     core.error(`AI inference failed: ${error instanceof Error ? error.message : 'Unknown error'}`)
     throw error

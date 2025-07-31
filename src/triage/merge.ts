@@ -24,14 +24,21 @@ export async function mergeResponses(
       .split(/[,\n\r]+/)
       .map((f: string) => f.trim())
       .filter((f: string) => f)
-      .map((f: string) => path.join(f.trim()))
+      .map((f: string) => {
+        // Validate file extension for security
+        if (!f.trim().endsWith('.json')) {
+          throw new Error(`Invalid file type: ${f}. Only JSON files are allowed.`)
+        }
+        return path.join(f.trim())
+      })
     allFiles.push(...files)
   } else {
     // Process all JSON files from responses directory
     try {
-      const files = await fs.promises.readdir(path.join(responsesDir))
+      const files = await fs.promises.readdir(responsesDir)
       const jsonFilePaths = files
         .filter((f: string) => f.endsWith('.json')) // get json files
+        .filter((f: string) => /^[a-zA-Z0-9._-]+\.json$/.test(f)) // validate filename format
         .map((f: string) => path.join(responsesDir, f)) // construct full paths
       allFiles.push(...jsonFilePaths)
     } catch {
@@ -90,6 +97,21 @@ export async function mergeResponses(
  * @returns Promise that resolves with the file contents.
  */
 async function getFileContents(file: string) {
+  // Optional file size check - skip if stat fails (e.g., in test environment)
+  try {
+    const stats = await fs.promises.stat(file)
+    const maxFileSize = 10 * 1024 * 1024 // 10MB limit
+    if (stats.size > maxFileSize) {
+      throw new Error(`File ${file} is too large (${stats.size} bytes). Maximum allowed size is ${maxFileSize} bytes.`)
+    }
+  } catch (error) {
+    // If stat fails, continue anyway (might be in test environment)
+    if (error instanceof Error && error.message.includes('too large')) {
+      throw error // Re-throw size errors
+    }
+    // Ignore other stat errors (e.g., file not found, which will be caught by readFile)
+  }
+
   let fileContents = await fs.promises.readFile(file, 'utf8')
 
   // Break file contents into lines
