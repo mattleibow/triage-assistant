@@ -4,6 +4,35 @@ import * as fs from 'fs'
 import { PromptGenerationConfig } from '../config.js'
 
 /**
+ * Sanitizes a value for safe use in shell commands
+ */
+function sanitizeForShell(value: string): string {
+  // Remove or escape potentially dangerous characters
+  return value
+    .replace(/[`$(){}[\]|&;<>]/g, '') // Remove shell metacharacters
+    .replace(/\s+/g, ' ') // Normalize whitespace
+    .trim()
+}
+
+/**
+ * Checks if a command is allowed to be executed
+ */
+function isAllowedCommand(command: string): boolean {
+  // Allowlist of safe commands and patterns
+  const allowedPatterns = [
+    /^gh\s+/, // GitHub CLI commands
+    /^echo\s+/, // Echo commands
+    /^cat\s+/, // Cat commands for reading files
+    /^ls\s+/, // Directory listing
+    /^pwd$/, // Print working directory
+    /^date$/, // Current date
+  ]
+  
+  // Check if command starts with any allowed pattern
+  return allowedPatterns.some(pattern => pattern.test(command))
+}
+
+/**
  * Generates a prompt from a template string or file by replacing placeholders and executing commands.
  *
  * @param templateContent The template content as a string.
@@ -25,15 +54,24 @@ export async function generatePrompt(
   const outputContent: string[] = []
 
   for (let line of lines) {
-    // Replace placeholders
+    // Replace placeholders with proper escaping
     for (const [key, value] of Object.entries(replacements)) {
-      line = line.replace(new RegExp(`{{${key}}}`, 'g'), String(value || ''))
+      // Sanitize the replacement value to prevent injection
+      const sanitizedValue = sanitizeForShell(String(value || ''))
+      line = line.replace(new RegExp(`{{${key}}}`, 'g'), sanitizedValue)
     }
 
     // Check for EXEC: command prefix
     const execMatch = line.match(/^EXEC:\s*(.+)$/)
     if (execMatch) {
       const command = execMatch[1]
+      
+      // Validate command to prevent arbitrary command execution
+      if (!isAllowedCommand(command)) {
+        core.setFailed(`Command not allowed: ${command}`)
+        throw new Error(`Security: Command not in allowlist: ${command}`)
+      }
+      
       core.info(`Executing command: ${command}`)
 
       try {

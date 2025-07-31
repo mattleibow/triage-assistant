@@ -6,6 +6,28 @@ import { runEngagementWorkflow } from './engagement/engagement.js'
 import { EverythingConfig } from './config.js'
 
 /**
+ * Validates that a string represents a positive integer
+ */
+function validatePositiveInteger(value: string, fieldName: string): number {
+  const parsed = parseInt(value, 10)
+  if (isNaN(parsed) || parsed <= 0 || !Number.isInteger(parsed)) {
+    throw new Error(`Invalid ${fieldName} number: "${value}". Must be a positive integer.`)
+  }
+  return parsed
+}
+
+/**
+ * Validates that a string represents a non-negative integer
+ */
+function validateNonNegativeInteger(value: string, fieldName: string): number {
+  const parsed = parseInt(value, 10)
+  if (isNaN(parsed) || parsed < 0 || !Number.isInteger(parsed)) {
+    throw new Error(`Invalid ${fieldName} number: "${value}". Must be a non-negative integer.`)
+  }
+  return parsed
+}
+
+/**
  * Enum for triage modes
  */
 enum TriageMode {
@@ -65,11 +87,11 @@ export async function run(): Promise<void> {
       applyScores: core.getBooleanInput('apply-scores'),
       commentFooter: core.getInput('comment-footer'),
       dryRun: core.getBooleanInput('dry-run') || false,
-      issueNumber: issueInput ? parseInt(issueInput, 10) : issueContext,
+      issueNumber: issueInput ? validatePositiveInteger(issueInput, 'issue') : issueContext,
       label: core.getInput('label'),
       labelPrefix: core.getInput('label-prefix'),
       projectColumn: core.getInput('project-column') || DEFAULT_PROJECT_COLUMN_NAME,
-      projectNumber: projectInput ? parseInt(projectInput, 10) : 0,
+      projectNumber: projectInput ? validateNonNegativeInteger(projectInput, 'project') : 0,
       repoName: github.context.repo.repo,
       repoOwner: github.context.repo.owner,
       repository: `${github.context.repo.owner}/${github.context.repo.repo}`,
@@ -87,6 +109,19 @@ export async function run(): Promise<void> {
     }
     if (!config.aiToken) {
       core.info('No specific AI token provided, using GitHub token as fallback.')
+    }
+
+    // Validate numeric inputs
+    if (config.issueNumber <= 0) {
+      throw new Error(`Invalid issue number: ${config.issueNumber}. Must be a positive integer.`)
+    }
+    if (typeof config.projectNumber === 'number' && config.projectNumber < 0) {
+      throw new Error(`Invalid project number: ${config.projectNumber}. Must be a non-negative integer.`)
+    }
+
+    // Validate repository name to prevent injection
+    if (!/^[a-zA-Z0-9._-]+\/[a-zA-Z0-9._-]+$/.test(config.repository)) {
+      throw new Error(`Invalid repository format: ${config.repository}`)
     }
 
     let responseFile = ''

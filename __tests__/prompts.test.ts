@@ -140,7 +140,7 @@ After command`)
   })
 
   it('should handle EXEC command errors', async () => {
-    const templateContent = 'EXEC: invalid-command'
+    const templateContent = 'EXEC: echo test'
     const replacements = {}
 
     // Mock exec to reject with error
@@ -151,6 +151,17 @@ After command`)
       'Command not found'
     )
 
-    expect(core.setFailed).toHaveBeenCalledWith("Error executing command 'invalid-command': Error: Command not found")
+    expect(core.setFailed).toHaveBeenCalledWith("Error executing command 'echo test': Error: Command not found")
+  })
+
+  it('should reject disallowed commands', async () => {
+    const templateContent = 'EXEC: rm -rf /'
+    const replacements = {}
+
+    await expect(generatePrompt(templateContent, undefined, replacements, mockConfig)).rejects.toThrow(
+      'Security: Command not in allowlist'
+    )
+
+    expect(core.setFailed).toHaveBeenCalledWith("Command not allowed: rm -rf /")
   })
 })
