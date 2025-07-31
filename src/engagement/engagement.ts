@@ -70,9 +70,13 @@ async function calculateIssueEngagementScores(
   octokit: Octokit,
   graphql: GraphQLSdk
 ): Promise<EngagementResponse> {
+  if (!config.issueNumber || config.issueNumber <= 0) {
+    throw new Error('Valid issue number is required for issue engagement scoring')
+  }
+
   core.info(`Calculating engagement score for issue #${config.issueNumber}`)
 
-  const issueDetails = await getIssueDetails(graphql, config.repoOwner, config.repoName, config.issueNumber!)
+  const issueDetails = await getIssueDetails(graphql, config.repoOwner, config.repoName, config.issueNumber)
   const item = await createEngagementItem(issueDetails)
 
   return {
@@ -89,9 +93,13 @@ async function calculateProjectEngagementScores(
   octokit: Octokit,
   graphql: GraphQLSdk
 ): Promise<EngagementResponse> {
+  if (!config.projectNumber || config.projectNumber <= 0) {
+    throw new Error('Valid project number is required for project engagement scoring')
+  }
+
   core.info(`Calculating engagement scores for project #${config.projectNumber}`)
 
-  const projectNumber = config.projectNumber!
+  const projectNumber = config.projectNumber
   const projectItems = await getAllProjectItems(octokit, config.repoOwner, config.repoName, projectNumber)
 
   const items: EngagementItem[] = []

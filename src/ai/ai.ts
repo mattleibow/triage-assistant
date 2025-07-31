@@ -54,7 +54,17 @@ export async function runInference(
       throw new Error(`An error occurred while fetching the response (${response.status}): ${response.body}`)
     }
 
-    const modelResponse: string = response.body.choices[0].message.content || ''
+    // Validate response structure
+    if (!response.body.choices || response.body.choices.length === 0) {
+      throw new Error('Invalid AI response: no choices returned')
+    }
+
+    const firstChoice = response.body.choices[0]
+    if (!firstChoice?.message?.content) {
+      throw new Error('Invalid AI response: no content in first choice')
+    }
+
+    const modelResponse: string = firstChoice.message.content
 
     // Validate response length to prevent abuse
     if (modelResponse.length > 100000) {
