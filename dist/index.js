@@ -31650,6 +31650,32 @@ function getPrompt$1(templateName) {
 var execExports = requireExec();
 
 /**
+ * Sanitizes a value for safe use in shell commands
+ */
+function sanitizeForShell(value) {
+    // Remove or escape potentially dangerous characters
+    return value
+        .replace(/[`$(){}[\]|&;<>]/g, '') // Remove shell metacharacters
+        .replace(/\s+/g, ' ') // Normalize whitespace
+        .trim();
+}
+/**
+ * Checks if a command is allowed to be executed
+ */
+function isAllowedCommand(command) {
+    // Allowlist of safe commands and patterns
+    const allowedPatterns = [
+        /^gh\s+/, // GitHub CLI commands
+        /^echo\s+/, // Echo commands
+        /^cat\s+/, // Cat commands for reading files
+        /^ls\s+/, // Directory listing
+        /^pwd$/, // Print working directory
+        /^date$/, // Current date
+    ];
+    // Check if command starts with any allowed pattern
+    return allowedPatterns.some(pattern => pattern.test(command));
+}
+/**
  * Generates a prompt from a template string or file by replacing placeholders and executing commands.
  *
  * @param templateContent The template content as a string.
@@ -31664,14 +31690,21 @@ async function generatePrompt(templateContent, outputPath, replacements, config)
     const lines = templateContent.split('\n');
     const outputContent = [];
     for (let line of lines) {
-        // Replace placeholders
+        // Replace placeholders with proper escaping
         for (const [key, value] of Object.entries(replacements)) {
-            line = line.replace(new RegExp(`{{${key}}}`, 'g'), String(value || ''));
+            // Sanitize the replacement value to prevent injection
+            const sanitizedValue = sanitizeForShell(String(value || ''));
+            line = line.replace(new RegExp(`{{${key}}}`, 'g'), sanitizedValue);
         }
         // Check for EXEC: command prefix
         const execMatch = line.match(/^EXEC:\s*(.+)$/);
         if (execMatch) {
             const command = execMatch[1];
+            // Validate command to prevent arbitrary command execution
+            if (!isAllowedCommand(command)) {
+                coreExports.setFailed(`Command not allowed: ${command}`);
+                throw new Error(`Security: Command not in allowlist: ${command}`);
+            }
             coreExports.info(`Executing command: ${command}`);
             try {
                 let output = '';
@@ -38820,7 +38853,15 @@ async function runInference(systemPrompt, userPrompt, responseFile, maxTokens = 
             }
             throw new Error(`An error occurred while fetching the response (${response.status}): ${response.body}`);
         }
-        const modelResponse = response.body.choices[0].message.content || '';
+        // Validate response structure
+        if (!response.body.choices || response.body.choices.length === 0) {
+            throw new Error('Invalid AI response: no choices returned');
+        }
+        const firstChoice = response.body.choices[0];
+        if (!firstChoice?.message?.content) {
+            throw new Error('Invalid AI response: no content in first choice');
+        }
+        const modelResponse = firstChoice.message.content;
         // Validate response length to prevent abuse
         if (modelResponse.length > 100000) {
             throw new Error('AI response too large, possible security issue');
@@ -48199,6 +48240,9 @@ async function calculateEngagementScores(config, octokit, graphql) {
  * Calculate engagement scores for a single issue
  */
 async function calculateIssueEngagementScores(config, octokit, graphql) {
+    if (!config.issueNumber || config.issueNumber <= 0) {
+        throw new Error('Valid issue number is required for issue engagement scoring');
+    }
     coreExports.info(`Calculating engagement score for issue #${config.issueNumber}`);
     const issueDetails = await getIssueDetails(graphql, config.repoOwner, config.repoName, config.issueNumber);
     const item = await createEngagementItem(issueDetails);
@@ -48211,6 +48255,9 @@ async function calculateIssueEngagementScores(config, octokit, graphql) {
  * Calculate engagement scores for all issues in a project
  */
 async function calculateProjectEngagementScores(config, octokit, graphql) {
+    if (!config.projectNumber || config.projectNumber <= 0) {
+        throw new Error('Valid project number is required for project engagement scoring');
+    }
     coreExports.info(`Calculating engagement scores for project #${config.projectNumber}`);
     const projectNumber = config.projectNumber;
     const projectItems = await getAllProjectItems(octokit, config.repoOwner, config.repoName, projectNumber);
@@ -48356,7 +48403,7 @@ async function run() {
         if (config.issueNumber <= 0) {
             throw new Error(`Invalid issue number: ${config.issueNumber}. Must be a positive integer.`);
         }
-        if (config.projectNumber < 0) {
+        if (typeof config.projectNumber === 'number' && config.projectNumber < 0) {
             throw new Error(`Invalid project number: ${config.projectNumber}. Must be a non-negative integer.`);
         }
         // Validate repository name to prevent injection
