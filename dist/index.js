@@ -47781,11 +47781,78 @@ const GetIssueDetailsDocument = gql `
   }
 }
     `;
+const GetProjectFieldDocument = gql `
+    query GetProjectField($owner: String!, $repo: String!, $projectNumber: Int!) {
+  repository(owner: $owner, name: $repo) {
+    projectV2(number: $projectNumber) {
+      id
+      fields(first: 100) {
+        nodes {
+          ... on ProjectV2Field {
+            id
+            name
+            dataType
+          }
+        }
+      }
+    }
+  }
+}
+    `;
+const GetProjectItemsDocument = gql `
+    query GetProjectItems($owner: String!, $repo: String!, $projectNumber: Int!, $cursor: String) {
+  repository(owner: $owner, name: $repo) {
+    projectV2(number: $projectNumber) {
+      id
+      items(first: 100, after: $cursor) {
+        pageInfo {
+          hasNextPage
+          endCursor
+        }
+        nodes {
+          id
+          content {
+            ... on Issue {
+              number
+              repository {
+                name
+                owner {
+                  login
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+    `;
+const UpdateProjectItemFieldDocument = gql `
+    mutation UpdateProjectItemField($itemId: ID!, $fieldId: ID!, $projectId: ID!, $value: String!) {
+  updateProjectV2ItemFieldValue(
+    input: {itemId: $itemId, fieldId: $fieldId, projectId: $projectId, value: {text: $value}}
+  ) {
+    projectV2Item {
+      id
+    }
+  }
+}
+    `;
 const defaultWrapper = (action, _operationName, _operationType, _variables) => action();
 function getSdk(client, withWrapper = defaultWrapper) {
     return {
         GetIssueDetails(variables, requestHeaders, signal) {
             return withWrapper((wrappedRequestHeaders) => client.request({ document: GetIssueDetailsDocument, variables, requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders }, signal }), 'GetIssueDetails', 'query', variables);
+        },
+        GetProjectField(variables, requestHeaders, signal) {
+            return withWrapper((wrappedRequestHeaders) => client.request({ document: GetProjectFieldDocument, variables, requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders }, signal }), 'GetProjectField', 'query', variables);
+        },
+        GetProjectItems(variables, requestHeaders, signal) {
+            return withWrapper((wrappedRequestHeaders) => client.request({ document: GetProjectItemsDocument, variables, requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders }, signal }), 'GetProjectItems', 'query', variables);
+        },
+        UpdateProjectItemField(variables, requestHeaders, signal) {
+            return withWrapper((wrappedRequestHeaders) => client.request({ document: UpdateProjectItemFieldDocument, variables, requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders }, signal }), 'UpdateProjectItemField', 'mutation', variables);
         }
     };
 }
@@ -47798,55 +47865,26 @@ var EngagementClassification;
 /**
  * Get all items from a project
  */
-async function getAllProjectItems(octokit, owner, repo, projectNumber) {
+async function getAllProjectItems(sdk, owner, repo, projectNumber) {
     coreExports.info(`Fetching all items from project #${projectNumber}`);
-    const query = `
-    query($owner: String!, $repo: String!, $projectNumber: Int!, $cursor: String) {
-      repository(owner: $owner, name: $repo) {
-        projectV2(number: $projectNumber) {
-          id
-          items(first: 100, after: $cursor) {
-            pageInfo {
-              hasNextPage
-              endCursor
-            }
-            nodes {
-              id
-              content {
-                ... on Issue {
-                  number
-                  repository {
-                    name
-                    owner {
-                      login
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    }
-  `;
     let hasNextPage = true;
     let cursor = null;
     const allItems = [];
     while (hasNextPage) {
-        const result = await octokit.graphql(query, {
+        const result = await sdk.GetProjectItems({
             owner,
             repo,
             projectNumber,
             cursor
         });
-        const projectData = result.repository.projectV2;
+        const projectData = result.repository?.projectV2;
         if (!projectData) {
             throw new Error(`Project #${projectNumber} not found`);
         }
         const projectId = projectData.id;
-        const items = projectData.items.nodes;
+        const items = projectData.items.nodes || [];
         for (const item of items) {
-            if (item.content && item.content.number) {
+            if (item?.content && 'number' in item.content && item.content.number) {
                 allItems.push({
                     id: item.id,
                     projectId,
@@ -47860,22 +47898,36 @@ async function getAllProjectItems(octokit, owner, repo, projectNumber) {
             }
         }
         hasNextPage = projectData.items.pageInfo.hasNextPage;
-        cursor = projectData.items.pageInfo.endCursor;
+        cursor = projectData.items.pageInfo.endCursor || null;
     }
     return allItems;
 }
 /**
  * Update project field with engagement scores
  */
-async function updateProjectWithScores(config, response, octokit) {
+async function updateProjectWithScores(config, response) {
     if (!config.applyScores || !config.projectNumber) {
         coreExports.info('Skipping project update');
         return;
     }
     coreExports.info(`Updating project #${config.projectNumber} with engagement scores`);
-    const projectField = await getProjectField(octokit, config.repoOwner, config.repoName, config.projectNumber, config.projectColumn);
+    // Create GraphQL SDK
+    const graphql = new GraphQLClient('https://api.github.com/graphql', {
+        headers: {
+            Authorization: `Bearer ${config.token}`
+        }
+    });
+    const sdk = getSdk(graphql);
+    const projectField = await getProjectField(sdk, config.repoOwner, config.repoName, config.projectNumber, config.projectColumn);
     if (!projectField) {
         coreExports.warning(`Field "${config.projectColumn}" not found in project`);
+        return;
+    }
+    // Get the project ID for the mutation
+    const projectItems = await getAllProjectItems(sdk, config.repoOwner, config.repoName, config.projectNumber);
+    const projectId = projectItems.length > 0 ? projectItems[0].projectId : null;
+    if (!projectId) {
+        coreExports.warning('No project items found or unable to determine project ID');
         return;
     }
     // Update each issue's engagement score
@@ -47883,7 +47935,7 @@ async function updateProjectWithScores(config, response, octokit) {
     for (const item of response.items) {
         if (item.id) {
             try {
-                await updateProjectItem(octokit, config, item.id, projectField.id, item.engagement.score.toString());
+                await updateProjectItem(sdk, config, item.id, projectField.id, projectId, item.engagement.score.toString());
                 updatedCount++;
             }
             catch (error) {
@@ -47896,36 +47948,21 @@ async function updateProjectWithScores(config, response, octokit) {
 /**
  * Get project field information
  */
-async function getProjectField(octokit, owner, repo, projectNumber, fieldName) {
-    const query = `
-    query($owner: String!, $repo: String!, $projectNumber: Int!) {
-      repository(owner: $owner, name: $repo) {
-        projectV2(number: $projectNumber) {
-          id
-          fields(first: 100) {
-            nodes {
-              ... on ProjectV2Field {
-                id
-                name
-                dataType
-              }
-            }
-          }
-        }
-      }
-    }
-  `;
-    const result = await octokit.graphql(query, {
+async function getProjectField(sdk, owner, repo, projectNumber, fieldName) {
+    const result = await sdk.GetProjectField({
         owner,
         repo,
         projectNumber
     });
-    const project = result.repository.projectV2;
+    const project = result.repository?.projectV2;
     if (!project) {
         return null;
     }
-    const field = project.fields.nodes.find((f) => f.name === fieldName);
-    if (!field) {
+    const field = project.fields.nodes?.find((f) => {
+        // Check if it's a ProjectV2Field (which has name and id)
+        return f?.__typename === 'ProjectV2Field' && f?.name === fieldName;
+    });
+    if (!field || field.__typename !== 'ProjectV2Field') {
         return null;
     }
     return { id: field.id, name: field.name };
@@ -47933,29 +47970,15 @@ async function getProjectField(octokit, owner, repo, projectNumber, fieldName) {
 /**
  * Update a project item field
  */
-async function updateProjectItem(octokit, config, itemId, fieldId, value) {
+async function updateProjectItem(sdk, config, itemId, fieldId, projectId, value) {
     if (config.dryRun) {
         coreExports.info(`Dry run: Skipping updating project item ${itemId} field ${fieldId} with value "${value}"`);
         return;
     }
-    const mutation = `
-    mutation($itemId: ID!, $fieldId: ID!, $value: String!) {
-      updateProjectV2ItemFieldValue(input: {
-        itemId: $itemId
-        fieldId: $fieldId
-        value: {
-          text: $value
-        }
-      }) {
-        projectV2Item {
-          id
-        }
-      }
-    }
-  `;
-    await octokit.graphql(mutation, {
+    await sdk.UpdateProjectItemField({
         itemId,
         fieldId,
+        projectId,
         value
     });
 }
@@ -48093,7 +48116,7 @@ async function runEngagementWorkflow(config) {
     coreExports.info(`Calculated engagement scores for ${engagementResponse.totalItems} items`);
     // Update project with scores if requested
     if (config.applyScores) {
-        await updateProjectWithScores(config, engagementResponse, octokit);
+        await updateProjectWithScores(config, engagementResponse);
     }
     // Save engagement response to file
     const engagementFile = `${config.tempDir}/engagement-response.json`;
@@ -48135,7 +48158,7 @@ async function calculateIssueEngagementScores(config, octokit, graphql) {
 async function calculateProjectEngagementScores(config, octokit, graphql) {
     coreExports.info(`Calculating engagement scores for project #${config.projectNumber}`);
     const projectNumber = config.projectNumber;
-    const projectItems = await getAllProjectItems(octokit, config.repoOwner, config.repoName, projectNumber);
+    const projectItems = await getAllProjectItems(graphql, config.repoOwner, config.repoName, projectNumber);
     const items = [];
     coreExports.info(`Found ${projectItems.length} items in project #${projectNumber}`);
     for (const projectItem of projectItems) {

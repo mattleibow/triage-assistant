@@ -32,7 +32,7 @@ export async function runEngagementWorkflow(config: EverythingConfig): Promise<s
 
   // Update project with scores if requested
   if (config.applyScores) {
-    await updateProjectWithScores(config, engagementResponse, octokit)
+    await updateProjectWithScores(config, engagementResponse)
   }
 
   // Save engagement response to file
@@ -92,7 +92,7 @@ async function calculateProjectEngagementScores(
   core.info(`Calculating engagement scores for project #${config.projectNumber}`)
 
   const projectNumber = config.projectNumber!
-  const projectItems = await getAllProjectItems(octokit, config.repoOwner, config.repoName, projectNumber)
+  const projectItems = await getAllProjectItems(graphql, config.repoOwner, config.repoName, projectNumber)
 
   const items: EngagementItem[] = []
 

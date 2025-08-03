@@ -1,15 +1,14 @@
 import * as core from '@actions/core'
-import * as github from '@actions/github'
+import { GraphQLClient } from 'graphql-request'
+import { getSdk, Sdk as GraphQLSdk } from '../generated/graphql.js'
 import { EngagementResponse } from '../engagement/engagement-types.js'
 import { EngagementConfig, TriageConfig } from '../config.js'
-
-type Octokit = ReturnType<typeof github.getOctokit>
 
 /**
  * Get all items from a project
  */
 export async function getAllProjectItems(
-  octokit: Octokit,
+  sdk: GraphQLSdk,
   owner: string,
   repo: string,
   projectNumber: number
@@ -17,36 +16,6 @@ export async function getAllProjectItems(
   Array<{ id: string; projectId: string; content?: { type: string; owner: string; repo: string; number: number } }>
 > {
   core.info(`Fetching all items from project #${projectNumber}`)
-
-  const query = `
-    query($owner: String!, $repo: String!, $projectNumber: Int!, $cursor: String) {
-      repository(owner: $owner, name: $repo) {
-        projectV2(number: $projectNumber) {
-          id
-          items(first: 100, after: $cursor) {
-            pageInfo {
-              hasNextPage
-              endCursor
-            }
-            nodes {
-              id
-              content {
-                ... on Issue {
-                  number
-                  repository {
-                    name
-                    owner {
-                      login
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    }
-  `
 
   let hasNextPage = true
   let cursor: string | null = null
@@ -57,47 +26,23 @@ export async function getAllProjectItems(
   }> = []
 
   while (hasNextPage) {
-    const result: {
-      repository: {
-        projectV2: {
-          id: string
-          items: {
-            pageInfo: {
-              hasNextPage: boolean
-              endCursor: string
-            }
-            nodes: Array<{
-              id: string
-              content?: {
-                number: number
-                repository: {
-                  name: string
-                  owner: {
-                    login: string
-                  }
-                }
-              }
-            }>
-          }
-        }
-      }
-    } = await octokit.graphql(query, {
+    const result = await sdk.GetProjectItems({
       owner,
       repo,
       projectNumber,
       cursor
     })
 
-    const projectData = result.repository.projectV2
+    const projectData = result.repository?.projectV2
     if (!projectData) {
       throw new Error(`Project #${projectNumber} not found`)
     }
 
     const projectId = projectData.id
-    const items = projectData.items.nodes
+    const items = projectData.items.nodes || []
 
     for (const item of items) {
-      if (item.content && item.content.number) {
+      if (item?.content && 'number' in item.content && item.content.number) {
         allItems.push({
           id: item.id,
           projectId,
@@ -112,7 +57,7 @@ export async function getAllProjectItems(
     }
 
     hasNextPage = projectData.items.pageInfo.hasNextPage
-    cursor = projectData.items.pageInfo.endCursor
+    cursor = projectData.items.pageInfo.endCursor || null
   }
 
   return allItems
@@ -123,8 +68,7 @@ export async function getAllProjectItems(
  */
 export async function updateProjectWithScores(
   config: EngagementConfig & TriageConfig,
-  response: EngagementResponse,
-  octokit: Octokit
+  response: EngagementResponse
 ): Promise<void> {
   if (!config.applyScores || !config.projectNumber) {
     core.info('Skipping project update')
@@ -133,8 +77,16 @@ export async function updateProjectWithScores(
 
   core.info(`Updating project #${config.projectNumber} with engagement scores`)
 
+  // Create GraphQL SDK
+  const graphql = new GraphQLClient('https://api.github.com/graphql', {
+    headers: {
+      Authorization: `Bearer ${config.token}`
+    }
+  })
+  const sdk = getSdk(graphql)
+
   const projectField = await getProjectField(
-    octokit,
+    sdk,
     config.repoOwner,
     config.repoName,
     config.projectNumber,
@@ -146,12 +98,21 @@ export async function updateProjectWithScores(
     return
   }
 
+  // Get the project ID for the mutation
+  const projectItems = await getAllProjectItems(sdk, config.repoOwner, config.repoName, config.projectNumber)
+
+  const projectId = projectItems.length > 0 ? projectItems[0].projectId : null
+  if (!projectId) {
+    core.warning('No project items found or unable to determine project ID')
+    return
+  }
+
   // Update each issue's engagement score
   let updatedCount = 0
   for (const item of response.items) {
     if (item.id) {
       try {
-        await updateProjectItem(octokit, config, item.id, projectField.id, item.engagement.score.toString())
+        await updateProjectItem(sdk, config, item.id, projectField.id, projectId, item.engagement.score.toString())
         updatedCount++
       } catch (error) {
         core.warning(`Failed to update item ${item.id}: ${error}`)
@@ -166,57 +127,29 @@ export async function updateProjectWithScores(
  * Get project field information
  */
 export async function getProjectField(
-  octokit: Octokit,
+  sdk: GraphQLSdk,
   owner: string,
   repo: string,
   projectNumber: number,
   fieldName: string
 ): Promise<{ id: string; name: string } | null> {
-  const query = `
-    query($owner: String!, $repo: String!, $projectNumber: Int!) {
-      repository(owner: $owner, name: $repo) {
-        projectV2(number: $projectNumber) {
-          id
-          fields(first: 100) {
-            nodes {
-              ... on ProjectV2Field {
-                id
-                name
-                dataType
-              }
-            }
-          }
-        }
-      }
-    }
-  `
-
-  const result: {
-    repository: {
-      projectV2: {
-        id: string
-        fields: {
-          nodes: Array<{
-            id: string
-            name: string
-            dataType: string
-          }>
-        }
-      }
-    }
-  } = await octokit.graphql(query, {
+  const result = await sdk.GetProjectField({
     owner,
     repo,
     projectNumber
   })
 
-  const project = result.repository.projectV2
+  const project = result.repository?.projectV2
   if (!project) {
     return null
   }
 
-  const field = project.fields.nodes.find((f: { name: string }) => f.name === fieldName)
-  if (!field) {
+  const field = project.fields.nodes?.find((f) => {
+    // Check if it's a ProjectV2Field (which has name and id)
+    return f?.__typename === 'ProjectV2Field' && f?.name === fieldName
+  })
+
+  if (!field || field.__typename !== 'ProjectV2Field') {
     return null
   }
 
@@ -227,10 +160,11 @@ export async function getProjectField(
  * Update a project item field
  */
 export async function updateProjectItem(
-  octokit: Octokit,
+  sdk: GraphQLSdk,
   config: EngagementConfig & TriageConfig,
   itemId: string,
   fieldId: string,
+  projectId: string,
   value: string
 ): Promise<void> {
   if (config.dryRun) {
@@ -238,25 +172,10 @@ export async function updateProjectItem(
     return
   }
 
-  const mutation = `
-    mutation($itemId: ID!, $fieldId: ID!, $value: String!) {
-      updateProjectV2ItemFieldValue(input: {
-        itemId: $itemId
-        fieldId: $fieldId
-        value: {
-          text: $value
-        }
-      }) {
-        projectV2Item {
-          id
-        }
-      }
-    }
-  `
-
-  await octokit.graphql(mutation, {
+  await sdk.UpdateProjectItemField({
     itemId,
     fieldId,
+    projectId,
     value
   })
 }
