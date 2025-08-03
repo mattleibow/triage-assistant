@@ -44,7 +44,7 @@ The action operates through a unified entry point with mode selection via the `T
 - **`issue-details.ts`** - Issue data processing, scoring calculations, and historic analysis
 - **`issues.ts`** - Issue retrieval, manipulation, and REST API interactions
 - **`projects.ts`** - GitHub Projects v2 GraphQL operations and field updates
-- **`queries.ts`** - GraphQL query definitions and pagination handling
+- **`queries/*.graphql`** - GraphQL query definitions and pagination handling
 
 #### Triage Module (`src/triage/`)
 
@@ -283,7 +283,7 @@ describe('calculateScore with new factor', () => {
 
 **Adding New GraphQL Operations:**
 
-1. **Define Query/Mutation** - Add to `src/github/queries.ts`
+1. **Define Query/Mutation** - Add to `src/github/queries/*.graphql`
 2. **Run Code Generation** - `npm run codegen` to generate TypeScript types
 3. **Implement Operation** - Use generated SDK for type-safe operations
 4. **Handle Pagination** - Implement proper cursor-based pagination if needed
