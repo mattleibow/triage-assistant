@@ -4,7 +4,7 @@ import * as fs from 'fs'
 import * as path from 'path'
 import { GetIssueDetailsQuery, Sdk as GraphQLSdk } from '../generated/graphql.js'
 import { GitHubIssueConfig, TriageConfig } from '../config.js'
-import { IssueDetails, CommentData, ReactionData, UserInfo } from './issue-details.js'
+import { IssueDetails, ReactionData, CommentData, UserInfo } from './types.js'
 
 type Octokit = ReturnType<typeof github.getOctokit>
 type GetIssueDetailsQueryIssue = NonNullable<NonNullable<GetIssueDetailsQuery['repository']>['issue']>

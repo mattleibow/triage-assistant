@@ -47813,6 +47813,7 @@ const GetProjectItemsDocument = gql `
           id
           content {
             ... on Issue {
+              id
               number
               repository {
                 name
@@ -47863,70 +47864,22 @@ var EngagementClassification;
 })(EngagementClassification || (EngagementClassification = {}));
 
 /**
- * Get all items from a project
- */
-async function getAllProjectItems(sdk, owner, repo, projectNumber) {
-    coreExports.info(`Fetching all items from project #${projectNumber}`);
-    let hasNextPage = true;
-    let cursor = null;
-    const allItems = [];
-    while (hasNextPage) {
-        const result = await sdk.GetProjectItems({
-            owner,
-            repo,
-            projectNumber,
-            cursor
-        });
-        const projectData = result.repository?.projectV2;
-        if (!projectData) {
-            throw new Error(`Project #${projectNumber} not found`);
-        }
-        const projectId = projectData.id;
-        const items = projectData.items.nodes || [];
-        for (const item of items) {
-            if (item?.content && 'number' in item.content && item.content.number) {
-                allItems.push({
-                    id: item.id,
-                    projectId,
-                    content: {
-                        type: 'issue',
-                        owner: item.content.repository.owner.login,
-                        repo: item.content.repository.name,
-                        number: item.content.number
-                    }
-                });
-            }
-        }
-        hasNextPage = projectData.items.pageInfo.hasNextPage;
-        cursor = projectData.items.pageInfo.endCursor || null;
-    }
-    return allItems;
-}
-/**
  * Update project field with engagement scores
  */
-async function updateProjectWithScores(config, response) {
+async function updateProjectWithScores(config, graphql, response) {
     if (!config.applyScores || !config.projectNumber) {
         coreExports.info('Skipping project update');
         return;
     }
     coreExports.info(`Updating project #${config.projectNumber} with engagement scores`);
-    // Create GraphQL SDK
-    const graphql = new GraphQLClient('https://api.github.com/graphql', {
-        headers: {
-            Authorization: `Bearer ${config.token}`
-        }
-    });
-    const sdk = getSdk(graphql);
-    const projectField = await getProjectField(sdk, config.repoOwner, config.repoName, config.projectNumber, config.projectColumn);
+    const projectField = await getProjectField(graphql, config.repoOwner, config.repoName, config.projectNumber, config.projectColumn);
     if (!projectField) {
         coreExports.warning(`Field "${config.projectColumn}" not found in project`);
         return;
     }
     // Get the project ID for the mutation
-    const projectItems = await getAllProjectItems(sdk, config.repoOwner, config.repoName, config.projectNumber);
-    const projectId = projectItems.length > 0 ? projectItems[0].projectId : null;
-    if (!projectId) {
+    const project = await getProjectDetails(graphql, config.repoOwner, config.repoName, config.projectNumber);
+    if (!project || !project.items || project.items.length === 0) {
         coreExports.warning('No project items found or unable to determine project ID');
         return;
     }
@@ -47935,7 +47888,7 @@ async function updateProjectWithScores(config, response) {
     for (const item of response.items) {
         if (item.id) {
             try {
-                await updateProjectItem(sdk, config, item.id, projectField.id, projectId, item.engagement.score.toString());
+                await updateProjectItem(graphql, config, item.id, projectField.id, project.id, item.engagement.score.toString());
                 updatedCount++;
             }
             catch (error) {
@@ -47948,8 +47901,8 @@ async function updateProjectWithScores(config, response) {
 /**
  * Get project field information
  */
-async function getProjectField(sdk, owner, repo, projectNumber, fieldName) {
-    const result = await sdk.GetProjectField({
+async function getProjectField(graphql, owner, repo, projectNumber, fieldName) {
+    const result = await graphql.GetProjectField({
         owner,
         repo,
         projectNumber
@@ -47968,19 +47921,84 @@ async function getProjectField(sdk, owner, repo, projectNumber, fieldName) {
     return { id: field.id, name: field.name };
 }
 /**
+ * Get all items from a project
+ */
+async function getProjectDetails(graphql, owner, repo, projectNumber) {
+    coreExports.info(`Fetching all items from project #${projectNumber}`);
+    const result = await graphql.GetProjectItems({
+        owner,
+        repo,
+        projectNumber,
+        cursor: null
+    });
+    const projectData = result.repository?.projectV2;
+    if (!projectData) {
+        throw new Error(`Project #${projectNumber} not found`);
+    }
+    // Create the project object
+    const project = {
+        id: projectData.id,
+        owner,
+        number: projectNumber,
+        items: []
+    };
+    // Add first batch of items
+    let cursor = addItems(projectData.items, project.items, projectData.id);
+    // Paginate through remaining items
+    while (cursor) {
+        const nextResult = await graphql.GetProjectItems({
+            owner,
+            repo,
+            projectNumber,
+            cursor
+        });
+        cursor = addItems(nextResult?.repository?.projectV2?.items, project.items, projectData.id);
+    }
+    return project;
+}
+/**
  * Update a project item field
  */
-async function updateProjectItem(sdk, config, itemId, fieldId, projectId, value) {
+async function updateProjectItem(graphql, config, itemId, fieldId, projectId, value) {
     if (config.dryRun) {
         coreExports.info(`Dry run: Skipping updating project item ${itemId} field ${fieldId} with value "${value}"`);
         return;
     }
-    await sdk.UpdateProjectItemField({
+    await graphql.UpdateProjectItemField({
         itemId,
         fieldId,
         projectId,
         value
     });
+}
+function addItems(items, allItems, projectId) {
+    if (!items?.nodes) {
+        return null;
+    }
+    items.nodes.forEach((item) => {
+        if (!item) {
+            return;
+        }
+        // TODO: add other item types
+        if (item?.content?.__typename !== 'Issue') {
+            return;
+        }
+        allItems.push({
+            id: item.id,
+            projectId: projectId,
+            type: item.content.__typename,
+            content: {
+                id: item.content.id,
+                owner: item.content.repository.owner.login,
+                repo: item.content.repository.name,
+                number: item.content.number
+            }
+        });
+    });
+    if (!items.pageInfo.hasNextPage) {
+        return null;
+    }
+    return items.pageInfo.endCursor;
 }
 
 /**
@@ -48105,18 +48123,17 @@ async function calculateHistoricalScore(issue) {
  */
 async function runEngagementWorkflow(config) {
     coreExports.info('Running in engagement scoring mode');
-    const octokit = githubExports.getOctokit(config.token);
     const graphql = new GraphQLClient('https://api.github.com/graphql', {
         headers: {
             Authorization: `Bearer ${config.token}`
         }
     });
     const sdk = getSdk(graphql);
-    const engagementResponse = await calculateEngagementScores(config, octokit, sdk);
+    const engagementResponse = await calculateEngagementScores(config, sdk);
     coreExports.info(`Calculated engagement scores for ${engagementResponse.totalItems} items`);
     // Update project with scores if requested
     if (config.applyScores) {
-        await updateProjectWithScores(config, engagementResponse);
+        await updateProjectWithScores(config, sdk, engagementResponse);
     }
     // Save engagement response to file
     const engagementFile = `${config.tempDir}/engagement-response.json`;
@@ -48126,15 +48143,15 @@ async function runEngagementWorkflow(config) {
 /**
  * Calculate engagement scores for issues in a project or single issue
  * @param config - Configuration object containing project and authentication details
- * @param octokit - GitHub API client
+ * @param graphql - GraphQL SDK instance for making API calls
  * @returns Promise<EngagementResponse> - The engagement response with scores
  */
-async function calculateEngagementScores(config, octokit, graphql) {
+async function calculateEngagementScores(config, graphql) {
     if (config.projectNumber && config.projectNumber > 0) {
-        return await calculateProjectEngagementScores(config, octokit, graphql);
+        return await calculateProjectEngagementScores(config, graphql);
     }
     else if (config.issueNumber && config.issueNumber > 0) {
-        return await calculateIssueEngagementScores(config, octokit, graphql);
+        return await calculateIssueEngagementScores(config, graphql);
     }
     else {
         throw new Error('Either project number or issue number must be specified');
@@ -48143,7 +48160,7 @@ async function calculateEngagementScores(config, octokit, graphql) {
 /**
  * Calculate engagement scores for a single issue
  */
-async function calculateIssueEngagementScores(config, octokit, graphql) {
+async function calculateIssueEngagementScores(config, graphql) {
     coreExports.info(`Calculating engagement score for issue #${config.issueNumber}`);
     const issueDetails = await getIssueDetails(graphql, config.repoOwner, config.repoName, config.issueNumber);
     const item = await createEngagementItem(issueDetails);
@@ -48155,26 +48172,31 @@ async function calculateIssueEngagementScores(config, octokit, graphql) {
 /**
  * Calculate engagement scores for all issues in a project
  */
-async function calculateProjectEngagementScores(config, octokit, graphql) {
+async function calculateProjectEngagementScores(config, graphql) {
     coreExports.info(`Calculating engagement scores for project #${config.projectNumber}`);
     const projectNumber = config.projectNumber;
-    const projectItems = await getAllProjectItems(graphql, config.repoOwner, config.repoName, projectNumber);
+    const project = await getProjectDetails(graphql, config.repoOwner, config.repoName, projectNumber);
+    if (!project || !project.items || project.items.length === 0) {
+        coreExports.warning('No project items found or unable to determine project ID');
+        return {
+            items: [],
+            totalItems: 0
+        };
+    }
+    coreExports.info(`Found ${project.items.length} items in project #${projectNumber}`);
     const items = [];
-    coreExports.info(`Found ${projectItems.length} items in project #${projectNumber}`);
-    for (const projectItem of projectItems) {
-        if (projectItem.content?.type === 'Issue') {
-            const issueDetails = await getIssueDetails(graphql, projectItem.content.owner, projectItem.content.repo, projectItem.content.number);
-            const item = await createEngagementItem(issueDetails, projectItem.id);
-            items.push(item);
-        }
+    for (const projectItem of project.items) {
+        const issueDetails = await getIssueDetails(graphql, projectItem.content.owner, projectItem.content.repo, projectItem.content.number);
+        const item = await createEngagementItem(issueDetails, projectItem.id);
+        items.push(item);
     }
     return {
         items,
         totalItems: items.length,
         project: {
-            id: projectItems[0]?.projectId || '',
-            owner: config.repoOwner,
-            number: projectNumber
+            id: project.id,
+            owner: project.owner,
+            number: project.number
         }
     };
 }

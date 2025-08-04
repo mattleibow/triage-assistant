@@ -1,36 +1,4 @@
-export interface IssueDetails {
-  id: string
-  owner: string
-  repo: string
-  number: number
-  title: string
-  body: string
-  state: string
-  createdAt: Date
-  updatedAt: Date
-  closedAt: Date | null
-  reactions: ReactionData[]
-  comments: CommentData[]
-  user: UserInfo
-  assignees: UserInfo[]
-}
-
-export interface CommentData {
-  user: UserInfo
-  createdAt: Date
-  reactions: ReactionData[]
-}
-
-export interface ReactionData {
-  user: UserInfo
-  reaction: string
-  createdAt: Date
-}
-
-export interface UserInfo {
-  login: string
-  type: string
-}
+import { IssueDetails } from './types.js'
 
 /**
  * Get historic issue details by filtering activity to 7 days ago

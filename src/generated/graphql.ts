@@ -35661,7 +35661,7 @@ export type GetProjectItemsQueryVariables = Exact<{
 }>;
 
 
-export type GetProjectItemsQuery = { __typename?: 'Query', repository?: { __typename?: 'Repository', projectV2?: { __typename?: 'ProjectV2', id: string, items: { __typename?: 'ProjectV2ItemConnection', pageInfo: { __typename?: 'PageInfo', hasNextPage: boolean, endCursor?: string | null }, nodes?: Array<{ __typename?: 'ProjectV2Item', id: string, content?: { __typename?: 'DraftIssue' } | { __typename?: 'Issue', number: number, repository: { __typename?: 'Repository', name: string, owner: { __typename?: 'Organization', login: string } | { __typename?: 'User', login: string } } } | { __typename?: 'PullRequest' } | null } | null> | null } } | null } | null };
+export type GetProjectItemsQuery = { __typename?: 'Query', repository?: { __typename?: 'Repository', projectV2?: { __typename?: 'ProjectV2', id: string, items: { __typename?: 'ProjectV2ItemConnection', pageInfo: { __typename?: 'PageInfo', hasNextPage: boolean, endCursor?: string | null }, nodes?: Array<{ __typename?: 'ProjectV2Item', id: string, content?: { __typename?: 'DraftIssue' } | { __typename?: 'Issue', id: string, number: number, repository: { __typename?: 'Repository', name: string, owner: { __typename?: 'Organization', login: string } | { __typename?: 'User', login: string } } } | { __typename?: 'PullRequest' } | null } | null> | null } } | null } | null };
 
 export type UpdateProjectItemFieldMutationVariables = Exact<{
   itemId: Scalars['ID']['input'];
@@ -35782,6 +35782,7 @@ export const GetProjectItemsDocument = gql`
           id
           content {
             ... on Issue {
+              id
               number
               repository {
                 name

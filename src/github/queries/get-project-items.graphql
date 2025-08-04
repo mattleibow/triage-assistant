@@ -12,6 +12,7 @@ query GetProjectItems($owner: String!, $repo: String!, $projectNumber: Int!, $cu
           id
           content {
             ... on Issue {
+              id
               number
               repository {
                 name

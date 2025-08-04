@@ -1,6 +1,5 @@
 import { jest } from '@jest/globals'
 import {
-  IssueDetails,
   getHistoricalIssueDetails,
   getUniqueContributorsCount,
   getDaysSinceLastActivity,
@@ -9,6 +8,7 @@ import {
   calculateHistoricalScore
 } from '../src/github/issue-details.js'
 import { createEngagementItem } from '../src/engagement/engagement.js'
+import { IssueDetails } from '../src/github/types.js'
 
 describe('IssueDetails', () => {
   // Mock date for consistent testing

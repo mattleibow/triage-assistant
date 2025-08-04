@@ -1,26 +1,15 @@
+import { Issue, Project } from '../github/types.js'
+
 export interface EngagementResponse {
-  project?: EngagementProject
+  project?: Project
   items: EngagementItem[]
   totalItems: number
 }
 
-export interface EngagementProject {
-  id: string
-  owner: string
-  number: number
-}
-
 export interface EngagementItem {
   id?: string
-  issue: EngagementIssue
+  issue: Issue
   engagement: EngagementScore
-}
-
-export interface EngagementIssue {
-  id: string
-  owner: string
-  repo: string
-  number: number
 }
 
 export interface EngagementScore {
