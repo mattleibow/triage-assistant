@@ -1,6 +1,6 @@
 import * as require$$0 from 'os';
 import require$$0__default from 'os';
-import require$$0$1, { randomUUID as randomUUID$4 } from 'crypto';
+import require$$0$1 from 'crypto';
 import * as fs from 'fs';
 import fs__default from 'fs';
 import * as path from 'path';
@@ -16,8 +16,8 @@ import require$$0$5, { Readable } from 'stream';
 import require$$7 from 'buffer';
 import require$$8 from 'querystring';
 import require$$14 from 'stream/web';
-import require$$0$7, { Transform, Readable as Readable$1 } from 'node:stream';
-import require$$1$2, { inspect } from 'node:util';
+import require$$0$7, { Transform } from 'node:stream';
+import require$$1$2, { inspect as inspect$1 } from 'node:util';
 import require$$0$6 from 'node:events';
 import require$$0$8 from 'worker_threads';
 import require$$2$2 from 'perf_hooks';
@@ -33,11 +33,11 @@ import require$$6$1 from 'timers';
 import * as os from 'node:os';
 import { EOL } from 'node:os';
 import * as process$1 from 'node:process';
+import { randomUUID as randomUUID$2 } from 'node:crypto';
 import require$$1$4 from 'tty';
 import * as http from 'node:http';
 import * as https from 'node:https';
 import * as zlib from 'node:zlib';
-import { randomUUID as randomUUID$3 } from 'node:crypto';
 
 var commonjsGlobal = typeof globalThis !== 'undefined' ? globalThis : typeof window !== 'undefined' ? window : typeof global !== 'undefined' ? global : typeof self !== 'undefined' ? self : {};
 
@@ -21725,11 +21725,11 @@ function requireUtil$1 () {
 	return util$1;
 }
 
-var parse$1;
+var parse$2;
 var hasRequiredParse;
 
 function requireParse () {
-	if (hasRequiredParse) return parse$1;
+	if (hasRequiredParse) return parse$2;
 	hasRequiredParse = 1;
 
 	const { maxNameValuePairSize, maxAttributeValueSize } = requireConstants$1();
@@ -22043,11 +22043,11 @@ function requireParse () {
 	  return parseUnparsedAttributes(unparsedAttributes, cookieAttributeList)
 	}
 
-	parse$1 = {
+	parse$2 = {
 	  parseSetCookie,
 	  parseUnparsedAttributes
 	};
-	return parse$1;
+	return parse$2;
 }
 
 var cookies;
@@ -27292,15 +27292,15 @@ var coreExports = requireCore();
 
 var github = {};
 
-var context$1 = {};
+var context$2 = {};
 
 var hasRequiredContext;
 
 function requireContext () {
-	if (hasRequiredContext) return context$1;
+	if (hasRequiredContext) return context$2;
 	hasRequiredContext = 1;
-	Object.defineProperty(context$1, "__esModule", { value: true });
-	context$1.Context = void 0;
+	Object.defineProperty(context$2, "__esModule", { value: true });
+	context$2.Context = void 0;
 	const fs_1 = fs__default;
 	const os_1 = require$$0__default;
 	class Context {
@@ -27352,9 +27352,9 @@ function requireContext () {
 	        throw new Error("context.repo requires a GITHUB_REPOSITORY environment variable like 'owner/repo'");
 	    }
 	}
-	context$1.Context = Context;
+	context$2.Context = Context;
 	
-	return context$1;
+	return context$2;
 }
 
 var utils$1 = {};
@@ -27665,7 +27665,7 @@ function lowercaseKeys(object) {
   }, {});
 }
 
-function isPlainObject$1(value) {
+function isPlainObject$2(value) {
   if (typeof value !== "object" || value === null)
     return false;
   if (Object.prototype.toString.call(value) !== "[object Object]")
@@ -27680,7 +27680,7 @@ function isPlainObject$1(value) {
 function mergeDeep(defaults, options) {
   const result = Object.assign({}, defaults);
   Object.keys(options).forEach((key) => {
-    if (isPlainObject$1(options[key])) {
+    if (isPlainObject$2(options[key])) {
       if (!(key in defaults))
         Object.assign(result, { [key]: options[key] });
       else
@@ -27890,7 +27890,7 @@ function expand(template, context) {
   }
 }
 
-function parse(options) {
+function parse$1(options) {
   let method = options.method.toUpperCase();
   let url = (options.url || "/").replace(/:([a-z]\w+)/g, "{$1}");
   let headers = Object.assign({}, options.headers);
@@ -27955,7 +27955,7 @@ function parse(options) {
 }
 
 function endpointWithDefaults(defaults, route, options) {
-  return parse(merge(defaults, route, options));
+  return parse$1(merge(defaults, route, options));
 }
 
 function withDefaults$2(oldDefaults, newDefaults) {
@@ -27965,7 +27965,7 @@ function withDefaults$2(oldDefaults, newDefaults) {
     DEFAULTS,
     defaults: withDefaults$2.bind(null, DEFAULTS),
     merge: merge.bind(null, DEFAULTS),
-    parse
+    parse: parse$1
   });
 }
 
@@ -27973,7 +27973,7 @@ const endpoint = withDefaults$2(null, DEFAULTS);
 
 const VERSION$4 = "8.4.1";
 
-function isPlainObject(value) {
+function isPlainObject$1(value) {
   if (typeof value !== "object" || value === null)
     return false;
   if (Object.prototype.toString.call(value) !== "[object Object]")
@@ -28156,7 +28156,7 @@ function getBufferResponse(response) {
 function fetchWrapper(requestOptions) {
   const log = requestOptions.request && requestOptions.request.log ? requestOptions.request.log : console;
   const parseSuccessResponseBody = requestOptions.request?.parseSuccessResponseBody !== false;
-  if (isPlainObject(requestOptions.body) || Array.isArray(requestOptions.body)) {
+  if (isPlainObject$1(requestOptions.body) || Array.isArray(requestOptions.body)) {
     requestOptions.body = JSON.stringify(requestOptions.body);
   }
   let headers = {};
@@ -28481,13 +28481,28 @@ const createTokenAuth = function createTokenAuth2(token) {
 // pkg/dist-src/index.js
 
 // pkg/dist-src/version.js
-var VERSION$2 = "5.2.0";
+var VERSION$2 = "5.2.2";
 
 // pkg/dist-src/index.js
 var noop = () => {
 };
 var consoleWarn = console.warn.bind(console);
 var consoleError = console.error.bind(console);
+function createLogger(logger = {}) {
+  if (typeof logger.debug !== "function") {
+    logger.debug = noop;
+  }
+  if (typeof logger.info !== "function") {
+    logger.info = noop;
+  }
+  if (typeof logger.warn !== "function") {
+    logger.warn = consoleWarn;
+  }
+  if (typeof logger.error !== "function") {
+    logger.error = consoleError;
+  }
+  return logger;
+}
 var userAgentTrail = `octokit-core.js/${VERSION$2} ${getUserAgent()}`;
 var Octokit = class {
   static {
@@ -28561,15 +28576,7 @@ var Octokit = class {
     }
     this.request = request.defaults(requestDefaults);
     this.graphql = withCustomRequest(this.request).defaults(requestDefaults);
-    this.log = Object.assign(
-      {
-        debug: noop,
-        info: noop,
-        warn: consoleWarn,
-        error: consoleError
-      },
-      options.log
-    );
+    this.log = createLogger(options.log);
     this.hook = hook;
     if (!options.authStrategy) {
       if (!options.auth) {
@@ -31280,9 +31287,9 @@ function rng() {
   return getRandomValues(rnds8);
 }
 
-var randomUUID$2 = typeof crypto !== 'undefined' && crypto.randomUUID && crypto.randomUUID.bind(crypto);
+var randomUUID$1 = typeof crypto !== 'undefined' && crypto.randomUUID && crypto.randomUUID.bind(crypto);
 var native = {
-  randomUUID: randomUUID$2
+  randomUUID: randomUUID$1
 };
 
 function v4(options, buf, offset) {
@@ -31722,6 +31729,17 @@ PERFORMANCE OF THIS SOFTWARE.
 /* global Reflect, Promise, SuppressedError, Symbol, Iterator */
 
 
+var __assign = function() {
+    __assign = Object.assign || function __assign(t) {
+        for (var s, i = 1, n = arguments.length; i < n; i++) {
+            s = arguments[i];
+            for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p)) t[p] = s[p];
+        }
+        return t;
+    };
+    return __assign.apply(this, arguments);
+};
+
 function __rest(s, e) {
     var t = {};
     for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p) && e.indexOf(p) < 0)
@@ -31816,74 +31834,74 @@ let AbortError$1 = class AbortError extends Error {
 
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
-function log$1(message, ...args) {
+function log(message, ...args) {
     process$1.stderr.write(`${require$$1$2.format(message, ...args)}${EOL}`);
 }
 
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
-const debugEnvVariable$1 = (typeof process !== "undefined" && process.env && process.env.DEBUG) || undefined;
-let enabledString$1;
-let enabledNamespaces$1 = [];
-let skippedNamespaces$1 = [];
-const debuggers$1 = [];
-if (debugEnvVariable$1) {
-    enable$1(debugEnvVariable$1);
+const debugEnvVariable = (typeof process !== "undefined" && process.env && process.env.DEBUG) || undefined;
+let enabledString;
+let enabledNamespaces = [];
+let skippedNamespaces = [];
+const debuggers = [];
+if (debugEnvVariable) {
+    enable(debugEnvVariable);
 }
-const debugObj$1 = Object.assign((namespace) => {
-    return createDebugger$1(namespace);
+const debugObj = Object.assign((namespace) => {
+    return createDebugger(namespace);
 }, {
-    enable: enable$1,
-    enabled: enabled$1,
-    disable: disable$1,
-    log: log$1,
+    enable,
+    enabled,
+    disable,
+    log,
 });
-function enable$1(namespaces) {
-    enabledString$1 = namespaces;
-    enabledNamespaces$1 = [];
-    skippedNamespaces$1 = [];
+function enable(namespaces) {
+    enabledString = namespaces;
+    enabledNamespaces = [];
+    skippedNamespaces = [];
     const wildcard = /\*/g;
     const namespaceList = namespaces.split(",").map((ns) => ns.trim().replace(wildcard, ".*?"));
     for (const ns of namespaceList) {
         if (ns.startsWith("-")) {
-            skippedNamespaces$1.push(new RegExp(`^${ns.substr(1)}$`));
+            skippedNamespaces.push(new RegExp(`^${ns.substr(1)}$`));
         }
         else {
-            enabledNamespaces$1.push(new RegExp(`^${ns}$`));
+            enabledNamespaces.push(new RegExp(`^${ns}$`));
         }
     }
-    for (const instance of debuggers$1) {
-        instance.enabled = enabled$1(instance.namespace);
+    for (const instance of debuggers) {
+        instance.enabled = enabled(instance.namespace);
     }
 }
-function enabled$1(namespace) {
+function enabled(namespace) {
     if (namespace.endsWith("*")) {
         return true;
     }
-    for (const skipped of skippedNamespaces$1) {
+    for (const skipped of skippedNamespaces) {
         if (skipped.test(namespace)) {
             return false;
         }
     }
-    for (const enabledNamespace of enabledNamespaces$1) {
+    for (const enabledNamespace of enabledNamespaces) {
         if (enabledNamespace.test(namespace)) {
             return true;
         }
     }
     return false;
 }
-function disable$1() {
-    const result = enabledString$1 || "";
-    enable$1("");
+function disable() {
+    const result = enabledString || "";
+    enable("");
     return result;
 }
-function createDebugger$1(namespace) {
+function createDebugger(namespace) {
     const newDebugger = Object.assign(debug, {
-        enabled: enabled$1(namespace),
-        destroy: destroy$1,
-        log: debugObj$1.log,
+        enabled: enabled(namespace),
+        destroy,
+        log: debugObj.log,
         namespace,
-        extend: extend$1,
+        extend,
     });
     function debug(...args) {
         if (!newDebugger.enabled) {
@@ -31894,19 +31912,19 @@ function createDebugger$1(namespace) {
         }
         newDebugger.log(...args);
     }
-    debuggers$1.push(newDebugger);
+    debuggers.push(newDebugger);
     return newDebugger;
 }
-function destroy$1() {
-    const index = debuggers$1.indexOf(this);
+function destroy() {
+    const index = debuggers.indexOf(this);
     if (index >= 0) {
-        debuggers$1.splice(index, 1);
+        debuggers.splice(index, 1);
         return true;
     }
     return false;
 }
-function extend$1(namespace) {
-    const newDebugger = createDebugger$1(`${this.namespace}:${namespace}`);
+function extend(namespace) {
+    const newDebugger = createDebugger(`${this.namespace}:${namespace}`);
     newDebugger.log = this.log;
     return newDebugger;
 }
@@ -31914,13 +31932,13 @@ function extend$1(namespace) {
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 const TYPESPEC_RUNTIME_LOG_LEVELS = ["verbose", "info", "warning", "error"];
-const levelMap$1 = {
+const levelMap = {
     verbose: 400,
     info: 300,
     warning: 200,
     error: 100,
 };
-function patchLogMethod$1(parent, child) {
+function patchLogMethod(parent, child) {
     child.log = (...args) => {
         parent.log(...args);
     };
@@ -31938,94 +31956,91 @@ function createLoggerContext(options) {
     const logLevelFromEnv = (typeof process !== "undefined" && process.env && process.env[options.logLevelEnvVarName]) ||
         undefined;
     let logLevel;
-    const clientLogger = debugObj$1(options.namespace);
+    const clientLogger = debugObj(options.namespace);
     clientLogger.log = (...args) => {
-        debugObj$1.log(...args);
+        debugObj.log(...args);
     };
+    function contextSetLogLevel(level) {
+        if (level && !isTypeSpecRuntimeLogLevel(level)) {
+            throw new Error(`Unknown log level '${level}'. Acceptable values: ${TYPESPEC_RUNTIME_LOG_LEVELS.join(",")}`);
+        }
+        logLevel = level;
+        const enabledNamespaces = [];
+        for (const logger of registeredLoggers) {
+            if (shouldEnable(logger)) {
+                enabledNamespaces.push(logger.namespace);
+            }
+        }
+        debugObj.enable(enabledNamespaces.join(","));
+    }
     if (logLevelFromEnv) {
         // avoid calling setLogLevel because we don't want a mis-set environment variable to crash
         if (isTypeSpecRuntimeLogLevel(logLevelFromEnv)) {
-            setLogLevel$1(logLevelFromEnv);
+            contextSetLogLevel(logLevelFromEnv);
         }
         else {
             console.error(`${options.logLevelEnvVarName} set to unknown log level '${logLevelFromEnv}'; logging is not enabled. Acceptable values: ${TYPESPEC_RUNTIME_LOG_LEVELS.join(", ")}.`);
         }
     }
     function shouldEnable(logger) {
-        return Boolean(logLevel && levelMap$1[logger.level] <= levelMap$1[logLevel]);
+        return Boolean(logLevel && levelMap[logger.level] <= levelMap[logLevel]);
     }
     function createLogger(parent, level) {
         const logger = Object.assign(parent.extend(level), {
             level,
         });
-        patchLogMethod$1(parent, logger);
+        patchLogMethod(parent, logger);
         if (shouldEnable(logger)) {
-            const enabledNamespaces = debugObj$1.disable();
-            debugObj$1.enable(enabledNamespaces + "," + logger.namespace);
+            const enabledNamespaces = debugObj.disable();
+            debugObj.enable(enabledNamespaces + "," + logger.namespace);
         }
         registeredLoggers.add(logger);
         return logger;
     }
+    function contextGetLogLevel() {
+        return logLevel;
+    }
+    function contextCreateClientLogger(namespace) {
+        const clientRootLogger = clientLogger.extend(namespace);
+        patchLogMethod(clientLogger, clientRootLogger);
+        return {
+            error: createLogger(clientRootLogger, "error"),
+            warning: createLogger(clientRootLogger, "warning"),
+            info: createLogger(clientRootLogger, "info"),
+            verbose: createLogger(clientRootLogger, "verbose"),
+        };
+    }
     return {
-        setLogLevel(level) {
-            if (level && !isTypeSpecRuntimeLogLevel(level)) {
-                throw new Error(`Unknown log level '${level}'. Acceptable values: ${TYPESPEC_RUNTIME_LOG_LEVELS.join(",")}`);
-            }
-            logLevel = level;
-            const enabledNamespaces = [];
-            for (const logger of registeredLoggers) {
-                if (shouldEnable(logger)) {
-                    enabledNamespaces.push(logger.namespace);
-                }
-            }
-            debugObj$1.enable(enabledNamespaces.join(","));
-        },
-        getLogLevel() {
-            return logLevel;
-        },
-        createClientLogger(namespace) {
-            const clientRootLogger = clientLogger.extend(namespace);
-            patchLogMethod$1(clientLogger, clientRootLogger);
-            return {
-                error: createLogger(clientRootLogger, "error"),
-                warning: createLogger(clientRootLogger, "warning"),
-                info: createLogger(clientRootLogger, "info"),
-                verbose: createLogger(clientRootLogger, "verbose"),
-            };
-        },
+        setLogLevel: contextSetLogLevel,
+        getLogLevel: contextGetLogLevel,
+        createClientLogger: contextCreateClientLogger,
         logger: clientLogger,
     };
 }
-const context = createLoggerContext({
+const context$1 = createLoggerContext({
     logLevelEnvVarName: "TYPESPEC_RUNTIME_LOG_LEVEL",
     namespace: "typeSpecRuntime",
 });
-/**
- * Retrieves the currently specified log level.
- */
-function setLogLevel$1(logLevel) {
-    context.setLogLevel(logLevel);
-}
 /**
  * Creates a logger for use by the SDKs that inherits from `TypeSpecRuntimeLogger`.
  * @param namespace - The name of the SDK package.
  * @hidden
  */
 function createClientLogger$1(namespace) {
-    return context.createClientLogger(namespace);
+    return context$1.createClientLogger(namespace);
 }
 
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
-function normalizeName$1(name) {
+function normalizeName(name) {
     return name.toLowerCase();
 }
-function* headerIterator$1(map) {
+function* headerIterator(map) {
     for (const entry of map.values()) {
         yield [entry.name, entry.value];
     }
 }
-let HttpHeadersImpl$1 = class HttpHeadersImpl {
+class HttpHeadersImpl {
     constructor(rawHeaders) {
         this._headersMap = new Map();
         if (rawHeaders) {
@@ -32041,7 +32056,7 @@ let HttpHeadersImpl$1 = class HttpHeadersImpl {
      * @param value - The value of the header to set.
      */
     set(name, value) {
-        this._headersMap.set(normalizeName$1(name), { name, value: String(value).trim() });
+        this._headersMap.set(normalizeName(name), { name, value: String(value).trim() });
     }
     /**
      * Get the header value for the provided header name, or undefined if no header exists in this
@@ -32050,21 +32065,21 @@ let HttpHeadersImpl$1 = class HttpHeadersImpl {
      */
     get(name) {
         var _a;
-        return (_a = this._headersMap.get(normalizeName$1(name))) === null || _a === void 0 ? void 0 : _a.value;
+        return (_a = this._headersMap.get(normalizeName(name))) === null || _a === void 0 ? void 0 : _a.value;
     }
     /**
      * Get whether or not this header collection contains a header entry for the provided header name.
      * @param name - The name of the header to set. This value is case-insensitive.
      */
     has(name) {
-        return this._headersMap.has(normalizeName$1(name));
+        return this._headersMap.has(normalizeName(name));
     }
     /**
      * Remove the header with the provided headerName.
      * @param name - The name of the header to remove.
      */
     delete(name) {
-        this._headersMap.delete(normalizeName$1(name));
+        this._headersMap.delete(normalizeName(name));
     }
     /**
      * Get the JSON object representation of this HTTP header collection.
@@ -32093,31 +32108,31 @@ let HttpHeadersImpl$1 = class HttpHeadersImpl {
      * Iterate over tuples of header [name, value] pairs.
      */
     [Symbol.iterator]() {
-        return headerIterator$1(this._headersMap);
+        return headerIterator(this._headersMap);
     }
-};
+}
 /**
  * Creates an object that satisfies the `HttpHeaders` interface.
  * @param rawHeaders - A simple object representing initial headers
  */
-function createHttpHeaders$1(rawHeaders) {
-    return new HttpHeadersImpl$1(rawHeaders);
+function createHttpHeaders(rawHeaders) {
+    return new HttpHeadersImpl(rawHeaders);
 }
 
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
-var _a$3;
+var _a$1;
 // NOTE: This is a workaround until we can use `globalThis.crypto.randomUUID` in Node.js 19+.
-const uuidFunction$1 = typeof ((_a$3 = globalThis === null || globalThis === void 0 ? void 0 : globalThis.crypto) === null || _a$3 === void 0 ? void 0 : _a$3.randomUUID) === "function"
+const uuidFunction = typeof ((_a$1 = globalThis === null || globalThis === void 0 ? void 0 : globalThis.crypto) === null || _a$1 === void 0 ? void 0 : _a$1.randomUUID) === "function"
     ? globalThis.crypto.randomUUID.bind(globalThis.crypto)
-    : randomUUID$3;
+    : randomUUID$2;
 /**
  * Generated Universally Unique Identifier
  *
  * @returns RFC4122 v4 UUID.
  */
-function randomUUID$1() {
-    return uuidFunction$1();
+function randomUUID() {
+    return uuidFunction();
 }
 
 // Copyright (c) Microsoft Corporation.
@@ -32127,7 +32142,7 @@ class PipelineRequestImpl {
         var _a, _b, _c, _d, _e, _f, _g;
         this.url = options.url;
         this.body = options.body;
-        this.headers = (_a = options.headers) !== null && _a !== void 0 ? _a : createHttpHeaders$1();
+        this.headers = (_a = options.headers) !== null && _a !== void 0 ? _a : createHttpHeaders();
         this.method = (_b = options.method) !== null && _b !== void 0 ? _b : "GET";
         this.timeout = (_c = options.timeout) !== null && _c !== void 0 ? _c : 0;
         this.multipartBody = options.multipartBody;
@@ -32139,10 +32154,11 @@ class PipelineRequestImpl {
         this.abortSignal = options.abortSignal;
         this.onUploadProgress = options.onUploadProgress;
         this.onDownloadProgress = options.onDownloadProgress;
-        this.requestId = options.requestId || randomUUID$1();
+        this.requestId = options.requestId || randomUUID();
         this.allowInsecureConnection = (_f = options.allowInsecureConnection) !== null && _f !== void 0 ? _f : false;
         this.enableBrowserStreams = (_g = options.enableBrowserStreams) !== null && _g !== void 0 ? _g : false;
         this.requestOverrides = options.requestOverrides;
+        this.authSchemes = options.authSchemes;
     }
 }
 /**
@@ -32156,13 +32172,13 @@ function createPipelineRequest(options) {
 
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
-const ValidPhaseNames$1 = new Set(["Deserialize", "Serialize", "Retry", "Sign"]);
+const ValidPhaseNames = new Set(["Deserialize", "Serialize", "Retry", "Sign"]);
 /**
  * A private implementation of Pipeline.
  * Do not export this class from the package.
  * @internal
  */
-let HttpPipeline$1 = class HttpPipeline {
+class HttpPipeline {
     constructor(policies) {
         var _a;
         this._policies = [];
@@ -32173,10 +32189,10 @@ let HttpPipeline$1 = class HttpPipeline {
         if (options.phase && options.afterPhase) {
             throw new Error("Policies inside a phase cannot specify afterPhase.");
         }
-        if (options.phase && !ValidPhaseNames$1.has(options.phase)) {
+        if (options.phase && !ValidPhaseNames.has(options.phase)) {
             throw new Error(`Invalid phase name: ${options.phase}`);
         }
-        if (options.afterPhase && !ValidPhaseNames$1.has(options.afterPhase)) {
+        if (options.afterPhase && !ValidPhaseNames.has(options.afterPhase)) {
             throw new Error(`Invalid afterPhase name: ${options.afterPhase}`);
         }
         this._policies.push({
@@ -32407,13 +32423,13 @@ let HttpPipeline$1 = class HttpPipeline {
         }
         return result;
     }
-};
+}
 /**
  * Creates a totally empty pipeline.
  * Useful for testing or creating a custom one.
  */
 function createEmptyPipeline$1() {
-    return HttpPipeline$1.create();
+    return HttpPipeline.create();
 }
 
 // Copyright (c) Microsoft Corporation.
@@ -32422,7 +32438,7 @@ function createEmptyPipeline$1() {
  * Helper to determine when an input is a generic JS object.
  * @returns true when input is an object type that is not null, Array, RegExp, or Date.
  */
-function isObject$1(input) {
+function isObject(input) {
     return (typeof input === "object" &&
         input !== null &&
         !Array.isArray(input) &&
@@ -32437,7 +32453,7 @@ function isObject$1(input) {
  * @param e - Something caught by a catch clause.
  */
 function isError$1(e) {
-    if (isObject$1(e)) {
+    if (isObject(e)) {
         const hasName = typeof e.name === "string";
         const hasMessage = typeof e.message === "string";
         return hasName && hasMessage;
@@ -32447,13 +32463,13 @@ function isError$1(e) {
 
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
-const custom$1 = inspect.custom;
+const custom = inspect$1.custom;
 
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
-const RedactedString$1 = "REDACTED";
+const RedactedString = "REDACTED";
 // Make sure this list is up-to-date with the one under core/logger/Readme#Keyconcepts
-const defaultAllowedHeaderNames$1 = [
+const defaultAllowedHeaderNames = [
     "x-ms-client-request-id",
     "x-ms-return-client-request-id",
     "x-ms-useragent",
@@ -32494,14 +32510,14 @@ const defaultAllowedHeaderNames$1 = [
     "User-Agent",
     "WWW-Authenticate",
 ];
-const defaultAllowedQueryParameters$1 = ["api-version"];
+const defaultAllowedQueryParameters = ["api-version"];
 /**
  * A utility class to sanitize objects for logging.
  */
-let Sanitizer$1 = class Sanitizer {
+class Sanitizer {
     constructor({ additionalAllowedHeaderNames: allowedHeaderNames = [], additionalAllowedQueryParameters: allowedQueryParameters = [], } = {}) {
-        allowedHeaderNames = defaultAllowedHeaderNames$1.concat(allowedHeaderNames);
-        allowedQueryParameters = defaultAllowedQueryParameters$1.concat(allowedQueryParameters);
+        allowedHeaderNames = defaultAllowedHeaderNames.concat(allowedHeaderNames);
+        allowedQueryParameters = defaultAllowedQueryParameters.concat(allowedQueryParameters);
         this.allowedHeaderNames = new Set(allowedHeaderNames.map((n) => n.toLowerCase()));
         this.allowedQueryParameters = new Set(allowedQueryParameters.map((p) => p.toLowerCase()));
     }
@@ -32539,7 +32555,7 @@ let Sanitizer$1 = class Sanitizer {
                 // field with the autorest spec. No need to log it.
                 return undefined;
             }
-            else if (Array.isArray(value) || isObject$1(value)) {
+            else if (Array.isArray(value) || isObject(value)) {
                 if (seen.has(value)) {
                     return "[Circular]";
                 }
@@ -32563,7 +32579,7 @@ let Sanitizer$1 = class Sanitizer {
         }
         for (const [key] of url.searchParams) {
             if (!this.allowedQueryParameters.has(key.toLowerCase())) {
-                url.searchParams.set(key, RedactedString$1);
+                url.searchParams.set(key, RedactedString);
             }
         }
         return url.toString();
@@ -32575,7 +32591,7 @@ let Sanitizer$1 = class Sanitizer {
                 sanitized[key] = obj[key];
             }
             else {
-                sanitized[key] = RedactedString$1;
+                sanitized[key] = RedactedString;
             }
         }
         return sanitized;
@@ -32590,20 +32606,20 @@ let Sanitizer$1 = class Sanitizer {
                 sanitized[k] = value[k];
             }
             else {
-                sanitized[k] = RedactedString$1;
+                sanitized[k] = RedactedString;
             }
         }
         return sanitized;
     }
-};
+}
 
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
-const errorSanitizer$1 = new Sanitizer$1();
+const errorSanitizer = new Sanitizer();
 /**
  * A custom error type for failed pipeline requests.
  */
-let RestError$1 = class RestError extends Error {
+class RestError extends Error {
     constructor(message, options = {}) {
         super(message);
         this.name = "RestError";
@@ -32616,34 +32632,34 @@ let RestError$1 = class RestError extends Error {
         Object.defineProperty(this, "request", { value: options.request, enumerable: false });
         Object.defineProperty(this, "response", { value: options.response, enumerable: false });
         // Logging method for util.inspect in Node
-        Object.defineProperty(this, custom$1, {
+        Object.defineProperty(this, custom, {
             value: () => {
                 // Extract non-enumerable properties and add them back. This is OK since in this output the request and
                 // response get sanitized.
-                return `RestError: ${this.message} \n ${errorSanitizer$1.sanitize(Object.assign(Object.assign({}, this), { request: this.request, response: this.response }))}`;
+                return `RestError: ${this.message} \n ${errorSanitizer.sanitize(Object.assign(Object.assign({}, this), { request: this.request, response: this.response }))}`;
             },
             enumerable: false,
         });
         Object.setPrototypeOf(this, RestError.prototype);
     }
-};
+}
 /**
  * Something went wrong when making the request.
  * This means the actual request failed for some reason,
  * such as a DNS issue or the connection being lost.
  */
-RestError$1.REQUEST_SEND_ERROR = "REQUEST_SEND_ERROR";
+RestError.REQUEST_SEND_ERROR = "REQUEST_SEND_ERROR";
 /**
  * This means that parsing the response from the server failed.
  * It may have been malformed.
  */
-RestError$1.PARSE_ERROR = "PARSE_ERROR";
+RestError.PARSE_ERROR = "PARSE_ERROR";
 /**
  * Typeguard for RestError
  * @param e - Something caught by a catch clause.
  */
 function isRestError$1(e) {
-    if (e instanceof RestError$1) {
+    if (e instanceof RestError) {
         return true;
     }
     return isError$1(e) && e.name === "RestError";
@@ -32666,7 +32682,7 @@ function uint8ArrayToString(bytes, format) {
  * @param format - the format we use to decode the value
  * @returns a uint8array
  */
-function stringToUint8Array$1(value, format) {
+function stringToUint8Array(value, format) {
     return Buffer.from(value, format);
 }
 
@@ -32748,7 +32764,7 @@ class NodeHttpClient {
         let timeoutId;
         if (request.timeout > 0) {
             timeoutId = setTimeout(() => {
-                const sanitizer = new Sanitizer$1();
+                const sanitizer = new Sanitizer();
                 logger$2.info(`request to '${sanitizer.sanitizeUrl(request.url)}' timed out. canceling...`);
                 abortController.abort();
             }, request.timeout);
@@ -32856,7 +32872,7 @@ class NodeHttpClient {
             const req = isInsecure ? http.request(options, resolve) : https.request(options, resolve);
             req.once("error", (err) => {
                 var _a;
-                reject(new RestError$1(err.message, { code: (_a = err.code) !== null && _a !== void 0 ? _a : RestError$1.REQUEST_SEND_ERROR, request }));
+                reject(new RestError(err.message, { code: (_a = err.code) !== null && _a !== void 0 ? _a : RestError.REQUEST_SEND_ERROR, request }));
             });
             abortController.signal.addEventListener("abort", () => {
                 const abortError = new AbortError$1("The operation was aborted. Rejecting from abort signal callback while making request.");
@@ -32875,7 +32891,7 @@ class NodeHttpClient {
                 }
                 else {
                     logger$2.error("Unrecognized body type", body);
-                    reject(new RestError$1("Unrecognized body type"));
+                    reject(new RestError("Unrecognized body type"));
                 }
             }
             else {
@@ -32923,7 +32939,7 @@ class NodeHttpClient {
     }
 }
 function getResponseHeaders(res) {
-    const headers = createHttpHeaders$1();
+    const headers = createHttpHeaders();
     for (const header of Object.keys(res.headers)) {
         const value = res.headers[header];
         if (Array.isArray(value)) {
@@ -32970,8 +32986,8 @@ function streamToText(stream) {
                 reject(e);
             }
             else {
-                reject(new RestError$1(`Error reading response as text: ${e.message}`, {
-                    code: RestError$1.PARSE_ERROR,
+                reject(new RestError(`Error reading response as text: ${e.message}`, {
+                    code: RestError.PARSE_ERROR,
                 }));
             }
         });
@@ -33020,7 +33036,7 @@ function createDefaultHttpClient() {
 /**
  * The programmatic identifier of the logPolicy.
  */
-const logPolicyName$1 = "logPolicy";
+const logPolicyName = "logPolicy";
 /**
  * A policy that logs all requests and responses.
  * @param options - Options to configure logPolicy.
@@ -33028,12 +33044,12 @@ const logPolicyName$1 = "logPolicy";
 function logPolicy$1(options = {}) {
     var _a;
     const logger = (_a = options.logger) !== null && _a !== void 0 ? _a : logger$2.info;
-    const sanitizer = new Sanitizer$1({
+    const sanitizer = new Sanitizer({
         additionalAllowedHeaderNames: options.additionalAllowedHeaderNames,
         additionalAllowedQueryParameters: options.additionalAllowedQueryParameters,
     });
     return {
-        name: logPolicyName$1,
+        name: logPolicyName,
         async sendRequest(request, next) {
             if (!logger.enabled) {
                 return next(request);
@@ -33052,11 +33068,11 @@ function logPolicy$1(options = {}) {
 /**
  * The programmatic identifier of the redirectPolicy.
  */
-const redirectPolicyName$1 = "redirectPolicy";
+const redirectPolicyName = "redirectPolicy";
 /**
  * Methods that are allowed to follow redirects 301 and 302
  */
-const allowedRedirect$1 = ["GET", "HEAD"];
+const allowedRedirect = ["GET", "HEAD"];
 /**
  * A policy to follow Location headers from the server in order
  * to support server-side redirection.
@@ -33066,20 +33082,20 @@ const allowedRedirect$1 = ["GET", "HEAD"];
 function redirectPolicy$1(options = {}) {
     const { maxRetries = 20 } = options;
     return {
-        name: redirectPolicyName$1,
+        name: redirectPolicyName,
         async sendRequest(request, next) {
             const response = await next(request);
-            return handleRedirect$1(next, response, maxRetries);
+            return handleRedirect(next, response, maxRetries);
         },
     };
 }
-async function handleRedirect$1(next, response, maxRetries, currentRetries = 0) {
+async function handleRedirect(next, response, maxRetries, currentRetries = 0) {
     const { request, status, headers } = response;
     const locationHeader = headers.get("location");
     if (locationHeader &&
         (status === 300 ||
-            (status === 301 && allowedRedirect$1.includes(request.method)) ||
-            (status === 302 && allowedRedirect$1.includes(request.method)) ||
+            (status === 301 && allowedRedirect.includes(request.method)) ||
+            (status === 302 && allowedRedirect.includes(request.method)) ||
             (status === 303 && request.method === "POST") ||
             status === 307) &&
         currentRetries < maxRetries) {
@@ -33094,7 +33110,7 @@ async function handleRedirect$1(next, response, maxRetries, currentRetries = 0) 
         }
         request.headers.delete("Authorization");
         const res = await next(request);
-        return handleRedirect$1(next, res, maxRetries, currentRetries + 1);
+        return handleRedirect(next, res, maxRetries, currentRetries + 1);
     }
     return response;
 }
@@ -33128,8 +33144,8 @@ async function setPlatformSpecificData$1(map) {
 
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
-const SDK_VERSION$2 = "0.2.2";
-const DEFAULT_RETRY_POLICY_COUNT$1 = 3;
+const SDK_VERSION$2 = "0.3.0";
+const DEFAULT_RETRY_POLICY_COUNT = 3;
 
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
@@ -33189,14 +33205,14 @@ function userAgentPolicy$1(options = {}) {
 /**
  * The programmatic identifier of the decompressResponsePolicy.
  */
-const decompressResponsePolicyName$1 = "decompressResponsePolicy";
+const decompressResponsePolicyName = "decompressResponsePolicy";
 /**
  * A policy to enable response decompression according to Accept-Encoding header
  * https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Accept-Encoding
  */
 function decompressResponsePolicy$1() {
     return {
-        name: decompressResponsePolicyName$1,
+        name: decompressResponsePolicyName,
         async sendRequest(request, next) {
             // HEAD requests have no body
             if (request.method !== "HEAD") {
@@ -33217,7 +33233,7 @@ function decompressResponsePolicy$1() {
  * @param min - The smallest integer value allowed.
  * @param max - The largest integer value allowed.
  */
-function getRandomIntegerInclusive$1(min, max) {
+function getRandomIntegerInclusive(min, max) {
     // Make sure inputs are integers.
     min = Math.ceil(min);
     max = Math.floor(max);
@@ -33236,14 +33252,14 @@ function getRandomIntegerInclusive$1(min, max) {
  * @param config - The exponential retry configuration.
  * @returns An object containing the calculated retry delay.
  */
-function calculateRetryDelay$1(retryAttempt, config) {
+function calculateRetryDelay(retryAttempt, config) {
     // Exponentially increase the delay each time
     const exponentialDelay = config.retryDelayInMs * Math.pow(2, retryAttempt);
     // Don't let the delay exceed the maximum
     const clampedDelay = Math.min(config.maxRetryDelayInMs, exponentialDelay);
     // Allow the final value to have some "jitter" (within 50% of the delay size) so
     // that retries across multiple clients don't occur simultaneously.
-    const retryAfterInMs = clampedDelay / 2 + getRandomIntegerInclusive$1(0, clampedDelay / 2);
+    const retryAfterInMs = clampedDelay / 2 + getRandomIntegerInclusive(0, clampedDelay / 2);
     return { retryAfterInMs };
 }
 
@@ -33294,7 +33310,7 @@ function delay$1(delayInMs, value, options) {
  * @internal
  * @returns the parsed value or undefined if the parsed value is invalid.
  */
-function parseHeaderValueAsNumber$1(response, headerName) {
+function parseHeaderValueAsNumber(response, headerName) {
     const value = response.headers.get(headerName);
     if (!value)
         return;
@@ -33310,7 +33326,7 @@ function parseHeaderValueAsNumber$1(response, headerName) {
  * The header that comes back from services representing
  * the amount of time (minimum) to wait to retry (in seconds or timestamp after which we can retry).
  */
-const RetryAfterHeader$1 = "Retry-After";
+const RetryAfterHeader = "Retry-After";
 /**
  * The headers that come back from services representing
  * the amount of time (minimum) to wait to retry.
@@ -33318,7 +33334,7 @@ const RetryAfterHeader$1 = "Retry-After";
  * "retry-after-ms", "x-ms-retry-after-ms" : milliseconds
  * "Retry-After" : seconds or timestamp
  */
-const AllRetryAfterHeaders$1 = ["retry-after-ms", "x-ms-retry-after-ms", RetryAfterHeader$1];
+const AllRetryAfterHeaders = ["retry-after-ms", "x-ms-retry-after-ms", RetryAfterHeader];
 /**
  * A response is a throttling retry response if it has a throttling status code (429 or 503),
  * as long as one of the [ "Retry-After" or "retry-after-ms" or "x-ms-retry-after-ms" ] headers has a valid value.
@@ -33328,22 +33344,22 @@ const AllRetryAfterHeaders$1 = ["retry-after-ms", "x-ms-retry-after-ms", RetryAf
  *
  * @internal
  */
-function getRetryAfterInMs$1(response) {
+function getRetryAfterInMs(response) {
     if (!(response && [429, 503].includes(response.status)))
         return undefined;
     try {
         // Headers: "retry-after-ms", "x-ms-retry-after-ms", "Retry-After"
-        for (const header of AllRetryAfterHeaders$1) {
-            const retryAfterValue = parseHeaderValueAsNumber$1(response, header);
+        for (const header of AllRetryAfterHeaders) {
+            const retryAfterValue = parseHeaderValueAsNumber(response, header);
             if (retryAfterValue === 0 || retryAfterValue) {
                 // "Retry-After" header ==> seconds
                 // "retry-after-ms", "x-ms-retry-after-ms" headers ==> milli-seconds
-                const multiplyingFactor = header === RetryAfterHeader$1 ? 1000 : 1;
+                const multiplyingFactor = header === RetryAfterHeader ? 1000 : 1;
                 return retryAfterValue * multiplyingFactor; // in milli-seconds
             }
         }
         // RetryAfterHeader ("Retry-After") has a special case where it might be formatted as a date instead of a number of seconds
-        const retryAfterHeader = response.headers.get(RetryAfterHeader$1);
+        const retryAfterHeader = response.headers.get(RetryAfterHeader);
         if (!retryAfterHeader)
             return;
         const date = Date.parse(retryAfterHeader);
@@ -33359,14 +33375,14 @@ function getRetryAfterInMs$1(response) {
  * A response is a retry response if it has a throttling status code (429 or 503),
  * as long as one of the [ "Retry-After" or "retry-after-ms" or "x-ms-retry-after-ms" ] headers has a valid value.
  */
-function isThrottlingRetryResponse$1(response) {
-    return Number.isFinite(getRetryAfterInMs$1(response));
+function isThrottlingRetryResponse(response) {
+    return Number.isFinite(getRetryAfterInMs(response));
 }
-function throttlingRetryStrategy$1() {
+function throttlingRetryStrategy() {
     return {
         name: "throttlingRetryStrategy",
         retry({ response }) {
-            const retryAfterInMs = getRetryAfterInMs$1(response);
+            const retryAfterInMs = getRetryAfterInMs(response);
             if (!Number.isFinite(retryAfterInMs)) {
                 return { skipStrategy: true };
             }
@@ -33380,32 +33396,32 @@ function throttlingRetryStrategy$1() {
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 // intervals are in milliseconds
-const DEFAULT_CLIENT_RETRY_INTERVAL$1 = 1000;
-const DEFAULT_CLIENT_MAX_RETRY_INTERVAL$1 = 1000 * 64;
+const DEFAULT_CLIENT_RETRY_INTERVAL = 1000;
+const DEFAULT_CLIENT_MAX_RETRY_INTERVAL = 1000 * 64;
 /**
  * A retry strategy that retries with an exponentially increasing delay in these two cases:
  * - When there are errors in the underlying transport layer (e.g. DNS lookup failures).
  * - Or otherwise if the outgoing request fails (408, greater or equal than 500, except for 501 and 505).
  */
-function exponentialRetryStrategy$1(options = {}) {
+function exponentialRetryStrategy(options = {}) {
     var _a, _b;
-    const retryInterval = (_a = options.retryDelayInMs) !== null && _a !== void 0 ? _a : DEFAULT_CLIENT_RETRY_INTERVAL$1;
-    const maxRetryInterval = (_b = options.maxRetryDelayInMs) !== null && _b !== void 0 ? _b : DEFAULT_CLIENT_MAX_RETRY_INTERVAL$1;
+    const retryInterval = (_a = options.retryDelayInMs) !== null && _a !== void 0 ? _a : DEFAULT_CLIENT_RETRY_INTERVAL;
+    const maxRetryInterval = (_b = options.maxRetryDelayInMs) !== null && _b !== void 0 ? _b : DEFAULT_CLIENT_MAX_RETRY_INTERVAL;
     return {
         name: "exponentialRetryStrategy",
         retry({ retryCount, response, responseError }) {
-            const matchedSystemError = isSystemError$1(responseError);
+            const matchedSystemError = isSystemError(responseError);
             const ignoreSystemErrors = matchedSystemError && options.ignoreSystemErrors;
-            const isExponential = isExponentialRetryResponse$1(response);
+            const isExponential = isExponentialRetryResponse(response);
             const ignoreExponentialResponse = isExponential && options.ignoreHttpStatusCodes;
-            const unknownResponse = response && (isThrottlingRetryResponse$1(response) || !isExponential);
+            const unknownResponse = response && (isThrottlingRetryResponse(response) || !isExponential);
             if (unknownResponse || ignoreExponentialResponse || ignoreSystemErrors) {
                 return { skipStrategy: true };
             }
             if (responseError && !matchedSystemError && !isExponential) {
                 return { errorToThrow: responseError };
             }
-            return calculateRetryDelay$1(retryCount, {
+            return calculateRetryDelay(retryCount, {
                 retryDelayInMs: retryInterval,
                 maxRetryDelayInMs: maxRetryInterval,
             });
@@ -33417,7 +33433,7 @@ function exponentialRetryStrategy$1(options = {}) {
  * - 408, or
  * - Greater or equal than 500, except for 501 and 505.
  */
-function isExponentialRetryResponse$1(response) {
+function isExponentialRetryResponse(response) {
     return Boolean(response &&
         response.status !== undefined &&
         (response.status >= 500 || response.status === 408) &&
@@ -33427,7 +33443,7 @@ function isExponentialRetryResponse$1(response) {
 /**
  * Determines whether an error from a pipeline response was triggered in the network layer.
  */
-function isSystemError$1(err) {
+function isSystemError(err) {
     if (!err) {
         return false;
     }
@@ -33441,18 +33457,18 @@ function isSystemError$1(err) {
 
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
-const retryPolicyLogger$1 = createClientLogger$1("ts-http-runtime retryPolicy");
+const retryPolicyLogger = createClientLogger$1("ts-http-runtime retryPolicy");
 /**
  * The programmatic identifier of the retryPolicy.
  */
-const retryPolicyName$1 = "retryPolicy";
+const retryPolicyName = "retryPolicy";
 /**
  * retryPolicy is a generic policy to enable retrying requests when certain conditions are met
  */
-function retryPolicy$1(strategies, options = { maxRetries: DEFAULT_RETRY_POLICY_COUNT$1 }) {
-    const logger = options.logger || retryPolicyLogger$1;
+function retryPolicy(strategies, options = { maxRetries: DEFAULT_RETRY_POLICY_COUNT }) {
+    const logger = options.logger || retryPolicyLogger;
     return {
-        name: retryPolicyName$1,
+        name: retryPolicyName,
         async sendRequest(request, next) {
             var _a, _b;
             let response;
@@ -33483,7 +33499,7 @@ function retryPolicy$1(strategies, options = { maxRetries: DEFAULT_RETRY_POLICY_
                     const abortError = new AbortError$1();
                     throw abortError;
                 }
-                if (retryCount >= ((_b = options.maxRetries) !== null && _b !== void 0 ? _b : DEFAULT_RETRY_POLICY_COUNT$1)) {
+                if (retryCount >= ((_b = options.maxRetries) !== null && _b !== void 0 ? _b : DEFAULT_RETRY_POLICY_COUNT)) {
                     logger.info(`Retry ${retryCount}: Maximum retries reached. Returning the last received response, or throwing the last received error.`);
                     if (responseError) {
                         throw responseError;
@@ -33545,7 +33561,7 @@ function retryPolicy$1(strategies, options = { maxRetries: DEFAULT_RETRY_POLICY_
 /**
  * Name of the {@link defaultRetryPolicy}
  */
-const defaultRetryPolicyName$1 = "defaultRetryPolicy";
+const defaultRetryPolicyName = "defaultRetryPolicy";
 /**
  * A policy that retries according to three strategies:
  * - When the server sends a 429 response with a Retry-After header.
@@ -33555,24 +33571,24 @@ const defaultRetryPolicyName$1 = "defaultRetryPolicy";
 function defaultRetryPolicy$1(options = {}) {
     var _a;
     return {
-        name: defaultRetryPolicyName$1,
-        sendRequest: retryPolicy$1([throttlingRetryStrategy$1(), exponentialRetryStrategy$1(options)], {
-            maxRetries: (_a = options.maxRetries) !== null && _a !== void 0 ? _a : DEFAULT_RETRY_POLICY_COUNT$1,
+        name: defaultRetryPolicyName,
+        sendRequest: retryPolicy([throttlingRetryStrategy(), exponentialRetryStrategy(options)], {
+            maxRetries: (_a = options.maxRetries) !== null && _a !== void 0 ? _a : DEFAULT_RETRY_POLICY_COUNT,
         }).sendRequest,
     };
 }
 
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
-var _a$2, _b$1, _c$1, _d$1;
+var _a, _b, _c, _d;
 /**
  * A constant that indicates whether the environment the code is running is a Web Worker.
  */
 typeof self === "object" &&
     typeof (self === null || self === void 0 ? void 0 : self.importScripts) === "function" &&
-    (((_a$2 = self.constructor) === null || _a$2 === void 0 ? void 0 : _a$2.name) === "DedicatedWorkerGlobalScope" ||
-        ((_b$1 = self.constructor) === null || _b$1 === void 0 ? void 0 : _b$1.name) === "ServiceWorkerGlobalScope" ||
-        ((_c$1 = self.constructor) === null || _c$1 === void 0 ? void 0 : _c$1.name) === "SharedWorkerGlobalScope");
+    (((_a = self.constructor) === null || _a === void 0 ? void 0 : _a.name) === "DedicatedWorkerGlobalScope" ||
+        ((_b = self.constructor) === null || _b === void 0 ? void 0 : _b.name) === "ServiceWorkerGlobalScope" ||
+        ((_c = self.constructor) === null || _c === void 0 ? void 0 : _c.name) === "SharedWorkerGlobalScope");
 /**
  * A constant that indicates whether the environment the code is running is Deno.
  */
@@ -33588,15 +33604,15 @@ typeof Bun !== "undefined" && typeof Bun.version !== "undefined";
  */
 const isNodeLike$1 = typeof globalThis.process !== "undefined" &&
     Boolean(globalThis.process.version) &&
-    Boolean((_d$1 = globalThis.process.versions) === null || _d$1 === void 0 ? void 0 : _d$1.node);
+    Boolean((_d = globalThis.process.versions) === null || _d === void 0 ? void 0 : _d.node);
 
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 /**
  * The programmatic identifier of the formDataPolicy.
  */
-const formDataPolicyName$1 = "formDataPolicy";
-function formDataToFormDataMap$1(formData) {
+const formDataPolicyName = "formDataPolicy";
+function formDataToFormDataMap(formData) {
     var _a;
     const formDataMap = {};
     for (const [key, value] of formData.entries()) {
@@ -33610,19 +33626,19 @@ function formDataToFormDataMap$1(formData) {
  */
 function formDataPolicy$1() {
     return {
-        name: formDataPolicyName$1,
+        name: formDataPolicyName,
         async sendRequest(request, next) {
             if (isNodeLike$1 && typeof FormData !== "undefined" && request.body instanceof FormData) {
-                request.formData = formDataToFormDataMap$1(request.body);
+                request.formData = formDataToFormDataMap(request.body);
                 request.body = undefined;
             }
             if (request.formData) {
                 const contentType = request.headers.get("Content-Type");
                 if (contentType && contentType.indexOf("application/x-www-form-urlencoded") !== -1) {
-                    request.body = wwwFormUrlEncode$1(request.formData);
+                    request.body = wwwFormUrlEncode(request.formData);
                 }
                 else {
-                    await prepareFormData$1(request.formData, request);
+                    await prepareFormData(request.formData, request);
                 }
                 request.formData = undefined;
             }
@@ -33630,7 +33646,7 @@ function formDataPolicy$1() {
         },
     };
 }
-function wwwFormUrlEncode$1(formData) {
+function wwwFormUrlEncode(formData) {
     const urlSearchParams = new URLSearchParams();
     for (const [key, value] of Object.entries(formData)) {
         if (Array.isArray(value)) {
@@ -33644,7 +33660,7 @@ function wwwFormUrlEncode$1(formData) {
     }
     return urlSearchParams.toString();
 }
-async function prepareFormData$1(formData, request) {
+async function prepareFormData(formData, request) {
     // validate content type (multipart/form-data)
     const contentType = request.headers.get("Content-Type");
     if (contentType && !contentType.startsWith("multipart/form-data")) {
@@ -33658,10 +33674,10 @@ async function prepareFormData$1(formData, request) {
         for (const value of Array.isArray(values) ? values : [values]) {
             if (typeof value === "string") {
                 parts.push({
-                    headers: createHttpHeaders$1({
+                    headers: createHttpHeaders({
                         "Content-Disposition": `form-data; name="${fieldName}"`,
                     }),
-                    body: stringToUint8Array$1(value, "utf-8"),
+                    body: stringToUint8Array(value, "utf-8"),
                 });
             }
             else if (value === undefined || value === null || typeof value !== "object") {
@@ -33670,7 +33686,7 @@ async function prepareFormData$1(formData, request) {
             else {
                 // using || instead of ?? here since if value.name is empty we should create a file name
                 const fileName = value.name || "blob";
-                const headers = createHttpHeaders$1();
+                const headers = createHttpHeaders();
                 headers.set("Content-Disposition", `form-data; name="${fieldName}"; filename="${fileName}"`);
                 // again, || is used since an empty value.type means the content type is unset
                 headers.set("Content-Type", value.type || "application/octet-stream");
@@ -35090,9 +35106,7 @@ function requireDist$2 () {
 		    // In order to properly update the socket pool, we need to call `getName()` on
 		    // the core `https.Agent` if it is a secureEndpoint.
 		    getName(options) {
-		        const secureEndpoint = typeof options.secureEndpoint === 'boolean'
-		            ? options.secureEndpoint
-		            : this.isSecureEndpoint(options);
+		        const secureEndpoint = this.isSecureEndpoint(options);
 		        if (secureEndpoint) {
 		            // @ts-expect-error `getName()` isn't defined in `@types/node`
 		            return https_1.Agent.prototype.getName.call(this, options);
@@ -35621,23 +35635,23 @@ var distExports = requireDist();
 
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
-const HTTPS_PROXY$1 = "HTTPS_PROXY";
-const HTTP_PROXY$1 = "HTTP_PROXY";
-const ALL_PROXY$1 = "ALL_PROXY";
-const NO_PROXY$1 = "NO_PROXY";
+const HTTPS_PROXY = "HTTPS_PROXY";
+const HTTP_PROXY = "HTTP_PROXY";
+const ALL_PROXY = "ALL_PROXY";
+const NO_PROXY = "NO_PROXY";
 /**
  * The programmatic identifier of the proxyPolicy.
  */
-const proxyPolicyName$1 = "proxyPolicy";
+const proxyPolicyName = "proxyPolicy";
 /**
  * Stores the patterns specified in NO_PROXY environment variable.
  * @internal
  */
-const globalNoProxyList$1 = [];
-let noProxyListLoaded$1 = false;
+const globalNoProxyList = [];
+let noProxyListLoaded = false;
 /** A cache of whether a host should bypass the proxy. */
-const globalBypassedMap$1 = new Map();
-function getEnvironmentValue$1(name) {
+const globalBypassedMap = new Map();
+function getEnvironmentValue(name) {
     if (process.env[name]) {
         return process.env[name];
     }
@@ -35646,13 +35660,13 @@ function getEnvironmentValue$1(name) {
     }
     return undefined;
 }
-function loadEnvironmentProxyValue$1() {
+function loadEnvironmentProxyValue() {
     if (!process) {
         return undefined;
     }
-    const httpsProxy = getEnvironmentValue$1(HTTPS_PROXY$1);
-    const allProxy = getEnvironmentValue$1(ALL_PROXY$1);
-    const httpProxy = getEnvironmentValue$1(HTTP_PROXY$1);
+    const httpsProxy = getEnvironmentValue(HTTPS_PROXY);
+    const allProxy = getEnvironmentValue(ALL_PROXY);
+    const httpProxy = getEnvironmentValue(HTTP_PROXY);
     return httpsProxy || allProxy || httpProxy;
 }
 /**
@@ -35660,7 +35674,7 @@ function loadEnvironmentProxyValue$1() {
  * If there's a match, any request sent to the same host shouldn't have the proxy settings set.
  * This implementation is a port of https://github.com/Azure/azure-sdk-for-net/blob/8cca811371159e527159c7eb65602477898683e2/sdk/core/Azure.Core/src/Pipeline/Internal/HttpEnvironmentProxy.cs#L210
  */
-function isBypassed$1(uri, noProxyList, bypassedMap) {
+function isBypassed(uri, noProxyList, bypassedMap) {
     if (noProxyList.length === 0) {
         return false;
     }
@@ -35691,9 +35705,9 @@ function isBypassed$1(uri, noProxyList, bypassedMap) {
     bypassedMap === null || bypassedMap === void 0 ? void 0 : bypassedMap.set(host, isBypassedFlag);
     return isBypassedFlag;
 }
-function loadNoProxy$1() {
-    const noProxy = getEnvironmentValue$1(NO_PROXY$1);
-    noProxyListLoaded$1 = true;
+function loadNoProxy() {
+    const noProxy = getEnvironmentValue(NO_PROXY);
+    noProxyListLoaded = true;
     if (noProxy) {
         return noProxy
             .split(",")
@@ -35706,11 +35720,11 @@ function loadNoProxy$1() {
  * This method attempts to parse a proxy URL from the environment
  * variables `HTTPS_PROXY` or `HTTP_PROXY`.
  */
-function getDefaultProxySettingsInternal$1() {
-    const envProxy = loadEnvironmentProxyValue$1();
+function getDefaultProxySettingsInternal() {
+    const envProxy = loadEnvironmentProxyValue();
     return envProxy ? new URL(envProxy) : undefined;
 }
-function getUrlFromProxySettings$1(settings) {
+function getUrlFromProxySettings(settings) {
     let parsedProxyUrl;
     try {
         parsedProxyUrl = new URL(settings.host);
@@ -35727,7 +35741,7 @@ function getUrlFromProxySettings$1(settings) {
     }
     return parsedProxyUrl;
 }
-function setProxyAgentOnRequest$1(request, cachedAgents, proxyUrl) {
+function setProxyAgentOnRequest(request, cachedAgents, proxyUrl) {
     // Custom Agent should take precedence so if one is present
     // we should skip to avoid overwriting it.
     if (request.agent) {
@@ -35760,24 +35774,24 @@ function setProxyAgentOnRequest$1(request, cachedAgents, proxyUrl) {
  * @param options - additional settings, for example, custom NO_PROXY patterns
  */
 function proxyPolicy$1(proxySettings, options) {
-    if (!noProxyListLoaded$1) {
-        globalNoProxyList$1.push(...loadNoProxy$1());
+    if (!noProxyListLoaded) {
+        globalNoProxyList.push(...loadNoProxy());
     }
     const defaultProxy = proxySettings
-        ? getUrlFromProxySettings$1(proxySettings)
-        : getDefaultProxySettingsInternal$1();
+        ? getUrlFromProxySettings(proxySettings)
+        : getDefaultProxySettingsInternal();
     const cachedAgents = {};
     return {
-        name: proxyPolicyName$1,
+        name: proxyPolicyName,
         async sendRequest(request, next) {
             var _a;
             if (!request.proxySettings &&
                 defaultProxy &&
-                !isBypassed$1(request.url, (_a = void 0 ) !== null && _a !== void 0 ? _a : globalNoProxyList$1, globalBypassedMap$1)) {
-                setProxyAgentOnRequest$1(request, cachedAgents, defaultProxy);
+                !isBypassed(request.url, (_a = void 0 ) !== null && _a !== void 0 ? _a : globalNoProxyList, globalBypassedMap)) {
+                setProxyAgentOnRequest(request, cachedAgents, defaultProxy);
             }
             else if (request.proxySettings) {
-                setProxyAgentOnRequest$1(request, cachedAgents, getUrlFromProxySettings$1(request.proxySettings));
+                setProxyAgentOnRequest(request, cachedAgents, getUrlFromProxySettings(request.proxySettings));
             }
             return next(request);
         },
@@ -35789,13 +35803,13 @@ function proxyPolicy$1(proxySettings, options) {
 /**
  * Name of the Agent Policy
  */
-const agentPolicyName$1 = "agentPolicy";
+const agentPolicyName = "agentPolicy";
 /**
  * Gets a pipeline policy that sets http.agent
  */
 function agentPolicy$1(agent) {
     return {
-        name: agentPolicyName$1,
+        name: agentPolicyName,
         sendRequest: async (req, next) => {
             // Users may define an agent on the request, honor it over the client level one
             if (!req.agent) {
@@ -35811,13 +35825,13 @@ function agentPolicy$1(agent) {
 /**
  * Name of the TLS Policy
  */
-const tlsPolicyName$1 = "tlsPolicy";
+const tlsPolicyName = "tlsPolicy";
 /**
  * Gets a pipeline policy that adds the client certificate to the HttpClient agent for authentication.
  */
 function tlsPolicy$1(tlsSettings) {
     return {
-        name: tlsPolicyName$1,
+        name: tlsPolicyName,
         sendRequest: async (req, next) => {
             // Users may define a request tlsSettings, honor those over the client level one
             if (!req.tlsSettings) {
@@ -35848,13 +35862,13 @@ function isBinaryBody(body) {
 function isReadableStream(x) {
     return isNodeReadableStream(x) || isWebReadableStream(x);
 }
-function isBlob$1(x) {
+function isBlob(x) {
     return typeof x.stream === "function";
 }
 
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
-function streamAsyncIterator$1() {
+function streamAsyncIterator() {
     return __asyncGenerator(this, arguments, function* streamAsyncIterator_1() {
         const reader = this.getReader();
         try {
@@ -35871,32 +35885,32 @@ function streamAsyncIterator$1() {
         }
     });
 }
-function makeAsyncIterable$1(webStream) {
+function makeAsyncIterable(webStream) {
     if (!webStream[Symbol.asyncIterator]) {
-        webStream[Symbol.asyncIterator] = streamAsyncIterator$1.bind(webStream);
+        webStream[Symbol.asyncIterator] = streamAsyncIterator.bind(webStream);
     }
     if (!webStream.values) {
-        webStream.values = streamAsyncIterator$1.bind(webStream);
+        webStream.values = streamAsyncIterator.bind(webStream);
     }
 }
-function ensureNodeStream$1(stream) {
+function ensureNodeStream(stream) {
     if (stream instanceof ReadableStream) {
-        makeAsyncIterable$1(stream);
+        makeAsyncIterable(stream);
         return Readable.fromWeb(stream);
     }
     else {
         return stream;
     }
 }
-function toStream$1(source) {
+function toStream(source) {
     if (source instanceof Uint8Array) {
         return Readable.from(Buffer.from(source));
     }
-    else if (isBlob$1(source)) {
-        return ensureNodeStream$1(source.stream());
+    else if (isBlob(source)) {
+        return ensureNodeStream(source.stream());
     }
     else {
-        return ensureNodeStream$1(source);
+        return ensureNodeStream(source);
     }
 }
 /**
@@ -35908,9 +35922,9 @@ function toStream$1(source) {
  *
  * @internal
  */
-async function concat$1(sources) {
+async function concat(sources) {
     return function () {
-        const streams = sources.map((x) => (typeof x === "function" ? x() : x)).map(toStream$1);
+        const streams = sources.map((x) => (typeof x === "function" ? x() : x)).map(toStream);
         return Readable.from((function () {
             return __asyncGenerator(this, arguments, function* () {
                 var _a, e_1, _b, _c;
@@ -35938,21 +35952,21 @@ async function concat$1(sources) {
 
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
-function generateBoundary$1() {
-    return `----AzSDKFormBoundary${randomUUID$1()}`;
+function generateBoundary() {
+    return `----AzSDKFormBoundary${randomUUID()}`;
 }
-function encodeHeaders$1(headers) {
+function encodeHeaders(headers) {
     let result = "";
     for (const [key, value] of headers) {
         result += `${key}: ${value}\r\n`;
     }
     return result;
 }
-function getLength$1(source) {
+function getLength(source) {
     if (source instanceof Uint8Array) {
         return source.byteLength;
     }
-    else if (isBlob$1(source)) {
+    else if (isBlob(source)) {
         // if was created using createFile then -1 means we have an unknown size
         return source.size === -1 ? undefined : source.size;
     }
@@ -35960,10 +35974,10 @@ function getLength$1(source) {
         return undefined;
     }
 }
-function getTotalLength$1(sources) {
+function getTotalLength(sources) {
     let total = 0;
     for (const source of sources) {
-        const partLength = getLength$1(source);
+        const partLength = getLength(source);
         if (partLength === undefined) {
             return undefined;
         }
@@ -35973,35 +35987,35 @@ function getTotalLength$1(sources) {
     }
     return total;
 }
-async function buildRequestBody$1(request, parts, boundary) {
+async function buildRequestBody(request, parts, boundary) {
     const sources = [
-        stringToUint8Array$1(`--${boundary}`, "utf-8"),
+        stringToUint8Array(`--${boundary}`, "utf-8"),
         ...parts.flatMap((part) => [
-            stringToUint8Array$1("\r\n", "utf-8"),
-            stringToUint8Array$1(encodeHeaders$1(part.headers), "utf-8"),
-            stringToUint8Array$1("\r\n", "utf-8"),
+            stringToUint8Array("\r\n", "utf-8"),
+            stringToUint8Array(encodeHeaders(part.headers), "utf-8"),
+            stringToUint8Array("\r\n", "utf-8"),
             part.body,
-            stringToUint8Array$1(`\r\n--${boundary}`, "utf-8"),
+            stringToUint8Array(`\r\n--${boundary}`, "utf-8"),
         ]),
-        stringToUint8Array$1("--\r\n\r\n", "utf-8"),
+        stringToUint8Array("--\r\n\r\n", "utf-8"),
     ];
-    const contentLength = getTotalLength$1(sources);
+    const contentLength = getTotalLength(sources);
     if (contentLength) {
         request.headers.set("Content-Length", contentLength);
     }
-    request.body = await concat$1(sources);
+    request.body = await concat(sources);
 }
 /**
  * Name of multipart policy
  */
 const multipartPolicyName$1 = "multipartPolicy";
-const maxBoundaryLength$1 = 70;
-const validBoundaryCharacters$1 = new Set(`abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'()+,-./:=?`);
-function assertValidBoundary$1(boundary) {
-    if (boundary.length > maxBoundaryLength$1) {
+const maxBoundaryLength = 70;
+const validBoundaryCharacters = new Set(`abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'()+,-./:=?`);
+function assertValidBoundary(boundary) {
+    if (boundary.length > maxBoundaryLength) {
         throw new Error(`Multipart boundary "${boundary}" exceeds maximum length of 70 characters`);
     }
-    if (Array.from(boundary).some((x) => !validBoundaryCharacters$1.has(x))) {
+    if (Array.from(boundary).some((x) => !validBoundaryCharacters.has(x))) {
         throw new Error(`Multipart boundary "${boundary}" contains invalid characters`);
     }
 }
@@ -36031,13 +36045,13 @@ function multipartPolicy$1() {
             }
             boundary !== null && boundary !== void 0 ? boundary : (boundary = parsedBoundary);
             if (boundary) {
-                assertValidBoundary$1(boundary);
+                assertValidBoundary(boundary);
             }
             else {
-                boundary = generateBoundary$1();
+                boundary = generateBoundary();
             }
             request.headers.set("Content-Type", `${contentType}; boundary=${boundary}`);
-            await buildRequestBody$1(request, request.multipartBody.parts, boundary);
+            await buildRequestBody(request, request.multipartBody.parts, boundary);
             request.multipartBody = undefined;
             return next(request);
         },
@@ -36229,7 +36243,7 @@ function basicAuthenticationPolicy(options) {
                 return next(request);
             }
             const { username, password } = options.credential;
-            const headerValue = uint8ArrayToString(stringToUint8Array$1(`${username}:${password}`, "utf-8"), "base64");
+            const headerValue = uint8ArrayToString(stringToUint8Array(`${username}:${password}`, "utf-8"), "base64");
             request.headers.set("Authorization", `Basic ${headerValue}`);
             return next(request);
         },
@@ -36418,19 +36432,19 @@ function normalizeBody(body, contentType) {
         return body;
     }
     if (typeof body === "string" || typeof body === "number" || typeof body === "boolean") {
-        return stringToUint8Array$1(String(body), "utf-8");
+        return stringToUint8Array(String(body), "utf-8");
     }
     // stringify objects for JSON-ish content types e.g. application/json, application/merge-patch+json, application/vnd.oci.manifest.v1+json, application.json; charset=UTF-8
     if (contentType && /application\/(.+\+)?json(;.+)?/i.test(String(contentType))) {
-        return stringToUint8Array$1(JSON.stringify(body), "utf-8");
+        return stringToUint8Array(JSON.stringify(body), "utf-8");
     }
-    throw new RestError$1(`Unsupported body/content-type combination: ${body}, ${contentType}`);
+    throw new RestError(`Unsupported body/content-type combination: ${body}, ${contentType}`);
 }
 function buildBodyPart(descriptor) {
     var _a;
     const contentType = getPartContentType(descriptor);
     const contentDisposition = getContentDisposition(descriptor);
-    const headers = createHttpHeaders$1((_a = descriptor.headers) !== null && _a !== void 0 ? _a : {});
+    const headers = createHttpHeaders((_a = descriptor.headers) !== null && _a !== void 0 ? _a : {});
     if (contentType) {
         headers.set("content-type", contentType);
     }
@@ -36525,7 +36539,7 @@ function buildPipelineRequest(method, url, options = {}) {
     const requestContentType = getRequestContentType(options);
     const { body, multipartBody } = getRequestBody$1(options.body, requestContentType);
     const hasContent = body !== undefined || multipartBody !== undefined;
-    const headers = createHttpHeaders$1(Object.assign(Object.assign(Object.assign({}, (options.headers ? options.headers : {})), { accept: (_c = (_a = options.accept) !== null && _a !== void 0 ? _a : (_b = options.headers) === null || _b === void 0 ? void 0 : _b.accept) !== null && _c !== void 0 ? _c : "application/json" }), (hasContent &&
+    const headers = createHttpHeaders(Object.assign(Object.assign(Object.assign({}, (options.headers ? options.headers : {})), { accept: (_c = (_a = options.accept) !== null && _a !== void 0 ? _a : (_b = options.headers) === null || _b === void 0 ? void 0 : _b.accept) !== null && _c !== void 0 ? _c : "application/json" }), (hasContent &&
         requestContentType && {
         "content-type": requestContentType,
     })));
@@ -36610,8 +36624,8 @@ function getResponseBody(response) {
 function createParseError(response, err) {
     var _a;
     const msg = `Error "${err}" occurred while parsing the response body - ${response.bodyAsText}.`;
-    const errCode = (_a = err.code) !== null && _a !== void 0 ? _a : RestError$1.PARSE_ERROR;
-    return new RestError$1(msg, {
+    const errCode = (_a = err.code) !== null && _a !== void 0 ? _a : RestError.PARSE_ERROR;
+    return new RestError(msg, {
         code: errCode,
         statusCode: response.status,
         request: response.request,
@@ -36857,452 +36871,27 @@ function buildOperation(method, url, pipeline, options, allowInsecureConnection,
 
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
-const ValidPhaseNames = new Set(["Deserialize", "Serialize", "Retry", "Sign"]);
-/**
- * A private implementation of Pipeline.
- * Do not export this class from the package.
- * @internal
- */
-class HttpPipeline {
-    constructor(policies) {
-        var _a;
-        this._policies = [];
-        this._policies = (_a = policies === null || policies === void 0 ? void 0 : policies.slice(0)) !== null && _a !== void 0 ? _a : [];
-        this._orderedPolicies = undefined;
-    }
-    addPolicy(policy, options = {}) {
-        if (options.phase && options.afterPhase) {
-            throw new Error("Policies inside a phase cannot specify afterPhase.");
-        }
-        if (options.phase && !ValidPhaseNames.has(options.phase)) {
-            throw new Error(`Invalid phase name: ${options.phase}`);
-        }
-        if (options.afterPhase && !ValidPhaseNames.has(options.afterPhase)) {
-            throw new Error(`Invalid afterPhase name: ${options.afterPhase}`);
-        }
-        this._policies.push({
-            policy,
-            options,
-        });
-        this._orderedPolicies = undefined;
-    }
-    removePolicy(options) {
-        const removedPolicies = [];
-        this._policies = this._policies.filter((policyDescriptor) => {
-            if ((options.name && policyDescriptor.policy.name === options.name) ||
-                (options.phase && policyDescriptor.options.phase === options.phase)) {
-                removedPolicies.push(policyDescriptor.policy);
-                return false;
-            }
-            else {
-                return true;
-            }
-        });
-        this._orderedPolicies = undefined;
-        return removedPolicies;
-    }
-    sendRequest(httpClient, request) {
-        const policies = this.getOrderedPolicies();
-        const pipeline = policies.reduceRight((next, policy) => {
-            return (req) => {
-                return policy.sendRequest(req, next);
-            };
-        }, (req) => httpClient.sendRequest(req));
-        return pipeline(request);
-    }
-    getOrderedPolicies() {
-        if (!this._orderedPolicies) {
-            this._orderedPolicies = this.orderPolicies();
-        }
-        return this._orderedPolicies;
-    }
-    clone() {
-        return new HttpPipeline(this._policies);
-    }
-    static create() {
-        return new HttpPipeline();
-    }
-    orderPolicies() {
-        /**
-         * The goal of this method is to reliably order pipeline policies
-         * based on their declared requirements when they were added.
-         *
-         * Order is first determined by phase:
-         *
-         * 1. Serialize Phase
-         * 2. Policies not in a phase
-         * 3. Deserialize Phase
-         * 4. Retry Phase
-         * 5. Sign Phase
-         *
-         * Within each phase, policies are executed in the order
-         * they were added unless they were specified to execute
-         * before/after other policies or after a particular phase.
-         *
-         * To determine the final order, we will walk the policy list
-         * in phase order multiple times until all dependencies are
-         * satisfied.
-         *
-         * `afterPolicies` are the set of policies that must be
-         * executed before a given policy. This requirement is
-         * considered satisfied when each of the listed policies
-         * have been scheduled.
-         *
-         * `beforePolicies` are the set of policies that must be
-         * executed after a given policy. Since this dependency
-         * can be expressed by converting it into a equivalent
-         * `afterPolicies` declarations, they are normalized
-         * into that form for simplicity.
-         *
-         * An `afterPhase` dependency is considered satisfied when all
-         * policies in that phase have scheduled.
-         *
-         */
-        const result = [];
-        // Track all policies we know about.
-        const policyMap = new Map();
-        function createPhase(name) {
-            return {
-                name,
-                policies: new Set(),
-                hasRun: false,
-                hasAfterPolicies: false,
-            };
-        }
-        // Track policies for each phase.
-        const serializePhase = createPhase("Serialize");
-        const noPhase = createPhase("None");
-        const deserializePhase = createPhase("Deserialize");
-        const retryPhase = createPhase("Retry");
-        const signPhase = createPhase("Sign");
-        // a list of phases in order
-        const orderedPhases = [serializePhase, noPhase, deserializePhase, retryPhase, signPhase];
-        // Small helper function to map phase name to each Phase
-        function getPhase(phase) {
-            if (phase === "Retry") {
-                return retryPhase;
-            }
-            else if (phase === "Serialize") {
-                return serializePhase;
-            }
-            else if (phase === "Deserialize") {
-                return deserializePhase;
-            }
-            else if (phase === "Sign") {
-                return signPhase;
-            }
-            else {
-                return noPhase;
-            }
-        }
-        // First walk each policy and create a node to track metadata.
-        for (const descriptor of this._policies) {
-            const policy = descriptor.policy;
-            const options = descriptor.options;
-            const policyName = policy.name;
-            if (policyMap.has(policyName)) {
-                throw new Error("Duplicate policy names not allowed in pipeline");
-            }
-            const node = {
-                policy,
-                dependsOn: new Set(),
-                dependants: new Set(),
-            };
-            if (options.afterPhase) {
-                node.afterPhase = getPhase(options.afterPhase);
-                node.afterPhase.hasAfterPolicies = true;
-            }
-            policyMap.set(policyName, node);
-            const phase = getPhase(options.phase);
-            phase.policies.add(node);
-        }
-        // Now that each policy has a node, connect dependency references.
-        for (const descriptor of this._policies) {
-            const { policy, options } = descriptor;
-            const policyName = policy.name;
-            const node = policyMap.get(policyName);
-            if (!node) {
-                throw new Error(`Missing node for policy ${policyName}`);
-            }
-            if (options.afterPolicies) {
-                for (const afterPolicyName of options.afterPolicies) {
-                    const afterNode = policyMap.get(afterPolicyName);
-                    if (afterNode) {
-                        // Linking in both directions helps later
-                        // when we want to notify dependants.
-                        node.dependsOn.add(afterNode);
-                        afterNode.dependants.add(node);
-                    }
-                }
-            }
-            if (options.beforePolicies) {
-                for (const beforePolicyName of options.beforePolicies) {
-                    const beforeNode = policyMap.get(beforePolicyName);
-                    if (beforeNode) {
-                        // To execute before another node, make it
-                        // depend on the current node.
-                        beforeNode.dependsOn.add(node);
-                        node.dependants.add(beforeNode);
-                    }
-                }
-            }
-        }
-        function walkPhase(phase) {
-            phase.hasRun = true;
-            // Sets iterate in insertion order
-            for (const node of phase.policies) {
-                if (node.afterPhase && (!node.afterPhase.hasRun || node.afterPhase.policies.size)) {
-                    // If this node is waiting on a phase to complete,
-                    // we need to skip it for now.
-                    // Even if the phase is empty, we should wait for it
-                    // to be walked to avoid re-ordering policies.
-                    continue;
-                }
-                if (node.dependsOn.size === 0) {
-                    // If there's nothing else we're waiting for, we can
-                    // add this policy to the result list.
-                    result.push(node.policy);
-                    // Notify anything that depends on this policy that
-                    // the policy has been scheduled.
-                    for (const dependant of node.dependants) {
-                        dependant.dependsOn.delete(node);
-                    }
-                    policyMap.delete(node.policy.name);
-                    phase.policies.delete(node);
-                }
-            }
-        }
-        function walkPhases() {
-            for (const phase of orderedPhases) {
-                walkPhase(phase);
-                // if the phase isn't complete
-                if (phase.policies.size > 0 && phase !== noPhase) {
-                    if (!noPhase.hasRun) {
-                        // Try running noPhase to see if that unblocks this phase next tick.
-                        // This can happen if a phase that happens before noPhase
-                        // is waiting on a noPhase policy to complete.
-                        walkPhase(noPhase);
-                    }
-                    // Don't proceed to the next phase until this phase finishes.
-                    return;
-                }
-                if (phase.hasAfterPolicies) {
-                    // Run any policies unblocked by this phase
-                    walkPhase(noPhase);
-                }
-            }
-        }
-        // Iterate until we've put every node in the result list.
-        let iteration = 0;
-        while (policyMap.size > 0) {
-            iteration++;
-            const initialResultLength = result.length;
-            // Keep walking each phase in order until we can order every node.
-            walkPhases();
-            // The result list *should* get at least one larger each time
-            // after the first full pass.
-            // Otherwise, we're going to loop forever.
-            if (result.length <= initialResultLength && iteration > 1) {
-                throw new Error("Cannot satisfy policy dependencies due to requirements cycle.");
-            }
-        }
-        return result;
-    }
-}
 /**
  * Creates a totally empty pipeline.
  * Useful for testing or creating a custom one.
  */
 function createEmptyPipeline() {
-    return HttpPipeline.create();
+    return createEmptyPipeline$1();
 }
 
 // Copyright (c) Microsoft Corporation.
-// Licensed under the MIT license.
-function log(message, ...args) {
-    process$1.stderr.write(`${require$$1$2.format(message, ...args)}${EOL}`);
-}
-
-// Copyright (c) Microsoft Corporation.
-// Licensed under the MIT license.
-const debugEnvVariable = (typeof process !== "undefined" && process.env && process.env.DEBUG) || undefined;
-let enabledString;
-let enabledNamespaces = [];
-let skippedNamespaces = [];
-const debuggers = [];
-if (debugEnvVariable) {
-    enable(debugEnvVariable);
-}
-const debugObj = Object.assign((namespace) => {
-    return createDebugger(namespace);
-}, {
-    enable,
-    enabled,
-    disable,
-    log,
+// Licensed under the MIT License.
+const context = createLoggerContext({
+    logLevelEnvVarName: "AZURE_LOG_LEVEL",
+    namespace: "azure",
 });
-function enable(namespaces) {
-    enabledString = namespaces;
-    enabledNamespaces = [];
-    skippedNamespaces = [];
-    const wildcard = /\*/g;
-    const namespaceList = namespaces.split(",").map((ns) => ns.trim().replace(wildcard, ".*?"));
-    for (const ns of namespaceList) {
-        if (ns.startsWith("-")) {
-            skippedNamespaces.push(new RegExp(`^${ns.substr(1)}$`));
-        }
-        else {
-            enabledNamespaces.push(new RegExp(`^${ns}$`));
-        }
-    }
-    for (const instance of debuggers) {
-        instance.enabled = enabled(instance.namespace);
-    }
-}
-function enabled(namespace) {
-    if (namespace.endsWith("*")) {
-        return true;
-    }
-    for (const skipped of skippedNamespaces) {
-        if (skipped.test(namespace)) {
-            return false;
-        }
-    }
-    for (const enabledNamespace of enabledNamespaces) {
-        if (enabledNamespace.test(namespace)) {
-            return true;
-        }
-    }
-    return false;
-}
-function disable() {
-    const result = enabledString || "";
-    enable("");
-    return result;
-}
-function createDebugger(namespace) {
-    const newDebugger = Object.assign(debug, {
-        enabled: enabled(namespace),
-        destroy,
-        log: debugObj.log,
-        namespace,
-        extend,
-    });
-    function debug(...args) {
-        if (!newDebugger.enabled) {
-            return;
-        }
-        if (args.length > 0) {
-            args[0] = `${namespace} ${args[0]}`;
-        }
-        newDebugger.log(...args);
-    }
-    debuggers.push(newDebugger);
-    return newDebugger;
-}
-function destroy() {
-    const index = debuggers.indexOf(this);
-    if (index >= 0) {
-        debuggers.splice(index, 1);
-        return true;
-    }
-    return false;
-}
-function extend(namespace) {
-    const newDebugger = createDebugger(`${this.namespace}:${namespace}`);
-    newDebugger.log = this.log;
-    return newDebugger;
-}
-
-// Copyright (c) Microsoft Corporation.
-// Licensed under the MIT license.
-const registeredLoggers = new Set();
-const logLevelFromEnv = (typeof process !== "undefined" && process.env && process.env.AZURE_LOG_LEVEL) || undefined;
-let azureLogLevel;
-/**
- * The AzureLogger provides a mechanism for overriding where logs are output to.
- * By default, logs are sent to stderr.
- * Override the `log` method to redirect logs to another location.
- */
-const AzureLogger = debugObj("azure");
-AzureLogger.log = (...args) => {
-    debugObj.log(...args);
-};
-const AZURE_LOG_LEVELS = ["verbose", "info", "warning", "error"];
-if (logLevelFromEnv) {
-    // avoid calling setLogLevel because we don't want a mis-set environment variable to crash
-    if (isAzureLogLevel(logLevelFromEnv)) {
-        setLogLevel(logLevelFromEnv);
-    }
-    else {
-        console.error(`AZURE_LOG_LEVEL set to unknown log level '${logLevelFromEnv}'; logging is not enabled. Acceptable values: ${AZURE_LOG_LEVELS.join(", ")}.`);
-    }
-}
-/**
- * Immediately enables logging at the specified log level. If no level is specified, logging is disabled.
- * @param level - The log level to enable for logging.
- * Options from most verbose to least verbose are:
- * - verbose
- * - info
- * - warning
- * - error
- */
-function setLogLevel(level) {
-    if (level && !isAzureLogLevel(level)) {
-        throw new Error(`Unknown log level '${level}'. Acceptable values: ${AZURE_LOG_LEVELS.join(",")}`);
-    }
-    azureLogLevel = level;
-    const enabledNamespaces = [];
-    for (const logger of registeredLoggers) {
-        if (shouldEnable(logger)) {
-            enabledNamespaces.push(logger.namespace);
-        }
-    }
-    debugObj.enable(enabledNamespaces.join(","));
-}
-const levelMap = {
-    verbose: 400,
-    info: 300,
-    warning: 200,
-    error: 100,
-};
 /**
  * Creates a logger for use by the Azure SDKs that inherits from `AzureLogger`.
  * @param namespace - The name of the SDK package.
  * @hidden
  */
 function createClientLogger(namespace) {
-    const clientRootLogger = AzureLogger.extend(namespace);
-    patchLogMethod(AzureLogger, clientRootLogger);
-    return {
-        error: createLogger(clientRootLogger, "error"),
-        warning: createLogger(clientRootLogger, "warning"),
-        info: createLogger(clientRootLogger, "info"),
-        verbose: createLogger(clientRootLogger, "verbose"),
-    };
-}
-function patchLogMethod(parent, child) {
-    child.log = (...args) => {
-        parent.log(...args);
-    };
-}
-function createLogger(parent, level) {
-    const logger = Object.assign(parent.extend(level), {
-        level,
-    });
-    patchLogMethod(parent, logger);
-    if (shouldEnable(logger)) {
-        const enabledNamespaces = debugObj.disable();
-        debugObj.enable(enabledNamespaces + "," + logger.namespace);
-    }
-    registeredLoggers.add(logger);
-    return logger;
-}
-function shouldEnable(logger) {
-    return Boolean(azureLogLevel && levelMap[logger.level] <= levelMap[azureLogLevel]);
-}
-function isAzureLogLevel(logLevel) {
-    return AZURE_LOG_LEVELS.includes(logLevel);
+    return context.createClientLogger(namespace);
 }
 
 // Copyright (c) Microsoft Corporation.
@@ -37310,403 +36899,17 @@ function isAzureLogLevel(logLevel) {
 const logger$1 = createClientLogger("core-rest-pipeline");
 
 // Copyright (c) Microsoft Corporation.
-// Licensed under the MIT license.
-/**
- * This error is thrown when an asynchronous operation has been aborted.
- * Check for this error by testing the `name` that the name property of the
- * error matches `"AbortError"`.
- *
- * @example
- * ```ts
- * const controller = new AbortController();
- * controller.abort();
- * try {
- *   doAsyncWork(controller.signal)
- * } catch (e) {
- *   if (e.name === 'AbortError') {
- *     // handle abort error here.
- *   }
- * }
- * ```
- */
-class AbortError extends Error {
-    constructor(message) {
-        super(message);
-        this.name = "AbortError";
-    }
-}
-
-// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
-/**
- * Returns a random integer value between a lower and upper bound,
- * inclusive of both bounds.
- * Note that this uses Math.random and isn't secure. If you need to use
- * this for any kind of security purpose, find a better source of random.
- * @param min - The smallest integer value allowed.
- * @param max - The largest integer value allowed.
- */
-function getRandomIntegerInclusive(min, max) {
-    // Make sure inputs are integers.
-    min = Math.ceil(min);
-    max = Math.floor(max);
-    // Pick a random offset from zero to the size of the range.
-    // Since Math.random() can never return 1, we have to make the range one larger
-    // in order to be inclusive of the maximum value after we take the floor.
-    const offset = Math.floor(Math.random() * (max - min + 1));
-    return offset + min;
-}
-
-// Copyright (c) Microsoft Corporation.
-// Licensed under the MIT License.
-/**
- * Calculates the delay interval for retry attempts using exponential delay with jitter.
- * @param retryAttempt - The current retry attempt number.
- * @param config - The exponential retry configuration.
- * @returns An object containing the calculated retry delay.
- */
-function calculateRetryDelay(retryAttempt, config) {
-    // Exponentially increase the delay each time
-    const exponentialDelay = config.retryDelayInMs * Math.pow(2, retryAttempt);
-    // Don't let the delay exceed the maximum
-    const clampedDelay = Math.min(config.maxRetryDelayInMs, exponentialDelay);
-    // Allow the final value to have some "jitter" (within 50% of the delay size) so
-    // that retries across multiple clients don't occur simultaneously.
-    const retryAfterInMs = clampedDelay / 2 + getRandomIntegerInclusive(0, clampedDelay / 2);
-    return { retryAfterInMs };
-}
-
-// Copyright (c) Microsoft Corporation.
-// Licensed under the MIT License.
-/**
- * Helper to determine when an input is a generic JS object.
- * @returns true when input is an object type that is not null, Array, RegExp, or Date.
- */
-function isObject(input) {
-    return (typeof input === "object" &&
-        input !== null &&
-        !Array.isArray(input) &&
-        !(input instanceof RegExp) &&
-        !(input instanceof Date));
-}
-
-// Copyright (c) Microsoft Corporation.
-// Licensed under the MIT License.
-/**
- * Typeguard for an error object shape (has name and message)
- * @param e - Something caught by a catch clause.
- */
-function isError(e) {
-    if (isObject(e)) {
-        const hasName = typeof e.name === "string";
-        const hasMessage = typeof e.message === "string";
-        return hasName && hasMessage;
-    }
-    return false;
-}
-/**
- * Given what is thought to be an error object, return the message if possible.
- * If the message is missing, returns a stringified version of the input.
- * @param e - Something thrown from a try block
- * @returns The error message or a string of the input
- */
-function getErrorMessage(e) {
-    if (isError(e)) {
-        return e.message;
-    }
-    else {
-        let stringified;
-        try {
-            if (typeof e === "object" && e) {
-                stringified = JSON.stringify(e);
-            }
-            else {
-                stringified = String(e);
-            }
-        }
-        catch (err) {
-            stringified = "[unable to stringify input]";
-        }
-        return `Unknown error ${stringified}`;
-    }
-}
-
-// Copyright (c) Microsoft Corporation.
-// Licensed under the MIT License.
-/**
- * Helper TypeGuard that checks if something is defined or not.
- * @param thing - Anything
- */
-function isDefined(thing) {
-    return typeof thing !== "undefined" && thing !== null;
-}
-/**
- * Helper TypeGuard that checks if the input is an object with the specified properties.
- * @param thing - Anything.
- * @param properties - The name of the properties that should appear in the object.
- */
-function isObjectWithProperties(thing, properties) {
-    if (!isDefined(thing) || typeof thing !== "object") {
-        return false;
-    }
-    for (const property of properties) {
-        if (!objectHasProperty(thing, property)) {
-            return false;
-        }
-    }
-    return true;
-}
-/**
- * Helper TypeGuard that checks if the input is an object with the specified property.
- * @param thing - Any object.
- * @param property - The name of the property that should appear in the object.
- */
-function objectHasProperty(thing, property) {
-    return (isDefined(thing) && typeof thing === "object" && property in thing);
-}
-
-// Copyright (c) Microsoft Corporation.
-// Licensed under the MIT License.
-var _a$1;
-// NOTE: This is a workaround until we can use `globalThis.crypto.randomUUID` in Node.js 19+.
-const uuidFunction = typeof ((_a$1 = globalThis === null || globalThis === void 0 ? void 0 : globalThis.crypto) === null || _a$1 === void 0 ? void 0 : _a$1.randomUUID) === "function"
-    ? globalThis.crypto.randomUUID.bind(globalThis.crypto)
-    : randomUUID$4;
-/**
- * Generated Universally Unique Identifier
- *
- * @returns RFC4122 v4 UUID.
- */
-function randomUUID() {
-    return uuidFunction();
-}
-
-// Copyright (c) Microsoft Corporation.
-// Licensed under the MIT License.
-var _a, _b, _c, _d;
-/**
- * A constant that indicates whether the environment the code is running is a Web Worker.
- */
-typeof self === "object" &&
-    typeof (self === null || self === void 0 ? void 0 : self.importScripts) === "function" &&
-    (((_a = self.constructor) === null || _a === void 0 ? void 0 : _a.name) === "DedicatedWorkerGlobalScope" ||
-        ((_b = self.constructor) === null || _b === void 0 ? void 0 : _b.name) === "ServiceWorkerGlobalScope" ||
-        ((_c = self.constructor) === null || _c === void 0 ? void 0 : _c.name) === "SharedWorkerGlobalScope");
-/**
- * A constant that indicates whether the environment the code is running is Deno.
- */
-typeof Deno !== "undefined" &&
-    typeof Deno.version !== "undefined" &&
-    typeof Deno.version.deno !== "undefined";
-/**
- * A constant that indicates whether the environment the code is running is Bun.sh.
- */
-typeof Bun !== "undefined" && typeof Bun.version !== "undefined";
-/**
- * A constant that indicates whether the environment the code is running is a Node.js compatible environment.
- */
-const isNodeLike = typeof globalThis.process !== "undefined" &&
-    Boolean(globalThis.process.version) &&
-    Boolean((_d = globalThis.process.versions) === null || _d === void 0 ? void 0 : _d.node);
-
-// Copyright (c) Microsoft Corporation.
-// Licensed under the MIT License.
-/**
- * The helper that transforms bytes with specific character encoding into string
- * @param bytes - the uint8array bytes
- * @param format - the format we use to encode the byte
- * @returns a string of the encoded string
- */
-/**
- * The helper that transforms string to specific character encoded bytes array.
- * @param value - the string to be converted
- * @param format - the format we use to decode the value
- * @returns a uint8array
- */
-function stringToUint8Array(value, format) {
-    return Buffer.from(value, format);
-}
-
-// Copyright (c) Microsoft Corporation.
-// Licensed under the MIT License.
-const RedactedString = "REDACTED";
-// Make sure this list is up-to-date with the one under core/logger/Readme#Keyconcepts
-const defaultAllowedHeaderNames = [
-    "x-ms-client-request-id",
-    "x-ms-return-client-request-id",
-    "x-ms-useragent",
-    "x-ms-correlation-request-id",
-    "x-ms-request-id",
-    "client-request-id",
-    "ms-cv",
-    "return-client-request-id",
-    "traceparent",
-    "Access-Control-Allow-Credentials",
-    "Access-Control-Allow-Headers",
-    "Access-Control-Allow-Methods",
-    "Access-Control-Allow-Origin",
-    "Access-Control-Expose-Headers",
-    "Access-Control-Max-Age",
-    "Access-Control-Request-Headers",
-    "Access-Control-Request-Method",
-    "Origin",
-    "Accept",
-    "Accept-Encoding",
-    "Cache-Control",
-    "Connection",
-    "Content-Length",
-    "Content-Type",
-    "Date",
-    "ETag",
-    "Expires",
-    "If-Match",
-    "If-Modified-Since",
-    "If-None-Match",
-    "If-Unmodified-Since",
-    "Last-Modified",
-    "Pragma",
-    "Request-Id",
-    "Retry-After",
-    "Server",
-    "Transfer-Encoding",
-    "User-Agent",
-    "WWW-Authenticate",
-];
-const defaultAllowedQueryParameters = ["api-version"];
-/**
- * @internal
- */
-class Sanitizer {
-    constructor({ additionalAllowedHeaderNames: allowedHeaderNames = [], additionalAllowedQueryParameters: allowedQueryParameters = [], } = {}) {
-        allowedHeaderNames = defaultAllowedHeaderNames.concat(allowedHeaderNames);
-        allowedQueryParameters = defaultAllowedQueryParameters.concat(allowedQueryParameters);
-        this.allowedHeaderNames = new Set(allowedHeaderNames.map((n) => n.toLowerCase()));
-        this.allowedQueryParameters = new Set(allowedQueryParameters.map((p) => p.toLowerCase()));
-    }
-    sanitize(obj) {
-        const seen = new Set();
-        return JSON.stringify(obj, (key, value) => {
-            // Ensure Errors include their interesting non-enumerable members
-            if (value instanceof Error) {
-                return Object.assign(Object.assign({}, value), { name: value.name, message: value.message });
-            }
-            if (key === "headers") {
-                return this.sanitizeHeaders(value);
-            }
-            else if (key === "url") {
-                return this.sanitizeUrl(value);
-            }
-            else if (key === "query") {
-                return this.sanitizeQuery(value);
-            }
-            else if (key === "body") {
-                // Don't log the request body
-                return undefined;
-            }
-            else if (key === "response") {
-                // Don't log response again
-                return undefined;
-            }
-            else if (key === "operationSpec") {
-                // When using sendOperationRequest, the request carries a massive
-                // field with the autorest spec. No need to log it.
-                return undefined;
-            }
-            else if (Array.isArray(value) || isObject(value)) {
-                if (seen.has(value)) {
-                    return "[Circular]";
-                }
-                seen.add(value);
-            }
-            return value;
-        }, 2);
-    }
-    sanitizeUrl(value) {
-        if (typeof value !== "string" || value === null || value === "") {
-            return value;
-        }
-        const url = new URL(value);
-        if (!url.search) {
-            return value;
-        }
-        for (const [key] of url.searchParams) {
-            if (!this.allowedQueryParameters.has(key.toLowerCase())) {
-                url.searchParams.set(key, RedactedString);
-            }
-        }
-        return url.toString();
-    }
-    sanitizeHeaders(obj) {
-        const sanitized = {};
-        for (const key of Object.keys(obj)) {
-            if (this.allowedHeaderNames.has(key.toLowerCase())) {
-                sanitized[key] = obj[key];
-            }
-            else {
-                sanitized[key] = RedactedString;
-            }
-        }
-        return sanitized;
-    }
-    sanitizeQuery(value) {
-        if (typeof value !== "object" || value === null) {
-            return value;
-        }
-        const sanitized = {};
-        for (const k of Object.keys(value)) {
-            if (this.allowedQueryParameters.has(k.toLowerCase())) {
-                sanitized[k] = value[k];
-            }
-            else {
-                sanitized[k] = RedactedString;
-            }
-        }
-        return sanitized;
-    }
-}
-
-// Copyright (c) Microsoft Corporation.
-// Licensed under the MIT License.
-/**
- * The programmatic identifier of the logPolicy.
- */
-const logPolicyName = "logPolicy";
 /**
  * A policy that logs all requests and responses.
  * @param options - Options to configure logPolicy.
  */
 function logPolicy(options = {}) {
-    var _a;
-    const logger = (_a = options.logger) !== null && _a !== void 0 ? _a : logger$1.info;
-    const sanitizer = new Sanitizer({
-        additionalAllowedHeaderNames: options.additionalAllowedHeaderNames,
-        additionalAllowedQueryParameters: options.additionalAllowedQueryParameters,
-    });
-    return {
-        name: logPolicyName,
-        async sendRequest(request, next) {
-            if (!logger.enabled) {
-                return next(request);
-            }
-            logger(`Request: ${sanitizer.sanitize(request)}`);
-            const response = await next(request);
-            logger(`Response status code: ${response.status}`);
-            logger(`Headers: ${sanitizer.sanitize(response.headers)}`);
-            return response;
-        },
-    };
+    return logPolicy$1(Object.assign({ logger: logger$1.info }, options));
 }
 
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
-/**
- * The programmatic identifier of the redirectPolicy.
- */
-const redirectPolicyName = "redirectPolicy";
-/**
- * Methods that are allowed to follow redirects 301 and 302
- */
-const allowedRedirect = ["GET", "HEAD"];
 /**
  * A policy to follow Location headers from the server in order
  * to support server-side redirection.
@@ -37714,39 +36917,7 @@ const allowedRedirect = ["GET", "HEAD"];
  * @param options - Options to control policy behavior.
  */
 function redirectPolicy(options = {}) {
-    const { maxRetries = 20 } = options;
-    return {
-        name: redirectPolicyName,
-        async sendRequest(request, next) {
-            const response = await next(request);
-            return handleRedirect(next, response, maxRetries);
-        },
-    };
-}
-async function handleRedirect(next, response, maxRetries, currentRetries = 0) {
-    const { request, status, headers } = response;
-    const locationHeader = headers.get("location");
-    if (locationHeader &&
-        (status === 300 ||
-            (status === 301 && allowedRedirect.includes(request.method)) ||
-            (status === 302 && allowedRedirect.includes(request.method)) ||
-            (status === 303 && request.method === "POST") ||
-            status === 307) &&
-        currentRetries < maxRetries) {
-        const url = new URL(locationHeader, request.url);
-        request.url = url.toString();
-        // POST request with Status code 303 should be converted into a
-        // redirected GET request if the redirect url is present in the location header
-        if (status === 303) {
-            request.method = "GET";
-            request.headers.delete("Content-Length");
-            delete request.body;
-        }
-        request.headers.delete("Authorization");
-        const res = await next(request);
-        return handleRedirect(next, res, maxRetries, currentRetries + 1);
-    }
-    return response;
+    return redirectPolicy$1(options);
 }
 
 // Copyright (c) Microsoft Corporation.
@@ -37778,8 +36949,7 @@ async function setPlatformSpecificData(map) {
 
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
-const SDK_VERSION$1 = "1.19.1";
-const DEFAULT_RETRY_POLICY_COUNT = 3;
+const SDK_VERSION$1 = "1.22.0";
 
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
@@ -37835,10 +37005,171 @@ function userAgentPolicy(options = {}) {
 }
 
 // Copyright (c) Microsoft Corporation.
-// Licensed under the MIT License.
-function isBlob(x) {
-    return typeof x.stream === "function";
+// Licensed under the MIT license.
+/**
+ * This error is thrown when an asynchronous operation has been aborted.
+ * Check for this error by testing the `name` that the name property of the
+ * error matches `"AbortError"`.
+ *
+ * @example
+ * ```ts
+ * const controller = new AbortController();
+ * controller.abort();
+ * try {
+ *   doAsyncWork(controller.signal)
+ * } catch (e) {
+ *   if (e.name === 'AbortError') {
+ *     // handle abort error here.
+ *   }
+ * }
+ * ```
+ */
+class AbortError extends Error {
+    constructor(message) {
+        super(message);
+        this.name = "AbortError";
+    }
 }
+
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+/**
+ * Creates an abortable promise.
+ * @param buildPromise - A function that takes the resolve and reject functions as parameters.
+ * @param options - The options for the abortable promise.
+ * @returns A promise that can be aborted.
+ */
+function createAbortablePromise(buildPromise, options) {
+    const { cleanupBeforeAbort, abortSignal, abortErrorMsg } = options !== null && options !== void 0 ? options : {};
+    return new Promise((resolve, reject) => {
+        function rejectOnAbort() {
+            reject(new AbortError(abortErrorMsg !== null && abortErrorMsg !== void 0 ? abortErrorMsg : "The operation was aborted."));
+        }
+        function removeListeners() {
+            abortSignal === null || abortSignal === void 0 ? void 0 : abortSignal.removeEventListener("abort", onAbort);
+        }
+        function onAbort() {
+            cleanupBeforeAbort === null || cleanupBeforeAbort === void 0 ? void 0 : cleanupBeforeAbort();
+            removeListeners();
+            rejectOnAbort();
+        }
+        if (abortSignal === null || abortSignal === void 0 ? void 0 : abortSignal.aborted) {
+            return rejectOnAbort();
+        }
+        try {
+            buildPromise((x) => {
+                removeListeners();
+                resolve(x);
+            }, (x) => {
+                removeListeners();
+                reject(x);
+            });
+        }
+        catch (err) {
+            reject(err);
+        }
+        abortSignal === null || abortSignal === void 0 ? void 0 : abortSignal.addEventListener("abort", onAbort);
+    });
+}
+
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+const StandardAbortMessage = "The delay was aborted.";
+/**
+ * A wrapper for setTimeout that resolves a promise after timeInMs milliseconds.
+ * @param timeInMs - The number of milliseconds to be delayed.
+ * @param options - The options for delay - currently abort options
+ * @returns Promise that is resolved after timeInMs
+ */
+function delay(timeInMs, options) {
+    let token;
+    const { abortSignal, abortErrorMsg } = {};
+    return createAbortablePromise((resolve) => {
+        token = setTimeout(resolve, timeInMs);
+    }, {
+        cleanupBeforeAbort: () => clearTimeout(token),
+        abortSignal,
+        abortErrorMsg: abortErrorMsg !== null && abortErrorMsg !== void 0 ? abortErrorMsg : StandardAbortMessage,
+    });
+}
+
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+/**
+ * Given what is thought to be an error object, return the message if possible.
+ * If the message is missing, returns a stringified version of the input.
+ * @param e - Something thrown from a try block
+ * @returns The error message or a string of the input
+ */
+function getErrorMessage(e) {
+    if (isError$1(e)) {
+        return e.message;
+    }
+    else {
+        let stringified;
+        try {
+            if (typeof e === "object" && e) {
+                stringified = JSON.stringify(e);
+            }
+            else {
+                stringified = String(e);
+            }
+        }
+        catch (err) {
+            stringified = "[unable to stringify input]";
+        }
+        return `Unknown error ${stringified}`;
+    }
+}
+
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+/**
+ * Helper TypeGuard that checks if something is defined or not.
+ * @param thing - Anything
+ */
+function isDefined(thing) {
+    return typeof thing !== "undefined" && thing !== null;
+}
+/**
+ * Helper TypeGuard that checks if the input is an object with the specified properties.
+ * @param thing - Anything.
+ * @param properties - The name of the properties that should appear in the object.
+ */
+function isObjectWithProperties(thing, properties) {
+    if (!isDefined(thing) || typeof thing !== "object") {
+        return false;
+    }
+    for (const property of properties) {
+        if (!objectHasProperty(thing, property)) {
+            return false;
+        }
+    }
+    return true;
+}
+/**
+ * Helper TypeGuard that checks if the input is an object with the specified property.
+ * @param thing - Any object.
+ * @param property - The name of the property that should appear in the object.
+ */
+function objectHasProperty(thing, property) {
+    return (isDefined(thing) && typeof thing === "object" && property in thing);
+}
+
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+/**
+ * Typeguard for an error object shape (has name and message)
+ *
+ * @param e - Something caught by a catch clause.
+ */
+function isError(e) {
+    return isError$1(e);
+}
+/**
+ * A constant that indicates whether the environment the code is running is a Node.js compatible environment.
+ */
+const isNodeLike = isNodeLike$1;
 
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
@@ -37857,13 +37188,16 @@ function isBlob(x) {
  * @internal
  */
 const rawContent = Symbol("rawContent");
+/**
+ * Type guard to check if a given object is a blob-like object with a raw content property.
+ */
 function hasRawContent(x) {
     return typeof x[rawContent] === "function";
 }
 /**
  * Extract the raw content from a given blob-like object. If the input was created using createFile
  * or createFileFromStream, the exact content passed into createFile/createFileFromStream will be used.
- * For true instances of Blob and File, returns the blob's content as a Web ReadableStream<Uint8Array>.
+ * For true instances of Blob and File, returns the actual blob.
  *
  * @internal
  */
@@ -37872,524 +37206,48 @@ function getRawContent(blob) {
         return blob[rawContent]();
     }
     else {
-        return blob.stream();
+        return blob;
     }
 }
 
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
-function streamAsyncIterator() {
-    return __asyncGenerator(this, arguments, function* streamAsyncIterator_1() {
-        const reader = this.getReader();
-        try {
-            while (true) {
-                const { done, value } = yield __await(reader.read());
-                if (done) {
-                    return yield __await(void 0);
-                }
-                yield yield __await(value);
-            }
-        }
-        finally {
-            reader.releaseLock();
-        }
-    });
-}
-function makeAsyncIterable(webStream) {
-    if (!webStream[Symbol.asyncIterator]) {
-        webStream[Symbol.asyncIterator] = streamAsyncIterator.bind(webStream);
-    }
-    if (!webStream.values) {
-        webStream.values = streamAsyncIterator.bind(webStream);
-    }
-}
-function ensureNodeStream(stream) {
-    if (stream instanceof ReadableStream) {
-        makeAsyncIterable(stream);
-        return Readable$1.fromWeb(stream);
-    }
-    else {
-        return stream;
-    }
-}
-function toStream(source) {
-    if (source instanceof Uint8Array) {
-        return Readable$1.from(Buffer.from(source));
-    }
-    else if (isBlob(source)) {
-        return toStream(getRawContent(source));
-    }
-    else {
-        return ensureNodeStream(source);
-    }
-}
-/**
- * Utility function that concatenates a set of binary inputs into one combined output.
- *
- * @param sources - array of sources for the concatenation
- * @returns - in Node, a (() =\> NodeJS.ReadableStream) which, when read, produces a concatenation of all the inputs.
- *           In browser, returns a `Blob` representing all the concatenated inputs.
- *
- * @internal
- */
-async function concat(sources) {
-    return function () {
-        const streams = sources.map((x) => (typeof x === "function" ? x() : x)).map(toStream);
-        return Readable$1.from((function () {
-            return __asyncGenerator(this, arguments, function* () {
-                var _a, e_1, _b, _c;
-                for (const stream of streams) {
-                    try {
-                        for (var _d = true, stream_1 = (e_1 = void 0, __asyncValues(stream)), stream_1_1; stream_1_1 = yield __await(stream_1.next()), _a = stream_1_1.done, !_a; _d = true) {
-                            _c = stream_1_1.value;
-                            _d = false;
-                            const chunk = _c;
-                            yield yield __await(chunk);
-                        }
-                    }
-                    catch (e_1_1) { e_1 = { error: e_1_1 }; }
-                    finally {
-                        try {
-                            if (!_d && !_a && (_b = stream_1.return)) yield __await(_b.call(stream_1));
-                        }
-                        finally { if (e_1) throw e_1.error; }
-                    }
-                }
-            });
-        })());
-    };
-}
-
-// Copyright (c) Microsoft Corporation.
-// Licensed under the MIT License.
-function generateBoundary() {
-    return `----AzSDKFormBoundary${randomUUID()}`;
-}
-function encodeHeaders(headers) {
-    let result = "";
-    for (const [key, value] of headers) {
-        result += `${key}: ${value}\r\n`;
-    }
-    return result;
-}
-function getLength(source) {
-    if (source instanceof Uint8Array) {
-        return source.byteLength;
-    }
-    else if (isBlob(source)) {
-        // if was created using createFile then -1 means we have an unknown size
-        return source.size === -1 ? undefined : source.size;
-    }
-    else {
-        return undefined;
-    }
-}
-function getTotalLength(sources) {
-    let total = 0;
-    for (const source of sources) {
-        const partLength = getLength(source);
-        if (partLength === undefined) {
-            return undefined;
-        }
-        else {
-            total += partLength;
-        }
-    }
-    return total;
-}
-async function buildRequestBody(request, parts, boundary) {
-    const sources = [
-        stringToUint8Array(`--${boundary}`, "utf-8"),
-        ...parts.flatMap((part) => [
-            stringToUint8Array("\r\n", "utf-8"),
-            stringToUint8Array(encodeHeaders(part.headers), "utf-8"),
-            stringToUint8Array("\r\n", "utf-8"),
-            part.body,
-            stringToUint8Array(`\r\n--${boundary}`, "utf-8"),
-        ]),
-        stringToUint8Array("--\r\n\r\n", "utf-8"),
-    ];
-    const contentLength = getTotalLength(sources);
-    if (contentLength) {
-        request.headers.set("Content-Length", contentLength);
-    }
-    request.body = await concat(sources);
-}
 /**
  * Name of multipart policy
  */
-const multipartPolicyName = "multipartPolicy";
-const maxBoundaryLength = 70;
-const validBoundaryCharacters = new Set(`abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'()+,-./:=?`);
-function assertValidBoundary(boundary) {
-    if (boundary.length > maxBoundaryLength) {
-        throw new Error(`Multipart boundary "${boundary}" exceeds maximum length of 70 characters`);
-    }
-    if (Array.from(boundary).some((x) => !validBoundaryCharacters.has(x))) {
-        throw new Error(`Multipart boundary "${boundary}" contains invalid characters`);
-    }
-}
+const multipartPolicyName = multipartPolicyName$1;
 /**
  * Pipeline policy for multipart requests
  */
 function multipartPolicy() {
+    const tspPolicy = multipartPolicy$1();
     return {
         name: multipartPolicyName,
-        async sendRequest(request, next) {
-            var _a;
-            if (!request.multipartBody) {
-                return next(request);
+        sendRequest: async (request, next) => {
+            if (request.multipartBody) {
+                for (const part of request.multipartBody.parts) {
+                    if (hasRawContent(part.body)) {
+                        part.body = getRawContent(part.body);
+                    }
+                }
             }
-            if (request.body) {
-                throw new Error("multipartBody and regular body cannot be set at the same time");
-            }
-            let boundary = request.multipartBody.boundary;
-            const contentTypeHeader = (_a = request.headers.get("Content-Type")) !== null && _a !== void 0 ? _a : "multipart/mixed";
-            const parsedHeader = contentTypeHeader.match(/^(multipart\/[^ ;]+)(?:; *boundary=(.+))?$/);
-            if (!parsedHeader) {
-                throw new Error(`Got multipart request body, but content-type header was not multipart: ${contentTypeHeader}`);
-            }
-            const [, contentType, parsedBoundary] = parsedHeader;
-            if (parsedBoundary && boundary && parsedBoundary !== boundary) {
-                throw new Error(`Multipart boundary was specified as ${parsedBoundary} in the header, but got ${boundary} in the request body`);
-            }
-            boundary !== null && boundary !== void 0 ? boundary : (boundary = parsedBoundary);
-            if (boundary) {
-                assertValidBoundary(boundary);
-            }
-            else {
-                boundary = generateBoundary();
-            }
-            request.headers.set("Content-Type", `${contentType}; boundary=${boundary}`);
-            await buildRequestBody(request, request.multipartBody.parts, boundary);
-            request.multipartBody = undefined;
-            return next(request);
+            return tspPolicy.sendRequest(request, next);
         },
     };
 }
 
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
-/**
- * The programmatic identifier of the decompressResponsePolicy.
- */
-const decompressResponsePolicyName = "decompressResponsePolicy";
 /**
  * A policy to enable response decompression according to Accept-Encoding header
  * https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Accept-Encoding
  */
 function decompressResponsePolicy() {
-    return {
-        name: decompressResponsePolicyName,
-        async sendRequest(request, next) {
-            // HEAD requests have no body
-            if (request.method !== "HEAD") {
-                request.headers.set("Accept-Encoding", "gzip,deflate");
-            }
-            return next(request);
-        },
-    };
+    return decompressResponsePolicy$1();
 }
 
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
-const StandardAbortMessage = "The operation was aborted.";
-/**
- * A wrapper for setTimeout that resolves a promise after delayInMs milliseconds.
- * @param delayInMs - The number of milliseconds to be delayed.
- * @param value - The value to be resolved with after a timeout of t milliseconds.
- * @param options - The options for delay - currently abort options
- *                  - abortSignal - The abortSignal associated with containing operation.
- *                  - abortErrorMsg - The abort error message associated with containing operation.
- * @returns Resolved promise
- */
-function delay(delayInMs, value, options) {
-    return new Promise((resolve, reject) => {
-        let timer = undefined;
-        let onAborted = undefined;
-        const rejectOnAbort = () => {
-            return reject(new AbortError((options === null || options === void 0 ? void 0 : options.abortErrorMsg) ? options === null || options === void 0 ? void 0 : options.abortErrorMsg : StandardAbortMessage));
-        };
-        const removeListeners = () => {
-            if ((options === null || options === void 0 ? void 0 : options.abortSignal) && onAborted) {
-                options.abortSignal.removeEventListener("abort", onAborted);
-            }
-        };
-        onAborted = () => {
-            if (timer) {
-                clearTimeout(timer);
-            }
-            removeListeners();
-            return rejectOnAbort();
-        };
-        if ((options === null || options === void 0 ? void 0 : options.abortSignal) && options.abortSignal.aborted) {
-            return rejectOnAbort();
-        }
-        timer = setTimeout(() => {
-            removeListeners();
-            resolve(value);
-        }, delayInMs);
-        if (options === null || options === void 0 ? void 0 : options.abortSignal) {
-            options.abortSignal.addEventListener("abort", onAborted);
-        }
-    });
-}
-/**
- * @internal
- * @returns the parsed value or undefined if the parsed value is invalid.
- */
-function parseHeaderValueAsNumber(response, headerName) {
-    const value = response.headers.get(headerName);
-    if (!value)
-        return;
-    const valueAsNum = Number(value);
-    if (Number.isNaN(valueAsNum))
-        return;
-    return valueAsNum;
-}
-
-// Copyright (c) Microsoft Corporation.
-// Licensed under the MIT License.
-/**
- * The header that comes back from Azure services representing
- * the amount of time (minimum) to wait to retry (in seconds or timestamp after which we can retry).
- */
-const RetryAfterHeader = "Retry-After";
-/**
- * The headers that come back from Azure services representing
- * the amount of time (minimum) to wait to retry.
- *
- * "retry-after-ms", "x-ms-retry-after-ms" : milliseconds
- * "Retry-After" : seconds or timestamp
- */
-const AllRetryAfterHeaders = ["retry-after-ms", "x-ms-retry-after-ms", RetryAfterHeader];
-/**
- * A response is a throttling retry response if it has a throttling status code (429 or 503),
- * as long as one of the [ "Retry-After" or "retry-after-ms" or "x-ms-retry-after-ms" ] headers has a valid value.
- *
- * Returns the `retryAfterInMs` value if the response is a throttling retry response.
- * If not throttling retry response, returns `undefined`.
- *
- * @internal
- */
-function getRetryAfterInMs(response) {
-    if (!(response && [429, 503].includes(response.status)))
-        return undefined;
-    try {
-        // Headers: "retry-after-ms", "x-ms-retry-after-ms", "Retry-After"
-        for (const header of AllRetryAfterHeaders) {
-            const retryAfterValue = parseHeaderValueAsNumber(response, header);
-            if (retryAfterValue === 0 || retryAfterValue) {
-                // "Retry-After" header ==> seconds
-                // "retry-after-ms", "x-ms-retry-after-ms" headers ==> milli-seconds
-                const multiplyingFactor = header === RetryAfterHeader ? 1000 : 1;
-                return retryAfterValue * multiplyingFactor; // in milli-seconds
-            }
-        }
-        // RetryAfterHeader ("Retry-After") has a special case where it might be formatted as a date instead of a number of seconds
-        const retryAfterHeader = response.headers.get(RetryAfterHeader);
-        if (!retryAfterHeader)
-            return;
-        const date = Date.parse(retryAfterHeader);
-        const diff = date - Date.now();
-        // negative diff would mean a date in the past, so retry asap with 0 milliseconds
-        return Number.isFinite(diff) ? Math.max(0, diff) : undefined;
-    }
-    catch (_a) {
-        return undefined;
-    }
-}
-/**
- * A response is a retry response if it has a throttling status code (429 or 503),
- * as long as one of the [ "Retry-After" or "retry-after-ms" or "x-ms-retry-after-ms" ] headers has a valid value.
- */
-function isThrottlingRetryResponse(response) {
-    return Number.isFinite(getRetryAfterInMs(response));
-}
-function throttlingRetryStrategy() {
-    return {
-        name: "throttlingRetryStrategy",
-        retry({ response }) {
-            const retryAfterInMs = getRetryAfterInMs(response);
-            if (!Number.isFinite(retryAfterInMs)) {
-                return { skipStrategy: true };
-            }
-            return {
-                retryAfterInMs,
-            };
-        },
-    };
-}
-
-// Copyright (c) Microsoft Corporation.
-// Licensed under the MIT License.
-// intervals are in milliseconds
-const DEFAULT_CLIENT_RETRY_INTERVAL = 1000;
-const DEFAULT_CLIENT_MAX_RETRY_INTERVAL = 1000 * 64;
-/**
- * A retry strategy that retries with an exponentially increasing delay in these two cases:
- * - When there are errors in the underlying transport layer (e.g. DNS lookup failures).
- * - Or otherwise if the outgoing request fails (408, greater or equal than 500, except for 501 and 505).
- */
-function exponentialRetryStrategy(options = {}) {
-    var _a, _b;
-    const retryInterval = (_a = options.retryDelayInMs) !== null && _a !== void 0 ? _a : DEFAULT_CLIENT_RETRY_INTERVAL;
-    const maxRetryInterval = (_b = options.maxRetryDelayInMs) !== null && _b !== void 0 ? _b : DEFAULT_CLIENT_MAX_RETRY_INTERVAL;
-    return {
-        name: "exponentialRetryStrategy",
-        retry({ retryCount, response, responseError }) {
-            const matchedSystemError = isSystemError(responseError);
-            const ignoreSystemErrors = matchedSystemError && options.ignoreSystemErrors;
-            const isExponential = isExponentialRetryResponse(response);
-            const ignoreExponentialResponse = isExponential && options.ignoreHttpStatusCodes;
-            const unknownResponse = response && (isThrottlingRetryResponse(response) || !isExponential);
-            if (unknownResponse || ignoreExponentialResponse || ignoreSystemErrors) {
-                return { skipStrategy: true };
-            }
-            if (responseError && !matchedSystemError && !isExponential) {
-                return { errorToThrow: responseError };
-            }
-            return calculateRetryDelay(retryCount, {
-                retryDelayInMs: retryInterval,
-                maxRetryDelayInMs: maxRetryInterval,
-            });
-        },
-    };
-}
-/**
- * A response is a retry response if it has status codes:
- * - 408, or
- * - Greater or equal than 500, except for 501 and 505.
- */
-function isExponentialRetryResponse(response) {
-    return Boolean(response &&
-        response.status !== undefined &&
-        (response.status >= 500 || response.status === 408) &&
-        response.status !== 501 &&
-        response.status !== 505);
-}
-/**
- * Determines whether an error from a pipeline response was triggered in the network layer.
- */
-function isSystemError(err) {
-    if (!err) {
-        return false;
-    }
-    return (err.code === "ETIMEDOUT" ||
-        err.code === "ESOCKETTIMEDOUT" ||
-        err.code === "ECONNREFUSED" ||
-        err.code === "ECONNRESET" ||
-        err.code === "ENOENT" ||
-        err.code === "ENOTFOUND");
-}
-
-// Copyright (c) Microsoft Corporation.
-// Licensed under the MIT License.
-const retryPolicyLogger = createClientLogger("core-rest-pipeline retryPolicy");
-/**
- * The programmatic identifier of the retryPolicy.
- */
-const retryPolicyName = "retryPolicy";
-/**
- * retryPolicy is a generic policy to enable retrying requests when certain conditions are met
- */
-function retryPolicy(strategies, options = { maxRetries: DEFAULT_RETRY_POLICY_COUNT }) {
-    const logger = options.logger || retryPolicyLogger;
-    return {
-        name: retryPolicyName,
-        async sendRequest(request, next) {
-            var _a, _b;
-            let response;
-            let responseError;
-            let retryCount = -1;
-            retryRequest: while (true) {
-                retryCount += 1;
-                response = undefined;
-                responseError = undefined;
-                try {
-                    logger.info(`Retry ${retryCount}: Attempting to send request`, request.requestId);
-                    response = await next(request);
-                    logger.info(`Retry ${retryCount}: Received a response from request`, request.requestId);
-                }
-                catch (e) {
-                    logger.error(`Retry ${retryCount}: Received an error from request`, request.requestId);
-                    // RestErrors are valid targets for the retry strategies.
-                    // If none of the retry strategies can work with them, they will be thrown later in this policy.
-                    // If the received error is not a RestError, it is immediately thrown.
-                    responseError = e;
-                    if (!e || responseError.name !== "RestError") {
-                        throw e;
-                    }
-                    response = responseError.response;
-                }
-                if ((_a = request.abortSignal) === null || _a === void 0 ? void 0 : _a.aborted) {
-                    logger.error(`Retry ${retryCount}: Request aborted.`);
-                    const abortError = new AbortError();
-                    throw abortError;
-                }
-                if (retryCount >= ((_b = options.maxRetries) !== null && _b !== void 0 ? _b : DEFAULT_RETRY_POLICY_COUNT)) {
-                    logger.info(`Retry ${retryCount}: Maximum retries reached. Returning the last received response, or throwing the last received error.`);
-                    if (responseError) {
-                        throw responseError;
-                    }
-                    else if (response) {
-                        return response;
-                    }
-                    else {
-                        throw new Error("Maximum retries reached with no response or error to throw");
-                    }
-                }
-                logger.info(`Retry ${retryCount}: Processing ${strategies.length} retry strategies.`);
-                strategiesLoop: for (const strategy of strategies) {
-                    const strategyLogger = strategy.logger || retryPolicyLogger;
-                    strategyLogger.info(`Retry ${retryCount}: Processing retry strategy ${strategy.name}.`);
-                    const modifiers = strategy.retry({
-                        retryCount,
-                        response,
-                        responseError,
-                    });
-                    if (modifiers.skipStrategy) {
-                        strategyLogger.info(`Retry ${retryCount}: Skipped.`);
-                        continue strategiesLoop;
-                    }
-                    const { errorToThrow, retryAfterInMs, redirectTo } = modifiers;
-                    if (errorToThrow) {
-                        strategyLogger.error(`Retry ${retryCount}: Retry strategy ${strategy.name} throws error:`, errorToThrow);
-                        throw errorToThrow;
-                    }
-                    if (retryAfterInMs || retryAfterInMs === 0) {
-                        strategyLogger.info(`Retry ${retryCount}: Retry strategy ${strategy.name} retries after ${retryAfterInMs}`);
-                        await delay(retryAfterInMs, undefined, { abortSignal: request.abortSignal });
-                        continue retryRequest;
-                    }
-                    if (redirectTo) {
-                        strategyLogger.info(`Retry ${retryCount}: Retry strategy ${strategy.name} redirects to ${redirectTo}`);
-                        request.url = redirectTo;
-                        continue retryRequest;
-                    }
-                }
-                if (responseError) {
-                    logger.info(`None of the retry strategies could work with the received error. Throwing it.`);
-                    throw responseError;
-                }
-                if (response) {
-                    logger.info(`None of the retry strategies could work with the received response. Returning it.`);
-                    return response;
-                }
-                // If all the retries skip and there's no response,
-                // we're still in the retry loop, so a new request will be sent
-                // until `maxRetries` is reached.
-            }
-        },
-    };
-}
-
-// Copyright (c) Microsoft Corporation.
-// Licensed under the MIT License.
-/**
- * Name of the {@link defaultRetryPolicy}
- */
-const defaultRetryPolicyName = "defaultRetryPolicy";
 /**
  * A policy that retries according to three strategies:
  * - When the server sends a 429 response with a Retry-After header.
@@ -38397,331 +37255,20 @@ const defaultRetryPolicyName = "defaultRetryPolicy";
  * - Or otherwise if the outgoing request fails, it will retry with an exponentially increasing delay.
  */
 function defaultRetryPolicy(options = {}) {
-    var _a;
-    return {
-        name: defaultRetryPolicyName,
-        sendRequest: retryPolicy([throttlingRetryStrategy(), exponentialRetryStrategy(options)], {
-            maxRetries: (_a = options.maxRetries) !== null && _a !== void 0 ? _a : DEFAULT_RETRY_POLICY_COUNT,
-        }).sendRequest,
-    };
+    return defaultRetryPolicy$1(options);
 }
 
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
-function normalizeName(name) {
-    return name.toLowerCase();
-}
-function* headerIterator(map) {
-    for (const entry of map.values()) {
-        yield [entry.name, entry.value];
-    }
-}
-class HttpHeadersImpl {
-    constructor(rawHeaders) {
-        this._headersMap = new Map();
-        if (rawHeaders) {
-            for (const headerName of Object.keys(rawHeaders)) {
-                this.set(headerName, rawHeaders[headerName]);
-            }
-        }
-    }
-    /**
-     * Set a header in this collection with the provided name and value. The name is
-     * case-insensitive.
-     * @param name - The name of the header to set. This value is case-insensitive.
-     * @param value - The value of the header to set.
-     */
-    set(name, value) {
-        this._headersMap.set(normalizeName(name), { name, value: String(value).trim() });
-    }
-    /**
-     * Get the header value for the provided header name, or undefined if no header exists in this
-     * collection with the provided name.
-     * @param name - The name of the header. This value is case-insensitive.
-     */
-    get(name) {
-        var _a;
-        return (_a = this._headersMap.get(normalizeName(name))) === null || _a === void 0 ? void 0 : _a.value;
-    }
-    /**
-     * Get whether or not this header collection contains a header entry for the provided header name.
-     * @param name - The name of the header to set. This value is case-insensitive.
-     */
-    has(name) {
-        return this._headersMap.has(normalizeName(name));
-    }
-    /**
-     * Remove the header with the provided headerName.
-     * @param name - The name of the header to remove.
-     */
-    delete(name) {
-        this._headersMap.delete(normalizeName(name));
-    }
-    /**
-     * Get the JSON object representation of this HTTP header collection.
-     */
-    toJSON(options = {}) {
-        const result = {};
-        if (options.preserveCase) {
-            for (const entry of this._headersMap.values()) {
-                result[entry.name] = entry.value;
-            }
-        }
-        else {
-            for (const [normalizedName, entry] of this._headersMap) {
-                result[normalizedName] = entry.value;
-            }
-        }
-        return result;
-    }
-    /**
-     * Get the string representation of this HTTP header collection.
-     */
-    toString() {
-        return JSON.stringify(this.toJSON({ preserveCase: true }));
-    }
-    /**
-     * Iterate over tuples of header [name, value] pairs.
-     */
-    [Symbol.iterator]() {
-        return headerIterator(this._headersMap);
-    }
-}
-/**
- * Creates an object that satisfies the `HttpHeaders` interface.
- * @param rawHeaders - A simple object representing initial headers
- */
-function createHttpHeaders(rawHeaders) {
-    return new HttpHeadersImpl(rawHeaders);
-}
-
-// Copyright (c) Microsoft Corporation.
-// Licensed under the MIT License.
-/**
- * The programmatic identifier of the formDataPolicy.
- */
-const formDataPolicyName = "formDataPolicy";
-function formDataToFormDataMap(formData) {
-    var _a;
-    const formDataMap = {};
-    for (const [key, value] of formData.entries()) {
-        (_a = formDataMap[key]) !== null && _a !== void 0 ? _a : (formDataMap[key] = []);
-        formDataMap[key].push(value);
-    }
-    return formDataMap;
-}
 /**
  * A policy that encodes FormData on the request into the body.
  */
 function formDataPolicy() {
-    return {
-        name: formDataPolicyName,
-        async sendRequest(request, next) {
-            if (isNodeLike && typeof FormData !== "undefined" && request.body instanceof FormData) {
-                request.formData = formDataToFormDataMap(request.body);
-                request.body = undefined;
-            }
-            if (request.formData) {
-                const contentType = request.headers.get("Content-Type");
-                if (contentType && contentType.indexOf("application/x-www-form-urlencoded") !== -1) {
-                    request.body = wwwFormUrlEncode(request.formData);
-                }
-                else {
-                    await prepareFormData(request.formData, request);
-                }
-                request.formData = undefined;
-            }
-            return next(request);
-        },
-    };
-}
-function wwwFormUrlEncode(formData) {
-    const urlSearchParams = new URLSearchParams();
-    for (const [key, value] of Object.entries(formData)) {
-        if (Array.isArray(value)) {
-            for (const subValue of value) {
-                urlSearchParams.append(key, subValue.toString());
-            }
-        }
-        else {
-            urlSearchParams.append(key, value.toString());
-        }
-    }
-    return urlSearchParams.toString();
-}
-async function prepareFormData(formData, request) {
-    // validate content type (multipart/form-data)
-    const contentType = request.headers.get("Content-Type");
-    if (contentType && !contentType.startsWith("multipart/form-data")) {
-        // content type is specified and is not multipart/form-data. Exit.
-        return;
-    }
-    request.headers.set("Content-Type", contentType !== null && contentType !== void 0 ? contentType : "multipart/form-data");
-    // set body to MultipartRequestBody using content from FormDataMap
-    const parts = [];
-    for (const [fieldName, values] of Object.entries(formData)) {
-        for (const value of Array.isArray(values) ? values : [values]) {
-            if (typeof value === "string") {
-                parts.push({
-                    headers: createHttpHeaders({
-                        "Content-Disposition": `form-data; name="${fieldName}"`,
-                    }),
-                    body: stringToUint8Array(value, "utf-8"),
-                });
-            }
-            else if (value === undefined || value === null || typeof value !== "object") {
-                throw new Error(`Unexpected value for key ${fieldName}: ${value}. Value should be serialized to string first.`);
-            }
-            else {
-                // using || instead of ?? here since if value.name is empty we should create a file name
-                const fileName = value.name || "blob";
-                const headers = createHttpHeaders();
-                headers.set("Content-Disposition", `form-data; name="${fieldName}"; filename="${fileName}"`);
-                // again, || is used since an empty value.type means the content type is unset
-                headers.set("Content-Type", value.type || "application/octet-stream");
-                parts.push({
-                    headers,
-                    body: value,
-                });
-            }
-        }
-    }
-    request.multipartBody = { parts };
+    return formDataPolicy$1();
 }
 
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
-const HTTPS_PROXY = "HTTPS_PROXY";
-const HTTP_PROXY = "HTTP_PROXY";
-const ALL_PROXY = "ALL_PROXY";
-const NO_PROXY = "NO_PROXY";
-/**
- * The programmatic identifier of the proxyPolicy.
- */
-const proxyPolicyName = "proxyPolicy";
-/**
- * Stores the patterns specified in NO_PROXY environment variable.
- * @internal
- */
-const globalNoProxyList = [];
-let noProxyListLoaded = false;
-/** A cache of whether a host should bypass the proxy. */
-const globalBypassedMap = new Map();
-function getEnvironmentValue(name) {
-    if (process.env[name]) {
-        return process.env[name];
-    }
-    else if (process.env[name.toLowerCase()]) {
-        return process.env[name.toLowerCase()];
-    }
-    return undefined;
-}
-function loadEnvironmentProxyValue() {
-    if (!process) {
-        return undefined;
-    }
-    const httpsProxy = getEnvironmentValue(HTTPS_PROXY);
-    const allProxy = getEnvironmentValue(ALL_PROXY);
-    const httpProxy = getEnvironmentValue(HTTP_PROXY);
-    return httpsProxy || allProxy || httpProxy;
-}
-/**
- * Check whether the host of a given `uri` matches any pattern in the no proxy list.
- * If there's a match, any request sent to the same host shouldn't have the proxy settings set.
- * This implementation is a port of https://github.com/Azure/azure-sdk-for-net/blob/8cca811371159e527159c7eb65602477898683e2/sdk/core/Azure.Core/src/Pipeline/Internal/HttpEnvironmentProxy.cs#L210
- */
-function isBypassed(uri, noProxyList, bypassedMap) {
-    if (noProxyList.length === 0) {
-        return false;
-    }
-    const host = new URL(uri).hostname;
-    if (bypassedMap === null || bypassedMap === void 0 ? void 0 : bypassedMap.has(host)) {
-        return bypassedMap.get(host);
-    }
-    let isBypassedFlag = false;
-    for (const pattern of noProxyList) {
-        if (pattern[0] === ".") {
-            // This should match either domain it self or any subdomain or host
-            // .foo.com will match foo.com it self or *.foo.com
-            if (host.endsWith(pattern)) {
-                isBypassedFlag = true;
-            }
-            else {
-                if (host.length === pattern.length - 1 && host === pattern.slice(1)) {
-                    isBypassedFlag = true;
-                }
-            }
-        }
-        else {
-            if (host === pattern) {
-                isBypassedFlag = true;
-            }
-        }
-    }
-    bypassedMap === null || bypassedMap === void 0 ? void 0 : bypassedMap.set(host, isBypassedFlag);
-    return isBypassedFlag;
-}
-function loadNoProxy() {
-    const noProxy = getEnvironmentValue(NO_PROXY);
-    noProxyListLoaded = true;
-    if (noProxy) {
-        return noProxy
-            .split(",")
-            .map((item) => item.trim())
-            .filter((item) => item.length);
-    }
-    return [];
-}
-/**
- * This method attempts to parse a proxy URL from the environment
- * variables `HTTPS_PROXY` or `HTTP_PROXY`.
- */
-function getDefaultProxySettingsInternal() {
-    const envProxy = loadEnvironmentProxyValue();
-    return envProxy ? new URL(envProxy) : undefined;
-}
-function getUrlFromProxySettings(settings) {
-    let parsedProxyUrl;
-    try {
-        parsedProxyUrl = new URL(settings.host);
-    }
-    catch (_a) {
-        throw new Error(`Expecting a valid host string in proxy settings, but found "${settings.host}".`);
-    }
-    parsedProxyUrl.port = String(settings.port);
-    if (settings.username) {
-        parsedProxyUrl.username = settings.username;
-    }
-    if (settings.password) {
-        parsedProxyUrl.password = settings.password;
-    }
-    return parsedProxyUrl;
-}
-function setProxyAgentOnRequest(request, cachedAgents, proxyUrl) {
-    // Custom Agent should take precedence so if one is present
-    // we should skip to avoid overwriting it.
-    if (request.agent) {
-        return;
-    }
-    const url = new URL(request.url);
-    const isInsecure = url.protocol !== "https:";
-    if (request.tlsSettings) {
-        logger$1.warning("TLS settings are not supported in combination with custom Proxy, certificates provided to the client will be ignored.");
-    }
-    const headers = request.headers.toJSON();
-    if (isInsecure) {
-        if (!cachedAgents.httpProxyAgent) {
-            cachedAgents.httpProxyAgent = new distExports.HttpProxyAgent(proxyUrl, { headers });
-        }
-        request.agent = cachedAgents.httpProxyAgent;
-    }
-    else {
-        if (!cachedAgents.httpsProxyAgent) {
-            cachedAgents.httpsProxyAgent = new distExports$1.HttpsProxyAgent(proxyUrl, { headers });
-        }
-        request.agent = cachedAgents.httpsProxyAgent;
-    }
-}
 /**
  * A policy that allows one to apply proxy settings to all requests.
  * If not passed static settings, they will be retrieved from the HTTPS_PROXY
@@ -38730,28 +37277,7 @@ function setProxyAgentOnRequest(request, cachedAgents, proxyUrl) {
  * @param options - additional settings, for example, custom NO_PROXY patterns
  */
 function proxyPolicy(proxySettings, options) {
-    if (!noProxyListLoaded) {
-        globalNoProxyList.push(...loadNoProxy());
-    }
-    const defaultProxy = proxySettings
-        ? getUrlFromProxySettings(proxySettings)
-        : getDefaultProxySettingsInternal();
-    const cachedAgents = {};
-    return {
-        name: proxyPolicyName,
-        async sendRequest(request, next) {
-            var _a;
-            if (!request.proxySettings &&
-                defaultProxy &&
-                !isBypassed(request.url, (_a = void 0 ) !== null && _a !== void 0 ? _a : globalNoProxyList, globalBypassedMap)) {
-                setProxyAgentOnRequest(request, cachedAgents, defaultProxy);
-            }
-            else if (request.proxySettings) {
-                setProxyAgentOnRequest(request, cachedAgents, getUrlFromProxySettings(request.proxySettings));
-            }
-            return next(request);
-        },
-    };
+    return proxyPolicy$1(proxySettings);
 }
 
 // Copyright (c) Microsoft Corporation.
@@ -38781,45 +37307,19 @@ function setClientRequestIdPolicy(requestIdHeaderName = "x-ms-client-request-id"
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 /**
- * Name of the Agent Policy
- */
-const agentPolicyName = "agentPolicy";
-/**
  * Gets a pipeline policy that sets http.agent
  */
 function agentPolicy(agent) {
-    return {
-        name: agentPolicyName,
-        sendRequest: async (req, next) => {
-            // Users may define an agent on the request, honor it over the client level one
-            if (!req.agent) {
-                req.agent = agent;
-            }
-            return next(req);
-        },
-    };
+    return agentPolicy$1(agent);
 }
 
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 /**
- * Name of the TLS Policy
- */
-const tlsPolicyName = "tlsPolicy";
-/**
  * Gets a pipeline policy that adds the client certificate to the HttpClient agent for authentication.
  */
 function tlsPolicy(tlsSettings) {
-    return {
-        name: tlsPolicyName,
-        sendRequest: async (req, next) => {
-            // Users may define a request tlsSettings, honor those over the client level one
-            if (!req.tlsSettings) {
-                req.tlsSettings = tlsSettings;
-            }
-            return next(req);
-        },
-    };
+    return tlsPolicy$1(tlsSettings);
 }
 
 // Copyright (c) Microsoft Corporation.
@@ -39030,57 +37530,12 @@ function createTracingClient(options) {
 
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
-const custom = inspect.custom;
-
-// Copyright (c) Microsoft Corporation.
-// Licensed under the MIT License.
-const errorSanitizer = new Sanitizer();
-/**
- * A custom error type for failed pipeline requests.
- */
-class RestError extends Error {
-    constructor(message, options = {}) {
-        super(message);
-        this.name = "RestError";
-        this.code = options.code;
-        this.statusCode = options.statusCode;
-        // The request and response may contain sensitive information in the headers or body.
-        // To help prevent this sensitive information being accidentally logged, the request and response
-        // properties are marked as non-enumerable here. This prevents them showing up in the output of
-        // JSON.stringify and console.log.
-        Object.defineProperty(this, "request", { value: options.request, enumerable: false });
-        Object.defineProperty(this, "response", { value: options.response, enumerable: false });
-        Object.setPrototypeOf(this, RestError.prototype);
-    }
-    /**
-     * Logging method for util.inspect in Node
-     */
-    [custom]() {
-        // Extract non-enumerable properties and add them back. This is OK since in this output the request and
-        // response get sanitized.
-        return `RestError: ${this.message} \n ${errorSanitizer.sanitize(Object.assign(Object.assign({}, this), { request: this.request, response: this.response }))}`;
-    }
-}
-/**
- * Something went wrong when making the request.
- * This means the actual request failed for some reason,
- * such as a DNS issue or the connection being lost.
- */
-RestError.REQUEST_SEND_ERROR = "REQUEST_SEND_ERROR";
-/**
- * This means that parsing the response from the server failed.
- * It may have been malformed.
- */
-RestError.PARSE_ERROR = "PARSE_ERROR";
 /**
  * Typeguard for RestError
  * @param e - Something caught by a catch clause.
  */
 function isRestError(e) {
-    if (e instanceof RestError) {
-        return true;
-    }
-    return isError(e) && e.name === "RestError";
+    return isRestError$1(e);
 }
 
 // Copyright (c) Microsoft Corporation.
@@ -39211,6 +37666,66 @@ function tryProcessResponse$1(span, response) {
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 /**
+ * Creates a native AbortSignal which reflects the state of the provided AbortSignalLike.
+ * If the AbortSignalLike is already a native AbortSignal, it is returned as is.
+ * @param abortSignalLike - The AbortSignalLike to wrap.
+ * @returns - An object containing the native AbortSignal and an optional cleanup function. The cleanup function should be called when the AbortSignal is no longer needed.
+ */
+function wrapAbortSignalLike(abortSignalLike) {
+    if (abortSignalLike instanceof AbortSignal) {
+        return { abortSignal: abortSignalLike };
+    }
+    if (abortSignalLike.aborted) {
+        return { abortSignal: AbortSignal.abort(abortSignalLike.reason) };
+    }
+    const controller = new AbortController();
+    let needsCleanup = true;
+    function cleanup() {
+        if (needsCleanup) {
+            abortSignalLike.removeEventListener("abort", listener);
+            needsCleanup = false;
+        }
+    }
+    function listener() {
+        controller.abort(abortSignalLike.reason);
+        cleanup();
+    }
+    abortSignalLike.addEventListener("abort", listener);
+    return { abortSignal: controller.signal, cleanup };
+}
+
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+const wrapAbortSignalLikePolicyName = "wrapAbortSignalLikePolicy";
+/**
+ * Policy that ensure that any AbortSignalLike is wrapped in a native AbortSignal for processing by the pipeline.
+ * Since the ts-http-runtime expects a native AbortSignal, this policy is used to ensure that any AbortSignalLike is wrapped in a native AbortSignal.
+ *
+ * @returns - created policy
+ */
+function wrapAbortSignalLikePolicy() {
+    return {
+        name: wrapAbortSignalLikePolicyName,
+        sendRequest: async (request, next) => {
+            if (!request.abortSignal) {
+                return next(request);
+            }
+            const { abortSignal, cleanup } = wrapAbortSignalLike(request.abortSignal);
+            // eslint-disable-next-line no-param-reassign
+            request.abortSignal = abortSignal;
+            try {
+                return await next(request);
+            }
+            finally {
+                cleanup === null || cleanup === void 0 ? void 0 : cleanup();
+            }
+        },
+    };
+}
+
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+/**
  * Create a new pipeline with a default set of customizable policies.
  * @param options - Options to configure a custom pipeline.
  */
@@ -39227,6 +37742,7 @@ function createPipelineFromOptions(options) {
         pipeline.addPolicy(proxyPolicy(options.proxyOptions));
         pipeline.addPolicy(decompressResponsePolicy());
     }
+    pipeline.addPolicy(wrapAbortSignalLikePolicy());
     pipeline.addPolicy(formDataPolicy(), { beforePolicies: [multipartPolicyName] });
     pipeline.addPolicy(userAgentPolicy(options.userAgentOptions));
     pipeline.addPolicy(setClientRequestIdPolicy((_a = options.telemetryOptions) === null || _a === void 0 ? void 0 : _a.clientRequestIdHeaderName));
@@ -40360,6 +38876,90 @@ async function generatePromptFile$1(template, config, systemPromptPath) {
 }
 
 /**
+ * Merges multiple response JSON files into a single response file.
+ *
+ * @param inputFiles Comma or newline separated list of input files.
+ * @param responsesDir The directory with response files.
+ * @param outputPath Path to write the merged response file.
+ * @returns Promise that resolves with the merged response data.
+ */
+async function mergeResponses(inputFiles, responsesDir, outputPath) {
+    const allFiles = [];
+    {
+        // Process all JSON files from responses directory
+        try {
+            const files = await fs.promises.readdir(path.join(responsesDir));
+            const jsonFilePaths = files
+                .filter((f) => f.endsWith('.json')) // get json files
+                .map((f) => path.join(responsesDir, f)); // construct full paths
+            allFiles.push(...jsonFilePaths);
+        }
+        catch {
+            // The directory may not exist, so we ignore the error
+        }
+    }
+    if (allFiles.length === 0) {
+        throw new Error('No input files specified for merging responses');
+    }
+    coreExports.info(`Merging files: ${allFiles.join(', ')}`);
+    const merged = {
+        remarks: [],
+        regression: null,
+        labels: []
+    };
+    for (const file of allFiles) {
+        try {
+            coreExports.info(`Processing file: ${file}`);
+            // Read and parse the JSON file
+            const fileContents = await getFileContents(file);
+            const json = JSON.parse(fileContents);
+            // Merge the JSON data
+            for (const [key, value] of Object.entries(json)) {
+                if (merged[key]) {
+                    if (Array.isArray(merged[key]) && Array.isArray(value)) {
+                        merged[key].push(...value);
+                    }
+                    else {
+                        merged[key] = value;
+                    }
+                }
+                else {
+                    merged[key] = value;
+                }
+            }
+        }
+        catch {
+            coreExports.warning(`Failed to read or parse file: ${file}`);
+        }
+    }
+    await fs.promises.mkdir(path.dirname(outputPath), { recursive: true });
+    await fs.promises.writeFile(outputPath, JSON.stringify(merged, null, 2));
+    coreExports.info(`Merged response written to: ${outputPath}`);
+    return merged;
+}
+/**
+ * Helper function to read file contents and remove wrapping code blocks if present.
+ *
+ * @param file Path to the file to read.
+ * @returns Promise that resolves with the file contents.
+ */
+async function getFileContents(file) {
+    let fileContents = await fs.promises.readFile(file, 'utf8');
+    // Break file contents into lines
+    const lines = fileContents.split('\n');
+    // Remove wrapping code blocks if present
+    if (lines[0]?.match(/^\s*```/)) {
+        lines.shift();
+    }
+    if (lines[lines.length - 1]?.match(/^\s*```/)) {
+        lines.pop();
+    }
+    // Combine lines back into a single string
+    fileContents = lines.join('\n');
+    return fileContents;
+}
+
+/**
  * Comments on an issue with the provided summary.
  *
  * @param summaryFile Path to the file containing the summary text.
@@ -40367,13 +38967,14 @@ async function generatePromptFile$1(template, config, systemPromptPath) {
  * @param octokit The GitHub API client.
  */
 async function commentOnIssue(octokit, summaryFile, config, footer) {
-    const summary = await fs.promises.readFile(summaryFile, 'utf8');
+    const summary = await fs.promises.readFile(path.join(summaryFile), 'utf8');
     const commentBody = `
 ${summary}
 
-${footer}
-`;
-    if (commentBody.trim().length === 0) {
+${footer ?? ''}
+`.trim();
+    // If the comment body is empty, do not post an empty comment
+    if (commentBody.length === 0) {
         return;
     }
     if (config.dryRun) {
@@ -40394,9 +38995,11 @@ ${footer}
  * @param config The triage configuration object.
  * @param octokit The GitHub API client.
  */
-async function applyLabelsToIssue(octokit, mergedResponse, config) {
-    const labels = mergedResponse.labels?.map((l) => l.label)?.filter(Boolean) || [];
-    if (labels.length === 0) {
+async function applyLabelsToIssue(octokit, labels, config) {
+    // Filter out empty labels
+    labels = labels?.filter((label) => label.trim().length > 0);
+    // If no labels to apply, return early
+    if (!labels || labels.length === 0) {
         return;
     }
     if (config.dryRun) {
@@ -40463,6 +39066,141 @@ async function removeEyes(octokit, config) {
             });
         }
     }
+}
+/**
+ * Get detailed information about an issue including comments and reactions using GraphQL
+ */
+async function getIssueDetails(graphql, owner, repo, issueNumber) {
+    // Get issue with first batch of comments and reactions
+    const result = await graphql.GetIssueDetails({ owner, repo, issueNumber });
+    // Check if the issue exists
+    const issue = result.repository?.issue;
+    if (!issue) {
+        throw new Error(`Issue not found: ${owner}/${repo}#${issueNumber}`);
+    }
+    // Get all reactions for the issue
+    const allReactions = await getIssueReactions(graphql, issue, owner, repo, issueNumber);
+    // Get all comments
+    const allComments = await getIssueComments(graphql, issue, owner, repo, issueNumber);
+    const issueDetails = {
+        id: issue.id,
+        owner: owner,
+        repo: repo,
+        number: issue.number,
+        title: issue.title,
+        body: issue.body,
+        state: issue.state.toLowerCase(),
+        createdAt: new Date(issue.createdAt),
+        updatedAt: new Date(issue.updatedAt),
+        closedAt: issue.closedAt ? new Date(issue.closedAt) : null,
+        comments: allComments,
+        reactions: allReactions,
+        user: {
+            login: issue.author?.login || '',
+            type: issue.author?.__typename || ''
+        },
+        assignees: getAssignees(issue)
+    };
+    return issueDetails;
+}
+function getAssignees(issue) {
+    const allAssignees = [];
+    if (!issue.assignees.nodes) {
+        return allAssignees;
+    }
+    issue.assignees.nodes.map((assignee) => {
+        if (!assignee) {
+            return;
+        }
+        allAssignees.push({
+            login: assignee.login,
+            type: assignee.__typename || ''
+        });
+    });
+    return allAssignees;
+}
+async function getIssueReactions(graphql, issue, owner, repo, issueNumber) {
+    const allReactions = [];
+    // Add first batch of reactions
+    let reactionsCursor = addReactions(issue.reactions, allReactions);
+    // Paginate through remaining reactions
+    while (reactionsCursor) {
+        const nextResult = await graphql.GetIssueDetails({
+            owner,
+            repo,
+            issueNumber,
+            commentsCursor: null,
+            reactionsCursor
+        });
+        reactionsCursor = addReactions(nextResult?.repository?.issue?.reactions, allReactions);
+    }
+    return allReactions;
+}
+async function getIssueComments(graphql, issue, owner, repo, issueNumber) {
+    const allComments = [];
+    if (!issue.comments.nodes) {
+        return allComments;
+    }
+    // Add first batch of comments
+    let commentsCursor = addComments(issue.comments, allComments);
+    // Paginate through remaining comments
+    while (commentsCursor) {
+        const nextResult = await graphql.GetIssueDetails({
+            owner,
+            repo,
+            issueNumber,
+            commentsCursor,
+            reactionsCursor: null
+        });
+        commentsCursor = addComments(nextResult?.repository?.issue?.comments, allComments);
+    }
+    return allComments;
+}
+function addReactions(reactions, allReactions) {
+    if (!reactions?.nodes) {
+        return null;
+    }
+    reactions.nodes.forEach((reaction) => {
+        if (!reaction) {
+            return;
+        }
+        allReactions.push({
+            user: {
+                login: reaction.user?.login || '',
+                type: reaction.user?.__typename || ''
+            },
+            reaction: reaction.content.toLowerCase(),
+            createdAt: new Date(reaction.createdAt)
+        });
+    });
+    if (!reactions.pageInfo.hasNextPage) {
+        return null;
+    }
+    return reactions.pageInfo.endCursor;
+}
+function addComments(comments, allComments) {
+    if (!comments?.nodes) {
+        return null;
+    }
+    comments.nodes.forEach((comment) => {
+        if (!comment) {
+            return;
+        }
+        const allReactions = [];
+        addReactions(comment.reactions, allReactions);
+        allComments.push({
+            user: {
+                login: comment.author?.login || '',
+                type: comment.author?.__typename || ''
+            },
+            createdAt: new Date(comment.createdAt),
+            reactions: allReactions
+        });
+    });
+    if (!comments.pageInfo.hasNextPage) {
+        return null;
+    }
+    return comments.pageInfo.endCursor;
 }
 
 const systemPrompt = `
@@ -40595,68 +39333,6 @@ async function generateSummary(config, mergedResponseFile) {
     return summaryResponseFile;
 }
 /**
- * Merges multiple response JSON files into a single response file.
- *
- * @param inputFiles Comma or newline separated list of input files.
- * @param responseDir The directory with response files.
- * @param outputPath Path to write the merged response file.
- * @returns Promise that resolves with the merged response data.
- */
-async function mergeResponses(inputFiles, responseDir, outputPath) {
-    const allFiles = [];
-    {
-        // Process all JSON files from responses directory
-        try {
-            const files = await fs.promises.readdir(path.join(responseDir));
-            const jsonFilePaths = files
-                .filter((f) => f.endsWith('.json')) // get json files
-                .map((f) => path.join(responseDir, f)); // construct full paths
-            allFiles.push(...jsonFilePaths);
-        }
-        catch {
-            // The directory may not exist, so we ignore the error
-        }
-    }
-    if (allFiles.length === 0) {
-        throw new Error('No input files specified for merging responses');
-    }
-    coreExports.info(`Merging files: ${allFiles.join(', ')}`);
-    const merged = {
-        remarks: [],
-        regression: null,
-        labels: []
-    };
-    for (const file of allFiles) {
-        try {
-            coreExports.info(`Processing file: ${file}`);
-            // Read and parse the JSON file
-            const fileContents = await getFileContents(file);
-            const json = JSON.parse(fileContents);
-            // Merge the JSON data
-            for (const [key, value] of Object.entries(json)) {
-                if (merged[key]) {
-                    if (Array.isArray(merged[key]) && Array.isArray(value)) {
-                        merged[key].push(...value);
-                    }
-                    else {
-                        merged[key] = value;
-                    }
-                }
-                else {
-                    merged[key] = value;
-                }
-            }
-        }
-        catch {
-            coreExports.warning(`Failed to read or parse file: ${file}`);
-        }
-    }
-    await fs.promises.mkdir(path.dirname(outputPath), { recursive: true });
-    await fs.promises.writeFile(outputPath, JSON.stringify(merged, null, 2));
-    coreExports.info(`Merged response written to: ${outputPath}`);
-    return merged;
-}
-/**
  * Generates a prompt file based on the provided template and configuration.
  *
  * @param template The template prompt to use.
@@ -40671,75 +39347,8895 @@ async function generatePromptFile(template, promptPath, config, mergedResponseFi
         MERGED_JSON: mergedResponseFile
     }, config);
 }
-/**
- * Helper function to read file contents and remove wrapping code blocks if present.
- *
- * @param file Path to the file to read.
- * @returns Promise that resolves with the file contents.
- */
-async function getFileContents(file) {
-    let fileContents = await fs.promises.readFile(file, 'utf8');
-    // Break file contents into lines
-    const lines = fileContents.split('\n');
-    // Remove wrapping code blocks if present
-    if (lines[0]?.match(/^\s*```/)) {
-        lines.shift();
-    }
-    if (lines[lines.length - 1]?.match(/^\s*```/)) {
-        lines.pop();
-    }
-    // Combine lines back into a single string
-    fileContents = lines.join('\n');
-    return fileContents;
-}
 
 /**
- * Manages reactions (such as eyes) for an issue or PR.
- *
- * @param config The reactions configuration object.
- * @param addReaction If true, add the reaction; if false, remove it.
+ * Run the normal triage workflow
  */
-async function manageReactions(config, addReaction) {
+async function runTriageWorkflow(config) {
     const octokit = githubExports.getOctokit(config.token);
-    if (addReaction) {
-        await addEyes(octokit, config);
+    const shouldAddLabels = config.template ? true : false;
+    const shouldAddSummary = config.applyLabels || config.applyComment;
+    const shouldAddReactions = shouldAddLabels || shouldAddSummary;
+    const shouldRemoveReactions = shouldAddSummary;
+    try {
+        let responseFile = '';
+        // Step 1: Add eyes reaction at the start
+        if (shouldAddReactions) {
+            await addEyes(octokit, config);
+        }
+        // Step 2: Select labels if template is provided
+        if (shouldAddLabels) {
+            responseFile = await selectLabels(config);
+        }
+        // Step 3: Apply labels and comment if requested
+        if (shouldAddSummary) {
+            await mergeAndApplyTriage(octokit, config);
+        }
+        return responseFile;
     }
-    else {
-        await removeEyes(octokit, config);
+    finally {
+        // Step 4: Remove eyes reaction at the end if needed
+        if (shouldRemoveReactions) {
+            await removeEyes(octokit, config);
+        }
     }
 }
 /**
- * Applies labels and comments to an issue based on merged response data.
+ * Merges response JSON files and applies labels and comments to the issue.
  *
- * @param inputFiles Comma or newline separated list of input files.
+ * @param octokit The GitHub API client.
  * @param config The triage configuration object.
+ * @returns Promise that resolves with the path to the merged response file.
  */
-async function applyLabelsAndComment(config) {
-    const octokit = githubExports.getOctokit(config.token);
+async function mergeAndApplyTriage(octokit, config) {
     // Merge response JSON files
     const mergedResponseFile = path.join(config.tempDir, 'triage-assistant', 'responses.json');
-    const responseDir = path.join(config.tempDir, 'triage-assistant', 'responses');
-    const mergedResponse = await mergeResponses('', responseDir, mergedResponseFile);
+    const responsesDir = path.join(config.tempDir, 'triage-assistant', 'responses');
+    const mergedResponse = await mergeResponses('', responsesDir, mergedResponseFile);
     // Log the merged response for debugging
     coreExports.info(`Merged response: ${JSON.stringify(mergedResponse, null, 2)}`);
-    // Generate summary using AI
     if (config.applyComment) {
-        await applyComment(octokit, mergedResponseFile, config);
+        // Generate summary response using AI
+        const summaryResponseFile = await generateSummary(config, mergedResponseFile);
+        // Comment on the issue
+        await commentOnIssue(octokit, summaryResponseFile, config, config.commentFooter);
     }
-    // Apply labels to the issue
     if (config.applyLabels) {
-        await applyLabels(octokit, mergedResponse, config);
+        // Collect all the labels from the merged response
+        const labels = mergedResponse.labels?.map((l) => l.label)?.filter(Boolean) || [];
+        // Apply labels to the issue
+        await applyLabelsToIssue(octokit, labels, config);
     }
-}
-async function applyComment(octokit, mergedResponseFile, config) {
-    const summaryResponseFile = await generateSummary(config, mergedResponseFile);
-    // Comment on the issue
-    await commentOnIssue(octokit, summaryResponseFile, config, config.commentFooter);
-}
-async function applyLabels(octokit, mergedResponse, config) {
-    await applyLabelsToIssue(octokit, mergedResponse, config);
 }
 
+class ClientError extends Error {
+    response;
+    request;
+    constructor(response, request) {
+        const message = `${ClientError.extractMessage(response)}: ${JSON.stringify({
+            response,
+            request,
+        })}`;
+        super(message);
+        Object.setPrototypeOf(this, ClientError.prototype);
+        this.response = response;
+        this.request = request;
+        // this is needed as Safari doesn't support .captureStackTrace
+        if (typeof Error.captureStackTrace === `function`) {
+            Error.captureStackTrace(this, ClientError);
+        }
+    }
+    static extractMessage(response) {
+        return response.errors?.[0]?.message ?? `GraphQL Error (Code: ${String(response.status)})`;
+    }
+}
+
+const uppercase = (str) => str.toUpperCase();
+const callOrIdentity = (value) => {
+    return typeof value === `function` ? value() : value;
+};
+const zip = (a, b) => a.map((k, i) => [k, b[i]]);
+const HeadersInitToPlainObject = (headers) => {
+    let oHeaders = {};
+    if (headers instanceof Headers) {
+        oHeaders = HeadersInstanceToPlainObject(headers);
+    }
+    else if (Array.isArray(headers)) {
+        headers.forEach(([name, value]) => {
+            if (name && value !== undefined) {
+                oHeaders[name] = value;
+            }
+        });
+    }
+    else if (headers) {
+        oHeaders = headers;
+    }
+    return oHeaders;
+};
+const HeadersInstanceToPlainObject = (headers) => {
+    const o = {};
+    headers.forEach((v, k) => {
+        o[k] = v;
+    });
+    return o;
+};
+const tryCatch = (fn) => {
+    try {
+        const result = fn();
+        if (isPromiseLikeValue(result)) {
+            return result.catch((error) => {
+                return errorFromMaybeError(error);
+            });
+        }
+        return result;
+    }
+    catch (error) {
+        return errorFromMaybeError(error);
+    }
+};
+/**
+ * Ensure that the given value is an error and return it. If it is not an error than
+ * wrap it in one, passing the given value as the error message.
+ */
+const errorFromMaybeError = (maybeError) => {
+    if (maybeError instanceof Error)
+        return maybeError;
+    return new Error(String(maybeError));
+};
+const isPromiseLikeValue = (value) => {
+    return (typeof value === `object`
+        && value !== null
+        && `then` in value
+        && typeof value.then === `function`
+        && `catch` in value
+        && typeof value.catch === `function`
+        && `finally` in value
+        && typeof value.finally === `function`);
+};
+const casesExhausted = (value) => {
+    throw new Error(`Unhandled case: ${String(value)}`);
+};
+const isPlainObject = (value) => {
+    return typeof value === `object` && value !== null && !Array.isArray(value);
+};
+
+const parseBatchRequestArgs = (documentsOrOptions, requestHeaders) => {
+    // eslint-disable-next-line
+    return documentsOrOptions.documents
+        ? documentsOrOptions
+        : {
+            documents: documentsOrOptions,
+            requestHeaders: requestHeaders,
+            signal: undefined,
+        };
+};
+
+const parseRawRequestArgs = (queryOrOptions, variables, requestHeaders) => {
+    return queryOrOptions.query
+        ? queryOrOptions
+        : {
+            query: queryOrOptions,
+            variables: variables,
+            requestHeaders: requestHeaders,
+            signal: undefined,
+        };
+};
+
+function devAssert(condition, message) {
+  const booleanCondition = Boolean(condition);
+
+  if (!booleanCondition) {
+    throw new Error(message);
+  }
+}
+
+/**
+ * Return true if `value` is object-like. A value is object-like if it's not
+ * `null` and has a `typeof` result of "object".
+ */
+function isObjectLike(value) {
+  return typeof value == 'object' && value !== null;
+}
+
+function invariant(condition, message) {
+  const booleanCondition = Boolean(condition);
+
+  if (!booleanCondition) {
+    throw new Error(
+      'Unexpected invariant triggered.',
+    );
+  }
+}
+
+const LineRegExp = /\r\n|[\n\r]/g;
+/**
+ * Represents a location in a Source.
+ */
+
+/**
+ * Takes a Source and a UTF-8 character offset, and returns the corresponding
+ * line and column as a SourceLocation.
+ */
+function getLocation(source, position) {
+  let lastLineStart = 0;
+  let line = 1;
+
+  for (const match of source.body.matchAll(LineRegExp)) {
+    typeof match.index === 'number' || invariant(false);
+
+    if (match.index >= position) {
+      break;
+    }
+
+    lastLineStart = match.index + match[0].length;
+    line += 1;
+  }
+
+  return {
+    line,
+    column: position + 1 - lastLineStart,
+  };
+}
+
+/**
+ * Render a helpful description of the location in the GraphQL Source document.
+ */
+function printLocation(location) {
+  return printSourceLocation(
+    location.source,
+    getLocation(location.source, location.start),
+  );
+}
+/**
+ * Render a helpful description of the location in the GraphQL Source document.
+ */
+
+function printSourceLocation(source, sourceLocation) {
+  const firstLineColumnOffset = source.locationOffset.column - 1;
+  const body = ''.padStart(firstLineColumnOffset) + source.body;
+  const lineIndex = sourceLocation.line - 1;
+  const lineOffset = source.locationOffset.line - 1;
+  const lineNum = sourceLocation.line + lineOffset;
+  const columnOffset = sourceLocation.line === 1 ? firstLineColumnOffset : 0;
+  const columnNum = sourceLocation.column + columnOffset;
+  const locationStr = `${source.name}:${lineNum}:${columnNum}\n`;
+  const lines = body.split(/\r\n|[\n\r]/g);
+  const locationLine = lines[lineIndex]; // Special case for minified documents
+
+  if (locationLine.length > 120) {
+    const subLineIndex = Math.floor(columnNum / 80);
+    const subLineColumnNum = columnNum % 80;
+    const subLines = [];
+
+    for (let i = 0; i < locationLine.length; i += 80) {
+      subLines.push(locationLine.slice(i, i + 80));
+    }
+
+    return (
+      locationStr +
+      printPrefixedLines([
+        [`${lineNum} |`, subLines[0]],
+        ...subLines.slice(1, subLineIndex + 1).map((subLine) => ['|', subLine]),
+        ['|', '^'.padStart(subLineColumnNum)],
+        ['|', subLines[subLineIndex + 1]],
+      ])
+    );
+  }
+
+  return (
+    locationStr +
+    printPrefixedLines([
+      // Lines specified like this: ["prefix", "string"],
+      [`${lineNum - 1} |`, lines[lineIndex - 1]],
+      [`${lineNum} |`, locationLine],
+      ['|', '^'.padStart(columnNum)],
+      [`${lineNum + 1} |`, lines[lineIndex + 1]],
+    ])
+  );
+}
+
+function printPrefixedLines(lines) {
+  const existingLines = lines.filter(([_, line]) => line !== undefined);
+  const padLen = Math.max(...existingLines.map(([prefix]) => prefix.length));
+  return existingLines
+    .map(([prefix, line]) => prefix.padStart(padLen) + (line ? ' ' + line : ''))
+    .join('\n');
+}
+
+function toNormalizedOptions(args) {
+  const firstArg = args[0];
+
+  if (firstArg == null || 'kind' in firstArg || 'length' in firstArg) {
+    return {
+      nodes: firstArg,
+      source: args[1],
+      positions: args[2],
+      path: args[3],
+      originalError: args[4],
+      extensions: args[5],
+    };
+  }
+
+  return firstArg;
+}
+/**
+ * A GraphQLError describes an Error found during the parse, validate, or
+ * execute phases of performing a GraphQL operation. In addition to a message
+ * and stack trace, it also includes information about the locations in a
+ * GraphQL document and/or execution result that correspond to the Error.
+ */
+
+class GraphQLError extends Error {
+  /**
+   * An array of `{ line, column }` locations within the source GraphQL document
+   * which correspond to this error.
+   *
+   * Errors during validation often contain multiple locations, for example to
+   * point out two things with the same name. Errors during execution include a
+   * single location, the field which produced the error.
+   *
+   * Enumerable, and appears in the result of JSON.stringify().
+   */
+
+  /**
+   * An array describing the JSON-path into the execution response which
+   * corresponds to this error. Only included for errors during execution.
+   *
+   * Enumerable, and appears in the result of JSON.stringify().
+   */
+
+  /**
+   * An array of GraphQL AST Nodes corresponding to this error.
+   */
+
+  /**
+   * The source GraphQL document for the first location of this error.
+   *
+   * Note that if this Error represents more than one node, the source may not
+   * represent nodes after the first node.
+   */
+
+  /**
+   * An array of character offsets within the source GraphQL document
+   * which correspond to this error.
+   */
+
+  /**
+   * The original error thrown from a field resolver during execution.
+   */
+
+  /**
+   * Extension fields to add to the formatted error.
+   */
+
+  /**
+   * @deprecated Please use the `GraphQLErrorOptions` constructor overload instead.
+   */
+  constructor(message, ...rawArgs) {
+    var _this$nodes, _nodeLocations$, _ref;
+
+    const { nodes, source, positions, path, originalError, extensions } =
+      toNormalizedOptions(rawArgs);
+    super(message);
+    this.name = 'GraphQLError';
+    this.path = path !== null && path !== void 0 ? path : undefined;
+    this.originalError =
+      originalError !== null && originalError !== void 0
+        ? originalError
+        : undefined; // Compute list of blame nodes.
+
+    this.nodes = undefinedIfEmpty(
+      Array.isArray(nodes) ? nodes : nodes ? [nodes] : undefined,
+    );
+    const nodeLocations = undefinedIfEmpty(
+      (_this$nodes = this.nodes) === null || _this$nodes === void 0
+        ? void 0
+        : _this$nodes.map((node) => node.loc).filter((loc) => loc != null),
+    ); // Compute locations in the source for the given nodes/positions.
+
+    this.source =
+      source !== null && source !== void 0
+        ? source
+        : nodeLocations === null || nodeLocations === void 0
+        ? void 0
+        : (_nodeLocations$ = nodeLocations[0]) === null ||
+          _nodeLocations$ === void 0
+        ? void 0
+        : _nodeLocations$.source;
+    this.positions =
+      positions !== null && positions !== void 0
+        ? positions
+        : nodeLocations === null || nodeLocations === void 0
+        ? void 0
+        : nodeLocations.map((loc) => loc.start);
+    this.locations =
+      positions && source
+        ? positions.map((pos) => getLocation(source, pos))
+        : nodeLocations === null || nodeLocations === void 0
+        ? void 0
+        : nodeLocations.map((loc) => getLocation(loc.source, loc.start));
+    const originalExtensions = isObjectLike(
+      originalError === null || originalError === void 0
+        ? void 0
+        : originalError.extensions,
+    )
+      ? originalError === null || originalError === void 0
+        ? void 0
+        : originalError.extensions
+      : undefined;
+    this.extensions =
+      (_ref =
+        extensions !== null && extensions !== void 0
+          ? extensions
+          : originalExtensions) !== null && _ref !== void 0
+        ? _ref
+        : Object.create(null); // Only properties prescribed by the spec should be enumerable.
+    // Keep the rest as non-enumerable.
+
+    Object.defineProperties(this, {
+      message: {
+        writable: true,
+        enumerable: true,
+      },
+      name: {
+        enumerable: false,
+      },
+      nodes: {
+        enumerable: false,
+      },
+      source: {
+        enumerable: false,
+      },
+      positions: {
+        enumerable: false,
+      },
+      originalError: {
+        enumerable: false,
+      },
+    }); // Include (non-enumerable) stack trace.
+
+    /* c8 ignore start */
+    // FIXME: https://github.com/graphql/graphql-js/issues/2317
+
+    if (
+      originalError !== null &&
+      originalError !== void 0 &&
+      originalError.stack
+    ) {
+      Object.defineProperty(this, 'stack', {
+        value: originalError.stack,
+        writable: true,
+        configurable: true,
+      });
+    } else if (Error.captureStackTrace) {
+      Error.captureStackTrace(this, GraphQLError);
+    } else {
+      Object.defineProperty(this, 'stack', {
+        value: Error().stack,
+        writable: true,
+        configurable: true,
+      });
+    }
+    /* c8 ignore stop */
+  }
+
+  get [Symbol.toStringTag]() {
+    return 'GraphQLError';
+  }
+
+  toString() {
+    let output = this.message;
+
+    if (this.nodes) {
+      for (const node of this.nodes) {
+        if (node.loc) {
+          output += '\n\n' + printLocation(node.loc);
+        }
+      }
+    } else if (this.source && this.locations) {
+      for (const location of this.locations) {
+        output += '\n\n' + printSourceLocation(this.source, location);
+      }
+    }
+
+    return output;
+  }
+
+  toJSON() {
+    const formattedError = {
+      message: this.message,
+    };
+
+    if (this.locations != null) {
+      formattedError.locations = this.locations;
+    }
+
+    if (this.path != null) {
+      formattedError.path = this.path;
+    }
+
+    if (this.extensions != null && Object.keys(this.extensions).length > 0) {
+      formattedError.extensions = this.extensions;
+    }
+
+    return formattedError;
+  }
+}
+
+function undefinedIfEmpty(array) {
+  return array === undefined || array.length === 0 ? undefined : array;
+}
+
+/**
+ * Produces a GraphQLError representing a syntax error, containing useful
+ * descriptive information about the syntax error's position in the source.
+ */
+
+function syntaxError(source, position, description) {
+  return new GraphQLError(`Syntax Error: ${description}`, {
+    source,
+    positions: [position],
+  });
+}
+
+/**
+ * Contains a range of UTF-8 character offsets and token references that
+ * identify the region of the source from which the AST derived.
+ */
+class Location {
+  /**
+   * The character offset at which this Node begins.
+   */
+
+  /**
+   * The character offset at which this Node ends.
+   */
+
+  /**
+   * The Token at which this Node begins.
+   */
+
+  /**
+   * The Token at which this Node ends.
+   */
+
+  /**
+   * The Source document the AST represents.
+   */
+  constructor(startToken, endToken, source) {
+    this.start = startToken.start;
+    this.end = endToken.end;
+    this.startToken = startToken;
+    this.endToken = endToken;
+    this.source = source;
+  }
+
+  get [Symbol.toStringTag]() {
+    return 'Location';
+  }
+
+  toJSON() {
+    return {
+      start: this.start,
+      end: this.end,
+    };
+  }
+}
+/**
+ * Represents a range of characters represented by a lexical token
+ * within a Source.
+ */
+
+class Token {
+  /**
+   * The kind of Token.
+   */
+
+  /**
+   * The character offset at which this Node begins.
+   */
+
+  /**
+   * The character offset at which this Node ends.
+   */
+
+  /**
+   * The 1-indexed line number on which this Token appears.
+   */
+
+  /**
+   * The 1-indexed column number at which this Token begins.
+   */
+
+  /**
+   * For non-punctuation tokens, represents the interpreted value of the token.
+   *
+   * Note: is undefined for punctuation tokens, but typed as string for
+   * convenience in the parser.
+   */
+
+  /**
+   * Tokens exist as nodes in a double-linked-list amongst all tokens
+   * including ignored tokens. <SOF> is always the first node and <EOF>
+   * the last.
+   */
+  constructor(kind, start, end, line, column, value) {
+    this.kind = kind;
+    this.start = start;
+    this.end = end;
+    this.line = line;
+    this.column = column; // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+
+    this.value = value;
+    this.prev = null;
+    this.next = null;
+  }
+
+  get [Symbol.toStringTag]() {
+    return 'Token';
+  }
+
+  toJSON() {
+    return {
+      kind: this.kind,
+      value: this.value,
+      line: this.line,
+      column: this.column,
+    };
+  }
+}
+/**
+ * The list of all possible AST node types.
+ */
+
+/**
+ * @internal
+ */
+const QueryDocumentKeys = {
+  Name: [],
+  Document: ['definitions'],
+  OperationDefinition: [
+    'name',
+    'variableDefinitions',
+    'directives',
+    'selectionSet',
+  ],
+  VariableDefinition: ['variable', 'type', 'defaultValue', 'directives'],
+  Variable: ['name'],
+  SelectionSet: ['selections'],
+  Field: ['alias', 'name', 'arguments', 'directives', 'selectionSet'],
+  Argument: ['name', 'value'],
+  FragmentSpread: ['name', 'directives'],
+  InlineFragment: ['typeCondition', 'directives', 'selectionSet'],
+  FragmentDefinition: [
+    'name', // Note: fragment variable definitions are deprecated and will removed in v17.0.0
+    'variableDefinitions',
+    'typeCondition',
+    'directives',
+    'selectionSet',
+  ],
+  IntValue: [],
+  FloatValue: [],
+  StringValue: [],
+  BooleanValue: [],
+  NullValue: [],
+  EnumValue: [],
+  ListValue: ['values'],
+  ObjectValue: ['fields'],
+  ObjectField: ['name', 'value'],
+  Directive: ['name', 'arguments'],
+  NamedType: ['name'],
+  ListType: ['type'],
+  NonNullType: ['type'],
+  SchemaDefinition: ['description', 'directives', 'operationTypes'],
+  OperationTypeDefinition: ['type'],
+  ScalarTypeDefinition: ['description', 'name', 'directives'],
+  ObjectTypeDefinition: [
+    'description',
+    'name',
+    'interfaces',
+    'directives',
+    'fields',
+  ],
+  FieldDefinition: ['description', 'name', 'arguments', 'type', 'directives'],
+  InputValueDefinition: [
+    'description',
+    'name',
+    'type',
+    'defaultValue',
+    'directives',
+  ],
+  InterfaceTypeDefinition: [
+    'description',
+    'name',
+    'interfaces',
+    'directives',
+    'fields',
+  ],
+  UnionTypeDefinition: ['description', 'name', 'directives', 'types'],
+  EnumTypeDefinition: ['description', 'name', 'directives', 'values'],
+  EnumValueDefinition: ['description', 'name', 'directives'],
+  InputObjectTypeDefinition: ['description', 'name', 'directives', 'fields'],
+  DirectiveDefinition: ['description', 'name', 'arguments', 'locations'],
+  SchemaExtension: ['directives', 'operationTypes'],
+  ScalarTypeExtension: ['name', 'directives'],
+  ObjectTypeExtension: ['name', 'interfaces', 'directives', 'fields'],
+  InterfaceTypeExtension: ['name', 'interfaces', 'directives', 'fields'],
+  UnionTypeExtension: ['name', 'directives', 'types'],
+  EnumTypeExtension: ['name', 'directives', 'values'],
+  InputObjectTypeExtension: ['name', 'directives', 'fields'],
+};
+const kindValues = new Set(Object.keys(QueryDocumentKeys));
+/**
+ * @internal
+ */
+
+function isNode(maybeNode) {
+  const maybeKind =
+    maybeNode === null || maybeNode === void 0 ? void 0 : maybeNode.kind;
+  return typeof maybeKind === 'string' && kindValues.has(maybeKind);
+}
+/** Name */
+
+var OperationTypeNode;
+
+(function (OperationTypeNode) {
+  OperationTypeNode['QUERY'] = 'query';
+  OperationTypeNode['MUTATION'] = 'mutation';
+  OperationTypeNode['SUBSCRIPTION'] = 'subscription';
+})(OperationTypeNode || (OperationTypeNode = {}));
+
+/**
+ * The set of allowed directive location values.
+ */
+var DirectiveLocation;
+
+(function (DirectiveLocation) {
+  DirectiveLocation['QUERY'] = 'QUERY';
+  DirectiveLocation['MUTATION'] = 'MUTATION';
+  DirectiveLocation['SUBSCRIPTION'] = 'SUBSCRIPTION';
+  DirectiveLocation['FIELD'] = 'FIELD';
+  DirectiveLocation['FRAGMENT_DEFINITION'] = 'FRAGMENT_DEFINITION';
+  DirectiveLocation['FRAGMENT_SPREAD'] = 'FRAGMENT_SPREAD';
+  DirectiveLocation['INLINE_FRAGMENT'] = 'INLINE_FRAGMENT';
+  DirectiveLocation['VARIABLE_DEFINITION'] = 'VARIABLE_DEFINITION';
+  DirectiveLocation['SCHEMA'] = 'SCHEMA';
+  DirectiveLocation['SCALAR'] = 'SCALAR';
+  DirectiveLocation['OBJECT'] = 'OBJECT';
+  DirectiveLocation['FIELD_DEFINITION'] = 'FIELD_DEFINITION';
+  DirectiveLocation['ARGUMENT_DEFINITION'] = 'ARGUMENT_DEFINITION';
+  DirectiveLocation['INTERFACE'] = 'INTERFACE';
+  DirectiveLocation['UNION'] = 'UNION';
+  DirectiveLocation['ENUM'] = 'ENUM';
+  DirectiveLocation['ENUM_VALUE'] = 'ENUM_VALUE';
+  DirectiveLocation['INPUT_OBJECT'] = 'INPUT_OBJECT';
+  DirectiveLocation['INPUT_FIELD_DEFINITION'] = 'INPUT_FIELD_DEFINITION';
+})(DirectiveLocation || (DirectiveLocation = {}));
+/**
+ * The enum type representing the directive location values.
+ *
+ * @deprecated Please use `DirectiveLocation`. Will be remove in v17.
+ */
+
+/**
+ * The set of allowed kind values for AST nodes.
+ */
+var Kind;
+
+(function (Kind) {
+  Kind['NAME'] = 'Name';
+  Kind['DOCUMENT'] = 'Document';
+  Kind['OPERATION_DEFINITION'] = 'OperationDefinition';
+  Kind['VARIABLE_DEFINITION'] = 'VariableDefinition';
+  Kind['SELECTION_SET'] = 'SelectionSet';
+  Kind['FIELD'] = 'Field';
+  Kind['ARGUMENT'] = 'Argument';
+  Kind['FRAGMENT_SPREAD'] = 'FragmentSpread';
+  Kind['INLINE_FRAGMENT'] = 'InlineFragment';
+  Kind['FRAGMENT_DEFINITION'] = 'FragmentDefinition';
+  Kind['VARIABLE'] = 'Variable';
+  Kind['INT'] = 'IntValue';
+  Kind['FLOAT'] = 'FloatValue';
+  Kind['STRING'] = 'StringValue';
+  Kind['BOOLEAN'] = 'BooleanValue';
+  Kind['NULL'] = 'NullValue';
+  Kind['ENUM'] = 'EnumValue';
+  Kind['LIST'] = 'ListValue';
+  Kind['OBJECT'] = 'ObjectValue';
+  Kind['OBJECT_FIELD'] = 'ObjectField';
+  Kind['DIRECTIVE'] = 'Directive';
+  Kind['NAMED_TYPE'] = 'NamedType';
+  Kind['LIST_TYPE'] = 'ListType';
+  Kind['NON_NULL_TYPE'] = 'NonNullType';
+  Kind['SCHEMA_DEFINITION'] = 'SchemaDefinition';
+  Kind['OPERATION_TYPE_DEFINITION'] = 'OperationTypeDefinition';
+  Kind['SCALAR_TYPE_DEFINITION'] = 'ScalarTypeDefinition';
+  Kind['OBJECT_TYPE_DEFINITION'] = 'ObjectTypeDefinition';
+  Kind['FIELD_DEFINITION'] = 'FieldDefinition';
+  Kind['INPUT_VALUE_DEFINITION'] = 'InputValueDefinition';
+  Kind['INTERFACE_TYPE_DEFINITION'] = 'InterfaceTypeDefinition';
+  Kind['UNION_TYPE_DEFINITION'] = 'UnionTypeDefinition';
+  Kind['ENUM_TYPE_DEFINITION'] = 'EnumTypeDefinition';
+  Kind['ENUM_VALUE_DEFINITION'] = 'EnumValueDefinition';
+  Kind['INPUT_OBJECT_TYPE_DEFINITION'] = 'InputObjectTypeDefinition';
+  Kind['DIRECTIVE_DEFINITION'] = 'DirectiveDefinition';
+  Kind['SCHEMA_EXTENSION'] = 'SchemaExtension';
+  Kind['SCALAR_TYPE_EXTENSION'] = 'ScalarTypeExtension';
+  Kind['OBJECT_TYPE_EXTENSION'] = 'ObjectTypeExtension';
+  Kind['INTERFACE_TYPE_EXTENSION'] = 'InterfaceTypeExtension';
+  Kind['UNION_TYPE_EXTENSION'] = 'UnionTypeExtension';
+  Kind['ENUM_TYPE_EXTENSION'] = 'EnumTypeExtension';
+  Kind['INPUT_OBJECT_TYPE_EXTENSION'] = 'InputObjectTypeExtension';
+})(Kind || (Kind = {}));
+/**
+ * The enum type representing the possible kind values of AST nodes.
+ *
+ * @deprecated Please use `Kind`. Will be remove in v17.
+ */
+
+/**
+ * ```
+ * WhiteSpace ::
+ *   - "Horizontal Tab (U+0009)"
+ *   - "Space (U+0020)"
+ * ```
+ * @internal
+ */
+function isWhiteSpace(code) {
+  return code === 0x0009 || code === 0x0020;
+}
+/**
+ * ```
+ * Digit :: one of
+ *   - `0` `1` `2` `3` `4` `5` `6` `7` `8` `9`
+ * ```
+ * @internal
+ */
+
+function isDigit(code) {
+  return code >= 0x0030 && code <= 0x0039;
+}
+/**
+ * ```
+ * Letter :: one of
+ *   - `A` `B` `C` `D` `E` `F` `G` `H` `I` `J` `K` `L` `M`
+ *   - `N` `O` `P` `Q` `R` `S` `T` `U` `V` `W` `X` `Y` `Z`
+ *   - `a` `b` `c` `d` `e` `f` `g` `h` `i` `j` `k` `l` `m`
+ *   - `n` `o` `p` `q` `r` `s` `t` `u` `v` `w` `x` `y` `z`
+ * ```
+ * @internal
+ */
+
+function isLetter(code) {
+  return (
+    (code >= 0x0061 && code <= 0x007a) || // A-Z
+    (code >= 0x0041 && code <= 0x005a) // a-z
+  );
+}
+/**
+ * ```
+ * NameStart ::
+ *   - Letter
+ *   - `_`
+ * ```
+ * @internal
+ */
+
+function isNameStart(code) {
+  return isLetter(code) || code === 0x005f;
+}
+/**
+ * ```
+ * NameContinue ::
+ *   - Letter
+ *   - Digit
+ *   - `_`
+ * ```
+ * @internal
+ */
+
+function isNameContinue(code) {
+  return isLetter(code) || isDigit(code) || code === 0x005f;
+}
+
+/**
+ * Produces the value of a block string from its parsed raw value, similar to
+ * CoffeeScript's block string, Python's docstring trim or Ruby's strip_heredoc.
+ *
+ * This implements the GraphQL spec's BlockStringValue() static algorithm.
+ *
+ * @internal
+ */
+
+function dedentBlockStringLines(lines) {
+  var _firstNonEmptyLine2;
+
+  let commonIndent = Number.MAX_SAFE_INTEGER;
+  let firstNonEmptyLine = null;
+  let lastNonEmptyLine = -1;
+
+  for (let i = 0; i < lines.length; ++i) {
+    var _firstNonEmptyLine;
+
+    const line = lines[i];
+    const indent = leadingWhitespace(line);
+
+    if (indent === line.length) {
+      continue; // skip empty lines
+    }
+
+    firstNonEmptyLine =
+      (_firstNonEmptyLine = firstNonEmptyLine) !== null &&
+      _firstNonEmptyLine !== void 0
+        ? _firstNonEmptyLine
+        : i;
+    lastNonEmptyLine = i;
+
+    if (i !== 0 && indent < commonIndent) {
+      commonIndent = indent;
+    }
+  }
+
+  return lines // Remove common indentation from all lines but first.
+    .map((line, i) => (i === 0 ? line : line.slice(commonIndent))) // Remove leading and trailing blank lines.
+    .slice(
+      (_firstNonEmptyLine2 = firstNonEmptyLine) !== null &&
+        _firstNonEmptyLine2 !== void 0
+        ? _firstNonEmptyLine2
+        : 0,
+      lastNonEmptyLine + 1,
+    );
+}
+
+function leadingWhitespace(str) {
+  let i = 0;
+
+  while (i < str.length && isWhiteSpace(str.charCodeAt(i))) {
+    ++i;
+  }
+
+  return i;
+}
+/**
+ * Print a block string in the indented block form by adding a leading and
+ * trailing blank line. However, if a block string starts with whitespace and is
+ * a single-line, adding a leading blank line would strip that whitespace.
+ *
+ * @internal
+ */
+
+function printBlockString(value, options) {
+  const escapedValue = value.replace(/"""/g, '\\"""'); // Expand a block string's raw value into independent lines.
+
+  const lines = escapedValue.split(/\r\n|[\n\r]/g);
+  const isSingleLine = lines.length === 1; // If common indentation is found we can fix some of those cases by adding leading new line
+
+  const forceLeadingNewLine =
+    lines.length > 1 &&
+    lines
+      .slice(1)
+      .every((line) => line.length === 0 || isWhiteSpace(line.charCodeAt(0))); // Trailing triple quotes just looks confusing but doesn't force trailing new line
+
+  const hasTrailingTripleQuotes = escapedValue.endsWith('\\"""'); // Trailing quote (single or double) or slash forces trailing new line
+
+  const hasTrailingQuote = value.endsWith('"') && !hasTrailingTripleQuotes;
+  const hasTrailingSlash = value.endsWith('\\');
+  const forceTrailingNewline = hasTrailingQuote || hasTrailingSlash;
+  const printAsMultipleLines =
+    // add leading and trailing new lines only if it improves readability
+    (!isSingleLine ||
+      value.length > 70 ||
+      forceTrailingNewline ||
+      forceLeadingNewLine ||
+      hasTrailingTripleQuotes);
+  let result = ''; // Format a multi-line block quote to account for leading space.
+
+  const skipLeadingNewLine = isSingleLine && isWhiteSpace(value.charCodeAt(0));
+
+  if ((printAsMultipleLines && !skipLeadingNewLine) || forceLeadingNewLine) {
+    result += '\n';
+  }
+
+  result += escapedValue;
+
+  if (printAsMultipleLines || forceTrailingNewline) {
+    result += '\n';
+  }
+
+  return '"""' + result + '"""';
+}
+
+/**
+ * An exported enum describing the different kinds of tokens that the
+ * lexer emits.
+ */
+var TokenKind;
+
+(function (TokenKind) {
+  TokenKind['SOF'] = '<SOF>';
+  TokenKind['EOF'] = '<EOF>';
+  TokenKind['BANG'] = '!';
+  TokenKind['DOLLAR'] = '$';
+  TokenKind['AMP'] = '&';
+  TokenKind['PAREN_L'] = '(';
+  TokenKind['PAREN_R'] = ')';
+  TokenKind['SPREAD'] = '...';
+  TokenKind['COLON'] = ':';
+  TokenKind['EQUALS'] = '=';
+  TokenKind['AT'] = '@';
+  TokenKind['BRACKET_L'] = '[';
+  TokenKind['BRACKET_R'] = ']';
+  TokenKind['BRACE_L'] = '{';
+  TokenKind['PIPE'] = '|';
+  TokenKind['BRACE_R'] = '}';
+  TokenKind['NAME'] = 'Name';
+  TokenKind['INT'] = 'Int';
+  TokenKind['FLOAT'] = 'Float';
+  TokenKind['STRING'] = 'String';
+  TokenKind['BLOCK_STRING'] = 'BlockString';
+  TokenKind['COMMENT'] = 'Comment';
+})(TokenKind || (TokenKind = {}));
+/**
+ * The enum type representing the token kinds values.
+ *
+ * @deprecated Please use `TokenKind`. Will be remove in v17.
+ */
+
+/**
+ * Given a Source object, creates a Lexer for that source.
+ * A Lexer is a stateful stream generator in that every time
+ * it is advanced, it returns the next token in the Source. Assuming the
+ * source lexes, the final Token emitted by the lexer will be of kind
+ * EOF, after which the lexer will repeatedly return the same EOF token
+ * whenever called.
+ */
+
+class Lexer {
+  /**
+   * The previously focused non-ignored token.
+   */
+
+  /**
+   * The currently focused non-ignored token.
+   */
+
+  /**
+   * The (1-indexed) line containing the current token.
+   */
+
+  /**
+   * The character offset at which the current line begins.
+   */
+  constructor(source) {
+    const startOfFileToken = new Token(TokenKind.SOF, 0, 0, 0, 0);
+    this.source = source;
+    this.lastToken = startOfFileToken;
+    this.token = startOfFileToken;
+    this.line = 1;
+    this.lineStart = 0;
+  }
+
+  get [Symbol.toStringTag]() {
+    return 'Lexer';
+  }
+  /**
+   * Advances the token stream to the next non-ignored token.
+   */
+
+  advance() {
+    this.lastToken = this.token;
+    const token = (this.token = this.lookahead());
+    return token;
+  }
+  /**
+   * Looks ahead and returns the next non-ignored token, but does not change
+   * the state of Lexer.
+   */
+
+  lookahead() {
+    let token = this.token;
+
+    if (token.kind !== TokenKind.EOF) {
+      do {
+        if (token.next) {
+          token = token.next;
+        } else {
+          // Read the next token and form a link in the token linked-list.
+          const nextToken = readNextToken(this, token.end); // @ts-expect-error next is only mutable during parsing.
+
+          token.next = nextToken; // @ts-expect-error prev is only mutable during parsing.
+
+          nextToken.prev = token;
+          token = nextToken;
+        }
+      } while (token.kind === TokenKind.COMMENT);
+    }
+
+    return token;
+  }
+}
+/**
+ * @internal
+ */
+
+function isPunctuatorTokenKind(kind) {
+  return (
+    kind === TokenKind.BANG ||
+    kind === TokenKind.DOLLAR ||
+    kind === TokenKind.AMP ||
+    kind === TokenKind.PAREN_L ||
+    kind === TokenKind.PAREN_R ||
+    kind === TokenKind.SPREAD ||
+    kind === TokenKind.COLON ||
+    kind === TokenKind.EQUALS ||
+    kind === TokenKind.AT ||
+    kind === TokenKind.BRACKET_L ||
+    kind === TokenKind.BRACKET_R ||
+    kind === TokenKind.BRACE_L ||
+    kind === TokenKind.PIPE ||
+    kind === TokenKind.BRACE_R
+  );
+}
+/**
+ * A Unicode scalar value is any Unicode code point except surrogate code
+ * points. In other words, the inclusive ranges of values 0x0000 to 0xD7FF and
+ * 0xE000 to 0x10FFFF.
+ *
+ * SourceCharacter ::
+ *   - "Any Unicode scalar value"
+ */
+
+function isUnicodeScalarValue(code) {
+  return (
+    (code >= 0x0000 && code <= 0xd7ff) || (code >= 0xe000 && code <= 0x10ffff)
+  );
+}
+/**
+ * The GraphQL specification defines source text as a sequence of unicode scalar
+ * values (which Unicode defines to exclude surrogate code points). However
+ * JavaScript defines strings as a sequence of UTF-16 code units which may
+ * include surrogates. A surrogate pair is a valid source character as it
+ * encodes a supplementary code point (above U+FFFF), but unpaired surrogate
+ * code points are not valid source characters.
+ */
+
+function isSupplementaryCodePoint(body, location) {
+  return (
+    isLeadingSurrogate(body.charCodeAt(location)) &&
+    isTrailingSurrogate(body.charCodeAt(location + 1))
+  );
+}
+
+function isLeadingSurrogate(code) {
+  return code >= 0xd800 && code <= 0xdbff;
+}
+
+function isTrailingSurrogate(code) {
+  return code >= 0xdc00 && code <= 0xdfff;
+}
+/**
+ * Prints the code point (or end of file reference) at a given location in a
+ * source for use in error messages.
+ *
+ * Printable ASCII is printed quoted, while other points are printed in Unicode
+ * code point form (ie. U+1234).
+ */
+
+function printCodePointAt(lexer, location) {
+  const code = lexer.source.body.codePointAt(location);
+
+  if (code === undefined) {
+    return TokenKind.EOF;
+  } else if (code >= 0x0020 && code <= 0x007e) {
+    // Printable ASCII
+    const char = String.fromCodePoint(code);
+    return char === '"' ? "'\"'" : `"${char}"`;
+  } // Unicode code point
+
+  return 'U+' + code.toString(16).toUpperCase().padStart(4, '0');
+}
+/**
+ * Create a token with line and column location information.
+ */
+
+function createToken(lexer, kind, start, end, value) {
+  const line = lexer.line;
+  const col = 1 + start - lexer.lineStart;
+  return new Token(kind, start, end, line, col, value);
+}
+/**
+ * Gets the next token from the source starting at the given position.
+ *
+ * This skips over whitespace until it finds the next lexable token, then lexes
+ * punctuators immediately or calls the appropriate helper function for more
+ * complicated tokens.
+ */
+
+function readNextToken(lexer, start) {
+  const body = lexer.source.body;
+  const bodyLength = body.length;
+  let position = start;
+
+  while (position < bodyLength) {
+    const code = body.charCodeAt(position); // SourceCharacter
+
+    switch (code) {
+      // Ignored ::
+      //   - UnicodeBOM
+      //   - WhiteSpace
+      //   - LineTerminator
+      //   - Comment
+      //   - Comma
+      //
+      // UnicodeBOM :: "Byte Order Mark (U+FEFF)"
+      //
+      // WhiteSpace ::
+      //   - "Horizontal Tab (U+0009)"
+      //   - "Space (U+0020)"
+      //
+      // Comma :: ,
+      case 0xfeff: // <BOM>
+
+      case 0x0009: // \t
+
+      case 0x0020: // <space>
+
+      case 0x002c:
+        // ,
+        ++position;
+        continue;
+      // LineTerminator ::
+      //   - "New Line (U+000A)"
+      //   - "Carriage Return (U+000D)" [lookahead != "New Line (U+000A)"]
+      //   - "Carriage Return (U+000D)" "New Line (U+000A)"
+
+      case 0x000a:
+        // \n
+        ++position;
+        ++lexer.line;
+        lexer.lineStart = position;
+        continue;
+
+      case 0x000d:
+        // \r
+        if (body.charCodeAt(position + 1) === 0x000a) {
+          position += 2;
+        } else {
+          ++position;
+        }
+
+        ++lexer.line;
+        lexer.lineStart = position;
+        continue;
+      // Comment
+
+      case 0x0023:
+        // #
+        return readComment(lexer, position);
+      // Token ::
+      //   - Punctuator
+      //   - Name
+      //   - IntValue
+      //   - FloatValue
+      //   - StringValue
+      //
+      // Punctuator :: one of ! $ & ( ) ... : = @ [ ] { | }
+
+      case 0x0021:
+        // !
+        return createToken(lexer, TokenKind.BANG, position, position + 1);
+
+      case 0x0024:
+        // $
+        return createToken(lexer, TokenKind.DOLLAR, position, position + 1);
+
+      case 0x0026:
+        // &
+        return createToken(lexer, TokenKind.AMP, position, position + 1);
+
+      case 0x0028:
+        // (
+        return createToken(lexer, TokenKind.PAREN_L, position, position + 1);
+
+      case 0x0029:
+        // )
+        return createToken(lexer, TokenKind.PAREN_R, position, position + 1);
+
+      case 0x002e:
+        // .
+        if (
+          body.charCodeAt(position + 1) === 0x002e &&
+          body.charCodeAt(position + 2) === 0x002e
+        ) {
+          return createToken(lexer, TokenKind.SPREAD, position, position + 3);
+        }
+
+        break;
+
+      case 0x003a:
+        // :
+        return createToken(lexer, TokenKind.COLON, position, position + 1);
+
+      case 0x003d:
+        // =
+        return createToken(lexer, TokenKind.EQUALS, position, position + 1);
+
+      case 0x0040:
+        // @
+        return createToken(lexer, TokenKind.AT, position, position + 1);
+
+      case 0x005b:
+        // [
+        return createToken(lexer, TokenKind.BRACKET_L, position, position + 1);
+
+      case 0x005d:
+        // ]
+        return createToken(lexer, TokenKind.BRACKET_R, position, position + 1);
+
+      case 0x007b:
+        // {
+        return createToken(lexer, TokenKind.BRACE_L, position, position + 1);
+
+      case 0x007c:
+        // |
+        return createToken(lexer, TokenKind.PIPE, position, position + 1);
+
+      case 0x007d:
+        // }
+        return createToken(lexer, TokenKind.BRACE_R, position, position + 1);
+      // StringValue
+
+      case 0x0022:
+        // "
+        if (
+          body.charCodeAt(position + 1) === 0x0022 &&
+          body.charCodeAt(position + 2) === 0x0022
+        ) {
+          return readBlockString(lexer, position);
+        }
+
+        return readString(lexer, position);
+    } // IntValue | FloatValue (Digit | -)
+
+    if (isDigit(code) || code === 0x002d) {
+      return readNumber(lexer, position, code);
+    } // Name
+
+    if (isNameStart(code)) {
+      return readName(lexer, position);
+    }
+
+    throw syntaxError(
+      lexer.source,
+      position,
+      code === 0x0027
+        ? 'Unexpected single quote character (\'), did you mean to use a double quote (")?'
+        : isUnicodeScalarValue(code) || isSupplementaryCodePoint(body, position)
+        ? `Unexpected character: ${printCodePointAt(lexer, position)}.`
+        : `Invalid character: ${printCodePointAt(lexer, position)}.`,
+    );
+  }
+
+  return createToken(lexer, TokenKind.EOF, bodyLength, bodyLength);
+}
+/**
+ * Reads a comment token from the source file.
+ *
+ * ```
+ * Comment :: # CommentChar* [lookahead != CommentChar]
+ *
+ * CommentChar :: SourceCharacter but not LineTerminator
+ * ```
+ */
+
+function readComment(lexer, start) {
+  const body = lexer.source.body;
+  const bodyLength = body.length;
+  let position = start + 1;
+
+  while (position < bodyLength) {
+    const code = body.charCodeAt(position); // LineTerminator (\n | \r)
+
+    if (code === 0x000a || code === 0x000d) {
+      break;
+    } // SourceCharacter
+
+    if (isUnicodeScalarValue(code)) {
+      ++position;
+    } else if (isSupplementaryCodePoint(body, position)) {
+      position += 2;
+    } else {
+      break;
+    }
+  }
+
+  return createToken(
+    lexer,
+    TokenKind.COMMENT,
+    start,
+    position,
+    body.slice(start + 1, position),
+  );
+}
+/**
+ * Reads a number token from the source file, either a FloatValue or an IntValue
+ * depending on whether a FractionalPart or ExponentPart is encountered.
+ *
+ * ```
+ * IntValue :: IntegerPart [lookahead != {Digit, `.`, NameStart}]
+ *
+ * IntegerPart ::
+ *   - NegativeSign? 0
+ *   - NegativeSign? NonZeroDigit Digit*
+ *
+ * NegativeSign :: -
+ *
+ * NonZeroDigit :: Digit but not `0`
+ *
+ * FloatValue ::
+ *   - IntegerPart FractionalPart ExponentPart [lookahead != {Digit, `.`, NameStart}]
+ *   - IntegerPart FractionalPart [lookahead != {Digit, `.`, NameStart}]
+ *   - IntegerPart ExponentPart [lookahead != {Digit, `.`, NameStart}]
+ *
+ * FractionalPart :: . Digit+
+ *
+ * ExponentPart :: ExponentIndicator Sign? Digit+
+ *
+ * ExponentIndicator :: one of `e` `E`
+ *
+ * Sign :: one of + -
+ * ```
+ */
+
+function readNumber(lexer, start, firstCode) {
+  const body = lexer.source.body;
+  let position = start;
+  let code = firstCode;
+  let isFloat = false; // NegativeSign (-)
+
+  if (code === 0x002d) {
+    code = body.charCodeAt(++position);
+  } // Zero (0)
+
+  if (code === 0x0030) {
+    code = body.charCodeAt(++position);
+
+    if (isDigit(code)) {
+      throw syntaxError(
+        lexer.source,
+        position,
+        `Invalid number, unexpected digit after 0: ${printCodePointAt(
+          lexer,
+          position,
+        )}.`,
+      );
+    }
+  } else {
+    position = readDigits(lexer, position, code);
+    code = body.charCodeAt(position);
+  } // Full stop (.)
+
+  if (code === 0x002e) {
+    isFloat = true;
+    code = body.charCodeAt(++position);
+    position = readDigits(lexer, position, code);
+    code = body.charCodeAt(position);
+  } // E e
+
+  if (code === 0x0045 || code === 0x0065) {
+    isFloat = true;
+    code = body.charCodeAt(++position); // + -
+
+    if (code === 0x002b || code === 0x002d) {
+      code = body.charCodeAt(++position);
+    }
+
+    position = readDigits(lexer, position, code);
+    code = body.charCodeAt(position);
+  } // Numbers cannot be followed by . or NameStart
+
+  if (code === 0x002e || isNameStart(code)) {
+    throw syntaxError(
+      lexer.source,
+      position,
+      `Invalid number, expected digit but got: ${printCodePointAt(
+        lexer,
+        position,
+      )}.`,
+    );
+  }
+
+  return createToken(
+    lexer,
+    isFloat ? TokenKind.FLOAT : TokenKind.INT,
+    start,
+    position,
+    body.slice(start, position),
+  );
+}
+/**
+ * Returns the new position in the source after reading one or more digits.
+ */
+
+function readDigits(lexer, start, firstCode) {
+  if (!isDigit(firstCode)) {
+    throw syntaxError(
+      lexer.source,
+      start,
+      `Invalid number, expected digit but got: ${printCodePointAt(
+        lexer,
+        start,
+      )}.`,
+    );
+  }
+
+  const body = lexer.source.body;
+  let position = start + 1; // +1 to skip first firstCode
+
+  while (isDigit(body.charCodeAt(position))) {
+    ++position;
+  }
+
+  return position;
+}
+/**
+ * Reads a single-quote string token from the source file.
+ *
+ * ```
+ * StringValue ::
+ *   - `""` [lookahead != `"`]
+ *   - `"` StringCharacter+ `"`
+ *
+ * StringCharacter ::
+ *   - SourceCharacter but not `"` or `\` or LineTerminator
+ *   - `\u` EscapedUnicode
+ *   - `\` EscapedCharacter
+ *
+ * EscapedUnicode ::
+ *   - `{` HexDigit+ `}`
+ *   - HexDigit HexDigit HexDigit HexDigit
+ *
+ * EscapedCharacter :: one of `"` `\` `/` `b` `f` `n` `r` `t`
+ * ```
+ */
+
+function readString(lexer, start) {
+  const body = lexer.source.body;
+  const bodyLength = body.length;
+  let position = start + 1;
+  let chunkStart = position;
+  let value = '';
+
+  while (position < bodyLength) {
+    const code = body.charCodeAt(position); // Closing Quote (")
+
+    if (code === 0x0022) {
+      value += body.slice(chunkStart, position);
+      return createToken(lexer, TokenKind.STRING, start, position + 1, value);
+    } // Escape Sequence (\)
+
+    if (code === 0x005c) {
+      value += body.slice(chunkStart, position);
+      const escape =
+        body.charCodeAt(position + 1) === 0x0075 // u
+          ? body.charCodeAt(position + 2) === 0x007b // {
+            ? readEscapedUnicodeVariableWidth(lexer, position)
+            : readEscapedUnicodeFixedWidth(lexer, position)
+          : readEscapedCharacter(lexer, position);
+      value += escape.value;
+      position += escape.size;
+      chunkStart = position;
+      continue;
+    } // LineTerminator (\n | \r)
+
+    if (code === 0x000a || code === 0x000d) {
+      break;
+    } // SourceCharacter
+
+    if (isUnicodeScalarValue(code)) {
+      ++position;
+    } else if (isSupplementaryCodePoint(body, position)) {
+      position += 2;
+    } else {
+      throw syntaxError(
+        lexer.source,
+        position,
+        `Invalid character within String: ${printCodePointAt(
+          lexer,
+          position,
+        )}.`,
+      );
+    }
+  }
+
+  throw syntaxError(lexer.source, position, 'Unterminated string.');
+} // The string value and lexed size of an escape sequence.
+
+function readEscapedUnicodeVariableWidth(lexer, position) {
+  const body = lexer.source.body;
+  let point = 0;
+  let size = 3; // Cannot be larger than 12 chars (\u{00000000}).
+
+  while (size < 12) {
+    const code = body.charCodeAt(position + size++); // Closing Brace (})
+
+    if (code === 0x007d) {
+      // Must be at least 5 chars (\u{0}) and encode a Unicode scalar value.
+      if (size < 5 || !isUnicodeScalarValue(point)) {
+        break;
+      }
+
+      return {
+        value: String.fromCodePoint(point),
+        size,
+      };
+    } // Append this hex digit to the code point.
+
+    point = (point << 4) | readHexDigit(code);
+
+    if (point < 0) {
+      break;
+    }
+  }
+
+  throw syntaxError(
+    lexer.source,
+    position,
+    `Invalid Unicode escape sequence: "${body.slice(
+      position,
+      position + size,
+    )}".`,
+  );
+}
+
+function readEscapedUnicodeFixedWidth(lexer, position) {
+  const body = lexer.source.body;
+  const code = read16BitHexCode(body, position + 2);
+
+  if (isUnicodeScalarValue(code)) {
+    return {
+      value: String.fromCodePoint(code),
+      size: 6,
+    };
+  } // GraphQL allows JSON-style surrogate pair escape sequences, but only when
+  // a valid pair is formed.
+
+  if (isLeadingSurrogate(code)) {
+    // \u
+    if (
+      body.charCodeAt(position + 6) === 0x005c &&
+      body.charCodeAt(position + 7) === 0x0075
+    ) {
+      const trailingCode = read16BitHexCode(body, position + 8);
+
+      if (isTrailingSurrogate(trailingCode)) {
+        // JavaScript defines strings as a sequence of UTF-16 code units and
+        // encodes Unicode code points above U+FFFF using a surrogate pair of
+        // code units. Since this is a surrogate pair escape sequence, just
+        // include both codes into the JavaScript string value. Had JavaScript
+        // not been internally based on UTF-16, then this surrogate pair would
+        // be decoded to retrieve the supplementary code point.
+        return {
+          value: String.fromCodePoint(code, trailingCode),
+          size: 12,
+        };
+      }
+    }
+  }
+
+  throw syntaxError(
+    lexer.source,
+    position,
+    `Invalid Unicode escape sequence: "${body.slice(position, position + 6)}".`,
+  );
+}
+/**
+ * Reads four hexadecimal characters and returns the positive integer that 16bit
+ * hexadecimal string represents. For example, "000f" will return 15, and "dead"
+ * will return 57005.
+ *
+ * Returns a negative number if any char was not a valid hexadecimal digit.
+ */
+
+function read16BitHexCode(body, position) {
+  // readHexDigit() returns -1 on error. ORing a negative value with any other
+  // value always produces a negative value.
+  return (
+    (readHexDigit(body.charCodeAt(position)) << 12) |
+    (readHexDigit(body.charCodeAt(position + 1)) << 8) |
+    (readHexDigit(body.charCodeAt(position + 2)) << 4) |
+    readHexDigit(body.charCodeAt(position + 3))
+  );
+}
+/**
+ * Reads a hexadecimal character and returns its positive integer value (0-15).
+ *
+ * '0' becomes 0, '9' becomes 9
+ * 'A' becomes 10, 'F' becomes 15
+ * 'a' becomes 10, 'f' becomes 15
+ *
+ * Returns -1 if the provided character code was not a valid hexadecimal digit.
+ *
+ * HexDigit :: one of
+ *   - `0` `1` `2` `3` `4` `5` `6` `7` `8` `9`
+ *   - `A` `B` `C` `D` `E` `F`
+ *   - `a` `b` `c` `d` `e` `f`
+ */
+
+function readHexDigit(code) {
+  return code >= 0x0030 && code <= 0x0039 // 0-9
+    ? code - 0x0030
+    : code >= 0x0041 && code <= 0x0046 // A-F
+    ? code - 0x0037
+    : code >= 0x0061 && code <= 0x0066 // a-f
+    ? code - 0x0057
+    : -1;
+}
+/**
+ * | Escaped Character | Code Point | Character Name               |
+ * | ----------------- | ---------- | ---------------------------- |
+ * | `"`               | U+0022     | double quote                 |
+ * | `\`               | U+005C     | reverse solidus (back slash) |
+ * | `/`               | U+002F     | solidus (forward slash)      |
+ * | `b`               | U+0008     | backspace                    |
+ * | `f`               | U+000C     | form feed                    |
+ * | `n`               | U+000A     | line feed (new line)         |
+ * | `r`               | U+000D     | carriage return              |
+ * | `t`               | U+0009     | horizontal tab               |
+ */
+
+function readEscapedCharacter(lexer, position) {
+  const body = lexer.source.body;
+  const code = body.charCodeAt(position + 1);
+
+  switch (code) {
+    case 0x0022:
+      // "
+      return {
+        value: '\u0022',
+        size: 2,
+      };
+
+    case 0x005c:
+      // \
+      return {
+        value: '\u005c',
+        size: 2,
+      };
+
+    case 0x002f:
+      // /
+      return {
+        value: '\u002f',
+        size: 2,
+      };
+
+    case 0x0062:
+      // b
+      return {
+        value: '\u0008',
+        size: 2,
+      };
+
+    case 0x0066:
+      // f
+      return {
+        value: '\u000c',
+        size: 2,
+      };
+
+    case 0x006e:
+      // n
+      return {
+        value: '\u000a',
+        size: 2,
+      };
+
+    case 0x0072:
+      // r
+      return {
+        value: '\u000d',
+        size: 2,
+      };
+
+    case 0x0074:
+      // t
+      return {
+        value: '\u0009',
+        size: 2,
+      };
+  }
+
+  throw syntaxError(
+    lexer.source,
+    position,
+    `Invalid character escape sequence: "${body.slice(
+      position,
+      position + 2,
+    )}".`,
+  );
+}
+/**
+ * Reads a block string token from the source file.
+ *
+ * ```
+ * StringValue ::
+ *   - `"""` BlockStringCharacter* `"""`
+ *
+ * BlockStringCharacter ::
+ *   - SourceCharacter but not `"""` or `\"""`
+ *   - `\"""`
+ * ```
+ */
+
+function readBlockString(lexer, start) {
+  const body = lexer.source.body;
+  const bodyLength = body.length;
+  let lineStart = lexer.lineStart;
+  let position = start + 3;
+  let chunkStart = position;
+  let currentLine = '';
+  const blockLines = [];
+
+  while (position < bodyLength) {
+    const code = body.charCodeAt(position); // Closing Triple-Quote (""")
+
+    if (
+      code === 0x0022 &&
+      body.charCodeAt(position + 1) === 0x0022 &&
+      body.charCodeAt(position + 2) === 0x0022
+    ) {
+      currentLine += body.slice(chunkStart, position);
+      blockLines.push(currentLine);
+      const token = createToken(
+        lexer,
+        TokenKind.BLOCK_STRING,
+        start,
+        position + 3, // Return a string of the lines joined with U+000A.
+        dedentBlockStringLines(blockLines).join('\n'),
+      );
+      lexer.line += blockLines.length - 1;
+      lexer.lineStart = lineStart;
+      return token;
+    } // Escaped Triple-Quote (\""")
+
+    if (
+      code === 0x005c &&
+      body.charCodeAt(position + 1) === 0x0022 &&
+      body.charCodeAt(position + 2) === 0x0022 &&
+      body.charCodeAt(position + 3) === 0x0022
+    ) {
+      currentLine += body.slice(chunkStart, position);
+      chunkStart = position + 1; // skip only slash
+
+      position += 4;
+      continue;
+    } // LineTerminator
+
+    if (code === 0x000a || code === 0x000d) {
+      currentLine += body.slice(chunkStart, position);
+      blockLines.push(currentLine);
+
+      if (code === 0x000d && body.charCodeAt(position + 1) === 0x000a) {
+        position += 2;
+      } else {
+        ++position;
+      }
+
+      currentLine = '';
+      chunkStart = position;
+      lineStart = position;
+      continue;
+    } // SourceCharacter
+
+    if (isUnicodeScalarValue(code)) {
+      ++position;
+    } else if (isSupplementaryCodePoint(body, position)) {
+      position += 2;
+    } else {
+      throw syntaxError(
+        lexer.source,
+        position,
+        `Invalid character within String: ${printCodePointAt(
+          lexer,
+          position,
+        )}.`,
+      );
+    }
+  }
+
+  throw syntaxError(lexer.source, position, 'Unterminated string.');
+}
+/**
+ * Reads an alphanumeric + underscore name from the source.
+ *
+ * ```
+ * Name ::
+ *   - NameStart NameContinue* [lookahead != NameContinue]
+ * ```
+ */
+
+function readName(lexer, start) {
+  const body = lexer.source.body;
+  const bodyLength = body.length;
+  let position = start + 1;
+
+  while (position < bodyLength) {
+    const code = body.charCodeAt(position);
+
+    if (isNameContinue(code)) {
+      ++position;
+    } else {
+      break;
+    }
+  }
+
+  return createToken(
+    lexer,
+    TokenKind.NAME,
+    start,
+    position,
+    body.slice(start, position),
+  );
+}
+
+const MAX_ARRAY_LENGTH = 10;
+const MAX_RECURSIVE_DEPTH = 2;
+/**
+ * Used to print values in error messages.
+ */
+
+function inspect(value) {
+  return formatValue(value, []);
+}
+
+function formatValue(value, seenValues) {
+  switch (typeof value) {
+    case 'string':
+      return JSON.stringify(value);
+
+    case 'function':
+      return value.name ? `[function ${value.name}]` : '[function]';
+
+    case 'object':
+      return formatObjectValue(value, seenValues);
+
+    default:
+      return String(value);
+  }
+}
+
+function formatObjectValue(value, previouslySeenValues) {
+  if (value === null) {
+    return 'null';
+  }
+
+  if (previouslySeenValues.includes(value)) {
+    return '[Circular]';
+  }
+
+  const seenValues = [...previouslySeenValues, value];
+
+  if (isJSONable(value)) {
+    const jsonValue = value.toJSON(); // check for infinite recursion
+
+    if (jsonValue !== value) {
+      return typeof jsonValue === 'string'
+        ? jsonValue
+        : formatValue(jsonValue, seenValues);
+    }
+  } else if (Array.isArray(value)) {
+    return formatArray(value, seenValues);
+  }
+
+  return formatObject(value, seenValues);
+}
+
+function isJSONable(value) {
+  return typeof value.toJSON === 'function';
+}
+
+function formatObject(object, seenValues) {
+  const entries = Object.entries(object);
+
+  if (entries.length === 0) {
+    return '{}';
+  }
+
+  if (seenValues.length > MAX_RECURSIVE_DEPTH) {
+    return '[' + getObjectTag(object) + ']';
+  }
+
+  const properties = entries.map(
+    ([key, value]) => key + ': ' + formatValue(value, seenValues),
+  );
+  return '{ ' + properties.join(', ') + ' }';
+}
+
+function formatArray(array, seenValues) {
+  if (array.length === 0) {
+    return '[]';
+  }
+
+  if (seenValues.length > MAX_RECURSIVE_DEPTH) {
+    return '[Array]';
+  }
+
+  const len = Math.min(MAX_ARRAY_LENGTH, array.length);
+  const remaining = array.length - len;
+  const items = [];
+
+  for (let i = 0; i < len; ++i) {
+    items.push(formatValue(array[i], seenValues));
+  }
+
+  if (remaining === 1) {
+    items.push('... 1 more item');
+  } else if (remaining > 1) {
+    items.push(`... ${remaining} more items`);
+  }
+
+  return '[' + items.join(', ') + ']';
+}
+
+function getObjectTag(object) {
+  const tag = Object.prototype.toString
+    .call(object)
+    .replace(/^\[object /, '')
+    .replace(/]$/, '');
+
+  if (tag === 'Object' && typeof object.constructor === 'function') {
+    const name = object.constructor.name;
+
+    if (typeof name === 'string' && name !== '') {
+      return name;
+    }
+  }
+
+  return tag;
+}
+
+/* c8 ignore next 3 */
+
+const isProduction =
+  globalThis.process && // eslint-disable-next-line no-undef
+  process.env.NODE_ENV === 'production';
+/**
+ * A replacement for instanceof which includes an error warning when multi-realm
+ * constructors are detected.
+ * See: https://expressjs.com/en/advanced/best-practice-performance.html#set-node_env-to-production
+ * See: https://webpack.js.org/guides/production/
+ */
+
+const instanceOf =
+  /* c8 ignore next 6 */
+  // FIXME: https://github.com/graphql/graphql-js/issues/2317
+  isProduction
+    ? function instanceOf(value, constructor) {
+        return value instanceof constructor;
+      }
+    : function instanceOf(value, constructor) {
+        if (value instanceof constructor) {
+          return true;
+        }
+
+        if (typeof value === 'object' && value !== null) {
+          var _value$constructor;
+
+          // Prefer Symbol.toStringTag since it is immune to minification.
+          const className = constructor.prototype[Symbol.toStringTag];
+          const valueClassName = // We still need to support constructor's name to detect conflicts with older versions of this library.
+            Symbol.toStringTag in value // @ts-expect-error TS bug see, https://github.com/microsoft/TypeScript/issues/38009
+              ? value[Symbol.toStringTag]
+              : (_value$constructor = value.constructor) === null ||
+                _value$constructor === void 0
+              ? void 0
+              : _value$constructor.name;
+
+          if (className === valueClassName) {
+            const stringifiedValue = inspect(value);
+            throw new Error(`Cannot use ${className} "${stringifiedValue}" from another module or realm.
+
+Ensure that there is only one instance of "graphql" in the node_modules
+directory. If different versions of "graphql" are the dependencies of other
+relied on modules, use "resolutions" to ensure only one version is installed.
+
+https://yarnpkg.com/en/docs/selective-version-resolutions
+
+Duplicate "graphql" modules cannot be used at the same time since different
+versions may have different capabilities and behavior. The data from one
+version used in the function from another could produce confusing and
+spurious results.`);
+          }
+        }
+
+        return false;
+      };
+
+/**
+ * A representation of source input to GraphQL. The `name` and `locationOffset` parameters are
+ * optional, but they are useful for clients who store GraphQL documents in source files.
+ * For example, if the GraphQL input starts at line 40 in a file named `Foo.graphql`, it might
+ * be useful for `name` to be `"Foo.graphql"` and location to be `{ line: 40, column: 1 }`.
+ * The `line` and `column` properties in `locationOffset` are 1-indexed.
+ */
+class Source {
+  constructor(
+    body,
+    name = 'GraphQL request',
+    locationOffset = {
+      line: 1,
+      column: 1,
+    },
+  ) {
+    typeof body === 'string' ||
+      devAssert(false, `Body must be a string. Received: ${inspect(body)}.`);
+    this.body = body;
+    this.name = name;
+    this.locationOffset = locationOffset;
+    this.locationOffset.line > 0 ||
+      devAssert(
+        false,
+        'line in locationOffset is 1-indexed and must be positive.',
+      );
+    this.locationOffset.column > 0 ||
+      devAssert(
+        false,
+        'column in locationOffset is 1-indexed and must be positive.',
+      );
+  }
+
+  get [Symbol.toStringTag]() {
+    return 'Source';
+  }
+}
+/**
+ * Test if the given value is a Source object.
+ *
+ * @internal
+ */
+
+function isSource(source) {
+  return instanceOf(source, Source);
+}
+
+/**
+ * Configuration options to control parser behavior
+ */
+
+/**
+ * Given a GraphQL source, parses it into a Document.
+ * Throws GraphQLError if a syntax error is encountered.
+ */
+function parse(source, options) {
+  const parser = new Parser(source, options);
+  const document = parser.parseDocument();
+  Object.defineProperty(document, 'tokenCount', {
+    enumerable: false,
+    value: parser.tokenCount,
+  });
+  return document;
+}
+/**
+ * This class is exported only to assist people in implementing their own parsers
+ * without duplicating too much code and should be used only as last resort for cases
+ * such as experimental syntax or if certain features could not be contributed upstream.
+ *
+ * It is still part of the internal API and is versioned, so any changes to it are never
+ * considered breaking changes. If you still need to support multiple versions of the
+ * library, please use the `versionInfo` variable for version detection.
+ *
+ * @internal
+ */
+
+class Parser {
+  constructor(source, options = {}) {
+    const sourceObj = isSource(source) ? source : new Source(source);
+    this._lexer = new Lexer(sourceObj);
+    this._options = options;
+    this._tokenCounter = 0;
+  }
+
+  get tokenCount() {
+    return this._tokenCounter;
+  }
+  /**
+   * Converts a name lex token into a name parse node.
+   */
+
+  parseName() {
+    const token = this.expectToken(TokenKind.NAME);
+    return this.node(token, {
+      kind: Kind.NAME,
+      value: token.value,
+    });
+  } // Implements the parsing rules in the Document section.
+
+  /**
+   * Document : Definition+
+   */
+
+  parseDocument() {
+    return this.node(this._lexer.token, {
+      kind: Kind.DOCUMENT,
+      definitions: this.many(
+        TokenKind.SOF,
+        this.parseDefinition,
+        TokenKind.EOF,
+      ),
+    });
+  }
+  /**
+   * Definition :
+   *   - ExecutableDefinition
+   *   - TypeSystemDefinition
+   *   - TypeSystemExtension
+   *
+   * ExecutableDefinition :
+   *   - OperationDefinition
+   *   - FragmentDefinition
+   *
+   * TypeSystemDefinition :
+   *   - SchemaDefinition
+   *   - TypeDefinition
+   *   - DirectiveDefinition
+   *
+   * TypeDefinition :
+   *   - ScalarTypeDefinition
+   *   - ObjectTypeDefinition
+   *   - InterfaceTypeDefinition
+   *   - UnionTypeDefinition
+   *   - EnumTypeDefinition
+   *   - InputObjectTypeDefinition
+   */
+
+  parseDefinition() {
+    if (this.peek(TokenKind.BRACE_L)) {
+      return this.parseOperationDefinition();
+    } // Many definitions begin with a description and require a lookahead.
+
+    const hasDescription = this.peekDescription();
+    const keywordToken = hasDescription
+      ? this._lexer.lookahead()
+      : this._lexer.token;
+
+    if (keywordToken.kind === TokenKind.NAME) {
+      switch (keywordToken.value) {
+        case 'schema':
+          return this.parseSchemaDefinition();
+
+        case 'scalar':
+          return this.parseScalarTypeDefinition();
+
+        case 'type':
+          return this.parseObjectTypeDefinition();
+
+        case 'interface':
+          return this.parseInterfaceTypeDefinition();
+
+        case 'union':
+          return this.parseUnionTypeDefinition();
+
+        case 'enum':
+          return this.parseEnumTypeDefinition();
+
+        case 'input':
+          return this.parseInputObjectTypeDefinition();
+
+        case 'directive':
+          return this.parseDirectiveDefinition();
+      }
+
+      if (hasDescription) {
+        throw syntaxError(
+          this._lexer.source,
+          this._lexer.token.start,
+          'Unexpected description, descriptions are supported only on type definitions.',
+        );
+      }
+
+      switch (keywordToken.value) {
+        case 'query':
+        case 'mutation':
+        case 'subscription':
+          return this.parseOperationDefinition();
+
+        case 'fragment':
+          return this.parseFragmentDefinition();
+
+        case 'extend':
+          return this.parseTypeSystemExtension();
+      }
+    }
+
+    throw this.unexpected(keywordToken);
+  } // Implements the parsing rules in the Operations section.
+
+  /**
+   * OperationDefinition :
+   *  - SelectionSet
+   *  - OperationType Name? VariableDefinitions? Directives? SelectionSet
+   */
+
+  parseOperationDefinition() {
+    const start = this._lexer.token;
+
+    if (this.peek(TokenKind.BRACE_L)) {
+      return this.node(start, {
+        kind: Kind.OPERATION_DEFINITION,
+        operation: OperationTypeNode.QUERY,
+        name: undefined,
+        variableDefinitions: [],
+        directives: [],
+        selectionSet: this.parseSelectionSet(),
+      });
+    }
+
+    const operation = this.parseOperationType();
+    let name;
+
+    if (this.peek(TokenKind.NAME)) {
+      name = this.parseName();
+    }
+
+    return this.node(start, {
+      kind: Kind.OPERATION_DEFINITION,
+      operation,
+      name,
+      variableDefinitions: this.parseVariableDefinitions(),
+      directives: this.parseDirectives(false),
+      selectionSet: this.parseSelectionSet(),
+    });
+  }
+  /**
+   * OperationType : one of query mutation subscription
+   */
+
+  parseOperationType() {
+    const operationToken = this.expectToken(TokenKind.NAME);
+
+    switch (operationToken.value) {
+      case 'query':
+        return OperationTypeNode.QUERY;
+
+      case 'mutation':
+        return OperationTypeNode.MUTATION;
+
+      case 'subscription':
+        return OperationTypeNode.SUBSCRIPTION;
+    }
+
+    throw this.unexpected(operationToken);
+  }
+  /**
+   * VariableDefinitions : ( VariableDefinition+ )
+   */
+
+  parseVariableDefinitions() {
+    return this.optionalMany(
+      TokenKind.PAREN_L,
+      this.parseVariableDefinition,
+      TokenKind.PAREN_R,
+    );
+  }
+  /**
+   * VariableDefinition : Variable : Type DefaultValue? Directives[Const]?
+   */
+
+  parseVariableDefinition() {
+    return this.node(this._lexer.token, {
+      kind: Kind.VARIABLE_DEFINITION,
+      variable: this.parseVariable(),
+      type: (this.expectToken(TokenKind.COLON), this.parseTypeReference()),
+      defaultValue: this.expectOptionalToken(TokenKind.EQUALS)
+        ? this.parseConstValueLiteral()
+        : undefined,
+      directives: this.parseConstDirectives(),
+    });
+  }
+  /**
+   * Variable : $ Name
+   */
+
+  parseVariable() {
+    const start = this._lexer.token;
+    this.expectToken(TokenKind.DOLLAR);
+    return this.node(start, {
+      kind: Kind.VARIABLE,
+      name: this.parseName(),
+    });
+  }
+  /**
+   * ```
+   * SelectionSet : { Selection+ }
+   * ```
+   */
+
+  parseSelectionSet() {
+    return this.node(this._lexer.token, {
+      kind: Kind.SELECTION_SET,
+      selections: this.many(
+        TokenKind.BRACE_L,
+        this.parseSelection,
+        TokenKind.BRACE_R,
+      ),
+    });
+  }
+  /**
+   * Selection :
+   *   - Field
+   *   - FragmentSpread
+   *   - InlineFragment
+   */
+
+  parseSelection() {
+    return this.peek(TokenKind.SPREAD)
+      ? this.parseFragment()
+      : this.parseField();
+  }
+  /**
+   * Field : Alias? Name Arguments? Directives? SelectionSet?
+   *
+   * Alias : Name :
+   */
+
+  parseField() {
+    const start = this._lexer.token;
+    const nameOrAlias = this.parseName();
+    let alias;
+    let name;
+
+    if (this.expectOptionalToken(TokenKind.COLON)) {
+      alias = nameOrAlias;
+      name = this.parseName();
+    } else {
+      name = nameOrAlias;
+    }
+
+    return this.node(start, {
+      kind: Kind.FIELD,
+      alias,
+      name,
+      arguments: this.parseArguments(false),
+      directives: this.parseDirectives(false),
+      selectionSet: this.peek(TokenKind.BRACE_L)
+        ? this.parseSelectionSet()
+        : undefined,
+    });
+  }
+  /**
+   * Arguments[Const] : ( Argument[?Const]+ )
+   */
+
+  parseArguments(isConst) {
+    const item = isConst ? this.parseConstArgument : this.parseArgument;
+    return this.optionalMany(TokenKind.PAREN_L, item, TokenKind.PAREN_R);
+  }
+  /**
+   * Argument[Const] : Name : Value[?Const]
+   */
+
+  parseArgument(isConst = false) {
+    const start = this._lexer.token;
+    const name = this.parseName();
+    this.expectToken(TokenKind.COLON);
+    return this.node(start, {
+      kind: Kind.ARGUMENT,
+      name,
+      value: this.parseValueLiteral(isConst),
+    });
+  }
+
+  parseConstArgument() {
+    return this.parseArgument(true);
+  } // Implements the parsing rules in the Fragments section.
+
+  /**
+   * Corresponds to both FragmentSpread and InlineFragment in the spec.
+   *
+   * FragmentSpread : ... FragmentName Directives?
+   *
+   * InlineFragment : ... TypeCondition? Directives? SelectionSet
+   */
+
+  parseFragment() {
+    const start = this._lexer.token;
+    this.expectToken(TokenKind.SPREAD);
+    const hasTypeCondition = this.expectOptionalKeyword('on');
+
+    if (!hasTypeCondition && this.peek(TokenKind.NAME)) {
+      return this.node(start, {
+        kind: Kind.FRAGMENT_SPREAD,
+        name: this.parseFragmentName(),
+        directives: this.parseDirectives(false),
+      });
+    }
+
+    return this.node(start, {
+      kind: Kind.INLINE_FRAGMENT,
+      typeCondition: hasTypeCondition ? this.parseNamedType() : undefined,
+      directives: this.parseDirectives(false),
+      selectionSet: this.parseSelectionSet(),
+    });
+  }
+  /**
+   * FragmentDefinition :
+   *   - fragment FragmentName on TypeCondition Directives? SelectionSet
+   *
+   * TypeCondition : NamedType
+   */
+
+  parseFragmentDefinition() {
+    const start = this._lexer.token;
+    this.expectKeyword('fragment'); // Legacy support for defining variables within fragments changes
+    // the grammar of FragmentDefinition:
+    //   - fragment FragmentName VariableDefinitions? on TypeCondition Directives? SelectionSet
+
+    if (this._options.allowLegacyFragmentVariables === true) {
+      return this.node(start, {
+        kind: Kind.FRAGMENT_DEFINITION,
+        name: this.parseFragmentName(),
+        variableDefinitions: this.parseVariableDefinitions(),
+        typeCondition: (this.expectKeyword('on'), this.parseNamedType()),
+        directives: this.parseDirectives(false),
+        selectionSet: this.parseSelectionSet(),
+      });
+    }
+
+    return this.node(start, {
+      kind: Kind.FRAGMENT_DEFINITION,
+      name: this.parseFragmentName(),
+      typeCondition: (this.expectKeyword('on'), this.parseNamedType()),
+      directives: this.parseDirectives(false),
+      selectionSet: this.parseSelectionSet(),
+    });
+  }
+  /**
+   * FragmentName : Name but not `on`
+   */
+
+  parseFragmentName() {
+    if (this._lexer.token.value === 'on') {
+      throw this.unexpected();
+    }
+
+    return this.parseName();
+  } // Implements the parsing rules in the Values section.
+
+  /**
+   * Value[Const] :
+   *   - [~Const] Variable
+   *   - IntValue
+   *   - FloatValue
+   *   - StringValue
+   *   - BooleanValue
+   *   - NullValue
+   *   - EnumValue
+   *   - ListValue[?Const]
+   *   - ObjectValue[?Const]
+   *
+   * BooleanValue : one of `true` `false`
+   *
+   * NullValue : `null`
+   *
+   * EnumValue : Name but not `true`, `false` or `null`
+   */
+
+  parseValueLiteral(isConst) {
+    const token = this._lexer.token;
+
+    switch (token.kind) {
+      case TokenKind.BRACKET_L:
+        return this.parseList(isConst);
+
+      case TokenKind.BRACE_L:
+        return this.parseObject(isConst);
+
+      case TokenKind.INT:
+        this.advanceLexer();
+        return this.node(token, {
+          kind: Kind.INT,
+          value: token.value,
+        });
+
+      case TokenKind.FLOAT:
+        this.advanceLexer();
+        return this.node(token, {
+          kind: Kind.FLOAT,
+          value: token.value,
+        });
+
+      case TokenKind.STRING:
+      case TokenKind.BLOCK_STRING:
+        return this.parseStringLiteral();
+
+      case TokenKind.NAME:
+        this.advanceLexer();
+
+        switch (token.value) {
+          case 'true':
+            return this.node(token, {
+              kind: Kind.BOOLEAN,
+              value: true,
+            });
+
+          case 'false':
+            return this.node(token, {
+              kind: Kind.BOOLEAN,
+              value: false,
+            });
+
+          case 'null':
+            return this.node(token, {
+              kind: Kind.NULL,
+            });
+
+          default:
+            return this.node(token, {
+              kind: Kind.ENUM,
+              value: token.value,
+            });
+        }
+
+      case TokenKind.DOLLAR:
+        if (isConst) {
+          this.expectToken(TokenKind.DOLLAR);
+
+          if (this._lexer.token.kind === TokenKind.NAME) {
+            const varName = this._lexer.token.value;
+            throw syntaxError(
+              this._lexer.source,
+              token.start,
+              `Unexpected variable "$${varName}" in constant value.`,
+            );
+          } else {
+            throw this.unexpected(token);
+          }
+        }
+
+        return this.parseVariable();
+
+      default:
+        throw this.unexpected();
+    }
+  }
+
+  parseConstValueLiteral() {
+    return this.parseValueLiteral(true);
+  }
+
+  parseStringLiteral() {
+    const token = this._lexer.token;
+    this.advanceLexer();
+    return this.node(token, {
+      kind: Kind.STRING,
+      value: token.value,
+      block: token.kind === TokenKind.BLOCK_STRING,
+    });
+  }
+  /**
+   * ListValue[Const] :
+   *   - [ ]
+   *   - [ Value[?Const]+ ]
+   */
+
+  parseList(isConst) {
+    const item = () => this.parseValueLiteral(isConst);
+
+    return this.node(this._lexer.token, {
+      kind: Kind.LIST,
+      values: this.any(TokenKind.BRACKET_L, item, TokenKind.BRACKET_R),
+    });
+  }
+  /**
+   * ```
+   * ObjectValue[Const] :
+   *   - { }
+   *   - { ObjectField[?Const]+ }
+   * ```
+   */
+
+  parseObject(isConst) {
+    const item = () => this.parseObjectField(isConst);
+
+    return this.node(this._lexer.token, {
+      kind: Kind.OBJECT,
+      fields: this.any(TokenKind.BRACE_L, item, TokenKind.BRACE_R),
+    });
+  }
+  /**
+   * ObjectField[Const] : Name : Value[?Const]
+   */
+
+  parseObjectField(isConst) {
+    const start = this._lexer.token;
+    const name = this.parseName();
+    this.expectToken(TokenKind.COLON);
+    return this.node(start, {
+      kind: Kind.OBJECT_FIELD,
+      name,
+      value: this.parseValueLiteral(isConst),
+    });
+  } // Implements the parsing rules in the Directives section.
+
+  /**
+   * Directives[Const] : Directive[?Const]+
+   */
+
+  parseDirectives(isConst) {
+    const directives = [];
+
+    while (this.peek(TokenKind.AT)) {
+      directives.push(this.parseDirective(isConst));
+    }
+
+    return directives;
+  }
+
+  parseConstDirectives() {
+    return this.parseDirectives(true);
+  }
+  /**
+   * ```
+   * Directive[Const] : @ Name Arguments[?Const]?
+   * ```
+   */
+
+  parseDirective(isConst) {
+    const start = this._lexer.token;
+    this.expectToken(TokenKind.AT);
+    return this.node(start, {
+      kind: Kind.DIRECTIVE,
+      name: this.parseName(),
+      arguments: this.parseArguments(isConst),
+    });
+  } // Implements the parsing rules in the Types section.
+
+  /**
+   * Type :
+   *   - NamedType
+   *   - ListType
+   *   - NonNullType
+   */
+
+  parseTypeReference() {
+    const start = this._lexer.token;
+    let type;
+
+    if (this.expectOptionalToken(TokenKind.BRACKET_L)) {
+      const innerType = this.parseTypeReference();
+      this.expectToken(TokenKind.BRACKET_R);
+      type = this.node(start, {
+        kind: Kind.LIST_TYPE,
+        type: innerType,
+      });
+    } else {
+      type = this.parseNamedType();
+    }
+
+    if (this.expectOptionalToken(TokenKind.BANG)) {
+      return this.node(start, {
+        kind: Kind.NON_NULL_TYPE,
+        type,
+      });
+    }
+
+    return type;
+  }
+  /**
+   * NamedType : Name
+   */
+
+  parseNamedType() {
+    return this.node(this._lexer.token, {
+      kind: Kind.NAMED_TYPE,
+      name: this.parseName(),
+    });
+  } // Implements the parsing rules in the Type Definition section.
+
+  peekDescription() {
+    return this.peek(TokenKind.STRING) || this.peek(TokenKind.BLOCK_STRING);
+  }
+  /**
+   * Description : StringValue
+   */
+
+  parseDescription() {
+    if (this.peekDescription()) {
+      return this.parseStringLiteral();
+    }
+  }
+  /**
+   * ```
+   * SchemaDefinition : Description? schema Directives[Const]? { OperationTypeDefinition+ }
+   * ```
+   */
+
+  parseSchemaDefinition() {
+    const start = this._lexer.token;
+    const description = this.parseDescription();
+    this.expectKeyword('schema');
+    const directives = this.parseConstDirectives();
+    const operationTypes = this.many(
+      TokenKind.BRACE_L,
+      this.parseOperationTypeDefinition,
+      TokenKind.BRACE_R,
+    );
+    return this.node(start, {
+      kind: Kind.SCHEMA_DEFINITION,
+      description,
+      directives,
+      operationTypes,
+    });
+  }
+  /**
+   * OperationTypeDefinition : OperationType : NamedType
+   */
+
+  parseOperationTypeDefinition() {
+    const start = this._lexer.token;
+    const operation = this.parseOperationType();
+    this.expectToken(TokenKind.COLON);
+    const type = this.parseNamedType();
+    return this.node(start, {
+      kind: Kind.OPERATION_TYPE_DEFINITION,
+      operation,
+      type,
+    });
+  }
+  /**
+   * ScalarTypeDefinition : Description? scalar Name Directives[Const]?
+   */
+
+  parseScalarTypeDefinition() {
+    const start = this._lexer.token;
+    const description = this.parseDescription();
+    this.expectKeyword('scalar');
+    const name = this.parseName();
+    const directives = this.parseConstDirectives();
+    return this.node(start, {
+      kind: Kind.SCALAR_TYPE_DEFINITION,
+      description,
+      name,
+      directives,
+    });
+  }
+  /**
+   * ObjectTypeDefinition :
+   *   Description?
+   *   type Name ImplementsInterfaces? Directives[Const]? FieldsDefinition?
+   */
+
+  parseObjectTypeDefinition() {
+    const start = this._lexer.token;
+    const description = this.parseDescription();
+    this.expectKeyword('type');
+    const name = this.parseName();
+    const interfaces = this.parseImplementsInterfaces();
+    const directives = this.parseConstDirectives();
+    const fields = this.parseFieldsDefinition();
+    return this.node(start, {
+      kind: Kind.OBJECT_TYPE_DEFINITION,
+      description,
+      name,
+      interfaces,
+      directives,
+      fields,
+    });
+  }
+  /**
+   * ImplementsInterfaces :
+   *   - implements `&`? NamedType
+   *   - ImplementsInterfaces & NamedType
+   */
+
+  parseImplementsInterfaces() {
+    return this.expectOptionalKeyword('implements')
+      ? this.delimitedMany(TokenKind.AMP, this.parseNamedType)
+      : [];
+  }
+  /**
+   * ```
+   * FieldsDefinition : { FieldDefinition+ }
+   * ```
+   */
+
+  parseFieldsDefinition() {
+    return this.optionalMany(
+      TokenKind.BRACE_L,
+      this.parseFieldDefinition,
+      TokenKind.BRACE_R,
+    );
+  }
+  /**
+   * FieldDefinition :
+   *   - Description? Name ArgumentsDefinition? : Type Directives[Const]?
+   */
+
+  parseFieldDefinition() {
+    const start = this._lexer.token;
+    const description = this.parseDescription();
+    const name = this.parseName();
+    const args = this.parseArgumentDefs();
+    this.expectToken(TokenKind.COLON);
+    const type = this.parseTypeReference();
+    const directives = this.parseConstDirectives();
+    return this.node(start, {
+      kind: Kind.FIELD_DEFINITION,
+      description,
+      name,
+      arguments: args,
+      type,
+      directives,
+    });
+  }
+  /**
+   * ArgumentsDefinition : ( InputValueDefinition+ )
+   */
+
+  parseArgumentDefs() {
+    return this.optionalMany(
+      TokenKind.PAREN_L,
+      this.parseInputValueDef,
+      TokenKind.PAREN_R,
+    );
+  }
+  /**
+   * InputValueDefinition :
+   *   - Description? Name : Type DefaultValue? Directives[Const]?
+   */
+
+  parseInputValueDef() {
+    const start = this._lexer.token;
+    const description = this.parseDescription();
+    const name = this.parseName();
+    this.expectToken(TokenKind.COLON);
+    const type = this.parseTypeReference();
+    let defaultValue;
+
+    if (this.expectOptionalToken(TokenKind.EQUALS)) {
+      defaultValue = this.parseConstValueLiteral();
+    }
+
+    const directives = this.parseConstDirectives();
+    return this.node(start, {
+      kind: Kind.INPUT_VALUE_DEFINITION,
+      description,
+      name,
+      type,
+      defaultValue,
+      directives,
+    });
+  }
+  /**
+   * InterfaceTypeDefinition :
+   *   - Description? interface Name Directives[Const]? FieldsDefinition?
+   */
+
+  parseInterfaceTypeDefinition() {
+    const start = this._lexer.token;
+    const description = this.parseDescription();
+    this.expectKeyword('interface');
+    const name = this.parseName();
+    const interfaces = this.parseImplementsInterfaces();
+    const directives = this.parseConstDirectives();
+    const fields = this.parseFieldsDefinition();
+    return this.node(start, {
+      kind: Kind.INTERFACE_TYPE_DEFINITION,
+      description,
+      name,
+      interfaces,
+      directives,
+      fields,
+    });
+  }
+  /**
+   * UnionTypeDefinition :
+   *   - Description? union Name Directives[Const]? UnionMemberTypes?
+   */
+
+  parseUnionTypeDefinition() {
+    const start = this._lexer.token;
+    const description = this.parseDescription();
+    this.expectKeyword('union');
+    const name = this.parseName();
+    const directives = this.parseConstDirectives();
+    const types = this.parseUnionMemberTypes();
+    return this.node(start, {
+      kind: Kind.UNION_TYPE_DEFINITION,
+      description,
+      name,
+      directives,
+      types,
+    });
+  }
+  /**
+   * UnionMemberTypes :
+   *   - = `|`? NamedType
+   *   - UnionMemberTypes | NamedType
+   */
+
+  parseUnionMemberTypes() {
+    return this.expectOptionalToken(TokenKind.EQUALS)
+      ? this.delimitedMany(TokenKind.PIPE, this.parseNamedType)
+      : [];
+  }
+  /**
+   * EnumTypeDefinition :
+   *   - Description? enum Name Directives[Const]? EnumValuesDefinition?
+   */
+
+  parseEnumTypeDefinition() {
+    const start = this._lexer.token;
+    const description = this.parseDescription();
+    this.expectKeyword('enum');
+    const name = this.parseName();
+    const directives = this.parseConstDirectives();
+    const values = this.parseEnumValuesDefinition();
+    return this.node(start, {
+      kind: Kind.ENUM_TYPE_DEFINITION,
+      description,
+      name,
+      directives,
+      values,
+    });
+  }
+  /**
+   * ```
+   * EnumValuesDefinition : { EnumValueDefinition+ }
+   * ```
+   */
+
+  parseEnumValuesDefinition() {
+    return this.optionalMany(
+      TokenKind.BRACE_L,
+      this.parseEnumValueDefinition,
+      TokenKind.BRACE_R,
+    );
+  }
+  /**
+   * EnumValueDefinition : Description? EnumValue Directives[Const]?
+   */
+
+  parseEnumValueDefinition() {
+    const start = this._lexer.token;
+    const description = this.parseDescription();
+    const name = this.parseEnumValueName();
+    const directives = this.parseConstDirectives();
+    return this.node(start, {
+      kind: Kind.ENUM_VALUE_DEFINITION,
+      description,
+      name,
+      directives,
+    });
+  }
+  /**
+   * EnumValue : Name but not `true`, `false` or `null`
+   */
+
+  parseEnumValueName() {
+    if (
+      this._lexer.token.value === 'true' ||
+      this._lexer.token.value === 'false' ||
+      this._lexer.token.value === 'null'
+    ) {
+      throw syntaxError(
+        this._lexer.source,
+        this._lexer.token.start,
+        `${getTokenDesc(
+          this._lexer.token,
+        )} is reserved and cannot be used for an enum value.`,
+      );
+    }
+
+    return this.parseName();
+  }
+  /**
+   * InputObjectTypeDefinition :
+   *   - Description? input Name Directives[Const]? InputFieldsDefinition?
+   */
+
+  parseInputObjectTypeDefinition() {
+    const start = this._lexer.token;
+    const description = this.parseDescription();
+    this.expectKeyword('input');
+    const name = this.parseName();
+    const directives = this.parseConstDirectives();
+    const fields = this.parseInputFieldsDefinition();
+    return this.node(start, {
+      kind: Kind.INPUT_OBJECT_TYPE_DEFINITION,
+      description,
+      name,
+      directives,
+      fields,
+    });
+  }
+  /**
+   * ```
+   * InputFieldsDefinition : { InputValueDefinition+ }
+   * ```
+   */
+
+  parseInputFieldsDefinition() {
+    return this.optionalMany(
+      TokenKind.BRACE_L,
+      this.parseInputValueDef,
+      TokenKind.BRACE_R,
+    );
+  }
+  /**
+   * TypeSystemExtension :
+   *   - SchemaExtension
+   *   - TypeExtension
+   *
+   * TypeExtension :
+   *   - ScalarTypeExtension
+   *   - ObjectTypeExtension
+   *   - InterfaceTypeExtension
+   *   - UnionTypeExtension
+   *   - EnumTypeExtension
+   *   - InputObjectTypeDefinition
+   */
+
+  parseTypeSystemExtension() {
+    const keywordToken = this._lexer.lookahead();
+
+    if (keywordToken.kind === TokenKind.NAME) {
+      switch (keywordToken.value) {
+        case 'schema':
+          return this.parseSchemaExtension();
+
+        case 'scalar':
+          return this.parseScalarTypeExtension();
+
+        case 'type':
+          return this.parseObjectTypeExtension();
+
+        case 'interface':
+          return this.parseInterfaceTypeExtension();
+
+        case 'union':
+          return this.parseUnionTypeExtension();
+
+        case 'enum':
+          return this.parseEnumTypeExtension();
+
+        case 'input':
+          return this.parseInputObjectTypeExtension();
+      }
+    }
+
+    throw this.unexpected(keywordToken);
+  }
+  /**
+   * ```
+   * SchemaExtension :
+   *  - extend schema Directives[Const]? { OperationTypeDefinition+ }
+   *  - extend schema Directives[Const]
+   * ```
+   */
+
+  parseSchemaExtension() {
+    const start = this._lexer.token;
+    this.expectKeyword('extend');
+    this.expectKeyword('schema');
+    const directives = this.parseConstDirectives();
+    const operationTypes = this.optionalMany(
+      TokenKind.BRACE_L,
+      this.parseOperationTypeDefinition,
+      TokenKind.BRACE_R,
+    );
+
+    if (directives.length === 0 && operationTypes.length === 0) {
+      throw this.unexpected();
+    }
+
+    return this.node(start, {
+      kind: Kind.SCHEMA_EXTENSION,
+      directives,
+      operationTypes,
+    });
+  }
+  /**
+   * ScalarTypeExtension :
+   *   - extend scalar Name Directives[Const]
+   */
+
+  parseScalarTypeExtension() {
+    const start = this._lexer.token;
+    this.expectKeyword('extend');
+    this.expectKeyword('scalar');
+    const name = this.parseName();
+    const directives = this.parseConstDirectives();
+
+    if (directives.length === 0) {
+      throw this.unexpected();
+    }
+
+    return this.node(start, {
+      kind: Kind.SCALAR_TYPE_EXTENSION,
+      name,
+      directives,
+    });
+  }
+  /**
+   * ObjectTypeExtension :
+   *  - extend type Name ImplementsInterfaces? Directives[Const]? FieldsDefinition
+   *  - extend type Name ImplementsInterfaces? Directives[Const]
+   *  - extend type Name ImplementsInterfaces
+   */
+
+  parseObjectTypeExtension() {
+    const start = this._lexer.token;
+    this.expectKeyword('extend');
+    this.expectKeyword('type');
+    const name = this.parseName();
+    const interfaces = this.parseImplementsInterfaces();
+    const directives = this.parseConstDirectives();
+    const fields = this.parseFieldsDefinition();
+
+    if (
+      interfaces.length === 0 &&
+      directives.length === 0 &&
+      fields.length === 0
+    ) {
+      throw this.unexpected();
+    }
+
+    return this.node(start, {
+      kind: Kind.OBJECT_TYPE_EXTENSION,
+      name,
+      interfaces,
+      directives,
+      fields,
+    });
+  }
+  /**
+   * InterfaceTypeExtension :
+   *  - extend interface Name ImplementsInterfaces? Directives[Const]? FieldsDefinition
+   *  - extend interface Name ImplementsInterfaces? Directives[Const]
+   *  - extend interface Name ImplementsInterfaces
+   */
+
+  parseInterfaceTypeExtension() {
+    const start = this._lexer.token;
+    this.expectKeyword('extend');
+    this.expectKeyword('interface');
+    const name = this.parseName();
+    const interfaces = this.parseImplementsInterfaces();
+    const directives = this.parseConstDirectives();
+    const fields = this.parseFieldsDefinition();
+
+    if (
+      interfaces.length === 0 &&
+      directives.length === 0 &&
+      fields.length === 0
+    ) {
+      throw this.unexpected();
+    }
+
+    return this.node(start, {
+      kind: Kind.INTERFACE_TYPE_EXTENSION,
+      name,
+      interfaces,
+      directives,
+      fields,
+    });
+  }
+  /**
+   * UnionTypeExtension :
+   *   - extend union Name Directives[Const]? UnionMemberTypes
+   *   - extend union Name Directives[Const]
+   */
+
+  parseUnionTypeExtension() {
+    const start = this._lexer.token;
+    this.expectKeyword('extend');
+    this.expectKeyword('union');
+    const name = this.parseName();
+    const directives = this.parseConstDirectives();
+    const types = this.parseUnionMemberTypes();
+
+    if (directives.length === 0 && types.length === 0) {
+      throw this.unexpected();
+    }
+
+    return this.node(start, {
+      kind: Kind.UNION_TYPE_EXTENSION,
+      name,
+      directives,
+      types,
+    });
+  }
+  /**
+   * EnumTypeExtension :
+   *   - extend enum Name Directives[Const]? EnumValuesDefinition
+   *   - extend enum Name Directives[Const]
+   */
+
+  parseEnumTypeExtension() {
+    const start = this._lexer.token;
+    this.expectKeyword('extend');
+    this.expectKeyword('enum');
+    const name = this.parseName();
+    const directives = this.parseConstDirectives();
+    const values = this.parseEnumValuesDefinition();
+
+    if (directives.length === 0 && values.length === 0) {
+      throw this.unexpected();
+    }
+
+    return this.node(start, {
+      kind: Kind.ENUM_TYPE_EXTENSION,
+      name,
+      directives,
+      values,
+    });
+  }
+  /**
+   * InputObjectTypeExtension :
+   *   - extend input Name Directives[Const]? InputFieldsDefinition
+   *   - extend input Name Directives[Const]
+   */
+
+  parseInputObjectTypeExtension() {
+    const start = this._lexer.token;
+    this.expectKeyword('extend');
+    this.expectKeyword('input');
+    const name = this.parseName();
+    const directives = this.parseConstDirectives();
+    const fields = this.parseInputFieldsDefinition();
+
+    if (directives.length === 0 && fields.length === 0) {
+      throw this.unexpected();
+    }
+
+    return this.node(start, {
+      kind: Kind.INPUT_OBJECT_TYPE_EXTENSION,
+      name,
+      directives,
+      fields,
+    });
+  }
+  /**
+   * ```
+   * DirectiveDefinition :
+   *   - Description? directive @ Name ArgumentsDefinition? `repeatable`? on DirectiveLocations
+   * ```
+   */
+
+  parseDirectiveDefinition() {
+    const start = this._lexer.token;
+    const description = this.parseDescription();
+    this.expectKeyword('directive');
+    this.expectToken(TokenKind.AT);
+    const name = this.parseName();
+    const args = this.parseArgumentDefs();
+    const repeatable = this.expectOptionalKeyword('repeatable');
+    this.expectKeyword('on');
+    const locations = this.parseDirectiveLocations();
+    return this.node(start, {
+      kind: Kind.DIRECTIVE_DEFINITION,
+      description,
+      name,
+      arguments: args,
+      repeatable,
+      locations,
+    });
+  }
+  /**
+   * DirectiveLocations :
+   *   - `|`? DirectiveLocation
+   *   - DirectiveLocations | DirectiveLocation
+   */
+
+  parseDirectiveLocations() {
+    return this.delimitedMany(TokenKind.PIPE, this.parseDirectiveLocation);
+  }
+  /*
+   * DirectiveLocation :
+   *   - ExecutableDirectiveLocation
+   *   - TypeSystemDirectiveLocation
+   *
+   * ExecutableDirectiveLocation : one of
+   *   `QUERY`
+   *   `MUTATION`
+   *   `SUBSCRIPTION`
+   *   `FIELD`
+   *   `FRAGMENT_DEFINITION`
+   *   `FRAGMENT_SPREAD`
+   *   `INLINE_FRAGMENT`
+   *
+   * TypeSystemDirectiveLocation : one of
+   *   `SCHEMA`
+   *   `SCALAR`
+   *   `OBJECT`
+   *   `FIELD_DEFINITION`
+   *   `ARGUMENT_DEFINITION`
+   *   `INTERFACE`
+   *   `UNION`
+   *   `ENUM`
+   *   `ENUM_VALUE`
+   *   `INPUT_OBJECT`
+   *   `INPUT_FIELD_DEFINITION`
+   */
+
+  parseDirectiveLocation() {
+    const start = this._lexer.token;
+    const name = this.parseName();
+
+    if (Object.prototype.hasOwnProperty.call(DirectiveLocation, name.value)) {
+      return name;
+    }
+
+    throw this.unexpected(start);
+  } // Core parsing utility functions
+
+  /**
+   * Returns a node that, if configured to do so, sets a "loc" field as a
+   * location object, used to identify the place in the source that created a
+   * given parsed object.
+   */
+
+  node(startToken, node) {
+    if (this._options.noLocation !== true) {
+      node.loc = new Location(
+        startToken,
+        this._lexer.lastToken,
+        this._lexer.source,
+      );
+    }
+
+    return node;
+  }
+  /**
+   * Determines if the next token is of a given kind
+   */
+
+  peek(kind) {
+    return this._lexer.token.kind === kind;
+  }
+  /**
+   * If the next token is of the given kind, return that token after advancing the lexer.
+   * Otherwise, do not change the parser state and throw an error.
+   */
+
+  expectToken(kind) {
+    const token = this._lexer.token;
+
+    if (token.kind === kind) {
+      this.advanceLexer();
+      return token;
+    }
+
+    throw syntaxError(
+      this._lexer.source,
+      token.start,
+      `Expected ${getTokenKindDesc(kind)}, found ${getTokenDesc(token)}.`,
+    );
+  }
+  /**
+   * If the next token is of the given kind, return "true" after advancing the lexer.
+   * Otherwise, do not change the parser state and return "false".
+   */
+
+  expectOptionalToken(kind) {
+    const token = this._lexer.token;
+
+    if (token.kind === kind) {
+      this.advanceLexer();
+      return true;
+    }
+
+    return false;
+  }
+  /**
+   * If the next token is a given keyword, advance the lexer.
+   * Otherwise, do not change the parser state and throw an error.
+   */
+
+  expectKeyword(value) {
+    const token = this._lexer.token;
+
+    if (token.kind === TokenKind.NAME && token.value === value) {
+      this.advanceLexer();
+    } else {
+      throw syntaxError(
+        this._lexer.source,
+        token.start,
+        `Expected "${value}", found ${getTokenDesc(token)}.`,
+      );
+    }
+  }
+  /**
+   * If the next token is a given keyword, return "true" after advancing the lexer.
+   * Otherwise, do not change the parser state and return "false".
+   */
+
+  expectOptionalKeyword(value) {
+    const token = this._lexer.token;
+
+    if (token.kind === TokenKind.NAME && token.value === value) {
+      this.advanceLexer();
+      return true;
+    }
+
+    return false;
+  }
+  /**
+   * Helper function for creating an error when an unexpected lexed token is encountered.
+   */
+
+  unexpected(atToken) {
+    const token =
+      atToken !== null && atToken !== void 0 ? atToken : this._lexer.token;
+    return syntaxError(
+      this._lexer.source,
+      token.start,
+      `Unexpected ${getTokenDesc(token)}.`,
+    );
+  }
+  /**
+   * Returns a possibly empty list of parse nodes, determined by the parseFn.
+   * This list begins with a lex token of openKind and ends with a lex token of closeKind.
+   * Advances the parser to the next lex token after the closing token.
+   */
+
+  any(openKind, parseFn, closeKind) {
+    this.expectToken(openKind);
+    const nodes = [];
+
+    while (!this.expectOptionalToken(closeKind)) {
+      nodes.push(parseFn.call(this));
+    }
+
+    return nodes;
+  }
+  /**
+   * Returns a list of parse nodes, determined by the parseFn.
+   * It can be empty only if open token is missing otherwise it will always return non-empty list
+   * that begins with a lex token of openKind and ends with a lex token of closeKind.
+   * Advances the parser to the next lex token after the closing token.
+   */
+
+  optionalMany(openKind, parseFn, closeKind) {
+    if (this.expectOptionalToken(openKind)) {
+      const nodes = [];
+
+      do {
+        nodes.push(parseFn.call(this));
+      } while (!this.expectOptionalToken(closeKind));
+
+      return nodes;
+    }
+
+    return [];
+  }
+  /**
+   * Returns a non-empty list of parse nodes, determined by the parseFn.
+   * This list begins with a lex token of openKind and ends with a lex token of closeKind.
+   * Advances the parser to the next lex token after the closing token.
+   */
+
+  many(openKind, parseFn, closeKind) {
+    this.expectToken(openKind);
+    const nodes = [];
+
+    do {
+      nodes.push(parseFn.call(this));
+    } while (!this.expectOptionalToken(closeKind));
+
+    return nodes;
+  }
+  /**
+   * Returns a non-empty list of parse nodes, determined by the parseFn.
+   * This list may begin with a lex token of delimiterKind followed by items separated by lex tokens of tokenKind.
+   * Advances the parser to the next lex token after last item in the list.
+   */
+
+  delimitedMany(delimiterKind, parseFn) {
+    this.expectOptionalToken(delimiterKind);
+    const nodes = [];
+
+    do {
+      nodes.push(parseFn.call(this));
+    } while (this.expectOptionalToken(delimiterKind));
+
+    return nodes;
+  }
+
+  advanceLexer() {
+    const { maxTokens } = this._options;
+
+    const token = this._lexer.advance();
+
+    if (token.kind !== TokenKind.EOF) {
+      ++this._tokenCounter;
+
+      if (maxTokens !== undefined && this._tokenCounter > maxTokens) {
+        throw syntaxError(
+          this._lexer.source,
+          token.start,
+          `Document contains more that ${maxTokens} tokens. Parsing aborted.`,
+        );
+      }
+    }
+  }
+}
+/**
+ * A helper function to describe a token as a string for debugging.
+ */
+
+function getTokenDesc(token) {
+  const value = token.value;
+  return getTokenKindDesc(token.kind) + (value != null ? ` "${value}"` : '');
+}
+/**
+ * A helper function to describe a token kind as a string for debugging.
+ */
+
+function getTokenKindDesc(kind) {
+  return isPunctuatorTokenKind(kind) ? `"${kind}"` : kind;
+}
+
+/**
+ * Prints a string as a GraphQL StringValue literal. Replaces control characters
+ * and excluded characters (" U+0022 and \\ U+005C) with escape sequences.
+ */
+function printString(str) {
+  return `"${str.replace(escapedRegExp, escapedReplacer)}"`;
+} // eslint-disable-next-line no-control-regex
+
+const escapedRegExp = /[\x00-\x1f\x22\x5c\x7f-\x9f]/g;
+
+function escapedReplacer(str) {
+  return escapeSequences[str.charCodeAt(0)];
+} // prettier-ignore
+
+const escapeSequences = [
+  '\\u0000',
+  '\\u0001',
+  '\\u0002',
+  '\\u0003',
+  '\\u0004',
+  '\\u0005',
+  '\\u0006',
+  '\\u0007',
+  '\\b',
+  '\\t',
+  '\\n',
+  '\\u000B',
+  '\\f',
+  '\\r',
+  '\\u000E',
+  '\\u000F',
+  '\\u0010',
+  '\\u0011',
+  '\\u0012',
+  '\\u0013',
+  '\\u0014',
+  '\\u0015',
+  '\\u0016',
+  '\\u0017',
+  '\\u0018',
+  '\\u0019',
+  '\\u001A',
+  '\\u001B',
+  '\\u001C',
+  '\\u001D',
+  '\\u001E',
+  '\\u001F',
+  '',
+  '',
+  '\\"',
+  '',
+  '',
+  '',
+  '',
+  '',
+  '',
+  '',
+  '',
+  '',
+  '',
+  '',
+  '',
+  '', // 2F
+  '',
+  '',
+  '',
+  '',
+  '',
+  '',
+  '',
+  '',
+  '',
+  '',
+  '',
+  '',
+  '',
+  '',
+  '',
+  '', // 3F
+  '',
+  '',
+  '',
+  '',
+  '',
+  '',
+  '',
+  '',
+  '',
+  '',
+  '',
+  '',
+  '',
+  '',
+  '',
+  '', // 4F
+  '',
+  '',
+  '',
+  '',
+  '',
+  '',
+  '',
+  '',
+  '',
+  '',
+  '',
+  '',
+  '\\\\',
+  '',
+  '',
+  '', // 5F
+  '',
+  '',
+  '',
+  '',
+  '',
+  '',
+  '',
+  '',
+  '',
+  '',
+  '',
+  '',
+  '',
+  '',
+  '',
+  '', // 6F
+  '',
+  '',
+  '',
+  '',
+  '',
+  '',
+  '',
+  '',
+  '',
+  '',
+  '',
+  '',
+  '',
+  '',
+  '',
+  '\\u007F',
+  '\\u0080',
+  '\\u0081',
+  '\\u0082',
+  '\\u0083',
+  '\\u0084',
+  '\\u0085',
+  '\\u0086',
+  '\\u0087',
+  '\\u0088',
+  '\\u0089',
+  '\\u008A',
+  '\\u008B',
+  '\\u008C',
+  '\\u008D',
+  '\\u008E',
+  '\\u008F',
+  '\\u0090',
+  '\\u0091',
+  '\\u0092',
+  '\\u0093',
+  '\\u0094',
+  '\\u0095',
+  '\\u0096',
+  '\\u0097',
+  '\\u0098',
+  '\\u0099',
+  '\\u009A',
+  '\\u009B',
+  '\\u009C',
+  '\\u009D',
+  '\\u009E',
+  '\\u009F',
+];
+
+/**
+ * A visitor is provided to visit, it contains the collection of
+ * relevant functions to be called during the visitor's traversal.
+ */
+
+const BREAK = Object.freeze({});
+/**
+ * visit() will walk through an AST using a depth-first traversal, calling
+ * the visitor's enter function at each node in the traversal, and calling the
+ * leave function after visiting that node and all of its child nodes.
+ *
+ * By returning different values from the enter and leave functions, the
+ * behavior of the visitor can be altered, including skipping over a sub-tree of
+ * the AST (by returning false), editing the AST by returning a value or null
+ * to remove the value, or to stop the whole traversal by returning BREAK.
+ *
+ * When using visit() to edit an AST, the original AST will not be modified, and
+ * a new version of the AST with the changes applied will be returned from the
+ * visit function.
+ *
+ * ```ts
+ * const editedAST = visit(ast, {
+ *   enter(node, key, parent, path, ancestors) {
+ *     // @return
+ *     //   undefined: no action
+ *     //   false: skip visiting this node
+ *     //   visitor.BREAK: stop visiting altogether
+ *     //   null: delete this node
+ *     //   any value: replace this node with the returned value
+ *   },
+ *   leave(node, key, parent, path, ancestors) {
+ *     // @return
+ *     //   undefined: no action
+ *     //   false: no action
+ *     //   visitor.BREAK: stop visiting altogether
+ *     //   null: delete this node
+ *     //   any value: replace this node with the returned value
+ *   }
+ * });
+ * ```
+ *
+ * Alternatively to providing enter() and leave() functions, a visitor can
+ * instead provide functions named the same as the kinds of AST nodes, or
+ * enter/leave visitors at a named key, leading to three permutations of the
+ * visitor API:
+ *
+ * 1) Named visitors triggered when entering a node of a specific kind.
+ *
+ * ```ts
+ * visit(ast, {
+ *   Kind(node) {
+ *     // enter the "Kind" node
+ *   }
+ * })
+ * ```
+ *
+ * 2) Named visitors that trigger upon entering and leaving a node of a specific kind.
+ *
+ * ```ts
+ * visit(ast, {
+ *   Kind: {
+ *     enter(node) {
+ *       // enter the "Kind" node
+ *     }
+ *     leave(node) {
+ *       // leave the "Kind" node
+ *     }
+ *   }
+ * })
+ * ```
+ *
+ * 3) Generic visitors that trigger upon entering and leaving any node.
+ *
+ * ```ts
+ * visit(ast, {
+ *   enter(node) {
+ *     // enter any node
+ *   },
+ *   leave(node) {
+ *     // leave any node
+ *   }
+ * })
+ * ```
+ */
+
+function visit(root, visitor, visitorKeys = QueryDocumentKeys) {
+  const enterLeaveMap = new Map();
+
+  for (const kind of Object.values(Kind)) {
+    enterLeaveMap.set(kind, getEnterLeaveForKind(visitor, kind));
+  }
+  /* eslint-disable no-undef-init */
+
+  let stack = undefined;
+  let inArray = Array.isArray(root);
+  let keys = [root];
+  let index = -1;
+  let edits = [];
+  let node = root;
+  let key = undefined;
+  let parent = undefined;
+  const path = [];
+  const ancestors = [];
+  /* eslint-enable no-undef-init */
+
+  do {
+    index++;
+    const isLeaving = index === keys.length;
+    const isEdited = isLeaving && edits.length !== 0;
+
+    if (isLeaving) {
+      key = ancestors.length === 0 ? undefined : path[path.length - 1];
+      node = parent;
+      parent = ancestors.pop();
+
+      if (isEdited) {
+        if (inArray) {
+          node = node.slice();
+          let editOffset = 0;
+
+          for (const [editKey, editValue] of edits) {
+            const arrayKey = editKey - editOffset;
+
+            if (editValue === null) {
+              node.splice(arrayKey, 1);
+              editOffset++;
+            } else {
+              node[arrayKey] = editValue;
+            }
+          }
+        } else {
+          node = { ...node };
+
+          for (const [editKey, editValue] of edits) {
+            node[editKey] = editValue;
+          }
+        }
+      }
+
+      index = stack.index;
+      keys = stack.keys;
+      edits = stack.edits;
+      inArray = stack.inArray;
+      stack = stack.prev;
+    } else if (parent) {
+      key = inArray ? index : keys[index];
+      node = parent[key];
+
+      if (node === null || node === undefined) {
+        continue;
+      }
+
+      path.push(key);
+    }
+
+    let result;
+
+    if (!Array.isArray(node)) {
+      var _enterLeaveMap$get, _enterLeaveMap$get2;
+
+      isNode(node) || devAssert(false, `Invalid AST Node: ${inspect(node)}.`);
+      const visitFn = isLeaving
+        ? (_enterLeaveMap$get = enterLeaveMap.get(node.kind)) === null ||
+          _enterLeaveMap$get === void 0
+          ? void 0
+          : _enterLeaveMap$get.leave
+        : (_enterLeaveMap$get2 = enterLeaveMap.get(node.kind)) === null ||
+          _enterLeaveMap$get2 === void 0
+        ? void 0
+        : _enterLeaveMap$get2.enter;
+      result =
+        visitFn === null || visitFn === void 0
+          ? void 0
+          : visitFn.call(visitor, node, key, parent, path, ancestors);
+
+      if (result === BREAK) {
+        break;
+      }
+
+      if (result === false) {
+        if (!isLeaving) {
+          path.pop();
+          continue;
+        }
+      } else if (result !== undefined) {
+        edits.push([key, result]);
+
+        if (!isLeaving) {
+          if (isNode(result)) {
+            node = result;
+          } else {
+            path.pop();
+            continue;
+          }
+        }
+      }
+    }
+
+    if (result === undefined && isEdited) {
+      edits.push([key, node]);
+    }
+
+    if (isLeaving) {
+      path.pop();
+    } else {
+      var _node$kind;
+
+      stack = {
+        inArray,
+        index,
+        keys,
+        edits,
+        prev: stack,
+      };
+      inArray = Array.isArray(node);
+      keys = inArray
+        ? node
+        : (_node$kind = visitorKeys[node.kind]) !== null &&
+          _node$kind !== void 0
+        ? _node$kind
+        : [];
+      index = -1;
+      edits = [];
+
+      if (parent) {
+        ancestors.push(parent);
+      }
+
+      parent = node;
+    }
+  } while (stack !== undefined);
+
+  if (edits.length !== 0) {
+    // New root
+    return edits[edits.length - 1][1];
+  }
+
+  return root;
+}
+/**
+ * Given a visitor instance and a node kind, return EnterLeaveVisitor for that kind.
+ */
+
+function getEnterLeaveForKind(visitor, kind) {
+  const kindVisitor = visitor[kind];
+
+  if (typeof kindVisitor === 'object') {
+    // { Kind: { enter() {}, leave() {} } }
+    return kindVisitor;
+  } else if (typeof kindVisitor === 'function') {
+    // { Kind() {} }
+    return {
+      enter: kindVisitor,
+      leave: undefined,
+    };
+  } // { enter() {}, leave() {} }
+
+  return {
+    enter: visitor.enter,
+    leave: visitor.leave,
+  };
+}
+
+/**
+ * Converts an AST into a string, using one set of reasonable
+ * formatting rules.
+ */
+
+function print(ast) {
+  return visit(ast, printDocASTReducer);
+}
+const MAX_LINE_LENGTH = 80;
+const printDocASTReducer = {
+  Name: {
+    leave: (node) => node.value,
+  },
+  Variable: {
+    leave: (node) => '$' + node.name,
+  },
+  // Document
+  Document: {
+    leave: (node) => join(node.definitions, '\n\n'),
+  },
+  OperationDefinition: {
+    leave(node) {
+      const varDefs = wrap('(', join(node.variableDefinitions, ', '), ')');
+      const prefix = join(
+        [
+          node.operation,
+          join([node.name, varDefs]),
+          join(node.directives, ' '),
+        ],
+        ' ',
+      ); // Anonymous queries with no directives or variable definitions can use
+      // the query short form.
+
+      return (prefix === 'query' ? '' : prefix + ' ') + node.selectionSet;
+    },
+  },
+  VariableDefinition: {
+    leave: ({ variable, type, defaultValue, directives }) =>
+      variable +
+      ': ' +
+      type +
+      wrap(' = ', defaultValue) +
+      wrap(' ', join(directives, ' ')),
+  },
+  SelectionSet: {
+    leave: ({ selections }) => block(selections),
+  },
+  Field: {
+    leave({ alias, name, arguments: args, directives, selectionSet }) {
+      const prefix = wrap('', alias, ': ') + name;
+      let argsLine = prefix + wrap('(', join(args, ', '), ')');
+
+      if (argsLine.length > MAX_LINE_LENGTH) {
+        argsLine = prefix + wrap('(\n', indent(join(args, '\n')), '\n)');
+      }
+
+      return join([argsLine, join(directives, ' '), selectionSet], ' ');
+    },
+  },
+  Argument: {
+    leave: ({ name, value }) => name + ': ' + value,
+  },
+  // Fragments
+  FragmentSpread: {
+    leave: ({ name, directives }) =>
+      '...' + name + wrap(' ', join(directives, ' ')),
+  },
+  InlineFragment: {
+    leave: ({ typeCondition, directives, selectionSet }) =>
+      join(
+        [
+          '...',
+          wrap('on ', typeCondition),
+          join(directives, ' '),
+          selectionSet,
+        ],
+        ' ',
+      ),
+  },
+  FragmentDefinition: {
+    leave: (
+      { name, typeCondition, variableDefinitions, directives, selectionSet }, // Note: fragment variable definitions are experimental and may be changed
+    ) =>
+      // or removed in the future.
+      `fragment ${name}${wrap('(', join(variableDefinitions, ', '), ')')} ` +
+      `on ${typeCondition} ${wrap('', join(directives, ' '), ' ')}` +
+      selectionSet,
+  },
+  // Value
+  IntValue: {
+    leave: ({ value }) => value,
+  },
+  FloatValue: {
+    leave: ({ value }) => value,
+  },
+  StringValue: {
+    leave: ({ value, block: isBlockString }) =>
+      isBlockString ? printBlockString(value) : printString(value),
+  },
+  BooleanValue: {
+    leave: ({ value }) => (value ? 'true' : 'false'),
+  },
+  NullValue: {
+    leave: () => 'null',
+  },
+  EnumValue: {
+    leave: ({ value }) => value,
+  },
+  ListValue: {
+    leave: ({ values }) => '[' + join(values, ', ') + ']',
+  },
+  ObjectValue: {
+    leave: ({ fields }) => '{' + join(fields, ', ') + '}',
+  },
+  ObjectField: {
+    leave: ({ name, value }) => name + ': ' + value,
+  },
+  // Directive
+  Directive: {
+    leave: ({ name, arguments: args }) =>
+      '@' + name + wrap('(', join(args, ', '), ')'),
+  },
+  // Type
+  NamedType: {
+    leave: ({ name }) => name,
+  },
+  ListType: {
+    leave: ({ type }) => '[' + type + ']',
+  },
+  NonNullType: {
+    leave: ({ type }) => type + '!',
+  },
+  // Type System Definitions
+  SchemaDefinition: {
+    leave: ({ description, directives, operationTypes }) =>
+      wrap('', description, '\n') +
+      join(['schema', join(directives, ' '), block(operationTypes)], ' '),
+  },
+  OperationTypeDefinition: {
+    leave: ({ operation, type }) => operation + ': ' + type,
+  },
+  ScalarTypeDefinition: {
+    leave: ({ description, name, directives }) =>
+      wrap('', description, '\n') +
+      join(['scalar', name, join(directives, ' ')], ' '),
+  },
+  ObjectTypeDefinition: {
+    leave: ({ description, name, interfaces, directives, fields }) =>
+      wrap('', description, '\n') +
+      join(
+        [
+          'type',
+          name,
+          wrap('implements ', join(interfaces, ' & ')),
+          join(directives, ' '),
+          block(fields),
+        ],
+        ' ',
+      ),
+  },
+  FieldDefinition: {
+    leave: ({ description, name, arguments: args, type, directives }) =>
+      wrap('', description, '\n') +
+      name +
+      (hasMultilineItems(args)
+        ? wrap('(\n', indent(join(args, '\n')), '\n)')
+        : wrap('(', join(args, ', '), ')')) +
+      ': ' +
+      type +
+      wrap(' ', join(directives, ' ')),
+  },
+  InputValueDefinition: {
+    leave: ({ description, name, type, defaultValue, directives }) =>
+      wrap('', description, '\n') +
+      join(
+        [name + ': ' + type, wrap('= ', defaultValue), join(directives, ' ')],
+        ' ',
+      ),
+  },
+  InterfaceTypeDefinition: {
+    leave: ({ description, name, interfaces, directives, fields }) =>
+      wrap('', description, '\n') +
+      join(
+        [
+          'interface',
+          name,
+          wrap('implements ', join(interfaces, ' & ')),
+          join(directives, ' '),
+          block(fields),
+        ],
+        ' ',
+      ),
+  },
+  UnionTypeDefinition: {
+    leave: ({ description, name, directives, types }) =>
+      wrap('', description, '\n') +
+      join(
+        ['union', name, join(directives, ' '), wrap('= ', join(types, ' | '))],
+        ' ',
+      ),
+  },
+  EnumTypeDefinition: {
+    leave: ({ description, name, directives, values }) =>
+      wrap('', description, '\n') +
+      join(['enum', name, join(directives, ' '), block(values)], ' '),
+  },
+  EnumValueDefinition: {
+    leave: ({ description, name, directives }) =>
+      wrap('', description, '\n') + join([name, join(directives, ' ')], ' '),
+  },
+  InputObjectTypeDefinition: {
+    leave: ({ description, name, directives, fields }) =>
+      wrap('', description, '\n') +
+      join(['input', name, join(directives, ' '), block(fields)], ' '),
+  },
+  DirectiveDefinition: {
+    leave: ({ description, name, arguments: args, repeatable, locations }) =>
+      wrap('', description, '\n') +
+      'directive @' +
+      name +
+      (hasMultilineItems(args)
+        ? wrap('(\n', indent(join(args, '\n')), '\n)')
+        : wrap('(', join(args, ', '), ')')) +
+      (repeatable ? ' repeatable' : '') +
+      ' on ' +
+      join(locations, ' | '),
+  },
+  SchemaExtension: {
+    leave: ({ directives, operationTypes }) =>
+      join(
+        ['extend schema', join(directives, ' '), block(operationTypes)],
+        ' ',
+      ),
+  },
+  ScalarTypeExtension: {
+    leave: ({ name, directives }) =>
+      join(['extend scalar', name, join(directives, ' ')], ' '),
+  },
+  ObjectTypeExtension: {
+    leave: ({ name, interfaces, directives, fields }) =>
+      join(
+        [
+          'extend type',
+          name,
+          wrap('implements ', join(interfaces, ' & ')),
+          join(directives, ' '),
+          block(fields),
+        ],
+        ' ',
+      ),
+  },
+  InterfaceTypeExtension: {
+    leave: ({ name, interfaces, directives, fields }) =>
+      join(
+        [
+          'extend interface',
+          name,
+          wrap('implements ', join(interfaces, ' & ')),
+          join(directives, ' '),
+          block(fields),
+        ],
+        ' ',
+      ),
+  },
+  UnionTypeExtension: {
+    leave: ({ name, directives, types }) =>
+      join(
+        [
+          'extend union',
+          name,
+          join(directives, ' '),
+          wrap('= ', join(types, ' | ')),
+        ],
+        ' ',
+      ),
+  },
+  EnumTypeExtension: {
+    leave: ({ name, directives, values }) =>
+      join(['extend enum', name, join(directives, ' '), block(values)], ' '),
+  },
+  InputObjectTypeExtension: {
+    leave: ({ name, directives, fields }) =>
+      join(['extend input', name, join(directives, ' '), block(fields)], ' '),
+  },
+};
+/**
+ * Given maybeArray, print an empty string if it is null or empty, otherwise
+ * print all items together separated by separator if provided
+ */
+
+function join(maybeArray, separator = '') {
+  var _maybeArray$filter$jo;
+
+  return (_maybeArray$filter$jo =
+    maybeArray === null || maybeArray === void 0
+      ? void 0
+      : maybeArray.filter((x) => x).join(separator)) !== null &&
+    _maybeArray$filter$jo !== void 0
+    ? _maybeArray$filter$jo
+    : '';
+}
+/**
+ * Given array, print each item on its own line, wrapped in an indented `{ }` block.
+ */
+
+function block(array) {
+  return wrap('{\n', indent(join(array, '\n')), '\n}');
+}
+/**
+ * If maybeString is not null or empty, then wrap with start and end, otherwise print an empty string.
+ */
+
+function wrap(start, maybeString, end = '') {
+  return maybeString != null && maybeString !== ''
+    ? start + maybeString + end
+    : '';
+}
+
+function indent(str) {
+  return wrap('  ', str.replace(/\n/g, '\n  '));
+}
+
+function hasMultilineItems(maybeArray) {
+  var _maybeArray$some;
+
+  // FIXME: https://github.com/graphql/graphql-js/issues/2203
+
+  /* c8 ignore next */
+  return (_maybeArray$some =
+    maybeArray === null || maybeArray === void 0
+      ? void 0
+      : maybeArray.some((str) => str.includes('\n'))) !== null &&
+    _maybeArray$some !== void 0
+    ? _maybeArray$some
+    : false;
+}
+
+const ACCEPT_HEADER = `Accept`;
+const CONTENT_TYPE_HEADER = `Content-Type`;
+const CONTENT_TYPE_JSON = `application/json`;
+const CONTENT_TYPE_GQL = `application/graphql-response+json`;
+
+/**
+ * Clean a GraphQL document to send it via a GET query
+ */
+const cleanQuery = (str) => str.replace(/([\s,]|#[^\n\r]+)+/g, ` `).trim();
+const isGraphQLContentType = (contentType) => {
+    const contentTypeLower = contentType.toLowerCase();
+    return contentTypeLower.includes(CONTENT_TYPE_GQL) || contentTypeLower.includes(CONTENT_TYPE_JSON);
+};
+const parseGraphQLExecutionResult = (result) => {
+    try {
+        if (Array.isArray(result)) {
+            return {
+                _tag: `Batch`,
+                executionResults: result.map(parseExecutionResult),
+            };
+        }
+        else if (isPlainObject(result)) {
+            return {
+                _tag: `Single`,
+                executionResult: parseExecutionResult(result),
+            };
+        }
+        else {
+            throw new Error(`Invalid execution result: result is not object or array. \nGot:\n${String(result)}`);
+        }
+    }
+    catch (e) {
+        return e;
+    }
+};
+/**
+ * Example result:
+ *
+ * ```
+ * {
+ *  "data": null,
+ *  "errors": [{
+ *    "message": "custom error",
+ *    "locations": [{ "line": 2, "column": 3 }],
+ *    "path": ["playerNew"]
+ *  }]
+ * }
+ * ```
+ */
+const parseExecutionResult = (result) => {
+    if (typeof result !== `object` || result === null) {
+        throw new Error(`Invalid execution result: result is not object`);
+    }
+    let errors = undefined;
+    let data = undefined;
+    let extensions = undefined;
+    if (`errors` in result) {
+        if (!isPlainObject(result.errors) && !Array.isArray(result.errors)) {
+            throw new Error(`Invalid execution result: errors is not plain object OR array`); // prettier-ignore
+        }
+        errors = result.errors;
+    }
+    // todo add test coverage for case of null. @see https://github.com/jasonkuhrt/graphql-request/issues/739
+    if (`data` in result) {
+        if (!isPlainObject(result.data) && result.data !== null) {
+            throw new Error(`Invalid execution result: data is not plain object`); // prettier-ignore
+        }
+        data = result.data;
+    }
+    if (`extensions` in result) {
+        if (!isPlainObject(result.extensions))
+            throw new Error(`Invalid execution result: extensions is not plain object`); // prettier-ignore
+        extensions = result.extensions;
+    }
+    return {
+        data,
+        errors,
+        extensions,
+    };
+};
+const isRequestResultHaveErrors = (result) => result._tag === `Batch`
+    ? result.executionResults.some(isExecutionResultHaveErrors)
+    : isExecutionResultHaveErrors(result.executionResult);
+const isExecutionResultHaveErrors = (result) => Array.isArray(result.errors) ? result.errors.length > 0 : Boolean(result.errors);
+const isOperationDefinitionNode = (definition) => {
+    return (typeof definition === `object`
+        && definition !== null
+        && `kind` in definition
+        && definition.kind === Kind.OPERATION_DEFINITION);
+};
+
+/**
+ * helpers
+ */
+const extractOperationName = (document) => {
+    let operationName = undefined;
+    const defs = document.definitions.filter(isOperationDefinitionNode);
+    if (defs.length === 1) {
+        operationName = defs[0].name?.value;
+    }
+    return operationName;
+};
+const extractIsMutation = (document) => {
+    let isMutation = false;
+    const defs = document.definitions.filter(isOperationDefinitionNode);
+    if (defs.length === 1) {
+        /* eslint-disable-next-line @typescript-eslint/no-unsafe-enum-comparison --
+         * graphql@15's `OperationTypeNode` is a type, but graphql@16's `OperationTypeNode` is a native TypeScript enum
+         * Therefore, we cannot use `OperationTypeNode.MUTATION` here because it wouldn't work with graphql@15
+         **/
+        isMutation = defs[0].operation === `mutation`;
+    }
+    return isMutation;
+};
+const analyzeDocument = (document, excludeOperationName) => {
+    const expression = typeof document === `string` ? document : print(document);
+    let isMutation = false;
+    let operationName = undefined;
+    if (excludeOperationName) {
+        return { expression, isMutation, operationName };
+    }
+    const docNode = tryCatch(() => (typeof document === `string` ? parse(document) : document));
+    if (docNode instanceof Error) {
+        return { expression, isMutation, operationName };
+    }
+    operationName = extractOperationName(docNode);
+    isMutation = extractIsMutation(docNode);
+    return { expression, operationName, isMutation };
+};
+
+const defaultJsonSerializer = JSON;
+
+// @ts-expect-error todo
+const runRequest = async (input) => {
+    // todo make a Config type
+    const config = {
+        ...input,
+        method: input.request._tag === `Single`
+            ? input.request.document.isMutation
+                ? `POST`
+                : uppercase(input.method ?? `post`)
+            : input.request.hasMutations
+                ? `POST`
+                : uppercase(input.method ?? `post`),
+        fetchOptions: {
+            ...input.fetchOptions,
+            errorPolicy: input.fetchOptions.errorPolicy ?? `none`,
+        },
+    };
+    const fetcher = createFetcher(config.method);
+    const fetchResponse = await fetcher(config);
+    if (!fetchResponse.ok) {
+        return new ClientError({ status: fetchResponse.status, headers: fetchResponse.headers }, {
+            query: input.request._tag === `Single` ? input.request.document.expression : input.request.query,
+            variables: input.request.variables,
+        });
+    }
+    const result = await parseResultFromResponse(fetchResponse, input.fetchOptions.jsonSerializer ?? defaultJsonSerializer);
+    if (result instanceof Error)
+        throw result; // todo something better
+    const clientResponseBase = {
+        status: fetchResponse.status,
+        headers: fetchResponse.headers,
+    };
+    if (isRequestResultHaveErrors(result) && config.fetchOptions.errorPolicy === `none`) {
+        // todo this client response on error is not consistent with the data type for success
+        const clientResponse = result._tag === `Batch`
+            ? { ...result.executionResults, ...clientResponseBase }
+            : {
+                ...result.executionResult,
+                ...clientResponseBase,
+            };
+        // @ts-expect-error todo
+        return new ClientError(clientResponse, {
+            query: input.request._tag === `Single` ? input.request.document.expression : input.request.query,
+            variables: input.request.variables,
+        });
+    }
+    switch (result._tag) {
+        case `Single`:
+            // @ts-expect-error todo
+            return {
+                ...clientResponseBase,
+                ...executionResultClientResponseFields(config)(result.executionResult),
+            };
+        case `Batch`:
+            return {
+                ...clientResponseBase,
+                data: result.executionResults.map(executionResultClientResponseFields(config)),
+            };
+        default:
+            casesExhausted(result);
+    }
+};
+const executionResultClientResponseFields = ($params) => (executionResult) => {
+    return {
+        extensions: executionResult.extensions,
+        data: executionResult.data,
+        errors: $params.fetchOptions.errorPolicy === `all` ? executionResult.errors : undefined,
+    };
+};
+const parseResultFromResponse = async (response, jsonSerializer) => {
+    const contentType = response.headers.get(CONTENT_TYPE_HEADER);
+    const text = await response.text();
+    if (contentType && isGraphQLContentType(contentType)) {
+        return parseGraphQLExecutionResult(jsonSerializer.parse(text));
+    }
+    else {
+        // todo what is this good for...? Seems very random/undefined
+        return parseGraphQLExecutionResult(text);
+    }
+};
+const createFetcher = (method) => async (params) => {
+    const headers = new Headers(params.headers);
+    let searchParams = null;
+    let body = undefined;
+    if (!headers.has(ACCEPT_HEADER)) {
+        headers.set(ACCEPT_HEADER, [CONTENT_TYPE_GQL, CONTENT_TYPE_JSON].join(`, `));
+    }
+    if (method === `POST`) {
+        const $jsonSerializer = params.fetchOptions.jsonSerializer ?? defaultJsonSerializer;
+        body = $jsonSerializer.stringify(buildBody(params));
+        if (typeof body === `string` && !headers.has(CONTENT_TYPE_HEADER)) {
+            headers.set(CONTENT_TYPE_HEADER, CONTENT_TYPE_JSON);
+        }
+    }
+    else {
+        searchParams = buildQueryParams(params);
+    }
+    const init = { method, headers, body, ...params.fetchOptions };
+    let url = new URL(params.url);
+    let initResolved = init;
+    if (params.middleware) {
+        const result = await Promise.resolve(params.middleware({
+            ...init,
+            url: params.url,
+            operationName: params.request._tag === `Single` ? params.request.document.operationName : undefined,
+            variables: params.request.variables,
+        }));
+        const { url: urlNew, ...initNew } = result;
+        url = new URL(urlNew);
+        initResolved = initNew;
+    }
+    if (searchParams) {
+        searchParams.forEach((value, name) => {
+            url.searchParams.append(name, value);
+        });
+    }
+    const $fetch = params.fetch ?? fetch;
+    return await $fetch(url, initResolved);
+};
+const buildBody = (params) => {
+    switch (params.request._tag) {
+        case `Single`:
+            return {
+                query: params.request.document.expression,
+                variables: params.request.variables,
+                operationName: params.request.document.operationName,
+            };
+        case `Batch`:
+            return zip(params.request.query, params.request.variables ?? []).map(([query, variables]) => ({
+                query,
+                variables,
+            }));
+        default:
+            throw casesExhausted(params.request);
+    }
+};
+const buildQueryParams = (params) => {
+    const $jsonSerializer = params.fetchOptions.jsonSerializer ?? defaultJsonSerializer;
+    const searchParams = new URLSearchParams();
+    switch (params.request._tag) {
+        case `Single`: {
+            searchParams.append(`query`, cleanQuery(params.request.document.expression));
+            if (params.request.variables) {
+                searchParams.append(`variables`, $jsonSerializer.stringify(params.request.variables));
+            }
+            if (params.request.document.operationName) {
+                searchParams.append(`operationName`, params.request.document.operationName);
+            }
+            return searchParams;
+        }
+        case `Batch`: {
+            const variablesSerialized = params.request.variables?.map((v) => $jsonSerializer.stringify(v)) ?? [];
+            const queriesCleaned = params.request.query.map(cleanQuery);
+            const payload = zip(queriesCleaned, variablesSerialized).map(([query, variables]) => ({
+                query,
+                variables,
+            }));
+            searchParams.append(`query`, $jsonSerializer.stringify(payload));
+            return searchParams;
+        }
+        default:
+            throw casesExhausted(params.request);
+    }
+};
+
+/**
+ * GraphQL Client.
+ */
+class GraphQLClient {
+    url;
+    requestConfig;
+    constructor(url, requestConfig = {}) {
+        this.url = url;
+        this.requestConfig = requestConfig;
+    }
+    /**
+     * Send a GraphQL query to the server.
+     */
+    rawRequest = async (...args) => {
+        const [queryOrOptions, variables, requestHeaders] = args;
+        const rawRequestOptions = parseRawRequestArgs(queryOrOptions, variables, requestHeaders);
+        const { headers, fetch = globalThis.fetch, method = `POST`, requestMiddleware, responseMiddleware, excludeOperationName, ...fetchOptions } = this.requestConfig;
+        const { url } = this;
+        if (rawRequestOptions.signal !== undefined) {
+            fetchOptions.signal = rawRequestOptions.signal;
+        }
+        const document = analyzeDocument(rawRequestOptions.query, excludeOperationName);
+        const response = await runRequest({
+            url,
+            request: {
+                _tag: `Single`,
+                document,
+                variables: rawRequestOptions.variables,
+            },
+            headers: {
+                ...HeadersInitToPlainObject(callOrIdentity(headers)),
+                ...HeadersInitToPlainObject(rawRequestOptions.requestHeaders),
+            },
+            fetch,
+            method,
+            fetchOptions,
+            middleware: requestMiddleware,
+        });
+        if (responseMiddleware) {
+            await responseMiddleware(response, {
+                operationName: document.operationName,
+                variables,
+                url: this.url,
+            });
+        }
+        if (response instanceof Error) {
+            throw response;
+        }
+        return response;
+    };
+    async request(documentOrOptions, ...variablesAndRequestHeaders) {
+        const [variables, requestHeaders] = variablesAndRequestHeaders;
+        const requestOptions = parseRequestArgs(documentOrOptions, variables, requestHeaders);
+        const { headers, fetch = globalThis.fetch, method = `POST`, requestMiddleware, responseMiddleware, excludeOperationName, ...fetchOptions } = this.requestConfig;
+        const { url } = this;
+        if (requestOptions.signal !== undefined) {
+            fetchOptions.signal = requestOptions.signal;
+        }
+        const analyzedDocument = analyzeDocument(requestOptions.document, excludeOperationName);
+        const response = await runRequest({
+            url,
+            request: {
+                _tag: `Single`,
+                document: analyzedDocument,
+                variables: requestOptions.variables,
+            },
+            headers: {
+                ...HeadersInitToPlainObject(callOrIdentity(headers)),
+                ...HeadersInitToPlainObject(requestOptions.requestHeaders),
+            },
+            fetch,
+            method,
+            fetchOptions,
+            middleware: requestMiddleware,
+        });
+        if (responseMiddleware) {
+            await responseMiddleware(response, {
+                operationName: analyzedDocument.operationName,
+                variables: requestOptions.variables,
+                url: this.url,
+            });
+        }
+        if (response instanceof Error) {
+            throw response;
+        }
+        return response.data;
+    }
+    async batchRequests(documentsOrOptions, requestHeaders) {
+        const batchRequestOptions = parseBatchRequestArgs(documentsOrOptions, requestHeaders);
+        const { headers, excludeOperationName, ...fetchOptions } = this.requestConfig;
+        if (batchRequestOptions.signal !== undefined) {
+            fetchOptions.signal = batchRequestOptions.signal;
+        }
+        const analyzedDocuments = batchRequestOptions.documents.map(({ document }) => analyzeDocument(document, excludeOperationName));
+        const expressions = analyzedDocuments.map(({ expression }) => expression);
+        const hasMutations = analyzedDocuments.some(({ isMutation }) => isMutation);
+        const variables = batchRequestOptions.documents.map(({ variables }) => variables);
+        const response = await runRequest({
+            url: this.url,
+            request: {
+                _tag: `Batch`,
+                operationName: undefined,
+                query: expressions,
+                hasMutations,
+                variables,
+            },
+            headers: {
+                ...HeadersInitToPlainObject(callOrIdentity(headers)),
+                ...HeadersInitToPlainObject(batchRequestOptions.requestHeaders),
+            },
+            fetch: this.requestConfig.fetch ?? globalThis.fetch,
+            method: this.requestConfig.method || `POST`,
+            fetchOptions,
+            middleware: this.requestConfig.requestMiddleware,
+        });
+        if (this.requestConfig.responseMiddleware) {
+            await this.requestConfig.responseMiddleware(response, {
+                operationName: undefined,
+                variables,
+                url: this.url,
+            });
+        }
+        if (response instanceof Error) {
+            throw response;
+        }
+        return response.data;
+    }
+    setHeaders(headers) {
+        this.requestConfig.headers = headers;
+        return this;
+    }
+    /**
+     * Attach a header to the client. All subsequent requests will have this header.
+     */
+    setHeader(key, value) {
+        const { headers } = this.requestConfig;
+        if (headers) {
+            // todo what if headers is in nested array form... ?
+            // @ts-expect-error todo
+            headers[key] = value;
+        }
+        else {
+            this.requestConfig.headers = { [key]: value };
+        }
+        return this;
+    }
+    /**
+     * Change the client endpoint. All subsequent requests will send to this endpoint.
+     */
+    setEndpoint(value) {
+        this.url = value;
+        return this;
+    }
+}
+
+const parseRequestArgs = (documentOrOptions, variables, requestHeaders) => {
+    return documentOrOptions.document
+        ? documentOrOptions
+        : {
+            document: documentOrOptions,
+            variables: variables,
+            requestHeaders: requestHeaders,
+            signal: undefined,
+        };
+};
+
+var docCache = new Map();
+var fragmentSourceMap = new Map();
+var printFragmentWarnings = true;
+var experimentalFragmentVariables = false;
+function normalize(string) {
+    return string.replace(/[\s,]+/g, ' ').trim();
+}
+function cacheKeyFromLoc(loc) {
+    return normalize(loc.source.body.substring(loc.start, loc.end));
+}
+function processFragments(ast) {
+    var seenKeys = new Set();
+    var definitions = [];
+    ast.definitions.forEach(function (fragmentDefinition) {
+        if (fragmentDefinition.kind === 'FragmentDefinition') {
+            var fragmentName = fragmentDefinition.name.value;
+            var sourceKey = cacheKeyFromLoc(fragmentDefinition.loc);
+            var sourceKeySet = fragmentSourceMap.get(fragmentName);
+            if (sourceKeySet && !sourceKeySet.has(sourceKey)) {
+                if (printFragmentWarnings) {
+                    console.warn("Warning: fragment with name " + fragmentName + " already exists.\n"
+                        + "graphql-tag enforces all fragment names across your application to be unique; read more about\n"
+                        + "this in the docs: http://dev.apollodata.com/core/fragments.html#unique-names");
+                }
+            }
+            else if (!sourceKeySet) {
+                fragmentSourceMap.set(fragmentName, sourceKeySet = new Set);
+            }
+            sourceKeySet.add(sourceKey);
+            if (!seenKeys.has(sourceKey)) {
+                seenKeys.add(sourceKey);
+                definitions.push(fragmentDefinition);
+            }
+        }
+        else {
+            definitions.push(fragmentDefinition);
+        }
+    });
+    return __assign(__assign({}, ast), { definitions: definitions });
+}
+function stripLoc(doc) {
+    var workSet = new Set(doc.definitions);
+    workSet.forEach(function (node) {
+        if (node.loc)
+            delete node.loc;
+        Object.keys(node).forEach(function (key) {
+            var value = node[key];
+            if (value && typeof value === 'object') {
+                workSet.add(value);
+            }
+        });
+    });
+    var loc = doc.loc;
+    if (loc) {
+        delete loc.startToken;
+        delete loc.endToken;
+    }
+    return doc;
+}
+function parseDocument(source) {
+    var cacheKey = normalize(source);
+    if (!docCache.has(cacheKey)) {
+        var parsed = parse(source, {
+            experimentalFragmentVariables: experimentalFragmentVariables,
+            allowLegacyFragmentVariables: experimentalFragmentVariables
+        });
+        if (!parsed || parsed.kind !== 'Document') {
+            throw new Error('Not a valid GraphQL document.');
+        }
+        docCache.set(cacheKey, stripLoc(processFragments(parsed)));
+    }
+    return docCache.get(cacheKey);
+}
+function gql(literals) {
+    var args = [];
+    for (var _i = 1; _i < arguments.length; _i++) {
+        args[_i - 1] = arguments[_i];
+    }
+    if (typeof literals === 'string') {
+        literals = [literals];
+    }
+    var result = literals[0];
+    args.forEach(function (arg, i) {
+        if (arg && arg.kind === 'Document') {
+            result += arg.loc.source.body;
+        }
+        else {
+            result += arg;
+        }
+        result += literals[i + 1];
+    });
+    return parseDocument(result);
+}
+function resetCaches() {
+    docCache.clear();
+    fragmentSourceMap.clear();
+}
+function disableFragmentWarnings() {
+    printFragmentWarnings = false;
+}
+function enableExperimentalFragmentVariables() {
+    experimentalFragmentVariables = true;
+}
+function disableExperimentalFragmentVariables() {
+    experimentalFragmentVariables = false;
+}
+var extras = {
+    gql: gql,
+    resetCaches: resetCaches,
+    disableFragmentWarnings: disableFragmentWarnings,
+    enableExperimentalFragmentVariables: enableExperimentalFragmentVariables,
+    disableExperimentalFragmentVariables: disableExperimentalFragmentVariables
+};
+(function (gql_1) {
+    gql_1.gql = extras.gql, gql_1.resetCaches = extras.resetCaches, gql_1.disableFragmentWarnings = extras.disableFragmentWarnings, gql_1.enableExperimentalFragmentVariables = extras.enableExperimentalFragmentVariables, gql_1.disableExperimentalFragmentVariables = extras.disableExperimentalFragmentVariables;
+})(gql || (gql = {}));
+gql["default"] = gql;
+
+// This file is auto-generated. Do not edit directly.
+/* eslint-disable */
+/** The actor's type. */
+var ActorType;
+(function (ActorType) {
+    /** Indicates a team actor. */
+    ActorType["Team"] = "TEAM";
+    /** Indicates a user actor. */
+    ActorType["User"] = "USER";
+})(ActorType || (ActorType = {}));
+/** Properties by which Audit Log connections can be ordered. */
+var AuditLogOrderField;
+(function (AuditLogOrderField) {
+    /** Order audit log entries by timestamp */
+    AuditLogOrderField["CreatedAt"] = "CREATED_AT";
+})(AuditLogOrderField || (AuditLogOrderField = {}));
+/** Represents an annotation's information level. */
+var CheckAnnotationLevel;
+(function (CheckAnnotationLevel) {
+    /** An annotation indicating an inescapable error. */
+    CheckAnnotationLevel["Failure"] = "FAILURE";
+    /** An annotation indicating some information. */
+    CheckAnnotationLevel["Notice"] = "NOTICE";
+    /** An annotation indicating an ignorable error. */
+    CheckAnnotationLevel["Warning"] = "WARNING";
+})(CheckAnnotationLevel || (CheckAnnotationLevel = {}));
+/** The possible states for a check suite or run conclusion. */
+var CheckConclusionState;
+(function (CheckConclusionState) {
+    /** The check suite or run requires action. */
+    CheckConclusionState["ActionRequired"] = "ACTION_REQUIRED";
+    /** The check suite or run has been cancelled. */
+    CheckConclusionState["Cancelled"] = "CANCELLED";
+    /** The check suite or run has failed. */
+    CheckConclusionState["Failure"] = "FAILURE";
+    /** The check suite or run was neutral. */
+    CheckConclusionState["Neutral"] = "NEUTRAL";
+    /** The check suite or run was skipped. */
+    CheckConclusionState["Skipped"] = "SKIPPED";
+    /** The check suite or run was marked stale by GitHub. Only GitHub can use this conclusion. */
+    CheckConclusionState["Stale"] = "STALE";
+    /** The check suite or run has failed at startup. */
+    CheckConclusionState["StartupFailure"] = "STARTUP_FAILURE";
+    /** The check suite or run has succeeded. */
+    CheckConclusionState["Success"] = "SUCCESS";
+    /** The check suite or run has timed out. */
+    CheckConclusionState["TimedOut"] = "TIMED_OUT";
+})(CheckConclusionState || (CheckConclusionState = {}));
+/** The possible states of a check run in a status rollup. */
+var CheckRunState;
+(function (CheckRunState) {
+    /** The check run requires action. */
+    CheckRunState["ActionRequired"] = "ACTION_REQUIRED";
+    /** The check run has been cancelled. */
+    CheckRunState["Cancelled"] = "CANCELLED";
+    /** The check run has been completed. */
+    CheckRunState["Completed"] = "COMPLETED";
+    /** The check run has failed. */
+    CheckRunState["Failure"] = "FAILURE";
+    /** The check run is in progress. */
+    CheckRunState["InProgress"] = "IN_PROGRESS";
+    /** The check run was neutral. */
+    CheckRunState["Neutral"] = "NEUTRAL";
+    /** The check run is in pending state. */
+    CheckRunState["Pending"] = "PENDING";
+    /** The check run has been queued. */
+    CheckRunState["Queued"] = "QUEUED";
+    /** The check run was skipped. */
+    CheckRunState["Skipped"] = "SKIPPED";
+    /** The check run was marked stale by GitHub. Only GitHub can use this conclusion. */
+    CheckRunState["Stale"] = "STALE";
+    /** The check run has failed at startup. */
+    CheckRunState["StartupFailure"] = "STARTUP_FAILURE";
+    /** The check run has succeeded. */
+    CheckRunState["Success"] = "SUCCESS";
+    /** The check run has timed out. */
+    CheckRunState["TimedOut"] = "TIMED_OUT";
+    /** The check run is in waiting state. */
+    CheckRunState["Waiting"] = "WAITING";
+})(CheckRunState || (CheckRunState = {}));
+/** The possible types of check runs. */
+var CheckRunType;
+(function (CheckRunType) {
+    /** Every check run available. */
+    CheckRunType["All"] = "ALL";
+    /** The latest check run. */
+    CheckRunType["Latest"] = "LATEST";
+})(CheckRunType || (CheckRunType = {}));
+/** The possible states for a check suite or run status. */
+var CheckStatusState;
+(function (CheckStatusState) {
+    /** The check suite or run has been completed. */
+    CheckStatusState["Completed"] = "COMPLETED";
+    /** The check suite or run is in progress. */
+    CheckStatusState["InProgress"] = "IN_PROGRESS";
+    /** The check suite or run is in pending state. */
+    CheckStatusState["Pending"] = "PENDING";
+    /** The check suite or run has been queued. */
+    CheckStatusState["Queued"] = "QUEUED";
+    /** The check suite or run has been requested. */
+    CheckStatusState["Requested"] = "REQUESTED";
+    /** The check suite or run is in waiting state. */
+    CheckStatusState["Waiting"] = "WAITING";
+})(CheckStatusState || (CheckStatusState = {}));
+/** Collaborators affiliation level with a subject. */
+var CollaboratorAffiliation;
+(function (CollaboratorAffiliation) {
+    /** All collaborators the authenticated user can see. */
+    CollaboratorAffiliation["All"] = "ALL";
+    /** All collaborators with permissions to an organization-owned subject, regardless of organization membership status. */
+    CollaboratorAffiliation["Direct"] = "DIRECT";
+    /** All outside collaborators of an organization-owned subject. */
+    CollaboratorAffiliation["Outside"] = "OUTSIDE";
+})(CollaboratorAffiliation || (CollaboratorAffiliation = {}));
+/** A comment author association with repository. */
+var CommentAuthorAssociation;
+(function (CommentAuthorAssociation) {
+    /** Author has been invited to collaborate on the repository. */
+    CommentAuthorAssociation["Collaborator"] = "COLLABORATOR";
+    /** Author has previously committed to the repository. */
+    CommentAuthorAssociation["Contributor"] = "CONTRIBUTOR";
+    /** Author has not previously committed to GitHub. */
+    CommentAuthorAssociation["FirstTimer"] = "FIRST_TIMER";
+    /** Author has not previously committed to the repository. */
+    CommentAuthorAssociation["FirstTimeContributor"] = "FIRST_TIME_CONTRIBUTOR";
+    /** Author is a placeholder for an unclaimed user. */
+    CommentAuthorAssociation["Mannequin"] = "MANNEQUIN";
+    /** Author is a member of the organization that owns the repository. */
+    CommentAuthorAssociation["Member"] = "MEMBER";
+    /** Author has no association with the repository. */
+    CommentAuthorAssociation["None"] = "NONE";
+    /** Author is the owner of the repository. */
+    CommentAuthorAssociation["Owner"] = "OWNER";
+})(CommentAuthorAssociation || (CommentAuthorAssociation = {}));
+/** The possible errors that will prevent a user from updating a comment. */
+var CommentCannotUpdateReason;
+(function (CommentCannotUpdateReason) {
+    /** Unable to create comment because repository is archived. */
+    CommentCannotUpdateReason["Archived"] = "ARCHIVED";
+    /** You cannot update this comment */
+    CommentCannotUpdateReason["Denied"] = "DENIED";
+    /** You must be the author or have write access to this repository to update this comment. */
+    CommentCannotUpdateReason["InsufficientAccess"] = "INSUFFICIENT_ACCESS";
+    /** Unable to create comment because issue is locked. */
+    CommentCannotUpdateReason["Locked"] = "LOCKED";
+    /** You must be logged in to update this comment. */
+    CommentCannotUpdateReason["LoginRequired"] = "LOGIN_REQUIRED";
+    /** Repository is under maintenance. */
+    CommentCannotUpdateReason["Maintenance"] = "MAINTENANCE";
+    /** At least one email address must be verified to update this comment. */
+    CommentCannotUpdateReason["VerifiedEmailRequired"] = "VERIFIED_EMAIL_REQUIRED";
+})(CommentCannotUpdateReason || (CommentCannotUpdateReason = {}));
+/** Properties by which commit contribution connections can be ordered. */
+var CommitContributionOrderField;
+(function (CommitContributionOrderField) {
+    /** Order commit contributions by how many commits they represent. */
+    CommitContributionOrderField["CommitCount"] = "COMMIT_COUNT";
+    /** Order commit contributions by when they were made. */
+    CommitContributionOrderField["OccurredAt"] = "OCCURRED_AT";
+})(CommitContributionOrderField || (CommitContributionOrderField = {}));
+/** The status of a git comparison between two refs. */
+var ComparisonStatus;
+(function (ComparisonStatus) {
+    /** The head ref is ahead of the base ref. */
+    ComparisonStatus["Ahead"] = "AHEAD";
+    /** The head ref is behind the base ref. */
+    ComparisonStatus["Behind"] = "BEHIND";
+    /** The head ref is both ahead and behind of the base ref, indicating git history has diverged. */
+    ComparisonStatus["Diverged"] = "DIVERGED";
+    /** The head ref and base ref are identical. */
+    ComparisonStatus["Identical"] = "IDENTICAL";
+})(ComparisonStatus || (ComparisonStatus = {}));
+/** Varying levels of contributions from none to many. */
+var ContributionLevel;
+(function (ContributionLevel) {
+    /** Lowest 25% of days of contributions. */
+    ContributionLevel["FirstQuartile"] = "FIRST_QUARTILE";
+    /** Highest 25% of days of contributions. More contributions than the third quartile. */
+    ContributionLevel["FourthQuartile"] = "FOURTH_QUARTILE";
+    /** No contributions occurred. */
+    ContributionLevel["None"] = "NONE";
+    /** Second lowest 25% of days of contributions. More contributions than the first quartile. */
+    ContributionLevel["SecondQuartile"] = "SECOND_QUARTILE";
+    /** Second highest 25% of days of contributions. More contributions than second quartile, less than the fourth quartile. */
+    ContributionLevel["ThirdQuartile"] = "THIRD_QUARTILE";
+})(ContributionLevel || (ContributionLevel = {}));
+/** The possible base permissions for repositories. */
+var DefaultRepositoryPermissionField;
+(function (DefaultRepositoryPermissionField) {
+    /** Can read, write, and administrate repos by default */
+    DefaultRepositoryPermissionField["Admin"] = "ADMIN";
+    /** No access */
+    DefaultRepositoryPermissionField["None"] = "NONE";
+    /** Can read repos by default */
+    DefaultRepositoryPermissionField["Read"] = "READ";
+    /** Can read and write repos by default */
+    DefaultRepositoryPermissionField["Write"] = "WRITE";
+})(DefaultRepositoryPermissionField || (DefaultRepositoryPermissionField = {}));
+/** The possible ecosystems of a dependency graph package. */
+var DependencyGraphEcosystem;
+(function (DependencyGraphEcosystem) {
+    /** GitHub Actions */
+    DependencyGraphEcosystem["Actions"] = "ACTIONS";
+    /** PHP packages hosted at packagist.org */
+    DependencyGraphEcosystem["Composer"] = "COMPOSER";
+    /** Go modules */
+    DependencyGraphEcosystem["Go"] = "GO";
+    /** Java artifacts hosted at the Maven central repository */
+    DependencyGraphEcosystem["Maven"] = "MAVEN";
+    /** JavaScript packages hosted at npmjs.com */
+    DependencyGraphEcosystem["Npm"] = "NPM";
+    /** .NET packages hosted at the NuGet Gallery */
+    DependencyGraphEcosystem["Nuget"] = "NUGET";
+    /** Python packages hosted at PyPI.org */
+    DependencyGraphEcosystem["Pip"] = "PIP";
+    /** Dart packages hosted at pub.dev */
+    DependencyGraphEcosystem["Pub"] = "PUB";
+    /** Ruby gems hosted at RubyGems.org */
+    DependencyGraphEcosystem["Rubygems"] = "RUBYGEMS";
+    /** Rust crates */
+    DependencyGraphEcosystem["Rust"] = "RUST";
+    /** Swift packages */
+    DependencyGraphEcosystem["Swift"] = "SWIFT";
+})(DependencyGraphEcosystem || (DependencyGraphEcosystem = {}));
+/** Properties by which deployment connections can be ordered. */
+var DeploymentOrderField;
+(function (DeploymentOrderField) {
+    /** Order collection by creation time */
+    DeploymentOrderField["CreatedAt"] = "CREATED_AT";
+})(DeploymentOrderField || (DeploymentOrderField = {}));
+/** The possible protection rule types. */
+var DeploymentProtectionRuleType;
+(function (DeploymentProtectionRuleType) {
+    /** Branch policy */
+    DeploymentProtectionRuleType["BranchPolicy"] = "BRANCH_POLICY";
+    /** Required reviewers */
+    DeploymentProtectionRuleType["RequiredReviewers"] = "REQUIRED_REVIEWERS";
+    /** Wait timer */
+    DeploymentProtectionRuleType["WaitTimer"] = "WAIT_TIMER";
+})(DeploymentProtectionRuleType || (DeploymentProtectionRuleType = {}));
+/** The possible states for a deployment review. */
+var DeploymentReviewState;
+(function (DeploymentReviewState) {
+    /** The deployment was approved. */
+    DeploymentReviewState["Approved"] = "APPROVED";
+    /** The deployment was rejected. */
+    DeploymentReviewState["Rejected"] = "REJECTED";
+})(DeploymentReviewState || (DeploymentReviewState = {}));
+/** The possible states in which a deployment can be. */
+var DeploymentState;
+(function (DeploymentState) {
+    /** The pending deployment was not updated after 30 minutes. */
+    DeploymentState["Abandoned"] = "ABANDONED";
+    /** The deployment is currently active. */
+    DeploymentState["Active"] = "ACTIVE";
+    /** An inactive transient deployment. */
+    DeploymentState["Destroyed"] = "DESTROYED";
+    /** The deployment experienced an error. */
+    DeploymentState["Error"] = "ERROR";
+    /** The deployment has failed. */
+    DeploymentState["Failure"] = "FAILURE";
+    /** The deployment is inactive. */
+    DeploymentState["Inactive"] = "INACTIVE";
+    /** The deployment is in progress. */
+    DeploymentState["InProgress"] = "IN_PROGRESS";
+    /** The deployment is pending. */
+    DeploymentState["Pending"] = "PENDING";
+    /** The deployment has queued */
+    DeploymentState["Queued"] = "QUEUED";
+    /** The deployment was successful. */
+    DeploymentState["Success"] = "SUCCESS";
+    /** The deployment is waiting. */
+    DeploymentState["Waiting"] = "WAITING";
+})(DeploymentState || (DeploymentState = {}));
+/** The possible states for a deployment status. */
+var DeploymentStatusState;
+(function (DeploymentStatusState) {
+    /** The deployment experienced an error. */
+    DeploymentStatusState["Error"] = "ERROR";
+    /** The deployment has failed. */
+    DeploymentStatusState["Failure"] = "FAILURE";
+    /** The deployment is inactive. */
+    DeploymentStatusState["Inactive"] = "INACTIVE";
+    /** The deployment is in progress. */
+    DeploymentStatusState["InProgress"] = "IN_PROGRESS";
+    /** The deployment is pending. */
+    DeploymentStatusState["Pending"] = "PENDING";
+    /** The deployment is queued */
+    DeploymentStatusState["Queued"] = "QUEUED";
+    /** The deployment was successful. */
+    DeploymentStatusState["Success"] = "SUCCESS";
+    /** The deployment is waiting. */
+    DeploymentStatusState["Waiting"] = "WAITING";
+})(DeploymentStatusState || (DeploymentStatusState = {}));
+/** The possible sides of a diff. */
+var DiffSide;
+(function (DiffSide) {
+    /** The left side of the diff. */
+    DiffSide["Left"] = "LEFT";
+    /** The right side of the diff. */
+    DiffSide["Right"] = "RIGHT";
+})(DiffSide || (DiffSide = {}));
+/** The possible reasons for closing a discussion. */
+var DiscussionCloseReason;
+(function (DiscussionCloseReason) {
+    /** The discussion is a duplicate of another */
+    DiscussionCloseReason["Duplicate"] = "DUPLICATE";
+    /** The discussion is no longer relevant */
+    DiscussionCloseReason["Outdated"] = "OUTDATED";
+    /** The discussion has been resolved */
+    DiscussionCloseReason["Resolved"] = "RESOLVED";
+})(DiscussionCloseReason || (DiscussionCloseReason = {}));
+/** Properties by which discussion connections can be ordered. */
+var DiscussionOrderField;
+(function (DiscussionOrderField) {
+    /** Order discussions by creation time. */
+    DiscussionOrderField["CreatedAt"] = "CREATED_AT";
+    /** Order discussions by most recent modification time. */
+    DiscussionOrderField["UpdatedAt"] = "UPDATED_AT";
+})(DiscussionOrderField || (DiscussionOrderField = {}));
+/** Properties by which discussion poll option connections can be ordered. */
+var DiscussionPollOptionOrderField;
+(function (DiscussionPollOptionOrderField) {
+    /** Order poll options by the order that the poll author specified when creating the poll. */
+    DiscussionPollOptionOrderField["AuthoredOrder"] = "AUTHORED_ORDER";
+    /** Order poll options by the number of votes it has. */
+    DiscussionPollOptionOrderField["VoteCount"] = "VOTE_COUNT";
+})(DiscussionPollOptionOrderField || (DiscussionPollOptionOrderField = {}));
+/** The possible states of a discussion. */
+var DiscussionState;
+(function (DiscussionState) {
+    /** A discussion that has been closed */
+    DiscussionState["Closed"] = "CLOSED";
+    /** A discussion that is open */
+    DiscussionState["Open"] = "OPEN";
+})(DiscussionState || (DiscussionState = {}));
+/** The possible state reasons of a discussion. */
+var DiscussionStateReason;
+(function (DiscussionStateReason) {
+    /** The discussion is a duplicate of another */
+    DiscussionStateReason["Duplicate"] = "DUPLICATE";
+    /** The discussion is no longer relevant */
+    DiscussionStateReason["Outdated"] = "OUTDATED";
+    /** The discussion was reopened */
+    DiscussionStateReason["Reopened"] = "REOPENED";
+    /** The discussion has been resolved */
+    DiscussionStateReason["Resolved"] = "RESOLVED";
+})(DiscussionStateReason || (DiscussionStateReason = {}));
+/** The possible reasons that a Dependabot alert was dismissed. */
+var DismissReason;
+(function (DismissReason) {
+    /** A fix has already been started */
+    DismissReason["FixStarted"] = "FIX_STARTED";
+    /** This alert is inaccurate or incorrect */
+    DismissReason["Inaccurate"] = "INACCURATE";
+    /** Vulnerable code is not actually used */
+    DismissReason["NotUsed"] = "NOT_USED";
+    /** No bandwidth to fix this */
+    DismissReason["NoBandwidth"] = "NO_BANDWIDTH";
+    /** Risk is tolerable to this project */
+    DismissReason["TolerableRisk"] = "TOLERABLE_RISK";
+})(DismissReason || (DismissReason = {}));
+/** Properties by which enterprise administrator invitation connections can be ordered. */
+var EnterpriseAdministratorInvitationOrderField;
+(function (EnterpriseAdministratorInvitationOrderField) {
+    /** Order enterprise administrator member invitations by creation time */
+    EnterpriseAdministratorInvitationOrderField["CreatedAt"] = "CREATED_AT";
+})(EnterpriseAdministratorInvitationOrderField || (EnterpriseAdministratorInvitationOrderField = {}));
+/** The possible administrator roles in an enterprise account. */
+var EnterpriseAdministratorRole;
+(function (EnterpriseAdministratorRole) {
+    /** Represents a billing manager of the enterprise account. */
+    EnterpriseAdministratorRole["BillingManager"] = "BILLING_MANAGER";
+    /** Represents an owner of the enterprise account. */
+    EnterpriseAdministratorRole["Owner"] = "OWNER";
+    /** Unaffiliated member of the enterprise account without an admin role. */
+    EnterpriseAdministratorRole["Unaffiliated"] = "UNAFFILIATED";
+})(EnterpriseAdministratorRole || (EnterpriseAdministratorRole = {}));
+/** The possible values for the enterprise allow private repository forking policy value. */
+var EnterpriseAllowPrivateRepositoryForkingPolicyValue;
+(function (EnterpriseAllowPrivateRepositoryForkingPolicyValue) {
+    /** Members can fork a repository to an organization within this enterprise. */
+    EnterpriseAllowPrivateRepositoryForkingPolicyValue["EnterpriseOrganizations"] = "ENTERPRISE_ORGANIZATIONS";
+    /** Members can fork a repository to their enterprise-managed user account or an organization inside this enterprise. */
+    EnterpriseAllowPrivateRepositoryForkingPolicyValue["EnterpriseOrganizationsUserAccounts"] = "ENTERPRISE_ORGANIZATIONS_USER_ACCOUNTS";
+    /** Members can fork a repository to their user account or an organization, either inside or outside of this enterprise. */
+    EnterpriseAllowPrivateRepositoryForkingPolicyValue["Everywhere"] = "EVERYWHERE";
+    /** Members can fork a repository only within the same organization (intra-org). */
+    EnterpriseAllowPrivateRepositoryForkingPolicyValue["SameOrganization"] = "SAME_ORGANIZATION";
+    /** Members can fork a repository to their user account or within the same organization. */
+    EnterpriseAllowPrivateRepositoryForkingPolicyValue["SameOrganizationUserAccounts"] = "SAME_ORGANIZATION_USER_ACCOUNTS";
+    /** Members can fork a repository to their user account. */
+    EnterpriseAllowPrivateRepositoryForkingPolicyValue["UserAccounts"] = "USER_ACCOUNTS";
+})(EnterpriseAllowPrivateRepositoryForkingPolicyValue || (EnterpriseAllowPrivateRepositoryForkingPolicyValue = {}));
+/** The possible values for the enterprise base repository permission setting. */
+var EnterpriseDefaultRepositoryPermissionSettingValue;
+(function (EnterpriseDefaultRepositoryPermissionSettingValue) {
+    /** Organization members will be able to clone, pull, push, and add new collaborators to all organization repositories. */
+    EnterpriseDefaultRepositoryPermissionSettingValue["Admin"] = "ADMIN";
+    /** Organization members will only be able to clone and pull public repositories. */
+    EnterpriseDefaultRepositoryPermissionSettingValue["None"] = "NONE";
+    /** Organizations in the enterprise choose base repository permissions for their members. */
+    EnterpriseDefaultRepositoryPermissionSettingValue["NoPolicy"] = "NO_POLICY";
+    /** Organization members will be able to clone and pull all organization repositories. */
+    EnterpriseDefaultRepositoryPermissionSettingValue["Read"] = "READ";
+    /** Organization members will be able to clone, pull, and push all organization repositories. */
+    EnterpriseDefaultRepositoryPermissionSettingValue["Write"] = "WRITE";
+})(EnterpriseDefaultRepositoryPermissionSettingValue || (EnterpriseDefaultRepositoryPermissionSettingValue = {}));
+/** The possible values for an enabled/no policy enterprise setting. */
+var EnterpriseDisallowedMethodsSettingValue;
+(function (EnterpriseDisallowedMethodsSettingValue) {
+    /** The setting prevents insecure 2FA methods from being used by members of the enterprise. */
+    EnterpriseDisallowedMethodsSettingValue["Insecure"] = "INSECURE";
+    /** There is no policy set for preventing insecure 2FA methods from being used by members of the enterprise. */
+    EnterpriseDisallowedMethodsSettingValue["NoPolicy"] = "NO_POLICY";
+})(EnterpriseDisallowedMethodsSettingValue || (EnterpriseDisallowedMethodsSettingValue = {}));
+/** The possible values for an enabled/disabled enterprise setting. */
+var EnterpriseEnabledDisabledSettingValue;
+(function (EnterpriseEnabledDisabledSettingValue) {
+    /** The setting is disabled for organizations in the enterprise. */
+    EnterpriseEnabledDisabledSettingValue["Disabled"] = "DISABLED";
+    /** The setting is enabled for organizations in the enterprise. */
+    EnterpriseEnabledDisabledSettingValue["Enabled"] = "ENABLED";
+    /** There is no policy set for organizations in the enterprise. */
+    EnterpriseEnabledDisabledSettingValue["NoPolicy"] = "NO_POLICY";
+})(EnterpriseEnabledDisabledSettingValue || (EnterpriseEnabledDisabledSettingValue = {}));
+/** The possible values for an enabled/no policy enterprise setting. */
+var EnterpriseEnabledSettingValue;
+(function (EnterpriseEnabledSettingValue) {
+    /** The setting is enabled for organizations in the enterprise. */
+    EnterpriseEnabledSettingValue["Enabled"] = "ENABLED";
+    /** There is no policy set for organizations in the enterprise. */
+    EnterpriseEnabledSettingValue["NoPolicy"] = "NO_POLICY";
+})(EnterpriseEnabledSettingValue || (EnterpriseEnabledSettingValue = {}));
+/** Properties by which enterprise member invitation connections can be ordered. */
+var EnterpriseMemberInvitationOrderField;
+(function (EnterpriseMemberInvitationOrderField) {
+    /** Order enterprise member invitations by creation time */
+    EnterpriseMemberInvitationOrderField["CreatedAt"] = "CREATED_AT";
+})(EnterpriseMemberInvitationOrderField || (EnterpriseMemberInvitationOrderField = {}));
+/** Properties by which enterprise member connections can be ordered. */
+var EnterpriseMemberOrderField;
+(function (EnterpriseMemberOrderField) {
+    /** Order enterprise members by creation time */
+    EnterpriseMemberOrderField["CreatedAt"] = "CREATED_AT";
+    /** Order enterprise members by login */
+    EnterpriseMemberOrderField["Login"] = "LOGIN";
+})(EnterpriseMemberOrderField || (EnterpriseMemberOrderField = {}));
+/** The possible values for the enterprise members can create repositories setting. */
+var EnterpriseMembersCanCreateRepositoriesSettingValue;
+(function (EnterpriseMembersCanCreateRepositoriesSettingValue) {
+    /** Members will be able to create public and private repositories. */
+    EnterpriseMembersCanCreateRepositoriesSettingValue["All"] = "ALL";
+    /** Members will not be able to create public or private repositories. */
+    EnterpriseMembersCanCreateRepositoriesSettingValue["Disabled"] = "DISABLED";
+    /** Organization owners choose whether to allow members to create repositories. */
+    EnterpriseMembersCanCreateRepositoriesSettingValue["NoPolicy"] = "NO_POLICY";
+    /** Members will be able to create only private repositories. */
+    EnterpriseMembersCanCreateRepositoriesSettingValue["Private"] = "PRIVATE";
+    /** Members will be able to create only public repositories. */
+    EnterpriseMembersCanCreateRepositoriesSettingValue["Public"] = "PUBLIC";
+})(EnterpriseMembersCanCreateRepositoriesSettingValue || (EnterpriseMembersCanCreateRepositoriesSettingValue = {}));
+/** The possible values for the members can make purchases setting. */
+var EnterpriseMembersCanMakePurchasesSettingValue;
+(function (EnterpriseMembersCanMakePurchasesSettingValue) {
+    /** The setting is disabled for organizations in the enterprise. */
+    EnterpriseMembersCanMakePurchasesSettingValue["Disabled"] = "DISABLED";
+    /** The setting is enabled for organizations in the enterprise. */
+    EnterpriseMembersCanMakePurchasesSettingValue["Enabled"] = "ENABLED";
+})(EnterpriseMembersCanMakePurchasesSettingValue || (EnterpriseMembersCanMakePurchasesSettingValue = {}));
+/** The possible values we have for filtering Platform::Objects::User#enterprises. */
+var EnterpriseMembershipType;
+(function (EnterpriseMembershipType) {
+    /** Returns all enterprises in which the user is an admin. */
+    EnterpriseMembershipType["Admin"] = "ADMIN";
+    /** Returns all enterprises in which the user is a member, admin, or billing manager. */
+    EnterpriseMembershipType["All"] = "ALL";
+    /** Returns all enterprises in which the user is a billing manager. */
+    EnterpriseMembershipType["BillingManager"] = "BILLING_MANAGER";
+    /** Returns all enterprises in which the user is a member of an org that is owned by the enterprise. */
+    EnterpriseMembershipType["OrgMembership"] = "ORG_MEMBERSHIP";
+})(EnterpriseMembershipType || (EnterpriseMembershipType = {}));
+/** Properties by which enterprise connections can be ordered. */
+var EnterpriseOrderField;
+(function (EnterpriseOrderField) {
+    /** Order enterprises by name */
+    EnterpriseOrderField["Name"] = "NAME";
+})(EnterpriseOrderField || (EnterpriseOrderField = {}));
+/** Properties by which Enterprise Server installation connections can be ordered. */
+var EnterpriseServerInstallationOrderField;
+(function (EnterpriseServerInstallationOrderField) {
+    /** Order Enterprise Server installations by creation time */
+    EnterpriseServerInstallationOrderField["CreatedAt"] = "CREATED_AT";
+    /** Order Enterprise Server installations by customer name */
+    EnterpriseServerInstallationOrderField["CustomerName"] = "CUSTOMER_NAME";
+    /** Order Enterprise Server installations by host name */
+    EnterpriseServerInstallationOrderField["HostName"] = "HOST_NAME";
+})(EnterpriseServerInstallationOrderField || (EnterpriseServerInstallationOrderField = {}));
+/** Properties by which Enterprise Server user account email connections can be ordered. */
+var EnterpriseServerUserAccountEmailOrderField;
+(function (EnterpriseServerUserAccountEmailOrderField) {
+    /** Order emails by email */
+    EnterpriseServerUserAccountEmailOrderField["Email"] = "EMAIL";
+})(EnterpriseServerUserAccountEmailOrderField || (EnterpriseServerUserAccountEmailOrderField = {}));
+/** Properties by which Enterprise Server user account connections can be ordered. */
+var EnterpriseServerUserAccountOrderField;
+(function (EnterpriseServerUserAccountOrderField) {
+    /** Order user accounts by login */
+    EnterpriseServerUserAccountOrderField["Login"] = "LOGIN";
+    /** Order user accounts by creation time on the Enterprise Server installation */
+    EnterpriseServerUserAccountOrderField["RemoteCreatedAt"] = "REMOTE_CREATED_AT";
+})(EnterpriseServerUserAccountOrderField || (EnterpriseServerUserAccountOrderField = {}));
+/** Properties by which Enterprise Server user accounts upload connections can be ordered. */
+var EnterpriseServerUserAccountsUploadOrderField;
+(function (EnterpriseServerUserAccountsUploadOrderField) {
+    /** Order user accounts uploads by creation time */
+    EnterpriseServerUserAccountsUploadOrderField["CreatedAt"] = "CREATED_AT";
+})(EnterpriseServerUserAccountsUploadOrderField || (EnterpriseServerUserAccountsUploadOrderField = {}));
+/** Synchronization state of the Enterprise Server user accounts upload */
+var EnterpriseServerUserAccountsUploadSyncState;
+(function (EnterpriseServerUserAccountsUploadSyncState) {
+    /** The synchronization of the upload failed. */
+    EnterpriseServerUserAccountsUploadSyncState["Failure"] = "FAILURE";
+    /** The synchronization of the upload is pending. */
+    EnterpriseServerUserAccountsUploadSyncState["Pending"] = "PENDING";
+    /** The synchronization of the upload succeeded. */
+    EnterpriseServerUserAccountsUploadSyncState["Success"] = "SUCCESS";
+})(EnterpriseServerUserAccountsUploadSyncState || (EnterpriseServerUserAccountsUploadSyncState = {}));
+/** The possible roles for enterprise membership. */
+var EnterpriseUserAccountMembershipRole;
+(function (EnterpriseUserAccountMembershipRole) {
+    /** The user is a member of an organization in the enterprise. */
+    EnterpriseUserAccountMembershipRole["Member"] = "MEMBER";
+    /** The user is an owner of an organization in the enterprise. */
+    EnterpriseUserAccountMembershipRole["Owner"] = "OWNER";
+    /** The user is not an owner of the enterprise, and not a member or owner of any organizations in the enterprise; only for EMU-enabled enterprises. */
+    EnterpriseUserAccountMembershipRole["Unaffiliated"] = "UNAFFILIATED";
+})(EnterpriseUserAccountMembershipRole || (EnterpriseUserAccountMembershipRole = {}));
+/** The possible GitHub Enterprise deployments where this user can exist. */
+var EnterpriseUserDeployment;
+(function (EnterpriseUserDeployment) {
+    /** The user is part of a GitHub Enterprise Cloud deployment. */
+    EnterpriseUserDeployment["Cloud"] = "CLOUD";
+    /** The user is part of a GitHub Enterprise Server deployment. */
+    EnterpriseUserDeployment["Server"] = "SERVER";
+})(EnterpriseUserDeployment || (EnterpriseUserDeployment = {}));
+/** Properties by which environments connections can be ordered */
+var EnvironmentOrderField;
+(function (EnvironmentOrderField) {
+    /** Order environments by name. */
+    EnvironmentOrderField["Name"] = "NAME";
+})(EnvironmentOrderField || (EnvironmentOrderField = {}));
+/** Properties by which environments connections can be ordered */
+var EnvironmentPinnedFilterField;
+(function (EnvironmentPinnedFilterField) {
+    /** All environments will be returned. */
+    EnvironmentPinnedFilterField["All"] = "ALL";
+    /** Environments exclude pinned will be returned */
+    EnvironmentPinnedFilterField["None"] = "NONE";
+    /** Only pinned environment will be returned */
+    EnvironmentPinnedFilterField["Only"] = "ONLY";
+})(EnvironmentPinnedFilterField || (EnvironmentPinnedFilterField = {}));
+/** The possible viewed states of a file . */
+var FileViewedState;
+(function (FileViewedState) {
+    /** The file has new changes since last viewed. */
+    FileViewedState["Dismissed"] = "DISMISSED";
+    /** The file has not been marked as viewed. */
+    FileViewedState["Unviewed"] = "UNVIEWED";
+    /** The file has been marked as viewed. */
+    FileViewedState["Viewed"] = "VIEWED";
+})(FileViewedState || (FileViewedState = {}));
+/** The possible funding platforms for repository funding links. */
+var FundingPlatform;
+(function (FundingPlatform) {
+    /** Buy Me a Coffee funding platform. */
+    FundingPlatform["BuyMeACoffee"] = "BUY_ME_A_COFFEE";
+    /** Community Bridge funding platform. */
+    FundingPlatform["CommunityBridge"] = "COMMUNITY_BRIDGE";
+    /** Custom funding platform. */
+    FundingPlatform["Custom"] = "CUSTOM";
+    /** GitHub funding platform. */
+    FundingPlatform["Github"] = "GITHUB";
+    /** IssueHunt funding platform. */
+    FundingPlatform["Issuehunt"] = "ISSUEHUNT";
+    /** Ko-fi funding platform. */
+    FundingPlatform["KoFi"] = "KO_FI";
+    /** LFX Crowdfunding funding platform. */
+    FundingPlatform["LfxCrowdfunding"] = "LFX_CROWDFUNDING";
+    /** Liberapay funding platform. */
+    FundingPlatform["Liberapay"] = "LIBERAPAY";
+    /** Open Collective funding platform. */
+    FundingPlatform["OpenCollective"] = "OPEN_COLLECTIVE";
+    /** Patreon funding platform. */
+    FundingPlatform["Patreon"] = "PATREON";
+    /** Polar funding platform. */
+    FundingPlatform["Polar"] = "POLAR";
+    /** thanks.dev funding platform. */
+    FundingPlatform["ThanksDev"] = "THANKS_DEV";
+    /** Tidelift funding platform. */
+    FundingPlatform["Tidelift"] = "TIDELIFT";
+})(FundingPlatform || (FundingPlatform = {}));
+/** Properties by which gist connections can be ordered. */
+var GistOrderField;
+(function (GistOrderField) {
+    /** Order gists by creation time */
+    GistOrderField["CreatedAt"] = "CREATED_AT";
+    /** Order gists by push time */
+    GistOrderField["PushedAt"] = "PUSHED_AT";
+    /** Order gists by update time */
+    GistOrderField["UpdatedAt"] = "UPDATED_AT";
+})(GistOrderField || (GistOrderField = {}));
+/** The privacy of a Gist */
+var GistPrivacy;
+(function (GistPrivacy) {
+    /** Gists that are public and secret */
+    GistPrivacy["All"] = "ALL";
+    /** Public */
+    GistPrivacy["Public"] = "PUBLIC";
+    /** Secret */
+    GistPrivacy["Secret"] = "SECRET";
+})(GistPrivacy || (GistPrivacy = {}));
+/** The state of a Git signature. */
+var GitSignatureState;
+(function (GitSignatureState) {
+    /** The signing certificate or its chain could not be verified */
+    GitSignatureState["BadCert"] = "BAD_CERT";
+    /** Invalid email used for signing */
+    GitSignatureState["BadEmail"] = "BAD_EMAIL";
+    /** Signing key expired */
+    GitSignatureState["ExpiredKey"] = "EXPIRED_KEY";
+    /** Internal error - the GPG verification service misbehaved */
+    GitSignatureState["GpgverifyError"] = "GPGVERIFY_ERROR";
+    /** Internal error - the GPG verification service is unavailable at the moment */
+    GitSignatureState["GpgverifyUnavailable"] = "GPGVERIFY_UNAVAILABLE";
+    /** Invalid signature */
+    GitSignatureState["Invalid"] = "INVALID";
+    /** Malformed signature */
+    GitSignatureState["MalformedSig"] = "MALFORMED_SIG";
+    /** The usage flags for the key that signed this don't allow signing */
+    GitSignatureState["NotSigningKey"] = "NOT_SIGNING_KEY";
+    /** Email used for signing not known to GitHub */
+    GitSignatureState["NoUser"] = "NO_USER";
+    /** Valid signature, though certificate revocation check failed */
+    GitSignatureState["OcspError"] = "OCSP_ERROR";
+    /** Valid signature, pending certificate revocation checking */
+    GitSignatureState["OcspPending"] = "OCSP_PENDING";
+    /** One or more certificates in chain has been revoked */
+    GitSignatureState["OcspRevoked"] = "OCSP_REVOKED";
+    /** Key used for signing not known to GitHub */
+    GitSignatureState["UnknownKey"] = "UNKNOWN_KEY";
+    /** Unknown signature type */
+    GitSignatureState["UnknownSigType"] = "UNKNOWN_SIG_TYPE";
+    /** Unsigned */
+    GitSignatureState["Unsigned"] = "UNSIGNED";
+    /** Email used for signing unverified on GitHub */
+    GitSignatureState["UnverifiedEmail"] = "UNVERIFIED_EMAIL";
+    /** Valid signature and verified by GitHub */
+    GitSignatureState["Valid"] = "VALID";
+})(GitSignatureState || (GitSignatureState = {}));
+/** The possible states in which authentication can be configured with an identity provider. */
+var IdentityProviderConfigurationState;
+(function (IdentityProviderConfigurationState) {
+    /** Authentication with an identity provider is configured but not enforced. */
+    IdentityProviderConfigurationState["Configured"] = "CONFIGURED";
+    /** Authentication with an identity provider is configured and enforced. */
+    IdentityProviderConfigurationState["Enforced"] = "ENFORCED";
+    /** Authentication with an identity provider is not configured. */
+    IdentityProviderConfigurationState["Unconfigured"] = "UNCONFIGURED";
+})(IdentityProviderConfigurationState || (IdentityProviderConfigurationState = {}));
+/** The possible values for the IP allow list enabled setting. */
+var IpAllowListEnabledSettingValue;
+(function (IpAllowListEnabledSettingValue) {
+    /** The setting is disabled for the owner. */
+    IpAllowListEnabledSettingValue["Disabled"] = "DISABLED";
+    /** The setting is enabled for the owner. */
+    IpAllowListEnabledSettingValue["Enabled"] = "ENABLED";
+})(IpAllowListEnabledSettingValue || (IpAllowListEnabledSettingValue = {}));
+/** Properties by which IP allow list entry connections can be ordered. */
+var IpAllowListEntryOrderField;
+(function (IpAllowListEntryOrderField) {
+    /** Order IP allow list entries by the allow list value. */
+    IpAllowListEntryOrderField["AllowListValue"] = "ALLOW_LIST_VALUE";
+    /** Order IP allow list entries by creation time. */
+    IpAllowListEntryOrderField["CreatedAt"] = "CREATED_AT";
+})(IpAllowListEntryOrderField || (IpAllowListEntryOrderField = {}));
+/** The possible values for the IP allow list configuration for installed GitHub Apps setting. */
+var IpAllowListForInstalledAppsEnabledSettingValue;
+(function (IpAllowListForInstalledAppsEnabledSettingValue) {
+    /** The setting is disabled for the owner. */
+    IpAllowListForInstalledAppsEnabledSettingValue["Disabled"] = "DISABLED";
+    /** The setting is enabled for the owner. */
+    IpAllowListForInstalledAppsEnabledSettingValue["Enabled"] = "ENABLED";
+})(IpAllowListForInstalledAppsEnabledSettingValue || (IpAllowListForInstalledAppsEnabledSettingValue = {}));
+/** The possible state reasons of a closed issue. */
+var IssueClosedStateReason;
+(function (IssueClosedStateReason) {
+    /** An issue that has been closed as completed */
+    IssueClosedStateReason["Completed"] = "COMPLETED";
+    /** An issue that has been closed as a duplicate */
+    IssueClosedStateReason["Duplicate"] = "DUPLICATE";
+    /** An issue that has been closed as not planned */
+    IssueClosedStateReason["NotPlanned"] = "NOT_PLANNED";
+})(IssueClosedStateReason || (IssueClosedStateReason = {}));
+/** Properties by which issue comment connections can be ordered. */
+var IssueCommentOrderField;
+(function (IssueCommentOrderField) {
+    /** Order issue comments by update time */
+    IssueCommentOrderField["UpdatedAt"] = "UPDATED_AT";
+})(IssueCommentOrderField || (IssueCommentOrderField = {}));
+/** Properties by which issue connections can be ordered. */
+var IssueOrderField;
+(function (IssueOrderField) {
+    /** Order issues by comment count */
+    IssueOrderField["Comments"] = "COMMENTS";
+    /** Order issues by creation time */
+    IssueOrderField["CreatedAt"] = "CREATED_AT";
+    /** Order issues by update time */
+    IssueOrderField["UpdatedAt"] = "UPDATED_AT";
+})(IssueOrderField || (IssueOrderField = {}));
+/** The possible states of an issue. */
+var IssueState;
+(function (IssueState) {
+    /** An issue that has been closed */
+    IssueState["Closed"] = "CLOSED";
+    /** An issue that is still open */
+    IssueState["Open"] = "OPEN";
+})(IssueState || (IssueState = {}));
+/** The possible state reasons of an issue. */
+var IssueStateReason;
+(function (IssueStateReason) {
+    /** An issue that has been closed as completed */
+    IssueStateReason["Completed"] = "COMPLETED";
+    /** An issue that has been closed as a duplicate. */
+    IssueStateReason["Duplicate"] = "DUPLICATE";
+    /** An issue that has been closed as not planned */
+    IssueStateReason["NotPlanned"] = "NOT_PLANNED";
+    /** An issue that has been reopened */
+    IssueStateReason["Reopened"] = "REOPENED";
+})(IssueStateReason || (IssueStateReason = {}));
+/** The possible item types found in a timeline. */
+var IssueTimelineItemsItemType;
+(function (IssueTimelineItemsItemType) {
+    /** Represents a 'added_to_project' event on a given issue or pull request. */
+    IssueTimelineItemsItemType["AddedToProjectEvent"] = "ADDED_TO_PROJECT_EVENT";
+    /** Represents an 'assigned' event on any assignable object. */
+    IssueTimelineItemsItemType["AssignedEvent"] = "ASSIGNED_EVENT";
+    /** Represents a 'closed' event on any `Closable`. */
+    IssueTimelineItemsItemType["ClosedEvent"] = "CLOSED_EVENT";
+    /** Represents a 'comment_deleted' event on a given issue or pull request. */
+    IssueTimelineItemsItemType["CommentDeletedEvent"] = "COMMENT_DELETED_EVENT";
+    /** Represents a 'connected' event on a given issue or pull request. */
+    IssueTimelineItemsItemType["ConnectedEvent"] = "CONNECTED_EVENT";
+    /** Represents a 'converted_note_to_issue' event on a given issue or pull request. */
+    IssueTimelineItemsItemType["ConvertedNoteToIssueEvent"] = "CONVERTED_NOTE_TO_ISSUE_EVENT";
+    /** Represents a 'converted_to_discussion' event on a given issue. */
+    IssueTimelineItemsItemType["ConvertedToDiscussionEvent"] = "CONVERTED_TO_DISCUSSION_EVENT";
+    /** Represents a mention made by one issue or pull request to another. */
+    IssueTimelineItemsItemType["CrossReferencedEvent"] = "CROSS_REFERENCED_EVENT";
+    /** Represents a 'demilestoned' event on a given issue or pull request. */
+    IssueTimelineItemsItemType["DemilestonedEvent"] = "DEMILESTONED_EVENT";
+    /** Represents a 'disconnected' event on a given issue or pull request. */
+    IssueTimelineItemsItemType["DisconnectedEvent"] = "DISCONNECTED_EVENT";
+    /** Represents a comment on an Issue. */
+    IssueTimelineItemsItemType["IssueComment"] = "ISSUE_COMMENT";
+    /** Represents a 'issue_type_added' event on a given issue. */
+    IssueTimelineItemsItemType["IssueTypeAddedEvent"] = "ISSUE_TYPE_ADDED_EVENT";
+    /** Represents a 'issue_type_changed' event on a given issue. */
+    IssueTimelineItemsItemType["IssueTypeChangedEvent"] = "ISSUE_TYPE_CHANGED_EVENT";
+    /** Represents a 'issue_type_removed' event on a given issue. */
+    IssueTimelineItemsItemType["IssueTypeRemovedEvent"] = "ISSUE_TYPE_REMOVED_EVENT";
+    /** Represents a 'labeled' event on a given issue or pull request. */
+    IssueTimelineItemsItemType["LabeledEvent"] = "LABELED_EVENT";
+    /** Represents a 'locked' event on a given issue or pull request. */
+    IssueTimelineItemsItemType["LockedEvent"] = "LOCKED_EVENT";
+    /** Represents a 'marked_as_duplicate' event on a given issue or pull request. */
+    IssueTimelineItemsItemType["MarkedAsDuplicateEvent"] = "MARKED_AS_DUPLICATE_EVENT";
+    /** Represents a 'mentioned' event on a given issue or pull request. */
+    IssueTimelineItemsItemType["MentionedEvent"] = "MENTIONED_EVENT";
+    /** Represents a 'milestoned' event on a given issue or pull request. */
+    IssueTimelineItemsItemType["MilestonedEvent"] = "MILESTONED_EVENT";
+    /** Represents a 'moved_columns_in_project' event on a given issue or pull request. */
+    IssueTimelineItemsItemType["MovedColumnsInProjectEvent"] = "MOVED_COLUMNS_IN_PROJECT_EVENT";
+    /** Represents a 'parent_issue_added' event on a given issue. */
+    IssueTimelineItemsItemType["ParentIssueAddedEvent"] = "PARENT_ISSUE_ADDED_EVENT";
+    /** Represents a 'parent_issue_removed' event on a given issue. */
+    IssueTimelineItemsItemType["ParentIssueRemovedEvent"] = "PARENT_ISSUE_REMOVED_EVENT";
+    /** Represents a 'pinned' event on a given issue or pull request. */
+    IssueTimelineItemsItemType["PinnedEvent"] = "PINNED_EVENT";
+    /** Represents a 'referenced' event on a given `ReferencedSubject`. */
+    IssueTimelineItemsItemType["ReferencedEvent"] = "REFERENCED_EVENT";
+    /** Represents a 'removed_from_project' event on a given issue or pull request. */
+    IssueTimelineItemsItemType["RemovedFromProjectEvent"] = "REMOVED_FROM_PROJECT_EVENT";
+    /** Represents a 'renamed' event on a given issue or pull request */
+    IssueTimelineItemsItemType["RenamedTitleEvent"] = "RENAMED_TITLE_EVENT";
+    /** Represents a 'reopened' event on any `Closable`. */
+    IssueTimelineItemsItemType["ReopenedEvent"] = "REOPENED_EVENT";
+    /** Represents a 'subscribed' event on a given `Subscribable`. */
+    IssueTimelineItemsItemType["SubscribedEvent"] = "SUBSCRIBED_EVENT";
+    /** Represents a 'sub_issue_added' event on a given issue. */
+    IssueTimelineItemsItemType["SubIssueAddedEvent"] = "SUB_ISSUE_ADDED_EVENT";
+    /** Represents a 'sub_issue_removed' event on a given issue. */
+    IssueTimelineItemsItemType["SubIssueRemovedEvent"] = "SUB_ISSUE_REMOVED_EVENT";
+    /** Represents a 'transferred' event on a given issue or pull request. */
+    IssueTimelineItemsItemType["TransferredEvent"] = "TRANSFERRED_EVENT";
+    /** Represents an 'unassigned' event on any assignable object. */
+    IssueTimelineItemsItemType["UnassignedEvent"] = "UNASSIGNED_EVENT";
+    /** Represents an 'unlabeled' event on a given issue or pull request. */
+    IssueTimelineItemsItemType["UnlabeledEvent"] = "UNLABELED_EVENT";
+    /** Represents an 'unlocked' event on a given issue or pull request. */
+    IssueTimelineItemsItemType["UnlockedEvent"] = "UNLOCKED_EVENT";
+    /** Represents an 'unmarked_as_duplicate' event on a given issue or pull request. */
+    IssueTimelineItemsItemType["UnmarkedAsDuplicateEvent"] = "UNMARKED_AS_DUPLICATE_EVENT";
+    /** Represents an 'unpinned' event on a given issue or pull request. */
+    IssueTimelineItemsItemType["UnpinnedEvent"] = "UNPINNED_EVENT";
+    /** Represents an 'unsubscribed' event on a given `Subscribable`. */
+    IssueTimelineItemsItemType["UnsubscribedEvent"] = "UNSUBSCRIBED_EVENT";
+    /** Represents a 'user_blocked' event on a given user. */
+    IssueTimelineItemsItemType["UserBlockedEvent"] = "USER_BLOCKED_EVENT";
+})(IssueTimelineItemsItemType || (IssueTimelineItemsItemType = {}));
+/** The possible color for an issue type */
+var IssueTypeColor;
+(function (IssueTypeColor) {
+    /** blue */
+    IssueTypeColor["Blue"] = "BLUE";
+    /** gray */
+    IssueTypeColor["Gray"] = "GRAY";
+    /** green */
+    IssueTypeColor["Green"] = "GREEN";
+    /** orange */
+    IssueTypeColor["Orange"] = "ORANGE";
+    /** pink */
+    IssueTypeColor["Pink"] = "PINK";
+    /** purple */
+    IssueTypeColor["Purple"] = "PURPLE";
+    /** red */
+    IssueTypeColor["Red"] = "RED";
+    /** yellow */
+    IssueTypeColor["Yellow"] = "YELLOW";
+})(IssueTypeColor || (IssueTypeColor = {}));
+/** Properties by which issue type connections can be ordered. */
+var IssueTypeOrderField;
+(function (IssueTypeOrderField) {
+    /** Order issue types by creation time */
+    IssueTypeOrderField["CreatedAt"] = "CREATED_AT";
+    /** Order issue types by name */
+    IssueTypeOrderField["Name"] = "NAME";
+})(IssueTypeOrderField || (IssueTypeOrderField = {}));
+/** Properties by which label connections can be ordered. */
+var LabelOrderField;
+(function (LabelOrderField) {
+    /** Order labels by creation time */
+    LabelOrderField["CreatedAt"] = "CREATED_AT";
+    /** Order labels by issue count */
+    LabelOrderField["IssueCount"] = "ISSUE_COUNT";
+    /** Order labels by name */
+    LabelOrderField["Name"] = "NAME";
+})(LabelOrderField || (LabelOrderField = {}));
+/** Properties by which language connections can be ordered. */
+var LanguageOrderField;
+(function (LanguageOrderField) {
+    /** Order languages by the size of all files containing the language */
+    LanguageOrderField["Size"] = "SIZE";
+})(LanguageOrderField || (LanguageOrderField = {}));
+/** The possible reasons that an issue or pull request was locked. */
+var LockReason;
+(function (LockReason) {
+    /** The issue or pull request was locked because the conversation was off-topic. */
+    LockReason["OffTopic"] = "OFF_TOPIC";
+    /** The issue or pull request was locked because the conversation was resolved. */
+    LockReason["Resolved"] = "RESOLVED";
+    /** The issue or pull request was locked because the conversation was spam. */
+    LockReason["Spam"] = "SPAM";
+    /** The issue or pull request was locked because the conversation was too heated. */
+    LockReason["TooHeated"] = "TOO_HEATED";
+})(LockReason || (LockReason = {}));
+/** Properties by which mannequins can be ordered. */
+var MannequinOrderField;
+(function (MannequinOrderField) {
+    /** Order mannequins why when they were created. */
+    MannequinOrderField["CreatedAt"] = "CREATED_AT";
+    /** Order mannequins alphabetically by their source login. */
+    MannequinOrderField["Login"] = "LOGIN";
+})(MannequinOrderField || (MannequinOrderField = {}));
+/** The possible default commit messages for merges. */
+var MergeCommitMessage;
+(function (MergeCommitMessage) {
+    /** Default to a blank commit message. */
+    MergeCommitMessage["Blank"] = "BLANK";
+    /** Default to the pull request's body. */
+    MergeCommitMessage["PrBody"] = "PR_BODY";
+    /** Default to the pull request's title. */
+    MergeCommitMessage["PrTitle"] = "PR_TITLE";
+})(MergeCommitMessage || (MergeCommitMessage = {}));
+/** The possible default commit titles for merges. */
+var MergeCommitTitle;
+(function (MergeCommitTitle) {
+    /** Default to the classic title for a merge message (e.g., Merge pull request #123 from branch-name). */
+    MergeCommitTitle["MergeMessage"] = "MERGE_MESSAGE";
+    /** Default to the pull request's title. */
+    MergeCommitTitle["PrTitle"] = "PR_TITLE";
+})(MergeCommitTitle || (MergeCommitTitle = {}));
+/** The possible states for a merge queue entry. */
+var MergeQueueEntryState;
+(function (MergeQueueEntryState) {
+    /** The entry is currently waiting for checks to pass. */
+    MergeQueueEntryState["AwaitingChecks"] = "AWAITING_CHECKS";
+    /** The entry is currently locked. */
+    MergeQueueEntryState["Locked"] = "LOCKED";
+    /** The entry is currently mergeable. */
+    MergeQueueEntryState["Mergeable"] = "MERGEABLE";
+    /** The entry is currently queued. */
+    MergeQueueEntryState["Queued"] = "QUEUED";
+    /** The entry is currently unmergeable. */
+    MergeQueueEntryState["Unmergeable"] = "UNMERGEABLE";
+})(MergeQueueEntryState || (MergeQueueEntryState = {}));
+/** When set to ALLGREEN, the merge commit created by merge queue for each PR in the group must pass all required checks to merge. When set to HEADGREEN, only the commit at the head of the merge group, i.e. the commit containing changes from all of the PRs in the group, must pass its required checks to merge. */
+var MergeQueueGroupingStrategy;
+(function (MergeQueueGroupingStrategy) {
+    /** The merge commit created by merge queue for each PR in the group must pass all required checks to merge */
+    MergeQueueGroupingStrategy["Allgreen"] = "ALLGREEN";
+    /** Only the commit at the head of the merge group must pass its required checks to merge. */
+    MergeQueueGroupingStrategy["Headgreen"] = "HEADGREEN";
+})(MergeQueueGroupingStrategy || (MergeQueueGroupingStrategy = {}));
+/** Method to use when merging changes from queued pull requests. */
+var MergeQueueMergeMethod;
+(function (MergeQueueMergeMethod) {
+    /** Merge commit */
+    MergeQueueMergeMethod["Merge"] = "MERGE";
+    /** Rebase and merge */
+    MergeQueueMergeMethod["Rebase"] = "REBASE";
+    /** Squash and merge */
+    MergeQueueMergeMethod["Squash"] = "SQUASH";
+})(MergeQueueMergeMethod || (MergeQueueMergeMethod = {}));
+/** The possible merging strategies for a merge queue. */
+var MergeQueueMergingStrategy;
+(function (MergeQueueMergingStrategy) {
+    /** Entries only allowed to merge if they are passing. */
+    MergeQueueMergingStrategy["Allgreen"] = "ALLGREEN";
+    /** Failing Entires are allowed to merge if they are with a passing entry. */
+    MergeQueueMergingStrategy["Headgreen"] = "HEADGREEN";
+})(MergeQueueMergingStrategy || (MergeQueueMergingStrategy = {}));
+/** Detailed status information about a pull request merge. */
+var MergeStateStatus;
+(function (MergeStateStatus) {
+    /** The head ref is out of date. */
+    MergeStateStatus["Behind"] = "BEHIND";
+    /** The merge is blocked. */
+    MergeStateStatus["Blocked"] = "BLOCKED";
+    /** Mergeable and passing commit status. */
+    MergeStateStatus["Clean"] = "CLEAN";
+    /** The merge commit cannot be cleanly created. */
+    MergeStateStatus["Dirty"] = "DIRTY";
+    /**
+     * The merge is blocked due to the pull request being a draft.
+     * @deprecated DRAFT state will be removed from this enum and `isDraft` should be used instead Use PullRequest.isDraft instead. Removal on 2021-01-01 UTC.
+     */
+    MergeStateStatus["Draft"] = "DRAFT";
+    /** Mergeable with passing commit status and pre-receive hooks. */
+    MergeStateStatus["HasHooks"] = "HAS_HOOKS";
+    /** The state cannot currently be determined. */
+    MergeStateStatus["Unknown"] = "UNKNOWN";
+    /** Mergeable with non-passing commit status. */
+    MergeStateStatus["Unstable"] = "UNSTABLE";
+})(MergeStateStatus || (MergeStateStatus = {}));
+/** Whether or not a PullRequest can be merged. */
+var MergeableState;
+(function (MergeableState) {
+    /** The pull request cannot be merged due to merge conflicts. */
+    MergeableState["Conflicting"] = "CONFLICTING";
+    /** The pull request can be merged. */
+    MergeableState["Mergeable"] = "MERGEABLE";
+    /** The mergeability of the pull request is still being calculated. */
+    MergeableState["Unknown"] = "UNKNOWN";
+})(MergeableState || (MergeableState = {}));
+/** Represents the different GitHub Enterprise Importer (GEI) migration sources. */
+var MigrationSourceType;
+(function (MigrationSourceType) {
+    /** An Azure DevOps migration source. */
+    MigrationSourceType["AzureDevops"] = "AZURE_DEVOPS";
+    /** A Bitbucket Server migration source. */
+    MigrationSourceType["BitbucketServer"] = "BITBUCKET_SERVER";
+    /** A GitHub Migration API source. */
+    MigrationSourceType["GithubArchive"] = "GITHUB_ARCHIVE";
+})(MigrationSourceType || (MigrationSourceType = {}));
+/** The GitHub Enterprise Importer (GEI) migration state. */
+var MigrationState;
+(function (MigrationState) {
+    /** The migration has failed. */
+    MigrationState["Failed"] = "FAILED";
+    /** The migration has invalid credentials. */
+    MigrationState["FailedValidation"] = "FAILED_VALIDATION";
+    /** The migration is in progress. */
+    MigrationState["InProgress"] = "IN_PROGRESS";
+    /** The migration has not started. */
+    MigrationState["NotStarted"] = "NOT_STARTED";
+    /** The migration needs to have its credentials validated. */
+    MigrationState["PendingValidation"] = "PENDING_VALIDATION";
+    /** The migration has been queued. */
+    MigrationState["Queued"] = "QUEUED";
+    /** The migration has succeeded. */
+    MigrationState["Succeeded"] = "SUCCEEDED";
+})(MigrationState || (MigrationState = {}));
+/** Properties by which milestone connections can be ordered. */
+var MilestoneOrderField;
+(function (MilestoneOrderField) {
+    /** Order milestones by when they were created. */
+    MilestoneOrderField["CreatedAt"] = "CREATED_AT";
+    /** Order milestones by when they are due. */
+    MilestoneOrderField["DueDate"] = "DUE_DATE";
+    /** Order milestones by their number. */
+    MilestoneOrderField["Number"] = "NUMBER";
+    /** Order milestones by when they were last updated. */
+    MilestoneOrderField["UpdatedAt"] = "UPDATED_AT";
+})(MilestoneOrderField || (MilestoneOrderField = {}));
+/** The possible states of a milestone. */
+var MilestoneState;
+(function (MilestoneState) {
+    /** A milestone that has been closed. */
+    MilestoneState["Closed"] = "CLOSED";
+    /** A milestone that is still open. */
+    MilestoneState["Open"] = "OPEN";
+})(MilestoneState || (MilestoneState = {}));
+/** The possible values for the notification restriction setting. */
+var NotificationRestrictionSettingValue;
+(function (NotificationRestrictionSettingValue) {
+    /** The setting is disabled for the owner. */
+    NotificationRestrictionSettingValue["Disabled"] = "DISABLED";
+    /** The setting is enabled for the owner. */
+    NotificationRestrictionSettingValue["Enabled"] = "ENABLED";
+})(NotificationRestrictionSettingValue || (NotificationRestrictionSettingValue = {}));
+/** The OIDC identity provider type */
+var OidcProviderType;
+(function (OidcProviderType) {
+    /** Azure Active Directory */
+    OidcProviderType["Aad"] = "AAD";
+})(OidcProviderType || (OidcProviderType = {}));
+/** The state of an OAuth application when it was created. */
+var OauthApplicationCreateAuditEntryState;
+(function (OauthApplicationCreateAuditEntryState) {
+    /** The OAuth application was active and allowed to have OAuth Accesses. */
+    OauthApplicationCreateAuditEntryState["Active"] = "ACTIVE";
+    /** The OAuth application was in the process of being deleted. */
+    OauthApplicationCreateAuditEntryState["PendingDeletion"] = "PENDING_DELETION";
+    /** The OAuth application was suspended from generating OAuth Accesses due to abuse or security concerns. */
+    OauthApplicationCreateAuditEntryState["Suspended"] = "SUSPENDED";
+})(OauthApplicationCreateAuditEntryState || (OauthApplicationCreateAuditEntryState = {}));
+/** The corresponding operation type for the action */
+var OperationType;
+(function (OperationType) {
+    /** An existing resource was accessed */
+    OperationType["Access"] = "ACCESS";
+    /** A resource performed an authentication event */
+    OperationType["Authentication"] = "AUTHENTICATION";
+    /** A new resource was created */
+    OperationType["Create"] = "CREATE";
+    /** An existing resource was modified */
+    OperationType["Modify"] = "MODIFY";
+    /** An existing resource was removed */
+    OperationType["Remove"] = "REMOVE";
+    /** An existing resource was restored */
+    OperationType["Restore"] = "RESTORE";
+    /** An existing resource was transferred between multiple resources */
+    OperationType["Transfer"] = "TRANSFER";
+})(OperationType || (OperationType = {}));
+/** Possible directions in which to order a list of items when provided an `orderBy` argument. */
+var OrderDirection;
+(function (OrderDirection) {
+    /** Specifies an ascending order for a given `orderBy` argument. */
+    OrderDirection["Asc"] = "ASC";
+    /** Specifies a descending order for a given `orderBy` argument. */
+    OrderDirection["Desc"] = "DESC";
+})(OrderDirection || (OrderDirection = {}));
+/** The permissions available to members on an Organization. */
+var OrgAddMemberAuditEntryPermission;
+(function (OrgAddMemberAuditEntryPermission) {
+    /** Can read, clone, push, and add collaborators to repositories. */
+    OrgAddMemberAuditEntryPermission["Admin"] = "ADMIN";
+    /** Can read and clone repositories. */
+    OrgAddMemberAuditEntryPermission["Read"] = "READ";
+})(OrgAddMemberAuditEntryPermission || (OrgAddMemberAuditEntryPermission = {}));
+/** The billing plans available for organizations. */
+var OrgCreateAuditEntryBillingPlan;
+(function (OrgCreateAuditEntryBillingPlan) {
+    /** Team Plan */
+    OrgCreateAuditEntryBillingPlan["Business"] = "BUSINESS";
+    /** Enterprise Cloud Plan */
+    OrgCreateAuditEntryBillingPlan["BusinessPlus"] = "BUSINESS_PLUS";
+    /** Free Plan */
+    OrgCreateAuditEntryBillingPlan["Free"] = "FREE";
+    /** Tiered Per Seat Plan */
+    OrgCreateAuditEntryBillingPlan["TieredPerSeat"] = "TIERED_PER_SEAT";
+    /** Legacy Unlimited Plan */
+    OrgCreateAuditEntryBillingPlan["Unlimited"] = "UNLIMITED";
+})(OrgCreateAuditEntryBillingPlan || (OrgCreateAuditEntryBillingPlan = {}));
+/** Properties by which enterprise owners can be ordered. */
+var OrgEnterpriseOwnerOrderField;
+(function (OrgEnterpriseOwnerOrderField) {
+    /** Order enterprise owners by login. */
+    OrgEnterpriseOwnerOrderField["Login"] = "LOGIN";
+})(OrgEnterpriseOwnerOrderField || (OrgEnterpriseOwnerOrderField = {}));
+/** The reason a billing manager was removed from an Organization. */
+var OrgRemoveBillingManagerAuditEntryReason;
+(function (OrgRemoveBillingManagerAuditEntryReason) {
+    /** SAML external identity missing */
+    OrgRemoveBillingManagerAuditEntryReason["SamlExternalIdentityMissing"] = "SAML_EXTERNAL_IDENTITY_MISSING";
+    /** SAML SSO enforcement requires an external identity */
+    OrgRemoveBillingManagerAuditEntryReason["SamlSsoEnforcementRequiresExternalIdentity"] = "SAML_SSO_ENFORCEMENT_REQUIRES_EXTERNAL_IDENTITY";
+    /** The organization required 2FA of its billing managers and this user did not have 2FA enabled. */
+    OrgRemoveBillingManagerAuditEntryReason["TwoFactorRequirementNonCompliance"] = "TWO_FACTOR_REQUIREMENT_NON_COMPLIANCE";
+})(OrgRemoveBillingManagerAuditEntryReason || (OrgRemoveBillingManagerAuditEntryReason = {}));
+/** The type of membership a user has with an Organization. */
+var OrgRemoveMemberAuditEntryMembershipType;
+(function (OrgRemoveMemberAuditEntryMembershipType) {
+    /** Organization owners have full access and can change several settings, including the names of repositories that belong to the Organization and Owners team membership. In addition, organization owners can delete the organization and all of its repositories. */
+    OrgRemoveMemberAuditEntryMembershipType["Admin"] = "ADMIN";
+    /** A billing manager is a user who manages the billing settings for the Organization, such as updating payment information. */
+    OrgRemoveMemberAuditEntryMembershipType["BillingManager"] = "BILLING_MANAGER";
+    /** A direct member is a user that is a member of the Organization. */
+    OrgRemoveMemberAuditEntryMembershipType["DirectMember"] = "DIRECT_MEMBER";
+    /** An outside collaborator is a person who isn't explicitly a member of the Organization, but who has Read, Write, or Admin permissions to one or more repositories in the organization. */
+    OrgRemoveMemberAuditEntryMembershipType["OutsideCollaborator"] = "OUTSIDE_COLLABORATOR";
+    /** A suspended member. */
+    OrgRemoveMemberAuditEntryMembershipType["Suspended"] = "SUSPENDED";
+    /** An unaffiliated collaborator is a person who is not a member of the Organization and does not have access to any repositories in the Organization. */
+    OrgRemoveMemberAuditEntryMembershipType["Unaffiliated"] = "UNAFFILIATED";
+})(OrgRemoveMemberAuditEntryMembershipType || (OrgRemoveMemberAuditEntryMembershipType = {}));
+/** The reason a member was removed from an Organization. */
+var OrgRemoveMemberAuditEntryReason;
+(function (OrgRemoveMemberAuditEntryReason) {
+    /** SAML external identity missing */
+    OrgRemoveMemberAuditEntryReason["SamlExternalIdentityMissing"] = "SAML_EXTERNAL_IDENTITY_MISSING";
+    /** SAML SSO enforcement requires an external identity */
+    OrgRemoveMemberAuditEntryReason["SamlSsoEnforcementRequiresExternalIdentity"] = "SAML_SSO_ENFORCEMENT_REQUIRES_EXTERNAL_IDENTITY";
+    /** User was removed from organization during account recovery */
+    OrgRemoveMemberAuditEntryReason["TwoFactorAccountRecovery"] = "TWO_FACTOR_ACCOUNT_RECOVERY";
+    /** The organization required 2FA of its billing managers and this user did not have 2FA enabled. */
+    OrgRemoveMemberAuditEntryReason["TwoFactorRequirementNonCompliance"] = "TWO_FACTOR_REQUIREMENT_NON_COMPLIANCE";
+    /** User account has been deleted */
+    OrgRemoveMemberAuditEntryReason["UserAccountDeleted"] = "USER_ACCOUNT_DELETED";
+})(OrgRemoveMemberAuditEntryReason || (OrgRemoveMemberAuditEntryReason = {}));
+/** The type of membership a user has with an Organization. */
+var OrgRemoveOutsideCollaboratorAuditEntryMembershipType;
+(function (OrgRemoveOutsideCollaboratorAuditEntryMembershipType) {
+    /** A billing manager is a user who manages the billing settings for the Organization, such as updating payment information. */
+    OrgRemoveOutsideCollaboratorAuditEntryMembershipType["BillingManager"] = "BILLING_MANAGER";
+    /** An outside collaborator is a person who isn't explicitly a member of the Organization, but who has Read, Write, or Admin permissions to one or more repositories in the organization. */
+    OrgRemoveOutsideCollaboratorAuditEntryMembershipType["OutsideCollaborator"] = "OUTSIDE_COLLABORATOR";
+    /** An unaffiliated collaborator is a person who is not a member of the Organization and does not have access to any repositories in the organization. */
+    OrgRemoveOutsideCollaboratorAuditEntryMembershipType["Unaffiliated"] = "UNAFFILIATED";
+})(OrgRemoveOutsideCollaboratorAuditEntryMembershipType || (OrgRemoveOutsideCollaboratorAuditEntryMembershipType = {}));
+/** The reason an outside collaborator was removed from an Organization. */
+var OrgRemoveOutsideCollaboratorAuditEntryReason;
+(function (OrgRemoveOutsideCollaboratorAuditEntryReason) {
+    /** SAML external identity missing */
+    OrgRemoveOutsideCollaboratorAuditEntryReason["SamlExternalIdentityMissing"] = "SAML_EXTERNAL_IDENTITY_MISSING";
+    /** The organization required 2FA of its billing managers and this user did not have 2FA enabled. */
+    OrgRemoveOutsideCollaboratorAuditEntryReason["TwoFactorRequirementNonCompliance"] = "TWO_FACTOR_REQUIREMENT_NON_COMPLIANCE";
+})(OrgRemoveOutsideCollaboratorAuditEntryReason || (OrgRemoveOutsideCollaboratorAuditEntryReason = {}));
+/** The default permission a repository can have in an Organization. */
+var OrgUpdateDefaultRepositoryPermissionAuditEntryPermission;
+(function (OrgUpdateDefaultRepositoryPermissionAuditEntryPermission) {
+    /** Can read, clone, push, and add collaborators to repositories. */
+    OrgUpdateDefaultRepositoryPermissionAuditEntryPermission["Admin"] = "ADMIN";
+    /** No default permission value. */
+    OrgUpdateDefaultRepositoryPermissionAuditEntryPermission["None"] = "NONE";
+    /** Can read and clone repositories. */
+    OrgUpdateDefaultRepositoryPermissionAuditEntryPermission["Read"] = "READ";
+    /** Can read, clone and push to repositories. */
+    OrgUpdateDefaultRepositoryPermissionAuditEntryPermission["Write"] = "WRITE";
+})(OrgUpdateDefaultRepositoryPermissionAuditEntryPermission || (OrgUpdateDefaultRepositoryPermissionAuditEntryPermission = {}));
+/** The permissions available to members on an Organization. */
+var OrgUpdateMemberAuditEntryPermission;
+(function (OrgUpdateMemberAuditEntryPermission) {
+    /** Can read, clone, push, and add collaborators to repositories. */
+    OrgUpdateMemberAuditEntryPermission["Admin"] = "ADMIN";
+    /** Can read and clone repositories. */
+    OrgUpdateMemberAuditEntryPermission["Read"] = "READ";
+})(OrgUpdateMemberAuditEntryPermission || (OrgUpdateMemberAuditEntryPermission = {}));
+/** The permissions available for repository creation on an Organization. */
+var OrgUpdateMemberRepositoryCreationPermissionAuditEntryVisibility;
+(function (OrgUpdateMemberRepositoryCreationPermissionAuditEntryVisibility) {
+    /** All organization members are restricted from creating any repositories. */
+    OrgUpdateMemberRepositoryCreationPermissionAuditEntryVisibility["All"] = "ALL";
+    /** All organization members are restricted from creating internal repositories. */
+    OrgUpdateMemberRepositoryCreationPermissionAuditEntryVisibility["Internal"] = "INTERNAL";
+    /** All organization members are allowed to create any repositories. */
+    OrgUpdateMemberRepositoryCreationPermissionAuditEntryVisibility["None"] = "NONE";
+    /** All organization members are restricted from creating private repositories. */
+    OrgUpdateMemberRepositoryCreationPermissionAuditEntryVisibility["Private"] = "PRIVATE";
+    /** All organization members are restricted from creating private or internal repositories. */
+    OrgUpdateMemberRepositoryCreationPermissionAuditEntryVisibility["PrivateInternal"] = "PRIVATE_INTERNAL";
+    /** All organization members are restricted from creating public repositories. */
+    OrgUpdateMemberRepositoryCreationPermissionAuditEntryVisibility["Public"] = "PUBLIC";
+    /** All organization members are restricted from creating public or internal repositories. */
+    OrgUpdateMemberRepositoryCreationPermissionAuditEntryVisibility["PublicInternal"] = "PUBLIC_INTERNAL";
+    /** All organization members are restricted from creating public or private repositories. */
+    OrgUpdateMemberRepositoryCreationPermissionAuditEntryVisibility["PublicPrivate"] = "PUBLIC_PRIVATE";
+})(OrgUpdateMemberRepositoryCreationPermissionAuditEntryVisibility || (OrgUpdateMemberRepositoryCreationPermissionAuditEntryVisibility = {}));
+/** The possible organization invitation roles. */
+var OrganizationInvitationRole;
+(function (OrganizationInvitationRole) {
+    /** The user is invited to be an admin of the organization. */
+    OrganizationInvitationRole["Admin"] = "ADMIN";
+    /** The user is invited to be a billing manager of the organization. */
+    OrganizationInvitationRole["BillingManager"] = "BILLING_MANAGER";
+    /** The user is invited to be a direct member of the organization. */
+    OrganizationInvitationRole["DirectMember"] = "DIRECT_MEMBER";
+    /** The user's previous role will be reinstated. */
+    OrganizationInvitationRole["Reinstate"] = "REINSTATE";
+})(OrganizationInvitationRole || (OrganizationInvitationRole = {}));
+/** The possible organization invitation sources. */
+var OrganizationInvitationSource;
+(function (OrganizationInvitationSource) {
+    /** The invitation was created from the web interface or from API */
+    OrganizationInvitationSource["Member"] = "MEMBER";
+    /** The invitation was created from SCIM */
+    OrganizationInvitationSource["Scim"] = "SCIM";
+    /** The invitation was sent before this feature was added */
+    OrganizationInvitationSource["Unknown"] = "UNKNOWN";
+})(OrganizationInvitationSource || (OrganizationInvitationSource = {}));
+/** The possible organization invitation types. */
+var OrganizationInvitationType;
+(function (OrganizationInvitationType) {
+    /** The invitation was to an email address. */
+    OrganizationInvitationType["Email"] = "EMAIL";
+    /** The invitation was to an existing user. */
+    OrganizationInvitationType["User"] = "USER";
+})(OrganizationInvitationType || (OrganizationInvitationType = {}));
+/** The possible roles within an organization for its members. */
+var OrganizationMemberRole;
+(function (OrganizationMemberRole) {
+    /** The user is an administrator of the organization. */
+    OrganizationMemberRole["Admin"] = "ADMIN";
+    /** The user is a member of the organization. */
+    OrganizationMemberRole["Member"] = "MEMBER";
+})(OrganizationMemberRole || (OrganizationMemberRole = {}));
+/** The possible values for the members can create repositories setting on an organization. */
+var OrganizationMembersCanCreateRepositoriesSettingValue;
+(function (OrganizationMembersCanCreateRepositoriesSettingValue) {
+    /** Members will be able to create public and private repositories. */
+    OrganizationMembersCanCreateRepositoriesSettingValue["All"] = "ALL";
+    /** Members will not be able to create public or private repositories. */
+    OrganizationMembersCanCreateRepositoriesSettingValue["Disabled"] = "DISABLED";
+    /** Members will be able to create only internal repositories. */
+    OrganizationMembersCanCreateRepositoriesSettingValue["Internal"] = "INTERNAL";
+    /** Members will be able to create only private repositories. */
+    OrganizationMembersCanCreateRepositoriesSettingValue["Private"] = "PRIVATE";
+})(OrganizationMembersCanCreateRepositoriesSettingValue || (OrganizationMembersCanCreateRepositoriesSettingValue = {}));
+/** The Octoshift Organization migration state. */
+var OrganizationMigrationState;
+(function (OrganizationMigrationState) {
+    /** The Octoshift migration has failed. */
+    OrganizationMigrationState["Failed"] = "FAILED";
+    /** The Octoshift migration has invalid credentials. */
+    OrganizationMigrationState["FailedValidation"] = "FAILED_VALIDATION";
+    /** The Octoshift migration is in progress. */
+    OrganizationMigrationState["InProgress"] = "IN_PROGRESS";
+    /** The Octoshift migration has not started. */
+    OrganizationMigrationState["NotStarted"] = "NOT_STARTED";
+    /** The Octoshift migration needs to have its credentials validated. */
+    OrganizationMigrationState["PendingValidation"] = "PENDING_VALIDATION";
+    /** The Octoshift migration is performing post repository migrations. */
+    OrganizationMigrationState["PostRepoMigration"] = "POST_REPO_MIGRATION";
+    /** The Octoshift migration is performing pre repository migrations. */
+    OrganizationMigrationState["PreRepoMigration"] = "PRE_REPO_MIGRATION";
+    /** The Octoshift migration has been queued. */
+    OrganizationMigrationState["Queued"] = "QUEUED";
+    /** The Octoshift org migration is performing repository migrations. */
+    OrganizationMigrationState["RepoMigration"] = "REPO_MIGRATION";
+    /** The Octoshift migration has succeeded. */
+    OrganizationMigrationState["Succeeded"] = "SUCCEEDED";
+})(OrganizationMigrationState || (OrganizationMigrationState = {}));
+/** Properties by which organization connections can be ordered. */
+var OrganizationOrderField;
+(function (OrganizationOrderField) {
+    /** Order organizations by creation time */
+    OrganizationOrderField["CreatedAt"] = "CREATED_AT";
+    /** Order organizations by login */
+    OrganizationOrderField["Login"] = "LOGIN";
+})(OrganizationOrderField || (OrganizationOrderField = {}));
+/** Properties by which package file connections can be ordered. */
+var PackageFileOrderField;
+(function (PackageFileOrderField) {
+    /** Order package files by creation time */
+    PackageFileOrderField["CreatedAt"] = "CREATED_AT";
+})(PackageFileOrderField || (PackageFileOrderField = {}));
+/** Properties by which package connections can be ordered. */
+var PackageOrderField;
+(function (PackageOrderField) {
+    /** Order packages by creation time */
+    PackageOrderField["CreatedAt"] = "CREATED_AT";
+})(PackageOrderField || (PackageOrderField = {}));
+/** The possible types of a package. */
+var PackageType;
+(function (PackageType) {
+    /** A debian package. */
+    PackageType["Debian"] = "DEBIAN";
+    /**
+     * A docker image.
+     * @deprecated DOCKER will be removed from this enum as this type will be migrated to only be used by the Packages REST API. Removal on 2021-06-21 UTC.
+     */
+    PackageType["Docker"] = "DOCKER";
+    /**
+     * A maven package.
+     * @deprecated MAVEN will be removed from this enum as this type will be migrated to only be used by the Packages REST API. Removal on 2023-02-10 UTC.
+     */
+    PackageType["Maven"] = "MAVEN";
+    /**
+     * An npm package.
+     * @deprecated NPM will be removed from this enum as this type will be migrated to only be used by the Packages REST API. Removal on 2022-11-21 UTC.
+     */
+    PackageType["Npm"] = "NPM";
+    /**
+     * A nuget package.
+     * @deprecated NUGET will be removed from this enum as this type will be migrated to only be used by the Packages REST API. Removal on 2022-11-21 UTC.
+     */
+    PackageType["Nuget"] = "NUGET";
+    /** A python package. */
+    PackageType["Pypi"] = "PYPI";
+    /**
+     * A rubygems package.
+     * @deprecated RUBYGEMS will be removed from this enum as this type will be migrated to only be used by the Packages REST API. Removal on 2022-12-28 UTC.
+     */
+    PackageType["Rubygems"] = "RUBYGEMS";
+})(PackageType || (PackageType = {}));
+/** Properties by which package version connections can be ordered. */
+var PackageVersionOrderField;
+(function (PackageVersionOrderField) {
+    /** Order package versions by creation time */
+    PackageVersionOrderField["CreatedAt"] = "CREATED_AT";
+})(PackageVersionOrderField || (PackageVersionOrderField = {}));
+/** The possible types of patch statuses. */
+var PatchStatus;
+(function (PatchStatus) {
+    /** The file was added. Git status 'A'. */
+    PatchStatus["Added"] = "ADDED";
+    /** The file's type was changed. Git status 'T'. */
+    PatchStatus["Changed"] = "CHANGED";
+    /** The file was copied. Git status 'C'. */
+    PatchStatus["Copied"] = "COPIED";
+    /** The file was deleted. Git status 'D'. */
+    PatchStatus["Deleted"] = "DELETED";
+    /** The file's contents were changed. Git status 'M'. */
+    PatchStatus["Modified"] = "MODIFIED";
+    /** The file was renamed. Git status 'R'. */
+    PatchStatus["Renamed"] = "RENAMED";
+})(PatchStatus || (PatchStatus = {}));
+/** Represents items that can be pinned to a profile page or dashboard. */
+var PinnableItemType;
+(function (PinnableItemType) {
+    /** A gist. */
+    PinnableItemType["Gist"] = "GIST";
+    /** An issue. */
+    PinnableItemType["Issue"] = "ISSUE";
+    /** An organization. */
+    PinnableItemType["Organization"] = "ORGANIZATION";
+    /** A project. */
+    PinnableItemType["Project"] = "PROJECT";
+    /** A pull request. */
+    PinnableItemType["PullRequest"] = "PULL_REQUEST";
+    /** A repository. */
+    PinnableItemType["Repository"] = "REPOSITORY";
+    /** A team. */
+    PinnableItemType["Team"] = "TEAM";
+    /** A user. */
+    PinnableItemType["User"] = "USER";
+})(PinnableItemType || (PinnableItemType = {}));
+/** Preconfigured gradients that may be used to style discussions pinned within a repository. */
+var PinnedDiscussionGradient;
+(function (PinnedDiscussionGradient) {
+    /** A gradient of blue to mint */
+    PinnedDiscussionGradient["BlueMint"] = "BLUE_MINT";
+    /** A gradient of blue to purple */
+    PinnedDiscussionGradient["BluePurple"] = "BLUE_PURPLE";
+    /** A gradient of pink to blue */
+    PinnedDiscussionGradient["PinkBlue"] = "PINK_BLUE";
+    /** A gradient of purple to coral */
+    PinnedDiscussionGradient["PurpleCoral"] = "PURPLE_CORAL";
+    /** A gradient of red to orange */
+    PinnedDiscussionGradient["RedOrange"] = "RED_ORANGE";
+})(PinnedDiscussionGradient || (PinnedDiscussionGradient = {}));
+/** Preconfigured background patterns that may be used to style discussions pinned within a repository. */
+var PinnedDiscussionPattern;
+(function (PinnedDiscussionPattern) {
+    /** An upward-facing chevron pattern */
+    PinnedDiscussionPattern["ChevronUp"] = "CHEVRON_UP";
+    /** A hollow dot pattern */
+    PinnedDiscussionPattern["Dot"] = "DOT";
+    /** A solid dot pattern */
+    PinnedDiscussionPattern["DotFill"] = "DOT_FILL";
+    /** A heart pattern */
+    PinnedDiscussionPattern["HeartFill"] = "HEART_FILL";
+    /** A plus sign pattern */
+    PinnedDiscussionPattern["Plus"] = "PLUS";
+    /** A lightning bolt pattern */
+    PinnedDiscussionPattern["Zap"] = "ZAP";
+})(PinnedDiscussionPattern || (PinnedDiscussionPattern = {}));
+/** Properties by which pinned environments connections can be ordered */
+var PinnedEnvironmentOrderField;
+(function (PinnedEnvironmentOrderField) {
+    /** Order pinned environments by position */
+    PinnedEnvironmentOrderField["Position"] = "POSITION";
+})(PinnedEnvironmentOrderField || (PinnedEnvironmentOrderField = {}));
+/** The possible archived states of a project card. */
+var ProjectCardArchivedState;
+(function (ProjectCardArchivedState) {
+    /**
+     * A project card that is archived
+     * @deprecated Projects (classic) is being deprecated in favor of the new Projects experience, see: https://github.blog/changelog/2024-05-23-sunset-notice-projects-classic/. Removal on 2025-04-01 UTC.
+     */
+    ProjectCardArchivedState["Archived"] = "ARCHIVED";
+    /**
+     * A project card that is not archived
+     * @deprecated Projects (classic) is being deprecated in favor of the new Projects experience, see: https://github.blog/changelog/2024-05-23-sunset-notice-projects-classic/. Removal on 2025-04-01 UTC.
+     */
+    ProjectCardArchivedState["NotArchived"] = "NOT_ARCHIVED";
+})(ProjectCardArchivedState || (ProjectCardArchivedState = {}));
+/** Various content states of a ProjectCard */
+var ProjectCardState;
+(function (ProjectCardState) {
+    /** The card has content only. */
+    ProjectCardState["ContentOnly"] = "CONTENT_ONLY";
+    /** The card has a note only. */
+    ProjectCardState["NoteOnly"] = "NOTE_ONLY";
+    /** The card is redacted. */
+    ProjectCardState["Redacted"] = "REDACTED";
+})(ProjectCardState || (ProjectCardState = {}));
+/** The semantic purpose of the column - todo, in progress, or done. */
+var ProjectColumnPurpose;
+(function (ProjectColumnPurpose) {
+    /** The column contains cards which are complete */
+    ProjectColumnPurpose["Done"] = "DONE";
+    /** The column contains cards which are currently being worked on */
+    ProjectColumnPurpose["InProgress"] = "IN_PROGRESS";
+    /** The column contains cards still to be worked on */
+    ProjectColumnPurpose["Todo"] = "TODO";
+})(ProjectColumnPurpose || (ProjectColumnPurpose = {}));
+/** Properties by which project connections can be ordered. */
+var ProjectOrderField;
+(function (ProjectOrderField) {
+    /** Order projects by creation time */
+    ProjectOrderField["CreatedAt"] = "CREATED_AT";
+    /** Order projects by name */
+    ProjectOrderField["Name"] = "NAME";
+    /** Order projects by update time */
+    ProjectOrderField["UpdatedAt"] = "UPDATED_AT";
+})(ProjectOrderField || (ProjectOrderField = {}));
+/** State of the project; either 'open' or 'closed' */
+var ProjectState;
+(function (ProjectState) {
+    /** The project is closed. */
+    ProjectState["Closed"] = "CLOSED";
+    /** The project is open. */
+    ProjectState["Open"] = "OPEN";
+})(ProjectState || (ProjectState = {}));
+/** GitHub-provided templates for Projects */
+var ProjectTemplate;
+(function (ProjectTemplate) {
+    /** Create a board with v2 triggers to automatically move cards across To do, In progress and Done columns. */
+    ProjectTemplate["AutomatedKanbanV2"] = "AUTOMATED_KANBAN_V2";
+    /** Create a board with triggers to automatically move cards across columns with review automation. */
+    ProjectTemplate["AutomatedReviewsKanban"] = "AUTOMATED_REVIEWS_KANBAN";
+    /** Create a board with columns for To do, In progress and Done. */
+    ProjectTemplate["BasicKanban"] = "BASIC_KANBAN";
+    /** Create a board to triage and prioritize bugs with To do, priority, and Done columns. */
+    ProjectTemplate["BugTriage"] = "BUG_TRIAGE";
+})(ProjectTemplate || (ProjectTemplate = {}));
+/** The type of a project field. */
+var ProjectV2CustomFieldType;
+(function (ProjectV2CustomFieldType) {
+    /** Date */
+    ProjectV2CustomFieldType["Date"] = "DATE";
+    /** Iteration */
+    ProjectV2CustomFieldType["Iteration"] = "ITERATION";
+    /** Number */
+    ProjectV2CustomFieldType["Number"] = "NUMBER";
+    /** Single Select */
+    ProjectV2CustomFieldType["SingleSelect"] = "SINGLE_SELECT";
+    /** Text */
+    ProjectV2CustomFieldType["Text"] = "TEXT";
+})(ProjectV2CustomFieldType || (ProjectV2CustomFieldType = {}));
+/** Properties by which project v2 field connections can be ordered. */
+var ProjectV2FieldOrderField;
+(function (ProjectV2FieldOrderField) {
+    /** Order project v2 fields by creation time */
+    ProjectV2FieldOrderField["CreatedAt"] = "CREATED_AT";
+    /** Order project v2 fields by name */
+    ProjectV2FieldOrderField["Name"] = "NAME";
+    /** Order project v2 fields by position */
+    ProjectV2FieldOrderField["Position"] = "POSITION";
+})(ProjectV2FieldOrderField || (ProjectV2FieldOrderField = {}));
+/** The type of a project field. */
+var ProjectV2FieldType;
+(function (ProjectV2FieldType) {
+    /** Assignees */
+    ProjectV2FieldType["Assignees"] = "ASSIGNEES";
+    /** Date */
+    ProjectV2FieldType["Date"] = "DATE";
+    /** Issue type */
+    ProjectV2FieldType["IssueType"] = "ISSUE_TYPE";
+    /** Iteration */
+    ProjectV2FieldType["Iteration"] = "ITERATION";
+    /** Labels */
+    ProjectV2FieldType["Labels"] = "LABELS";
+    /** Linked Pull Requests */
+    ProjectV2FieldType["LinkedPullRequests"] = "LINKED_PULL_REQUESTS";
+    /** Milestone */
+    ProjectV2FieldType["Milestone"] = "MILESTONE";
+    /** Number */
+    ProjectV2FieldType["Number"] = "NUMBER";
+    /** Parent issue */
+    ProjectV2FieldType["ParentIssue"] = "PARENT_ISSUE";
+    /** Repository */
+    ProjectV2FieldType["Repository"] = "REPOSITORY";
+    /** Reviewers */
+    ProjectV2FieldType["Reviewers"] = "REVIEWERS";
+    /** Single Select */
+    ProjectV2FieldType["SingleSelect"] = "SINGLE_SELECT";
+    /** Sub-issues progress */
+    ProjectV2FieldType["SubIssuesProgress"] = "SUB_ISSUES_PROGRESS";
+    /** Text */
+    ProjectV2FieldType["Text"] = "TEXT";
+    /** Title */
+    ProjectV2FieldType["Title"] = "TITLE";
+    /** Tracked by */
+    ProjectV2FieldType["TrackedBy"] = "TRACKED_BY";
+    /** Tracks */
+    ProjectV2FieldType["Tracks"] = "TRACKS";
+})(ProjectV2FieldType || (ProjectV2FieldType = {}));
+/** Properties by which project v2 item field value connections can be ordered. */
+var ProjectV2ItemFieldValueOrderField;
+(function (ProjectV2ItemFieldValueOrderField) {
+    /** Order project v2 item field values by the their position in the project */
+    ProjectV2ItemFieldValueOrderField["Position"] = "POSITION";
+})(ProjectV2ItemFieldValueOrderField || (ProjectV2ItemFieldValueOrderField = {}));
+/** Properties by which project v2 item connections can be ordered. */
+var ProjectV2ItemOrderField;
+(function (ProjectV2ItemOrderField) {
+    /** Order project v2 items by the their position in the project */
+    ProjectV2ItemOrderField["Position"] = "POSITION";
+})(ProjectV2ItemOrderField || (ProjectV2ItemOrderField = {}));
+/** The type of a project item. */
+var ProjectV2ItemType;
+(function (ProjectV2ItemType) {
+    /** Draft Issue */
+    ProjectV2ItemType["DraftIssue"] = "DRAFT_ISSUE";
+    /** Issue */
+    ProjectV2ItemType["Issue"] = "ISSUE";
+    /** Pull Request */
+    ProjectV2ItemType["PullRequest"] = "PULL_REQUEST";
+    /** Redacted Item */
+    ProjectV2ItemType["Redacted"] = "REDACTED";
+})(ProjectV2ItemType || (ProjectV2ItemType = {}));
+/** Properties by which projects can be ordered. */
+var ProjectV2OrderField;
+(function (ProjectV2OrderField) {
+    /** The project's date and time of creation */
+    ProjectV2OrderField["CreatedAt"] = "CREATED_AT";
+    /** The project's number */
+    ProjectV2OrderField["Number"] = "NUMBER";
+    /** The project's title */
+    ProjectV2OrderField["Title"] = "TITLE";
+    /** The project's date and time of update */
+    ProjectV2OrderField["UpdatedAt"] = "UPDATED_AT";
+})(ProjectV2OrderField || (ProjectV2OrderField = {}));
+/** The possible roles of a collaborator on a project. */
+var ProjectV2PermissionLevel;
+(function (ProjectV2PermissionLevel) {
+    /** The collaborator can view, edit, and maange the settings of the project */
+    ProjectV2PermissionLevel["Admin"] = "ADMIN";
+    /** The collaborator can view the project */
+    ProjectV2PermissionLevel["Read"] = "READ";
+    /** The collaborator can view and edit the project */
+    ProjectV2PermissionLevel["Write"] = "WRITE";
+})(ProjectV2PermissionLevel || (ProjectV2PermissionLevel = {}));
+/** The possible roles of a collaborator on a project. */
+var ProjectV2Roles;
+(function (ProjectV2Roles) {
+    /** The collaborator can view, edit, and maange the settings of the project */
+    ProjectV2Roles["Admin"] = "ADMIN";
+    /** The collaborator has no direct access to the project */
+    ProjectV2Roles["None"] = "NONE";
+    /** The collaborator can view the project */
+    ProjectV2Roles["Reader"] = "READER";
+    /** The collaborator can view and edit the project */
+    ProjectV2Roles["Writer"] = "WRITER";
+})(ProjectV2Roles || (ProjectV2Roles = {}));
+/** The display color of a single-select field option. */
+var ProjectV2SingleSelectFieldOptionColor;
+(function (ProjectV2SingleSelectFieldOptionColor) {
+    /** BLUE */
+    ProjectV2SingleSelectFieldOptionColor["Blue"] = "BLUE";
+    /** GRAY */
+    ProjectV2SingleSelectFieldOptionColor["Gray"] = "GRAY";
+    /** GREEN */
+    ProjectV2SingleSelectFieldOptionColor["Green"] = "GREEN";
+    /** ORANGE */
+    ProjectV2SingleSelectFieldOptionColor["Orange"] = "ORANGE";
+    /** PINK */
+    ProjectV2SingleSelectFieldOptionColor["Pink"] = "PINK";
+    /** PURPLE */
+    ProjectV2SingleSelectFieldOptionColor["Purple"] = "PURPLE";
+    /** RED */
+    ProjectV2SingleSelectFieldOptionColor["Red"] = "RED";
+    /** YELLOW */
+    ProjectV2SingleSelectFieldOptionColor["Yellow"] = "YELLOW";
+})(ProjectV2SingleSelectFieldOptionColor || (ProjectV2SingleSelectFieldOptionColor = {}));
+/** The possible states of a project v2. */
+var ProjectV2State;
+(function (ProjectV2State) {
+    /** A project v2 that has been closed */
+    ProjectV2State["Closed"] = "CLOSED";
+    /** A project v2 that is still open */
+    ProjectV2State["Open"] = "OPEN";
+})(ProjectV2State || (ProjectV2State = {}));
+/** Properties by which project v2 status updates can be ordered. */
+var ProjectV2StatusUpdateOrderField;
+(function (ProjectV2StatusUpdateOrderField) {
+    /** Allows chronological ordering of project v2 status updates. */
+    ProjectV2StatusUpdateOrderField["CreatedAt"] = "CREATED_AT";
+})(ProjectV2StatusUpdateOrderField || (ProjectV2StatusUpdateOrderField = {}));
+/** The possible statuses of a project v2. */
+var ProjectV2StatusUpdateStatus;
+(function (ProjectV2StatusUpdateStatus) {
+    /** A project v2 that is at risk and encountering some challenges. */
+    ProjectV2StatusUpdateStatus["AtRisk"] = "AT_RISK";
+    /** A project v2 that is complete. */
+    ProjectV2StatusUpdateStatus["Complete"] = "COMPLETE";
+    /** A project v2 that is inactive. */
+    ProjectV2StatusUpdateStatus["Inactive"] = "INACTIVE";
+    /** A project v2 that is off track and needs attention. */
+    ProjectV2StatusUpdateStatus["OffTrack"] = "OFF_TRACK";
+    /** A project v2 that is on track with no risks. */
+    ProjectV2StatusUpdateStatus["OnTrack"] = "ON_TRACK";
+})(ProjectV2StatusUpdateStatus || (ProjectV2StatusUpdateStatus = {}));
+/** The layout of a project v2 view. */
+var ProjectV2ViewLayout;
+(function (ProjectV2ViewLayout) {
+    /** Board layout */
+    ProjectV2ViewLayout["BoardLayout"] = "BOARD_LAYOUT";
+    /** Roadmap layout */
+    ProjectV2ViewLayout["RoadmapLayout"] = "ROADMAP_LAYOUT";
+    /** Table layout */
+    ProjectV2ViewLayout["TableLayout"] = "TABLE_LAYOUT";
+})(ProjectV2ViewLayout || (ProjectV2ViewLayout = {}));
+/** Properties by which project v2 view connections can be ordered. */
+var ProjectV2ViewOrderField;
+(function (ProjectV2ViewOrderField) {
+    /** Order project v2 views by creation time */
+    ProjectV2ViewOrderField["CreatedAt"] = "CREATED_AT";
+    /** Order project v2 views by name */
+    ProjectV2ViewOrderField["Name"] = "NAME";
+    /** Order project v2 views by position */
+    ProjectV2ViewOrderField["Position"] = "POSITION";
+})(ProjectV2ViewOrderField || (ProjectV2ViewOrderField = {}));
+/** Properties by which project workflows can be ordered. */
+var ProjectV2WorkflowsOrderField;
+(function (ProjectV2WorkflowsOrderField) {
+    /** The date and time of the workflow creation */
+    ProjectV2WorkflowsOrderField["CreatedAt"] = "CREATED_AT";
+    /** The name of the workflow */
+    ProjectV2WorkflowsOrderField["Name"] = "NAME";
+    /** The number of the workflow */
+    ProjectV2WorkflowsOrderField["Number"] = "NUMBER";
+    /** The date and time of the workflow update */
+    ProjectV2WorkflowsOrderField["UpdatedAt"] = "UPDATED_AT";
+})(ProjectV2WorkflowsOrderField || (ProjectV2WorkflowsOrderField = {}));
+/** Array of allowed merge methods. Allowed values include `merge`, `squash`, and `rebase`. At least one option must be enabled. */
+var PullRequestAllowedMergeMethods;
+(function (PullRequestAllowedMergeMethods) {
+    /** Add all commits from the head branch to the base branch with a merge commit. */
+    PullRequestAllowedMergeMethods["Merge"] = "MERGE";
+    /** Add all commits from the head branch onto the base branch individually. */
+    PullRequestAllowedMergeMethods["Rebase"] = "REBASE";
+    /** Combine all commits from the head branch into a single commit in the base branch. */
+    PullRequestAllowedMergeMethods["Squash"] = "SQUASH";
+})(PullRequestAllowedMergeMethods || (PullRequestAllowedMergeMethods = {}));
+/** The possible methods for updating a pull request's head branch with the base branch. */
+var PullRequestBranchUpdateMethod;
+(function (PullRequestBranchUpdateMethod) {
+    /** Update branch via merge */
+    PullRequestBranchUpdateMethod["Merge"] = "MERGE";
+    /** Update branch via rebase */
+    PullRequestBranchUpdateMethod["Rebase"] = "REBASE";
+})(PullRequestBranchUpdateMethod || (PullRequestBranchUpdateMethod = {}));
+/** Represents available types of methods to use when merging a pull request. */
+var PullRequestMergeMethod;
+(function (PullRequestMergeMethod) {
+    /** Add all commits from the head branch to the base branch with a merge commit. */
+    PullRequestMergeMethod["Merge"] = "MERGE";
+    /** Add all commits from the head branch onto the base branch individually. */
+    PullRequestMergeMethod["Rebase"] = "REBASE";
+    /** Combine all commits from the head branch into a single commit in the base branch. */
+    PullRequestMergeMethod["Squash"] = "SQUASH";
+})(PullRequestMergeMethod || (PullRequestMergeMethod = {}));
+/** Properties by which pull_requests connections can be ordered. */
+var PullRequestOrderField;
+(function (PullRequestOrderField) {
+    /** Order pull_requests by creation time */
+    PullRequestOrderField["CreatedAt"] = "CREATED_AT";
+    /** Order pull_requests by update time */
+    PullRequestOrderField["UpdatedAt"] = "UPDATED_AT";
+})(PullRequestOrderField || (PullRequestOrderField = {}));
+/** The possible states of a pull request review comment. */
+var PullRequestReviewCommentState;
+(function (PullRequestReviewCommentState) {
+    /** A comment that is part of a pending review */
+    PullRequestReviewCommentState["Pending"] = "PENDING";
+    /** A comment that is part of a submitted review */
+    PullRequestReviewCommentState["Submitted"] = "SUBMITTED";
+})(PullRequestReviewCommentState || (PullRequestReviewCommentState = {}));
+/** The review status of a pull request. */
+var PullRequestReviewDecision;
+(function (PullRequestReviewDecision) {
+    /** The pull request has received an approving review. */
+    PullRequestReviewDecision["Approved"] = "APPROVED";
+    /** Changes have been requested on the pull request. */
+    PullRequestReviewDecision["ChangesRequested"] = "CHANGES_REQUESTED";
+    /** A review is required before the pull request can be merged. */
+    PullRequestReviewDecision["ReviewRequired"] = "REVIEW_REQUIRED";
+})(PullRequestReviewDecision || (PullRequestReviewDecision = {}));
+/** The possible events to perform on a pull request review. */
+var PullRequestReviewEvent;
+(function (PullRequestReviewEvent) {
+    /** Submit feedback and approve merging these changes. */
+    PullRequestReviewEvent["Approve"] = "APPROVE";
+    /** Submit general feedback without explicit approval. */
+    PullRequestReviewEvent["Comment"] = "COMMENT";
+    /** Dismiss review so it now longer effects merging. */
+    PullRequestReviewEvent["Dismiss"] = "DISMISS";
+    /** Submit feedback that must be addressed before merging. */
+    PullRequestReviewEvent["RequestChanges"] = "REQUEST_CHANGES";
+})(PullRequestReviewEvent || (PullRequestReviewEvent = {}));
+/** The possible states of a pull request review. */
+var PullRequestReviewState;
+(function (PullRequestReviewState) {
+    /** A review allowing the pull request to merge. */
+    PullRequestReviewState["Approved"] = "APPROVED";
+    /** A review blocking the pull request from merging. */
+    PullRequestReviewState["ChangesRequested"] = "CHANGES_REQUESTED";
+    /** An informational review. */
+    PullRequestReviewState["Commented"] = "COMMENTED";
+    /** A review that has been dismissed. */
+    PullRequestReviewState["Dismissed"] = "DISMISSED";
+    /** A review that has not yet been submitted. */
+    PullRequestReviewState["Pending"] = "PENDING";
+})(PullRequestReviewState || (PullRequestReviewState = {}));
+/** The possible subject types of a pull request review comment. */
+var PullRequestReviewThreadSubjectType;
+(function (PullRequestReviewThreadSubjectType) {
+    /** A comment that has been made against the file of a pull request */
+    PullRequestReviewThreadSubjectType["File"] = "FILE";
+    /** A comment that has been made against the line of a pull request */
+    PullRequestReviewThreadSubjectType["Line"] = "LINE";
+})(PullRequestReviewThreadSubjectType || (PullRequestReviewThreadSubjectType = {}));
+/** The possible states of a pull request. */
+var PullRequestState;
+(function (PullRequestState) {
+    /** A pull request that has been closed without being merged. */
+    PullRequestState["Closed"] = "CLOSED";
+    /** A pull request that has been closed by being merged. */
+    PullRequestState["Merged"] = "MERGED";
+    /** A pull request that is still open. */
+    PullRequestState["Open"] = "OPEN";
+})(PullRequestState || (PullRequestState = {}));
+/** The possible item types found in a timeline. */
+var PullRequestTimelineItemsItemType;
+(function (PullRequestTimelineItemsItemType) {
+    /** Represents an 'added_to_merge_queue' event on a given pull request. */
+    PullRequestTimelineItemsItemType["AddedToMergeQueueEvent"] = "ADDED_TO_MERGE_QUEUE_EVENT";
+    /** Represents a 'added_to_project' event on a given issue or pull request. */
+    PullRequestTimelineItemsItemType["AddedToProjectEvent"] = "ADDED_TO_PROJECT_EVENT";
+    /** Represents an 'assigned' event on any assignable object. */
+    PullRequestTimelineItemsItemType["AssignedEvent"] = "ASSIGNED_EVENT";
+    /** Represents a 'automatic_base_change_failed' event on a given pull request. */
+    PullRequestTimelineItemsItemType["AutomaticBaseChangeFailedEvent"] = "AUTOMATIC_BASE_CHANGE_FAILED_EVENT";
+    /** Represents a 'automatic_base_change_succeeded' event on a given pull request. */
+    PullRequestTimelineItemsItemType["AutomaticBaseChangeSucceededEvent"] = "AUTOMATIC_BASE_CHANGE_SUCCEEDED_EVENT";
+    /** Represents a 'auto_merge_disabled' event on a given pull request. */
+    PullRequestTimelineItemsItemType["AutoMergeDisabledEvent"] = "AUTO_MERGE_DISABLED_EVENT";
+    /** Represents a 'auto_merge_enabled' event on a given pull request. */
+    PullRequestTimelineItemsItemType["AutoMergeEnabledEvent"] = "AUTO_MERGE_ENABLED_EVENT";
+    /** Represents a 'auto_rebase_enabled' event on a given pull request. */
+    PullRequestTimelineItemsItemType["AutoRebaseEnabledEvent"] = "AUTO_REBASE_ENABLED_EVENT";
+    /** Represents a 'auto_squash_enabled' event on a given pull request. */
+    PullRequestTimelineItemsItemType["AutoSquashEnabledEvent"] = "AUTO_SQUASH_ENABLED_EVENT";
+    /** Represents a 'base_ref_changed' event on a given issue or pull request. */
+    PullRequestTimelineItemsItemType["BaseRefChangedEvent"] = "BASE_REF_CHANGED_EVENT";
+    /** Represents a 'base_ref_deleted' event on a given pull request. */
+    PullRequestTimelineItemsItemType["BaseRefDeletedEvent"] = "BASE_REF_DELETED_EVENT";
+    /** Represents a 'base_ref_force_pushed' event on a given pull request. */
+    PullRequestTimelineItemsItemType["BaseRefForcePushedEvent"] = "BASE_REF_FORCE_PUSHED_EVENT";
+    /** Represents a 'closed' event on any `Closable`. */
+    PullRequestTimelineItemsItemType["ClosedEvent"] = "CLOSED_EVENT";
+    /** Represents a 'comment_deleted' event on a given issue or pull request. */
+    PullRequestTimelineItemsItemType["CommentDeletedEvent"] = "COMMENT_DELETED_EVENT";
+    /** Represents a 'connected' event on a given issue or pull request. */
+    PullRequestTimelineItemsItemType["ConnectedEvent"] = "CONNECTED_EVENT";
+    /** Represents a 'converted_note_to_issue' event on a given issue or pull request. */
+    PullRequestTimelineItemsItemType["ConvertedNoteToIssueEvent"] = "CONVERTED_NOTE_TO_ISSUE_EVENT";
+    /** Represents a 'converted_to_discussion' event on a given issue. */
+    PullRequestTimelineItemsItemType["ConvertedToDiscussionEvent"] = "CONVERTED_TO_DISCUSSION_EVENT";
+    /** Represents a 'convert_to_draft' event on a given pull request. */
+    PullRequestTimelineItemsItemType["ConvertToDraftEvent"] = "CONVERT_TO_DRAFT_EVENT";
+    /** Represents a mention made by one issue or pull request to another. */
+    PullRequestTimelineItemsItemType["CrossReferencedEvent"] = "CROSS_REFERENCED_EVENT";
+    /** Represents a 'demilestoned' event on a given issue or pull request. */
+    PullRequestTimelineItemsItemType["DemilestonedEvent"] = "DEMILESTONED_EVENT";
+    /** Represents a 'deployed' event on a given pull request. */
+    PullRequestTimelineItemsItemType["DeployedEvent"] = "DEPLOYED_EVENT";
+    /** Represents a 'deployment_environment_changed' event on a given pull request. */
+    PullRequestTimelineItemsItemType["DeploymentEnvironmentChangedEvent"] = "DEPLOYMENT_ENVIRONMENT_CHANGED_EVENT";
+    /** Represents a 'disconnected' event on a given issue or pull request. */
+    PullRequestTimelineItemsItemType["DisconnectedEvent"] = "DISCONNECTED_EVENT";
+    /** Represents a 'head_ref_deleted' event on a given pull request. */
+    PullRequestTimelineItemsItemType["HeadRefDeletedEvent"] = "HEAD_REF_DELETED_EVENT";
+    /** Represents a 'head_ref_force_pushed' event on a given pull request. */
+    PullRequestTimelineItemsItemType["HeadRefForcePushedEvent"] = "HEAD_REF_FORCE_PUSHED_EVENT";
+    /** Represents a 'head_ref_restored' event on a given pull request. */
+    PullRequestTimelineItemsItemType["HeadRefRestoredEvent"] = "HEAD_REF_RESTORED_EVENT";
+    /** Represents a comment on an Issue. */
+    PullRequestTimelineItemsItemType["IssueComment"] = "ISSUE_COMMENT";
+    /** Represents a 'issue_type_added' event on a given issue. */
+    PullRequestTimelineItemsItemType["IssueTypeAddedEvent"] = "ISSUE_TYPE_ADDED_EVENT";
+    /** Represents a 'issue_type_changed' event on a given issue. */
+    PullRequestTimelineItemsItemType["IssueTypeChangedEvent"] = "ISSUE_TYPE_CHANGED_EVENT";
+    /** Represents a 'issue_type_removed' event on a given issue. */
+    PullRequestTimelineItemsItemType["IssueTypeRemovedEvent"] = "ISSUE_TYPE_REMOVED_EVENT";
+    /** Represents a 'labeled' event on a given issue or pull request. */
+    PullRequestTimelineItemsItemType["LabeledEvent"] = "LABELED_EVENT";
+    /** Represents a 'locked' event on a given issue or pull request. */
+    PullRequestTimelineItemsItemType["LockedEvent"] = "LOCKED_EVENT";
+    /** Represents a 'marked_as_duplicate' event on a given issue or pull request. */
+    PullRequestTimelineItemsItemType["MarkedAsDuplicateEvent"] = "MARKED_AS_DUPLICATE_EVENT";
+    /** Represents a 'mentioned' event on a given issue or pull request. */
+    PullRequestTimelineItemsItemType["MentionedEvent"] = "MENTIONED_EVENT";
+    /** Represents a 'merged' event on a given pull request. */
+    PullRequestTimelineItemsItemType["MergedEvent"] = "MERGED_EVENT";
+    /** Represents a 'milestoned' event on a given issue or pull request. */
+    PullRequestTimelineItemsItemType["MilestonedEvent"] = "MILESTONED_EVENT";
+    /** Represents a 'moved_columns_in_project' event on a given issue or pull request. */
+    PullRequestTimelineItemsItemType["MovedColumnsInProjectEvent"] = "MOVED_COLUMNS_IN_PROJECT_EVENT";
+    /** Represents a 'parent_issue_added' event on a given issue. */
+    PullRequestTimelineItemsItemType["ParentIssueAddedEvent"] = "PARENT_ISSUE_ADDED_EVENT";
+    /** Represents a 'parent_issue_removed' event on a given issue. */
+    PullRequestTimelineItemsItemType["ParentIssueRemovedEvent"] = "PARENT_ISSUE_REMOVED_EVENT";
+    /** Represents a 'pinned' event on a given issue or pull request. */
+    PullRequestTimelineItemsItemType["PinnedEvent"] = "PINNED_EVENT";
+    /** Represents a Git commit part of a pull request. */
+    PullRequestTimelineItemsItemType["PullRequestCommit"] = "PULL_REQUEST_COMMIT";
+    /** Represents a commit comment thread part of a pull request. */
+    PullRequestTimelineItemsItemType["PullRequestCommitCommentThread"] = "PULL_REQUEST_COMMIT_COMMENT_THREAD";
+    /** A review object for a given pull request. */
+    PullRequestTimelineItemsItemType["PullRequestReview"] = "PULL_REQUEST_REVIEW";
+    /** A threaded list of comments for a given pull request. */
+    PullRequestTimelineItemsItemType["PullRequestReviewThread"] = "PULL_REQUEST_REVIEW_THREAD";
+    /** Represents the latest point in the pull request timeline for which the viewer has seen the pull request's commits. */
+    PullRequestTimelineItemsItemType["PullRequestRevisionMarker"] = "PULL_REQUEST_REVISION_MARKER";
+    /** Represents a 'ready_for_review' event on a given pull request. */
+    PullRequestTimelineItemsItemType["ReadyForReviewEvent"] = "READY_FOR_REVIEW_EVENT";
+    /** Represents a 'referenced' event on a given `ReferencedSubject`. */
+    PullRequestTimelineItemsItemType["ReferencedEvent"] = "REFERENCED_EVENT";
+    /** Represents a 'removed_from_merge_queue' event on a given pull request. */
+    PullRequestTimelineItemsItemType["RemovedFromMergeQueueEvent"] = "REMOVED_FROM_MERGE_QUEUE_EVENT";
+    /** Represents a 'removed_from_project' event on a given issue or pull request. */
+    PullRequestTimelineItemsItemType["RemovedFromProjectEvent"] = "REMOVED_FROM_PROJECT_EVENT";
+    /** Represents a 'renamed' event on a given issue or pull request */
+    PullRequestTimelineItemsItemType["RenamedTitleEvent"] = "RENAMED_TITLE_EVENT";
+    /** Represents a 'reopened' event on any `Closable`. */
+    PullRequestTimelineItemsItemType["ReopenedEvent"] = "REOPENED_EVENT";
+    /** Represents a 'review_dismissed' event on a given issue or pull request. */
+    PullRequestTimelineItemsItemType["ReviewDismissedEvent"] = "REVIEW_DISMISSED_EVENT";
+    /** Represents an 'review_requested' event on a given pull request. */
+    PullRequestTimelineItemsItemType["ReviewRequestedEvent"] = "REVIEW_REQUESTED_EVENT";
+    /** Represents an 'review_request_removed' event on a given pull request. */
+    PullRequestTimelineItemsItemType["ReviewRequestRemovedEvent"] = "REVIEW_REQUEST_REMOVED_EVENT";
+    /** Represents a 'subscribed' event on a given `Subscribable`. */
+    PullRequestTimelineItemsItemType["SubscribedEvent"] = "SUBSCRIBED_EVENT";
+    /** Represents a 'sub_issue_added' event on a given issue. */
+    PullRequestTimelineItemsItemType["SubIssueAddedEvent"] = "SUB_ISSUE_ADDED_EVENT";
+    /** Represents a 'sub_issue_removed' event on a given issue. */
+    PullRequestTimelineItemsItemType["SubIssueRemovedEvent"] = "SUB_ISSUE_REMOVED_EVENT";
+    /** Represents a 'transferred' event on a given issue or pull request. */
+    PullRequestTimelineItemsItemType["TransferredEvent"] = "TRANSFERRED_EVENT";
+    /** Represents an 'unassigned' event on any assignable object. */
+    PullRequestTimelineItemsItemType["UnassignedEvent"] = "UNASSIGNED_EVENT";
+    /** Represents an 'unlabeled' event on a given issue or pull request. */
+    PullRequestTimelineItemsItemType["UnlabeledEvent"] = "UNLABELED_EVENT";
+    /** Represents an 'unlocked' event on a given issue or pull request. */
+    PullRequestTimelineItemsItemType["UnlockedEvent"] = "UNLOCKED_EVENT";
+    /** Represents an 'unmarked_as_duplicate' event on a given issue or pull request. */
+    PullRequestTimelineItemsItemType["UnmarkedAsDuplicateEvent"] = "UNMARKED_AS_DUPLICATE_EVENT";
+    /** Represents an 'unpinned' event on a given issue or pull request. */
+    PullRequestTimelineItemsItemType["UnpinnedEvent"] = "UNPINNED_EVENT";
+    /** Represents an 'unsubscribed' event on a given `Subscribable`. */
+    PullRequestTimelineItemsItemType["UnsubscribedEvent"] = "UNSUBSCRIBED_EVENT";
+    /** Represents a 'user_blocked' event on a given user. */
+    PullRequestTimelineItemsItemType["UserBlockedEvent"] = "USER_BLOCKED_EVENT";
+})(PullRequestTimelineItemsItemType || (PullRequestTimelineItemsItemType = {}));
+/** The possible target states when updating a pull request. */
+var PullRequestUpdateState;
+(function (PullRequestUpdateState) {
+    /** A pull request that has been closed without being merged. */
+    PullRequestUpdateState["Closed"] = "CLOSED";
+    /** A pull request that is still open. */
+    PullRequestUpdateState["Open"] = "OPEN";
+})(PullRequestUpdateState || (PullRequestUpdateState = {}));
+/** Emojis that can be attached to Issues, Pull Requests and Comments. */
+var ReactionContent;
+(function (ReactionContent) {
+    /** Represents the `:confused:` emoji. */
+    ReactionContent["Confused"] = "CONFUSED";
+    /** Represents the `:eyes:` emoji. */
+    ReactionContent["Eyes"] = "EYES";
+    /** Represents the `:heart:` emoji. */
+    ReactionContent["Heart"] = "HEART";
+    /** Represents the `:hooray:` emoji. */
+    ReactionContent["Hooray"] = "HOORAY";
+    /** Represents the `:laugh:` emoji. */
+    ReactionContent["Laugh"] = "LAUGH";
+    /** Represents the `:rocket:` emoji. */
+    ReactionContent["Rocket"] = "ROCKET";
+    /** Represents the `:-1:` emoji. */
+    ReactionContent["ThumbsDown"] = "THUMBS_DOWN";
+    /** Represents the `:+1:` emoji. */
+    ReactionContent["ThumbsUp"] = "THUMBS_UP";
+})(ReactionContent || (ReactionContent = {}));
+/** A list of fields that reactions can be ordered by. */
+var ReactionOrderField;
+(function (ReactionOrderField) {
+    /** Allows ordering a list of reactions by when they were created. */
+    ReactionOrderField["CreatedAt"] = "CREATED_AT";
+})(ReactionOrderField || (ReactionOrderField = {}));
+/** Properties by which ref connections can be ordered. */
+var RefOrderField;
+(function (RefOrderField) {
+    /** Order refs by their alphanumeric name */
+    RefOrderField["Alphabetical"] = "ALPHABETICAL";
+    /** Order refs by underlying commit date if the ref prefix is refs/tags/ */
+    RefOrderField["TagCommitDate"] = "TAG_COMMIT_DATE";
+})(RefOrderField || (RefOrderField = {}));
+/** Properties by which release connections can be ordered. */
+var ReleaseOrderField;
+(function (ReleaseOrderField) {
+    /** Order releases by creation time */
+    ReleaseOrderField["CreatedAt"] = "CREATED_AT";
+    /** Order releases alphabetically by name */
+    ReleaseOrderField["Name"] = "NAME";
+})(ReleaseOrderField || (ReleaseOrderField = {}));
+/** The privacy of a repository */
+var RepoAccessAuditEntryVisibility;
+(function (RepoAccessAuditEntryVisibility) {
+    /** The repository is visible only to users in the same enterprise. */
+    RepoAccessAuditEntryVisibility["Internal"] = "INTERNAL";
+    /** The repository is visible only to those with explicit access. */
+    RepoAccessAuditEntryVisibility["Private"] = "PRIVATE";
+    /** The repository is visible to everyone. */
+    RepoAccessAuditEntryVisibility["Public"] = "PUBLIC";
+})(RepoAccessAuditEntryVisibility || (RepoAccessAuditEntryVisibility = {}));
+/** The privacy of a repository */
+var RepoAddMemberAuditEntryVisibility;
+(function (RepoAddMemberAuditEntryVisibility) {
+    /** The repository is visible only to users in the same enterprise. */
+    RepoAddMemberAuditEntryVisibility["Internal"] = "INTERNAL";
+    /** The repository is visible only to those with explicit access. */
+    RepoAddMemberAuditEntryVisibility["Private"] = "PRIVATE";
+    /** The repository is visible to everyone. */
+    RepoAddMemberAuditEntryVisibility["Public"] = "PUBLIC";
+})(RepoAddMemberAuditEntryVisibility || (RepoAddMemberAuditEntryVisibility = {}));
+/** The privacy of a repository */
+var RepoArchivedAuditEntryVisibility;
+(function (RepoArchivedAuditEntryVisibility) {
+    /** The repository is visible only to users in the same enterprise. */
+    RepoArchivedAuditEntryVisibility["Internal"] = "INTERNAL";
+    /** The repository is visible only to those with explicit access. */
+    RepoArchivedAuditEntryVisibility["Private"] = "PRIVATE";
+    /** The repository is visible to everyone. */
+    RepoArchivedAuditEntryVisibility["Public"] = "PUBLIC";
+})(RepoArchivedAuditEntryVisibility || (RepoArchivedAuditEntryVisibility = {}));
+/** The merge options available for pull requests to this repository. */
+var RepoChangeMergeSettingAuditEntryMergeType;
+(function (RepoChangeMergeSettingAuditEntryMergeType) {
+    /** The pull request is added to the base branch in a merge commit. */
+    RepoChangeMergeSettingAuditEntryMergeType["Merge"] = "MERGE";
+    /** Commits from the pull request are added onto the base branch individually without a merge commit. */
+    RepoChangeMergeSettingAuditEntryMergeType["Rebase"] = "REBASE";
+    /** The pull request's commits are squashed into a single commit before they are merged to the base branch. */
+    RepoChangeMergeSettingAuditEntryMergeType["Squash"] = "SQUASH";
+})(RepoChangeMergeSettingAuditEntryMergeType || (RepoChangeMergeSettingAuditEntryMergeType = {}));
+/** The privacy of a repository */
+var RepoCreateAuditEntryVisibility;
+(function (RepoCreateAuditEntryVisibility) {
+    /** The repository is visible only to users in the same enterprise. */
+    RepoCreateAuditEntryVisibility["Internal"] = "INTERNAL";
+    /** The repository is visible only to those with explicit access. */
+    RepoCreateAuditEntryVisibility["Private"] = "PRIVATE";
+    /** The repository is visible to everyone. */
+    RepoCreateAuditEntryVisibility["Public"] = "PUBLIC";
+})(RepoCreateAuditEntryVisibility || (RepoCreateAuditEntryVisibility = {}));
+/** The privacy of a repository */
+var RepoDestroyAuditEntryVisibility;
+(function (RepoDestroyAuditEntryVisibility) {
+    /** The repository is visible only to users in the same enterprise. */
+    RepoDestroyAuditEntryVisibility["Internal"] = "INTERNAL";
+    /** The repository is visible only to those with explicit access. */
+    RepoDestroyAuditEntryVisibility["Private"] = "PRIVATE";
+    /** The repository is visible to everyone. */
+    RepoDestroyAuditEntryVisibility["Public"] = "PUBLIC";
+})(RepoDestroyAuditEntryVisibility || (RepoDestroyAuditEntryVisibility = {}));
+/** The privacy of a repository */
+var RepoRemoveMemberAuditEntryVisibility;
+(function (RepoRemoveMemberAuditEntryVisibility) {
+    /** The repository is visible only to users in the same enterprise. */
+    RepoRemoveMemberAuditEntryVisibility["Internal"] = "INTERNAL";
+    /** The repository is visible only to those with explicit access. */
+    RepoRemoveMemberAuditEntryVisibility["Private"] = "PRIVATE";
+    /** The repository is visible to everyone. */
+    RepoRemoveMemberAuditEntryVisibility["Public"] = "PUBLIC";
+})(RepoRemoveMemberAuditEntryVisibility || (RepoRemoveMemberAuditEntryVisibility = {}));
+/** The reasons a piece of content can be reported or minimized. */
+var ReportedContentClassifiers;
+(function (ReportedContentClassifiers) {
+    /** An abusive or harassing piece of content */
+    ReportedContentClassifiers["Abuse"] = "ABUSE";
+    /** A duplicated piece of content */
+    ReportedContentClassifiers["Duplicate"] = "DUPLICATE";
+    /** An irrelevant piece of content */
+    ReportedContentClassifiers["OffTopic"] = "OFF_TOPIC";
+    /** An outdated piece of content */
+    ReportedContentClassifiers["Outdated"] = "OUTDATED";
+    /** The content has been resolved */
+    ReportedContentClassifiers["Resolved"] = "RESOLVED";
+    /** A spammy piece of content */
+    ReportedContentClassifiers["Spam"] = "SPAM";
+})(ReportedContentClassifiers || (ReportedContentClassifiers = {}));
+/** The affiliation of a user to a repository */
+var RepositoryAffiliation;
+(function (RepositoryAffiliation) {
+    /** Repositories that the user has been added to as a collaborator. */
+    RepositoryAffiliation["Collaborator"] = "COLLABORATOR";
+    /** Repositories that the user has access to through being a member of an organization. This includes every repository on every team that the user is on. */
+    RepositoryAffiliation["OrganizationMember"] = "ORGANIZATION_MEMBER";
+    /** Repositories that are owned by the authenticated user. */
+    RepositoryAffiliation["Owner"] = "OWNER";
+})(RepositoryAffiliation || (RepositoryAffiliation = {}));
+/** The reason a repository is listed as 'contributed'. */
+var RepositoryContributionType;
+(function (RepositoryContributionType) {
+    /** Created a commit */
+    RepositoryContributionType["Commit"] = "COMMIT";
+    /** Created an issue */
+    RepositoryContributionType["Issue"] = "ISSUE";
+    /** Created a pull request */
+    RepositoryContributionType["PullRequest"] = "PULL_REQUEST";
+    /** Reviewed a pull request */
+    RepositoryContributionType["PullRequestReview"] = "PULL_REQUEST_REVIEW";
+    /** Created the repository */
+    RepositoryContributionType["Repository"] = "REPOSITORY";
+})(RepositoryContributionType || (RepositoryContributionType = {}));
+/** A repository interaction limit. */
+var RepositoryInteractionLimit;
+(function (RepositoryInteractionLimit) {
+    /** Users that are not collaborators will not be able to interact with the repository. */
+    RepositoryInteractionLimit["CollaboratorsOnly"] = "COLLABORATORS_ONLY";
+    /** Users that have not previously committed to a repository’s default branch will be unable to interact with the repository. */
+    RepositoryInteractionLimit["ContributorsOnly"] = "CONTRIBUTORS_ONLY";
+    /** Users that have recently created their account will be unable to interact with the repository. */
+    RepositoryInteractionLimit["ExistingUsers"] = "EXISTING_USERS";
+    /** No interaction limits are enabled. */
+    RepositoryInteractionLimit["NoLimit"] = "NO_LIMIT";
+})(RepositoryInteractionLimit || (RepositoryInteractionLimit = {}));
+/** The length for a repository interaction limit to be enabled for. */
+var RepositoryInteractionLimitExpiry;
+(function (RepositoryInteractionLimitExpiry) {
+    /** The interaction limit will expire after 1 day. */
+    RepositoryInteractionLimitExpiry["OneDay"] = "ONE_DAY";
+    /** The interaction limit will expire after 1 month. */
+    RepositoryInteractionLimitExpiry["OneMonth"] = "ONE_MONTH";
+    /** The interaction limit will expire after 1 week. */
+    RepositoryInteractionLimitExpiry["OneWeek"] = "ONE_WEEK";
+    /** The interaction limit will expire after 6 months. */
+    RepositoryInteractionLimitExpiry["SixMonths"] = "SIX_MONTHS";
+    /** The interaction limit will expire after 3 days. */
+    RepositoryInteractionLimitExpiry["ThreeDays"] = "THREE_DAYS";
+})(RepositoryInteractionLimitExpiry || (RepositoryInteractionLimitExpiry = {}));
+/** Indicates where an interaction limit is configured. */
+var RepositoryInteractionLimitOrigin;
+(function (RepositoryInteractionLimitOrigin) {
+    /** A limit that is configured at the organization level. */
+    RepositoryInteractionLimitOrigin["Organization"] = "ORGANIZATION";
+    /** A limit that is configured at the repository level. */
+    RepositoryInteractionLimitOrigin["Repository"] = "REPOSITORY";
+    /** A limit that is configured at the user-wide level. */
+    RepositoryInteractionLimitOrigin["User"] = "USER";
+})(RepositoryInteractionLimitOrigin || (RepositoryInteractionLimitOrigin = {}));
+/** Properties by which repository invitation connections can be ordered. */
+var RepositoryInvitationOrderField;
+(function (RepositoryInvitationOrderField) {
+    /** Order repository invitations by creation time */
+    RepositoryInvitationOrderField["CreatedAt"] = "CREATED_AT";
+})(RepositoryInvitationOrderField || (RepositoryInvitationOrderField = {}));
+/** The possible reasons a given repository could be in a locked state. */
+var RepositoryLockReason;
+(function (RepositoryLockReason) {
+    /** The repository is locked due to a billing related reason. */
+    RepositoryLockReason["Billing"] = "BILLING";
+    /** The repository is locked due to a migration. */
+    RepositoryLockReason["Migrating"] = "MIGRATING";
+    /** The repository is locked due to a move. */
+    RepositoryLockReason["Moving"] = "MOVING";
+    /** The repository is locked due to a rename. */
+    RepositoryLockReason["Rename"] = "RENAME";
+    /** The repository is locked due to a trade controls related reason. */
+    RepositoryLockReason["TradeRestriction"] = "TRADE_RESTRICTION";
+    /** The repository is locked due to an ownership transfer. */
+    RepositoryLockReason["TransferringOwnership"] = "TRANSFERRING_OWNERSHIP";
+})(RepositoryLockReason || (RepositoryLockReason = {}));
+/** Possible directions in which to order a list of repository migrations when provided an `orderBy` argument. */
+var RepositoryMigrationOrderDirection;
+(function (RepositoryMigrationOrderDirection) {
+    /** Specifies an ascending order for a given `orderBy` argument. */
+    RepositoryMigrationOrderDirection["Asc"] = "ASC";
+    /** Specifies a descending order for a given `orderBy` argument. */
+    RepositoryMigrationOrderDirection["Desc"] = "DESC";
+})(RepositoryMigrationOrderDirection || (RepositoryMigrationOrderDirection = {}));
+/** Properties by which repository migrations can be ordered. */
+var RepositoryMigrationOrderField;
+(function (RepositoryMigrationOrderField) {
+    /** Order mannequins why when they were created. */
+    RepositoryMigrationOrderField["CreatedAt"] = "CREATED_AT";
+})(RepositoryMigrationOrderField || (RepositoryMigrationOrderField = {}));
+/** Properties by which repository connections can be ordered. */
+var RepositoryOrderField;
+(function (RepositoryOrderField) {
+    /** Order repositories by creation time */
+    RepositoryOrderField["CreatedAt"] = "CREATED_AT";
+    /** Order repositories by name */
+    RepositoryOrderField["Name"] = "NAME";
+    /** Order repositories by push time */
+    RepositoryOrderField["PushedAt"] = "PUSHED_AT";
+    /** Order repositories by number of stargazers */
+    RepositoryOrderField["Stargazers"] = "STARGAZERS";
+    /** Order repositories by update time */
+    RepositoryOrderField["UpdatedAt"] = "UPDATED_AT";
+})(RepositoryOrderField || (RepositoryOrderField = {}));
+/** The access level to a repository */
+var RepositoryPermission;
+(function (RepositoryPermission) {
+    /** Can read, clone, and push to this repository. Can also manage issues, pull requests, and repository settings, including adding collaborators */
+    RepositoryPermission["Admin"] = "ADMIN";
+    /** Can read, clone, and push to this repository. They can also manage issues, pull requests, and some repository settings */
+    RepositoryPermission["Maintain"] = "MAINTAIN";
+    /** Can read and clone this repository. Can also open and comment on issues and pull requests */
+    RepositoryPermission["Read"] = "READ";
+    /** Can read and clone this repository. Can also manage issues and pull requests */
+    RepositoryPermission["Triage"] = "TRIAGE";
+    /** Can read, clone, and push to this repository. Can also manage issues and pull requests */
+    RepositoryPermission["Write"] = "WRITE";
+})(RepositoryPermission || (RepositoryPermission = {}));
+/** The privacy of a repository */
+var RepositoryPrivacy;
+(function (RepositoryPrivacy) {
+    /** Private */
+    RepositoryPrivacy["Private"] = "PRIVATE";
+    /** Public */
+    RepositoryPrivacy["Public"] = "PUBLIC";
+})(RepositoryPrivacy || (RepositoryPrivacy = {}));
+/** Properties by which repository rule connections can be ordered. */
+var RepositoryRuleOrderField;
+(function (RepositoryRuleOrderField) {
+    /** Order repository rules by created time */
+    RepositoryRuleOrderField["CreatedAt"] = "CREATED_AT";
+    /** Order repository rules by type */
+    RepositoryRuleOrderField["Type"] = "TYPE";
+    /** Order repository rules by updated time */
+    RepositoryRuleOrderField["UpdatedAt"] = "UPDATED_AT";
+})(RepositoryRuleOrderField || (RepositoryRuleOrderField = {}));
+/** The rule types supported in rulesets */
+var RepositoryRuleType;
+(function (RepositoryRuleType) {
+    /** Authorization */
+    RepositoryRuleType["Authorization"] = "AUTHORIZATION";
+    /** Branch name pattern */
+    RepositoryRuleType["BranchNamePattern"] = "BRANCH_NAME_PATTERN";
+    /** Choose which tools must provide code scanning results before the reference is updated. When configured, code scanning must be enabled and have results for both the commit and the reference being updated. */
+    RepositoryRuleType["CodeScanning"] = "CODE_SCANNING";
+    /** Committer email pattern */
+    RepositoryRuleType["CommitterEmailPattern"] = "COMMITTER_EMAIL_PATTERN";
+    /** Commit author email pattern */
+    RepositoryRuleType["CommitAuthorEmailPattern"] = "COMMIT_AUTHOR_EMAIL_PATTERN";
+    /** Commit message pattern */
+    RepositoryRuleType["CommitMessagePattern"] = "COMMIT_MESSAGE_PATTERN";
+    /** Only allow users with bypass permission to create matching refs. */
+    RepositoryRuleType["Creation"] = "CREATION";
+    /** Only allow users with bypass permissions to delete matching refs. */
+    RepositoryRuleType["Deletion"] = "DELETION";
+    /** Prevent commits that include files with specified file extensions from being pushed to the commit graph. */
+    RepositoryRuleType["FileExtensionRestriction"] = "FILE_EXTENSION_RESTRICTION";
+    /** Prevent commits that include changes in specified file and folder paths from being pushed to the commit graph. This includes absolute paths that contain file names. */
+    RepositoryRuleType["FilePathRestriction"] = "FILE_PATH_RESTRICTION";
+    /** Branch is read-only. Users cannot push to the branch. */
+    RepositoryRuleType["LockBranch"] = "LOCK_BRANCH";
+    /** Prevent commits that include file paths that exceed the specified character limit from being pushed to the commit graph. */
+    RepositoryRuleType["MaxFilePathLength"] = "MAX_FILE_PATH_LENGTH";
+    /** Prevent commits with individual files that exceed the specified limit from being pushed to the commit graph. */
+    RepositoryRuleType["MaxFileSize"] = "MAX_FILE_SIZE";
+    /** Max ref updates */
+    RepositoryRuleType["MaxRefUpdates"] = "MAX_REF_UPDATES";
+    /** Merges must be performed via a merge queue. */
+    RepositoryRuleType["MergeQueue"] = "MERGE_QUEUE";
+    /** Merge queue locked ref */
+    RepositoryRuleType["MergeQueueLockedRef"] = "MERGE_QUEUE_LOCKED_REF";
+    /** Prevent users with push access from force pushing to refs. */
+    RepositoryRuleType["NonFastForward"] = "NON_FAST_FORWARD";
+    /** Require all commits be made to a non-target branch and submitted via a pull request before they can be merged. */
+    RepositoryRuleType["PullRequest"] = "PULL_REQUEST";
+    /** Choose which environments must be successfully deployed to before refs can be pushed into a ref that matches this rule. */
+    RepositoryRuleType["RequiredDeployments"] = "REQUIRED_DEPLOYMENTS";
+    /** Prevent merge commits from being pushed to matching refs. */
+    RepositoryRuleType["RequiredLinearHistory"] = "REQUIRED_LINEAR_HISTORY";
+    /** When enabled, all conversations on code must be resolved before a pull request can be merged into a branch that matches this rule. */
+    RepositoryRuleType["RequiredReviewThreadResolution"] = "REQUIRED_REVIEW_THREAD_RESOLUTION";
+    /** Commits pushed to matching refs must have verified signatures. */
+    RepositoryRuleType["RequiredSignatures"] = "REQUIRED_SIGNATURES";
+    /** Choose which status checks must pass before the ref is updated. When enabled, commits must first be pushed to another ref where the checks pass. */
+    RepositoryRuleType["RequiredStatusChecks"] = "REQUIRED_STATUS_CHECKS";
+    /** Require all commits be made to a non-target branch and submitted via a pull request and required workflow checks to pass before they can be merged. */
+    RepositoryRuleType["RequiredWorkflowStatusChecks"] = "REQUIRED_WORKFLOW_STATUS_CHECKS";
+    /** Secret scanning */
+    RepositoryRuleType["SecretScanning"] = "SECRET_SCANNING";
+    /** Tag */
+    RepositoryRuleType["Tag"] = "TAG";
+    /** Tag name pattern */
+    RepositoryRuleType["TagNamePattern"] = "TAG_NAME_PATTERN";
+    /** Only allow users with bypass permission to update matching refs. */
+    RepositoryRuleType["Update"] = "UPDATE";
+    /** Require all changes made to a targeted branch to pass the specified workflows before they can be merged. */
+    RepositoryRuleType["Workflows"] = "WORKFLOWS";
+    /** Workflow files cannot be modified. */
+    RepositoryRuleType["WorkflowUpdates"] = "WORKFLOW_UPDATES";
+})(RepositoryRuleType || (RepositoryRuleType = {}));
+/** The bypass mode for a specific actor on a ruleset. */
+var RepositoryRulesetBypassActorBypassMode;
+(function (RepositoryRulesetBypassActorBypassMode) {
+    /** The actor can always bypass rules */
+    RepositoryRulesetBypassActorBypassMode["Always"] = "ALWAYS";
+    /** The actor can only bypass rules via a pull request */
+    RepositoryRulesetBypassActorBypassMode["PullRequest"] = "PULL_REQUEST";
+})(RepositoryRulesetBypassActorBypassMode || (RepositoryRulesetBypassActorBypassMode = {}));
+/** The targets supported for rulesets. */
+var RepositoryRulesetTarget;
+(function (RepositoryRulesetTarget) {
+    /** Branch */
+    RepositoryRulesetTarget["Branch"] = "BRANCH";
+    /** Push */
+    RepositoryRulesetTarget["Push"] = "PUSH";
+    /** repository */
+    RepositoryRulesetTarget["Repository"] = "REPOSITORY";
+    /** Tag */
+    RepositoryRulesetTarget["Tag"] = "TAG";
+})(RepositoryRulesetTarget || (RepositoryRulesetTarget = {}));
+/** The possible filters for suggested actors in a repository */
+var RepositorySuggestedActorFilter;
+(function (RepositorySuggestedActorFilter) {
+    /** Actors that can be assigned to issues and pull requests */
+    RepositorySuggestedActorFilter["CanBeAssigned"] = "CAN_BE_ASSIGNED";
+    /** Actors that can be the author of issues and pull requests */
+    RepositorySuggestedActorFilter["CanBeAuthor"] = "CAN_BE_AUTHOR";
+})(RepositorySuggestedActorFilter || (RepositorySuggestedActorFilter = {}));
+/** The repository's visibility level. */
+var RepositoryVisibility;
+(function (RepositoryVisibility) {
+    /** The repository is visible only to users in the same enterprise. */
+    RepositoryVisibility["Internal"] = "INTERNAL";
+    /** The repository is visible only to those with explicit access. */
+    RepositoryVisibility["Private"] = "PRIVATE";
+    /** The repository is visible to everyone. */
+    RepositoryVisibility["Public"] = "PUBLIC";
+})(RepositoryVisibility || (RepositoryVisibility = {}));
+/** The possible relationships of an alert's dependency. */
+var RepositoryVulnerabilityAlertDependencyRelationship;
+(function (RepositoryVulnerabilityAlertDependencyRelationship) {
+    /** A direct dependency of your project */
+    RepositoryVulnerabilityAlertDependencyRelationship["Direct"] = "DIRECT";
+    /** A transitive dependency of your project */
+    RepositoryVulnerabilityAlertDependencyRelationship["Transitive"] = "TRANSITIVE";
+    /** The relationship is unknown */
+    RepositoryVulnerabilityAlertDependencyRelationship["Unknown"] = "UNKNOWN";
+})(RepositoryVulnerabilityAlertDependencyRelationship || (RepositoryVulnerabilityAlertDependencyRelationship = {}));
+/** The possible scopes of an alert's dependency. */
+var RepositoryVulnerabilityAlertDependencyScope;
+(function (RepositoryVulnerabilityAlertDependencyScope) {
+    /** A dependency that is only used in development */
+    RepositoryVulnerabilityAlertDependencyScope["Development"] = "DEVELOPMENT";
+    /** A dependency that is leveraged during application runtime */
+    RepositoryVulnerabilityAlertDependencyScope["Runtime"] = "RUNTIME";
+})(RepositoryVulnerabilityAlertDependencyScope || (RepositoryVulnerabilityAlertDependencyScope = {}));
+/** The possible states of an alert */
+var RepositoryVulnerabilityAlertState;
+(function (RepositoryVulnerabilityAlertState) {
+    /** An alert that has been automatically closed by Dependabot. */
+    RepositoryVulnerabilityAlertState["AutoDismissed"] = "AUTO_DISMISSED";
+    /** An alert that has been manually closed by a user. */
+    RepositoryVulnerabilityAlertState["Dismissed"] = "DISMISSED";
+    /** An alert that has been resolved by a code change. */
+    RepositoryVulnerabilityAlertState["Fixed"] = "FIXED";
+    /** An alert that is still open. */
+    RepositoryVulnerabilityAlertState["Open"] = "OPEN";
+})(RepositoryVulnerabilityAlertState || (RepositoryVulnerabilityAlertState = {}));
+/** The possible states that can be requested when creating a check run. */
+var RequestableCheckStatusState;
+(function (RequestableCheckStatusState) {
+    /** The check suite or run has been completed. */
+    RequestableCheckStatusState["Completed"] = "COMPLETED";
+    /** The check suite or run is in progress. */
+    RequestableCheckStatusState["InProgress"] = "IN_PROGRESS";
+    /** The check suite or run is in pending state. */
+    RequestableCheckStatusState["Pending"] = "PENDING";
+    /** The check suite or run has been queued. */
+    RequestableCheckStatusState["Queued"] = "QUEUED";
+    /** The check suite or run is in waiting state. */
+    RequestableCheckStatusState["Waiting"] = "WAITING";
+})(RequestableCheckStatusState || (RequestableCheckStatusState = {}));
+/** Possible roles a user may have in relation to an organization. */
+var RoleInOrganization;
+(function (RoleInOrganization) {
+    /** A user who is a direct member of the organization. */
+    RoleInOrganization["DirectMember"] = "DIRECT_MEMBER";
+    /** A user with full administrative access to the organization. */
+    RoleInOrganization["Owner"] = "OWNER";
+    /** A user who is unaffiliated with the organization. */
+    RoleInOrganization["Unaffiliated"] = "UNAFFILIATED";
+})(RoleInOrganization || (RoleInOrganization = {}));
+/** The level of enforcement for a rule or ruleset. */
+var RuleEnforcement;
+(function (RuleEnforcement) {
+    /** Rules will be enforced */
+    RuleEnforcement["Active"] = "ACTIVE";
+    /** Do not evaluate or enforce rules */
+    RuleEnforcement["Disabled"] = "DISABLED";
+    /** Allow admins to test rules before enforcing them. Admins can view insights on the Rule Insights page (`evaluate` is only available with GitHub Enterprise). */
+    RuleEnforcement["Evaluate"] = "EVALUATE";
+})(RuleEnforcement || (RuleEnforcement = {}));
+/** The possible digest algorithms used to sign SAML requests for an identity provider. */
+var SamlDigestAlgorithm;
+(function (SamlDigestAlgorithm) {
+    /** SHA1 */
+    SamlDigestAlgorithm["Sha1"] = "SHA1";
+    /** SHA256 */
+    SamlDigestAlgorithm["Sha256"] = "SHA256";
+    /** SHA384 */
+    SamlDigestAlgorithm["Sha384"] = "SHA384";
+    /** SHA512 */
+    SamlDigestAlgorithm["Sha512"] = "SHA512";
+})(SamlDigestAlgorithm || (SamlDigestAlgorithm = {}));
+/** The possible signature algorithms used to sign SAML requests for a Identity Provider. */
+var SamlSignatureAlgorithm;
+(function (SamlSignatureAlgorithm) {
+    /** RSA-SHA1 */
+    SamlSignatureAlgorithm["RsaSha1"] = "RSA_SHA1";
+    /** RSA-SHA256 */
+    SamlSignatureAlgorithm["RsaSha256"] = "RSA_SHA256";
+    /** RSA-SHA384 */
+    SamlSignatureAlgorithm["RsaSha384"] = "RSA_SHA384";
+    /** RSA-SHA512 */
+    SamlSignatureAlgorithm["RsaSha512"] = "RSA_SHA512";
+})(SamlSignatureAlgorithm || (SamlSignatureAlgorithm = {}));
+/** Properties by which saved reply connections can be ordered. */
+var SavedReplyOrderField;
+(function (SavedReplyOrderField) {
+    /** Order saved reply by when they were updated. */
+    SavedReplyOrderField["UpdatedAt"] = "UPDATED_AT";
+})(SavedReplyOrderField || (SavedReplyOrderField = {}));
+/** Represents the individual results of a search. */
+var SearchType;
+(function (SearchType) {
+    /** Returns matching discussions in repositories. */
+    SearchType["Discussion"] = "DISCUSSION";
+    /** Returns results matching issues in repositories. */
+    SearchType["Issue"] = "ISSUE";
+    /**
+     * Returns results matching issues in repositories.
+     * @deprecated Search for issues and pull requests will be overridden by advanced search on September 4, 2025. You can read more about this change on https://github.blog/changelog/2025-03-06-github-issues-projects-api-support-for-issues-advanced-search-and-more/. Removal on 2025-09-04 UTC.
+     */
+    SearchType["IssueAdvanced"] = "ISSUE_ADVANCED";
+    /** Returns results matching repositories. */
+    SearchType["Repository"] = "REPOSITORY";
+    /** Returns results matching users and organizations on GitHub. */
+    SearchType["User"] = "USER";
+})(SearchType || (SearchType = {}));
+/** Classification of the advisory. */
+var SecurityAdvisoryClassification;
+(function (SecurityAdvisoryClassification) {
+    /** Classification of general advisories. */
+    SecurityAdvisoryClassification["General"] = "GENERAL";
+    /** Classification of malware advisories. */
+    SecurityAdvisoryClassification["Malware"] = "MALWARE";
+})(SecurityAdvisoryClassification || (SecurityAdvisoryClassification = {}));
+/** The possible ecosystems of a security vulnerability's package. */
+var SecurityAdvisoryEcosystem;
+(function (SecurityAdvisoryEcosystem) {
+    /** GitHub Actions */
+    SecurityAdvisoryEcosystem["Actions"] = "ACTIONS";
+    /** PHP packages hosted at packagist.org */
+    SecurityAdvisoryEcosystem["Composer"] = "COMPOSER";
+    /** Erlang/Elixir packages hosted at hex.pm */
+    SecurityAdvisoryEcosystem["Erlang"] = "ERLANG";
+    /** Go modules */
+    SecurityAdvisoryEcosystem["Go"] = "GO";
+    /** Java artifacts hosted at the Maven central repository */
+    SecurityAdvisoryEcosystem["Maven"] = "MAVEN";
+    /** JavaScript packages hosted at npmjs.com */
+    SecurityAdvisoryEcosystem["Npm"] = "NPM";
+    /** .NET packages hosted at the NuGet Gallery */
+    SecurityAdvisoryEcosystem["Nuget"] = "NUGET";
+    /** Python packages hosted at PyPI.org */
+    SecurityAdvisoryEcosystem["Pip"] = "PIP";
+    /** Dart packages hosted at pub.dev */
+    SecurityAdvisoryEcosystem["Pub"] = "PUB";
+    /** Ruby gems hosted at RubyGems.org */
+    SecurityAdvisoryEcosystem["Rubygems"] = "RUBYGEMS";
+    /** Rust crates */
+    SecurityAdvisoryEcosystem["Rust"] = "RUST";
+    /** Swift packages */
+    SecurityAdvisoryEcosystem["Swift"] = "SWIFT";
+})(SecurityAdvisoryEcosystem || (SecurityAdvisoryEcosystem = {}));
+/** Identifier formats available for advisories. */
+var SecurityAdvisoryIdentifierType;
+(function (SecurityAdvisoryIdentifierType) {
+    /** Common Vulnerabilities and Exposures Identifier. */
+    SecurityAdvisoryIdentifierType["Cve"] = "CVE";
+    /** GitHub Security Advisory ID. */
+    SecurityAdvisoryIdentifierType["Ghsa"] = "GHSA";
+})(SecurityAdvisoryIdentifierType || (SecurityAdvisoryIdentifierType = {}));
+/** Properties by which security advisory connections can be ordered. */
+var SecurityAdvisoryOrderField;
+(function (SecurityAdvisoryOrderField) {
+    /** Order advisories by EPSS percentage */
+    SecurityAdvisoryOrderField["EpssPercentage"] = "EPSS_PERCENTAGE";
+    /** Order advisories by EPSS percentile */
+    SecurityAdvisoryOrderField["EpssPercentile"] = "EPSS_PERCENTILE";
+    /** Order advisories by publication time */
+    SecurityAdvisoryOrderField["PublishedAt"] = "PUBLISHED_AT";
+    /** Order advisories by update time */
+    SecurityAdvisoryOrderField["UpdatedAt"] = "UPDATED_AT";
+})(SecurityAdvisoryOrderField || (SecurityAdvisoryOrderField = {}));
+/** Severity of the vulnerability. */
+var SecurityAdvisorySeverity;
+(function (SecurityAdvisorySeverity) {
+    /** Critical. */
+    SecurityAdvisorySeverity["Critical"] = "CRITICAL";
+    /** High. */
+    SecurityAdvisorySeverity["High"] = "HIGH";
+    /** Low. */
+    SecurityAdvisorySeverity["Low"] = "LOW";
+    /** Moderate. */
+    SecurityAdvisorySeverity["Moderate"] = "MODERATE";
+})(SecurityAdvisorySeverity || (SecurityAdvisorySeverity = {}));
+/** Properties by which security vulnerability connections can be ordered. */
+var SecurityVulnerabilityOrderField;
+(function (SecurityVulnerabilityOrderField) {
+    /** Order vulnerability by update time */
+    SecurityVulnerabilityOrderField["UpdatedAt"] = "UPDATED_AT";
+})(SecurityVulnerabilityOrderField || (SecurityVulnerabilityOrderField = {}));
+/** Software or company that hosts social media accounts. */
+var SocialAccountProvider;
+(function (SocialAccountProvider) {
+    /** Decentralized microblogging social platform. */
+    SocialAccountProvider["Bluesky"] = "BLUESKY";
+    /** Social media and networking website. */
+    SocialAccountProvider["Facebook"] = "FACEBOOK";
+    /** Catch-all for social media providers that do not yet have specific handling. */
+    SocialAccountProvider["Generic"] = "GENERIC";
+    /** Fork of Mastodon with a greater focus on local posting. */
+    SocialAccountProvider["Hometown"] = "HOMETOWN";
+    /** Social media website with a focus on photo and video sharing. */
+    SocialAccountProvider["Instagram"] = "INSTAGRAM";
+    /** Professional networking website. */
+    SocialAccountProvider["Linkedin"] = "LINKEDIN";
+    /** Open-source federated microblogging service. */
+    SocialAccountProvider["Mastodon"] = "MASTODON";
+    /** JavaScript package registry. */
+    SocialAccountProvider["Npm"] = "NPM";
+    /** Social news aggregation and discussion website. */
+    SocialAccountProvider["Reddit"] = "REDDIT";
+    /** Live-streaming service. */
+    SocialAccountProvider["Twitch"] = "TWITCH";
+    /** Microblogging website. */
+    SocialAccountProvider["Twitter"] = "TWITTER";
+    /** Online video platform. */
+    SocialAccountProvider["Youtube"] = "YOUTUBE";
+})(SocialAccountProvider || (SocialAccountProvider = {}));
+/** Properties by which sponsor and lifetime value connections can be ordered. */
+var SponsorAndLifetimeValueOrderField;
+(function (SponsorAndLifetimeValueOrderField) {
+    /** Order results by how much money the sponsor has paid in total. */
+    SponsorAndLifetimeValueOrderField["LifetimeValue"] = "LIFETIME_VALUE";
+    /** Order results by the sponsor's login (username). */
+    SponsorAndLifetimeValueOrderField["SponsorLogin"] = "SPONSOR_LOGIN";
+    /** Order results by the sponsor's relevance to the viewer. */
+    SponsorAndLifetimeValueOrderField["SponsorRelevance"] = "SPONSOR_RELEVANCE";
+})(SponsorAndLifetimeValueOrderField || (SponsorAndLifetimeValueOrderField = {}));
+/** Properties by which sponsor connections can be ordered. */
+var SponsorOrderField;
+(function (SponsorOrderField) {
+    /** Order sponsorable entities by login (username). */
+    SponsorOrderField["Login"] = "LOGIN";
+    /** Order sponsors by their relevance to the viewer. */
+    SponsorOrderField["Relevance"] = "RELEVANCE";
+})(SponsorOrderField || (SponsorOrderField = {}));
+/** Properties by which sponsorable connections can be ordered. */
+var SponsorableOrderField;
+(function (SponsorableOrderField) {
+    /** Order sponsorable entities by login (username). */
+    SponsorableOrderField["Login"] = "LOGIN";
+})(SponsorableOrderField || (SponsorableOrderField = {}));
+/** The possible actions that GitHub Sponsors activities can represent. */
+var SponsorsActivityAction;
+(function (SponsorsActivityAction) {
+    /** The activity was cancelling a sponsorship. */
+    SponsorsActivityAction["CancelledSponsorship"] = "CANCELLED_SPONSORSHIP";
+    /** The activity was starting a sponsorship. */
+    SponsorsActivityAction["NewSponsorship"] = "NEW_SPONSORSHIP";
+    /** The activity was scheduling a downgrade or cancellation. */
+    SponsorsActivityAction["PendingChange"] = "PENDING_CHANGE";
+    /** The activity was funds being refunded to the sponsor or GitHub. */
+    SponsorsActivityAction["Refund"] = "REFUND";
+    /** The activity was disabling matching for a previously matched sponsorship. */
+    SponsorsActivityAction["SponsorMatchDisabled"] = "SPONSOR_MATCH_DISABLED";
+    /** The activity was changing the sponsorship tier, either directly by the sponsor or by a scheduled/pending change. */
+    SponsorsActivityAction["TierChange"] = "TIER_CHANGE";
+})(SponsorsActivityAction || (SponsorsActivityAction = {}));
+/** Properties by which GitHub Sponsors activity connections can be ordered. */
+var SponsorsActivityOrderField;
+(function (SponsorsActivityOrderField) {
+    /** Order activities by when they happened. */
+    SponsorsActivityOrderField["Timestamp"] = "TIMESTAMP";
+})(SponsorsActivityOrderField || (SponsorsActivityOrderField = {}));
+/** The possible time periods for which Sponsors activities can be requested. */
+var SponsorsActivityPeriod;
+(function (SponsorsActivityPeriod) {
+    /** Don't restrict the activity to any date range, include all activity. */
+    SponsorsActivityPeriod["All"] = "ALL";
+    /** The previous calendar day. */
+    SponsorsActivityPeriod["Day"] = "DAY";
+    /** The previous thirty days. */
+    SponsorsActivityPeriod["Month"] = "MONTH";
+    /** The previous seven days. */
+    SponsorsActivityPeriod["Week"] = "WEEK";
+})(SponsorsActivityPeriod || (SponsorsActivityPeriod = {}));
+/** Represents countries or regions for billing and residence for a GitHub Sponsors profile. */
+var SponsorsCountryOrRegionCode;
+(function (SponsorsCountryOrRegionCode) {
+    /** Andorra */
+    SponsorsCountryOrRegionCode["Ad"] = "AD";
+    /** United Arab Emirates */
+    SponsorsCountryOrRegionCode["Ae"] = "AE";
+    /** Afghanistan */
+    SponsorsCountryOrRegionCode["Af"] = "AF";
+    /** Antigua and Barbuda */
+    SponsorsCountryOrRegionCode["Ag"] = "AG";
+    /** Anguilla */
+    SponsorsCountryOrRegionCode["Ai"] = "AI";
+    /** Albania */
+    SponsorsCountryOrRegionCode["Al"] = "AL";
+    /** Armenia */
+    SponsorsCountryOrRegionCode["Am"] = "AM";
+    /** Angola */
+    SponsorsCountryOrRegionCode["Ao"] = "AO";
+    /** Antarctica */
+    SponsorsCountryOrRegionCode["Aq"] = "AQ";
+    /** Argentina */
+    SponsorsCountryOrRegionCode["Ar"] = "AR";
+    /** American Samoa */
+    SponsorsCountryOrRegionCode["As"] = "AS";
+    /** Austria */
+    SponsorsCountryOrRegionCode["At"] = "AT";
+    /** Australia */
+    SponsorsCountryOrRegionCode["Au"] = "AU";
+    /** Aruba */
+    SponsorsCountryOrRegionCode["Aw"] = "AW";
+    /** Åland */
+    SponsorsCountryOrRegionCode["Ax"] = "AX";
+    /** Azerbaijan */
+    SponsorsCountryOrRegionCode["Az"] = "AZ";
+    /** Bosnia and Herzegovina */
+    SponsorsCountryOrRegionCode["Ba"] = "BA";
+    /** Barbados */
+    SponsorsCountryOrRegionCode["Bb"] = "BB";
+    /** Bangladesh */
+    SponsorsCountryOrRegionCode["Bd"] = "BD";
+    /** Belgium */
+    SponsorsCountryOrRegionCode["Be"] = "BE";
+    /** Burkina Faso */
+    SponsorsCountryOrRegionCode["Bf"] = "BF";
+    /** Bulgaria */
+    SponsorsCountryOrRegionCode["Bg"] = "BG";
+    /** Bahrain */
+    SponsorsCountryOrRegionCode["Bh"] = "BH";
+    /** Burundi */
+    SponsorsCountryOrRegionCode["Bi"] = "BI";
+    /** Benin */
+    SponsorsCountryOrRegionCode["Bj"] = "BJ";
+    /** Saint Barthélemy */
+    SponsorsCountryOrRegionCode["Bl"] = "BL";
+    /** Bermuda */
+    SponsorsCountryOrRegionCode["Bm"] = "BM";
+    /** Brunei Darussalam */
+    SponsorsCountryOrRegionCode["Bn"] = "BN";
+    /** Bolivia */
+    SponsorsCountryOrRegionCode["Bo"] = "BO";
+    /** Bonaire, Sint Eustatius and Saba */
+    SponsorsCountryOrRegionCode["Bq"] = "BQ";
+    /** Brazil */
+    SponsorsCountryOrRegionCode["Br"] = "BR";
+    /** Bahamas */
+    SponsorsCountryOrRegionCode["Bs"] = "BS";
+    /** Bhutan */
+    SponsorsCountryOrRegionCode["Bt"] = "BT";
+    /** Bouvet Island */
+    SponsorsCountryOrRegionCode["Bv"] = "BV";
+    /** Botswana */
+    SponsorsCountryOrRegionCode["Bw"] = "BW";
+    /** Belarus */
+    SponsorsCountryOrRegionCode["By"] = "BY";
+    /** Belize */
+    SponsorsCountryOrRegionCode["Bz"] = "BZ";
+    /** Canada */
+    SponsorsCountryOrRegionCode["Ca"] = "CA";
+    /** Cocos (Keeling) Islands */
+    SponsorsCountryOrRegionCode["Cc"] = "CC";
+    /** Congo (Kinshasa) */
+    SponsorsCountryOrRegionCode["Cd"] = "CD";
+    /** Central African Republic */
+    SponsorsCountryOrRegionCode["Cf"] = "CF";
+    /** Congo (Brazzaville) */
+    SponsorsCountryOrRegionCode["Cg"] = "CG";
+    /** Switzerland */
+    SponsorsCountryOrRegionCode["Ch"] = "CH";
+    /** Côte d'Ivoire */
+    SponsorsCountryOrRegionCode["Ci"] = "CI";
+    /** Cook Islands */
+    SponsorsCountryOrRegionCode["Ck"] = "CK";
+    /** Chile */
+    SponsorsCountryOrRegionCode["Cl"] = "CL";
+    /** Cameroon */
+    SponsorsCountryOrRegionCode["Cm"] = "CM";
+    /** China */
+    SponsorsCountryOrRegionCode["Cn"] = "CN";
+    /** Colombia */
+    SponsorsCountryOrRegionCode["Co"] = "CO";
+    /** Costa Rica */
+    SponsorsCountryOrRegionCode["Cr"] = "CR";
+    /** Cape Verde */
+    SponsorsCountryOrRegionCode["Cv"] = "CV";
+    /** Curaçao */
+    SponsorsCountryOrRegionCode["Cw"] = "CW";
+    /** Christmas Island */
+    SponsorsCountryOrRegionCode["Cx"] = "CX";
+    /** Cyprus */
+    SponsorsCountryOrRegionCode["Cy"] = "CY";
+    /** Czech Republic */
+    SponsorsCountryOrRegionCode["Cz"] = "CZ";
+    /** Germany */
+    SponsorsCountryOrRegionCode["De"] = "DE";
+    /** Djibouti */
+    SponsorsCountryOrRegionCode["Dj"] = "DJ";
+    /** Denmark */
+    SponsorsCountryOrRegionCode["Dk"] = "DK";
+    /** Dominica */
+    SponsorsCountryOrRegionCode["Dm"] = "DM";
+    /** Dominican Republic */
+    SponsorsCountryOrRegionCode["Do"] = "DO";
+    /** Algeria */
+    SponsorsCountryOrRegionCode["Dz"] = "DZ";
+    /** Ecuador */
+    SponsorsCountryOrRegionCode["Ec"] = "EC";
+    /** Estonia */
+    SponsorsCountryOrRegionCode["Ee"] = "EE";
+    /** Egypt */
+    SponsorsCountryOrRegionCode["Eg"] = "EG";
+    /** Western Sahara */
+    SponsorsCountryOrRegionCode["Eh"] = "EH";
+    /** Eritrea */
+    SponsorsCountryOrRegionCode["Er"] = "ER";
+    /** Spain */
+    SponsorsCountryOrRegionCode["Es"] = "ES";
+    /** Ethiopia */
+    SponsorsCountryOrRegionCode["Et"] = "ET";
+    /** Finland */
+    SponsorsCountryOrRegionCode["Fi"] = "FI";
+    /** Fiji */
+    SponsorsCountryOrRegionCode["Fj"] = "FJ";
+    /** Falkland Islands */
+    SponsorsCountryOrRegionCode["Fk"] = "FK";
+    /** Micronesia */
+    SponsorsCountryOrRegionCode["Fm"] = "FM";
+    /** Faroe Islands */
+    SponsorsCountryOrRegionCode["Fo"] = "FO";
+    /** France */
+    SponsorsCountryOrRegionCode["Fr"] = "FR";
+    /** Gabon */
+    SponsorsCountryOrRegionCode["Ga"] = "GA";
+    /** United Kingdom */
+    SponsorsCountryOrRegionCode["Gb"] = "GB";
+    /** Grenada */
+    SponsorsCountryOrRegionCode["Gd"] = "GD";
+    /** Georgia */
+    SponsorsCountryOrRegionCode["Ge"] = "GE";
+    /** French Guiana */
+    SponsorsCountryOrRegionCode["Gf"] = "GF";
+    /** Guernsey */
+    SponsorsCountryOrRegionCode["Gg"] = "GG";
+    /** Ghana */
+    SponsorsCountryOrRegionCode["Gh"] = "GH";
+    /** Gibraltar */
+    SponsorsCountryOrRegionCode["Gi"] = "GI";
+    /** Greenland */
+    SponsorsCountryOrRegionCode["Gl"] = "GL";
+    /** Gambia */
+    SponsorsCountryOrRegionCode["Gm"] = "GM";
+    /** Guinea */
+    SponsorsCountryOrRegionCode["Gn"] = "GN";
+    /** Guadeloupe */
+    SponsorsCountryOrRegionCode["Gp"] = "GP";
+    /** Equatorial Guinea */
+    SponsorsCountryOrRegionCode["Gq"] = "GQ";
+    /** Greece */
+    SponsorsCountryOrRegionCode["Gr"] = "GR";
+    /** South Georgia and South Sandwich Islands */
+    SponsorsCountryOrRegionCode["Gs"] = "GS";
+    /** Guatemala */
+    SponsorsCountryOrRegionCode["Gt"] = "GT";
+    /** Guam */
+    SponsorsCountryOrRegionCode["Gu"] = "GU";
+    /** Guinea-Bissau */
+    SponsorsCountryOrRegionCode["Gw"] = "GW";
+    /** Guyana */
+    SponsorsCountryOrRegionCode["Gy"] = "GY";
+    /** Hong Kong */
+    SponsorsCountryOrRegionCode["Hk"] = "HK";
+    /** Heard and McDonald Islands */
+    SponsorsCountryOrRegionCode["Hm"] = "HM";
+    /** Honduras */
+    SponsorsCountryOrRegionCode["Hn"] = "HN";
+    /** Croatia */
+    SponsorsCountryOrRegionCode["Hr"] = "HR";
+    /** Haiti */
+    SponsorsCountryOrRegionCode["Ht"] = "HT";
+    /** Hungary */
+    SponsorsCountryOrRegionCode["Hu"] = "HU";
+    /** Indonesia */
+    SponsorsCountryOrRegionCode["Id"] = "ID";
+    /** Ireland */
+    SponsorsCountryOrRegionCode["Ie"] = "IE";
+    /** Israel */
+    SponsorsCountryOrRegionCode["Il"] = "IL";
+    /** Isle of Man */
+    SponsorsCountryOrRegionCode["Im"] = "IM";
+    /** India */
+    SponsorsCountryOrRegionCode["In"] = "IN";
+    /** British Indian Ocean Territory */
+    SponsorsCountryOrRegionCode["Io"] = "IO";
+    /** Iraq */
+    SponsorsCountryOrRegionCode["Iq"] = "IQ";
+    /** Iran */
+    SponsorsCountryOrRegionCode["Ir"] = "IR";
+    /** Iceland */
+    SponsorsCountryOrRegionCode["Is"] = "IS";
+    /** Italy */
+    SponsorsCountryOrRegionCode["It"] = "IT";
+    /** Jersey */
+    SponsorsCountryOrRegionCode["Je"] = "JE";
+    /** Jamaica */
+    SponsorsCountryOrRegionCode["Jm"] = "JM";
+    /** Jordan */
+    SponsorsCountryOrRegionCode["Jo"] = "JO";
+    /** Japan */
+    SponsorsCountryOrRegionCode["Jp"] = "JP";
+    /** Kenya */
+    SponsorsCountryOrRegionCode["Ke"] = "KE";
+    /** Kyrgyzstan */
+    SponsorsCountryOrRegionCode["Kg"] = "KG";
+    /** Cambodia */
+    SponsorsCountryOrRegionCode["Kh"] = "KH";
+    /** Kiribati */
+    SponsorsCountryOrRegionCode["Ki"] = "KI";
+    /** Comoros */
+    SponsorsCountryOrRegionCode["Km"] = "KM";
+    /** Saint Kitts and Nevis */
+    SponsorsCountryOrRegionCode["Kn"] = "KN";
+    /** Korea, South */
+    SponsorsCountryOrRegionCode["Kr"] = "KR";
+    /** Kuwait */
+    SponsorsCountryOrRegionCode["Kw"] = "KW";
+    /** Cayman Islands */
+    SponsorsCountryOrRegionCode["Ky"] = "KY";
+    /** Kazakhstan */
+    SponsorsCountryOrRegionCode["Kz"] = "KZ";
+    /** Laos */
+    SponsorsCountryOrRegionCode["La"] = "LA";
+    /** Lebanon */
+    SponsorsCountryOrRegionCode["Lb"] = "LB";
+    /** Saint Lucia */
+    SponsorsCountryOrRegionCode["Lc"] = "LC";
+    /** Liechtenstein */
+    SponsorsCountryOrRegionCode["Li"] = "LI";
+    /** Sri Lanka */
+    SponsorsCountryOrRegionCode["Lk"] = "LK";
+    /** Liberia */
+    SponsorsCountryOrRegionCode["Lr"] = "LR";
+    /** Lesotho */
+    SponsorsCountryOrRegionCode["Ls"] = "LS";
+    /** Lithuania */
+    SponsorsCountryOrRegionCode["Lt"] = "LT";
+    /** Luxembourg */
+    SponsorsCountryOrRegionCode["Lu"] = "LU";
+    /** Latvia */
+    SponsorsCountryOrRegionCode["Lv"] = "LV";
+    /** Libya */
+    SponsorsCountryOrRegionCode["Ly"] = "LY";
+    /** Morocco */
+    SponsorsCountryOrRegionCode["Ma"] = "MA";
+    /** Monaco */
+    SponsorsCountryOrRegionCode["Mc"] = "MC";
+    /** Moldova */
+    SponsorsCountryOrRegionCode["Md"] = "MD";
+    /** Montenegro */
+    SponsorsCountryOrRegionCode["Me"] = "ME";
+    /** Saint Martin (French part) */
+    SponsorsCountryOrRegionCode["Mf"] = "MF";
+    /** Madagascar */
+    SponsorsCountryOrRegionCode["Mg"] = "MG";
+    /** Marshall Islands */
+    SponsorsCountryOrRegionCode["Mh"] = "MH";
+    /** Macedonia */
+    SponsorsCountryOrRegionCode["Mk"] = "MK";
+    /** Mali */
+    SponsorsCountryOrRegionCode["Ml"] = "ML";
+    /** Myanmar */
+    SponsorsCountryOrRegionCode["Mm"] = "MM";
+    /** Mongolia */
+    SponsorsCountryOrRegionCode["Mn"] = "MN";
+    /** Macau */
+    SponsorsCountryOrRegionCode["Mo"] = "MO";
+    /** Northern Mariana Islands */
+    SponsorsCountryOrRegionCode["Mp"] = "MP";
+    /** Martinique */
+    SponsorsCountryOrRegionCode["Mq"] = "MQ";
+    /** Mauritania */
+    SponsorsCountryOrRegionCode["Mr"] = "MR";
+    /** Montserrat */
+    SponsorsCountryOrRegionCode["Ms"] = "MS";
+    /** Malta */
+    SponsorsCountryOrRegionCode["Mt"] = "MT";
+    /** Mauritius */
+    SponsorsCountryOrRegionCode["Mu"] = "MU";
+    /** Maldives */
+    SponsorsCountryOrRegionCode["Mv"] = "MV";
+    /** Malawi */
+    SponsorsCountryOrRegionCode["Mw"] = "MW";
+    /** Mexico */
+    SponsorsCountryOrRegionCode["Mx"] = "MX";
+    /** Malaysia */
+    SponsorsCountryOrRegionCode["My"] = "MY";
+    /** Mozambique */
+    SponsorsCountryOrRegionCode["Mz"] = "MZ";
+    /** Namibia */
+    SponsorsCountryOrRegionCode["Na"] = "NA";
+    /** New Caledonia */
+    SponsorsCountryOrRegionCode["Nc"] = "NC";
+    /** Niger */
+    SponsorsCountryOrRegionCode["Ne"] = "NE";
+    /** Norfolk Island */
+    SponsorsCountryOrRegionCode["Nf"] = "NF";
+    /** Nigeria */
+    SponsorsCountryOrRegionCode["Ng"] = "NG";
+    /** Nicaragua */
+    SponsorsCountryOrRegionCode["Ni"] = "NI";
+    /** Netherlands */
+    SponsorsCountryOrRegionCode["Nl"] = "NL";
+    /** Norway */
+    SponsorsCountryOrRegionCode["No"] = "NO";
+    /** Nepal */
+    SponsorsCountryOrRegionCode["Np"] = "NP";
+    /** Nauru */
+    SponsorsCountryOrRegionCode["Nr"] = "NR";
+    /** Niue */
+    SponsorsCountryOrRegionCode["Nu"] = "NU";
+    /** New Zealand */
+    SponsorsCountryOrRegionCode["Nz"] = "NZ";
+    /** Oman */
+    SponsorsCountryOrRegionCode["Om"] = "OM";
+    /** Panama */
+    SponsorsCountryOrRegionCode["Pa"] = "PA";
+    /** Peru */
+    SponsorsCountryOrRegionCode["Pe"] = "PE";
+    /** French Polynesia */
+    SponsorsCountryOrRegionCode["Pf"] = "PF";
+    /** Papua New Guinea */
+    SponsorsCountryOrRegionCode["Pg"] = "PG";
+    /** Philippines */
+    SponsorsCountryOrRegionCode["Ph"] = "PH";
+    /** Pakistan */
+    SponsorsCountryOrRegionCode["Pk"] = "PK";
+    /** Poland */
+    SponsorsCountryOrRegionCode["Pl"] = "PL";
+    /** Saint Pierre and Miquelon */
+    SponsorsCountryOrRegionCode["Pm"] = "PM";
+    /** Pitcairn */
+    SponsorsCountryOrRegionCode["Pn"] = "PN";
+    /** Puerto Rico */
+    SponsorsCountryOrRegionCode["Pr"] = "PR";
+    /** Palestine */
+    SponsorsCountryOrRegionCode["Ps"] = "PS";
+    /** Portugal */
+    SponsorsCountryOrRegionCode["Pt"] = "PT";
+    /** Palau */
+    SponsorsCountryOrRegionCode["Pw"] = "PW";
+    /** Paraguay */
+    SponsorsCountryOrRegionCode["Py"] = "PY";
+    /** Qatar */
+    SponsorsCountryOrRegionCode["Qa"] = "QA";
+    /** Reunion */
+    SponsorsCountryOrRegionCode["Re"] = "RE";
+    /** Romania */
+    SponsorsCountryOrRegionCode["Ro"] = "RO";
+    /** Serbia */
+    SponsorsCountryOrRegionCode["Rs"] = "RS";
+    /** Russian Federation */
+    SponsorsCountryOrRegionCode["Ru"] = "RU";
+    /** Rwanda */
+    SponsorsCountryOrRegionCode["Rw"] = "RW";
+    /** Saudi Arabia */
+    SponsorsCountryOrRegionCode["Sa"] = "SA";
+    /** Solomon Islands */
+    SponsorsCountryOrRegionCode["Sb"] = "SB";
+    /** Seychelles */
+    SponsorsCountryOrRegionCode["Sc"] = "SC";
+    /** Sudan */
+    SponsorsCountryOrRegionCode["Sd"] = "SD";
+    /** Sweden */
+    SponsorsCountryOrRegionCode["Se"] = "SE";
+    /** Singapore */
+    SponsorsCountryOrRegionCode["Sg"] = "SG";
+    /** Saint Helena */
+    SponsorsCountryOrRegionCode["Sh"] = "SH";
+    /** Slovenia */
+    SponsorsCountryOrRegionCode["Si"] = "SI";
+    /** Svalbard and Jan Mayen Islands */
+    SponsorsCountryOrRegionCode["Sj"] = "SJ";
+    /** Slovakia */
+    SponsorsCountryOrRegionCode["Sk"] = "SK";
+    /** Sierra Leone */
+    SponsorsCountryOrRegionCode["Sl"] = "SL";
+    /** San Marino */
+    SponsorsCountryOrRegionCode["Sm"] = "SM";
+    /** Senegal */
+    SponsorsCountryOrRegionCode["Sn"] = "SN";
+    /** Somalia */
+    SponsorsCountryOrRegionCode["So"] = "SO";
+    /** Suriname */
+    SponsorsCountryOrRegionCode["Sr"] = "SR";
+    /** South Sudan */
+    SponsorsCountryOrRegionCode["Ss"] = "SS";
+    /** Sao Tome and Principe */
+    SponsorsCountryOrRegionCode["St"] = "ST";
+    /** El Salvador */
+    SponsorsCountryOrRegionCode["Sv"] = "SV";
+    /** Sint Maarten (Dutch part) */
+    SponsorsCountryOrRegionCode["Sx"] = "SX";
+    /** Swaziland */
+    SponsorsCountryOrRegionCode["Sz"] = "SZ";
+    /** Turks and Caicos Islands */
+    SponsorsCountryOrRegionCode["Tc"] = "TC";
+    /** Chad */
+    SponsorsCountryOrRegionCode["Td"] = "TD";
+    /** French Southern Lands */
+    SponsorsCountryOrRegionCode["Tf"] = "TF";
+    /** Togo */
+    SponsorsCountryOrRegionCode["Tg"] = "TG";
+    /** Thailand */
+    SponsorsCountryOrRegionCode["Th"] = "TH";
+    /** Tajikistan */
+    SponsorsCountryOrRegionCode["Tj"] = "TJ";
+    /** Tokelau */
+    SponsorsCountryOrRegionCode["Tk"] = "TK";
+    /** Timor-Leste */
+    SponsorsCountryOrRegionCode["Tl"] = "TL";
+    /** Turkmenistan */
+    SponsorsCountryOrRegionCode["Tm"] = "TM";
+    /** Tunisia */
+    SponsorsCountryOrRegionCode["Tn"] = "TN";
+    /** Tonga */
+    SponsorsCountryOrRegionCode["To"] = "TO";
+    /** Türkiye */
+    SponsorsCountryOrRegionCode["Tr"] = "TR";
+    /** Trinidad and Tobago */
+    SponsorsCountryOrRegionCode["Tt"] = "TT";
+    /** Tuvalu */
+    SponsorsCountryOrRegionCode["Tv"] = "TV";
+    /** Taiwan */
+    SponsorsCountryOrRegionCode["Tw"] = "TW";
+    /** Tanzania */
+    SponsorsCountryOrRegionCode["Tz"] = "TZ";
+    /** Ukraine */
+    SponsorsCountryOrRegionCode["Ua"] = "UA";
+    /** Uganda */
+    SponsorsCountryOrRegionCode["Ug"] = "UG";
+    /** United States Minor Outlying Islands */
+    SponsorsCountryOrRegionCode["Um"] = "UM";
+    /** United States of America */
+    SponsorsCountryOrRegionCode["Us"] = "US";
+    /** Uruguay */
+    SponsorsCountryOrRegionCode["Uy"] = "UY";
+    /** Uzbekistan */
+    SponsorsCountryOrRegionCode["Uz"] = "UZ";
+    /** Vatican City */
+    SponsorsCountryOrRegionCode["Va"] = "VA";
+    /** Saint Vincent and the Grenadines */
+    SponsorsCountryOrRegionCode["Vc"] = "VC";
+    /** Venezuela */
+    SponsorsCountryOrRegionCode["Ve"] = "VE";
+    /** Virgin Islands, British */
+    SponsorsCountryOrRegionCode["Vg"] = "VG";
+    /** Virgin Islands, U.S. */
+    SponsorsCountryOrRegionCode["Vi"] = "VI";
+    /** Vietnam */
+    SponsorsCountryOrRegionCode["Vn"] = "VN";
+    /** Vanuatu */
+    SponsorsCountryOrRegionCode["Vu"] = "VU";
+    /** Wallis and Futuna Islands */
+    SponsorsCountryOrRegionCode["Wf"] = "WF";
+    /** Samoa */
+    SponsorsCountryOrRegionCode["Ws"] = "WS";
+    /** Yemen */
+    SponsorsCountryOrRegionCode["Ye"] = "YE";
+    /** Mayotte */
+    SponsorsCountryOrRegionCode["Yt"] = "YT";
+    /** South Africa */
+    SponsorsCountryOrRegionCode["Za"] = "ZA";
+    /** Zambia */
+    SponsorsCountryOrRegionCode["Zm"] = "ZM";
+    /** Zimbabwe */
+    SponsorsCountryOrRegionCode["Zw"] = "ZW";
+})(SponsorsCountryOrRegionCode || (SponsorsCountryOrRegionCode = {}));
+/** The different kinds of goals a GitHub Sponsors member can have. */
+var SponsorsGoalKind;
+(function (SponsorsGoalKind) {
+    /** The goal is about getting a certain amount in USD from sponsorships each month. */
+    SponsorsGoalKind["MonthlySponsorshipAmount"] = "MONTHLY_SPONSORSHIP_AMOUNT";
+    /** The goal is about reaching a certain number of sponsors. */
+    SponsorsGoalKind["TotalSponsorsCount"] = "TOTAL_SPONSORS_COUNT";
+})(SponsorsGoalKind || (SponsorsGoalKind = {}));
+/** The different kinds of records that can be featured on a GitHub Sponsors profile page. */
+var SponsorsListingFeaturedItemFeatureableType;
+(function (SponsorsListingFeaturedItemFeatureableType) {
+    /** A repository owned by the user or organization with the GitHub Sponsors profile. */
+    SponsorsListingFeaturedItemFeatureableType["Repository"] = "REPOSITORY";
+    /** A user who belongs to the organization with the GitHub Sponsors profile. */
+    SponsorsListingFeaturedItemFeatureableType["User"] = "USER";
+})(SponsorsListingFeaturedItemFeatureableType || (SponsorsListingFeaturedItemFeatureableType = {}));
+/** Properties by which Sponsors tiers connections can be ordered. */
+var SponsorsTierOrderField;
+(function (SponsorsTierOrderField) {
+    /** Order tiers by creation time. */
+    SponsorsTierOrderField["CreatedAt"] = "CREATED_AT";
+    /** Order tiers by their monthly price in cents */
+    SponsorsTierOrderField["MonthlyPriceInCents"] = "MONTHLY_PRICE_IN_CENTS";
+})(SponsorsTierOrderField || (SponsorsTierOrderField = {}));
+/** Properties by which sponsorship update connections can be ordered. */
+var SponsorshipNewsletterOrderField;
+(function (SponsorshipNewsletterOrderField) {
+    /** Order sponsorship newsletters by when they were created. */
+    SponsorshipNewsletterOrderField["CreatedAt"] = "CREATED_AT";
+})(SponsorshipNewsletterOrderField || (SponsorshipNewsletterOrderField = {}));
+/** Properties by which sponsorship connections can be ordered. */
+var SponsorshipOrderField;
+(function (SponsorshipOrderField) {
+    /** Order sponsorship by creation time. */
+    SponsorshipOrderField["CreatedAt"] = "CREATED_AT";
+})(SponsorshipOrderField || (SponsorshipOrderField = {}));
+/** How payment was made for funding a GitHub Sponsors sponsorship. */
+var SponsorshipPaymentSource;
+(function (SponsorshipPaymentSource) {
+    /** Payment was made through GitHub. */
+    SponsorshipPaymentSource["Github"] = "GITHUB";
+    /** Payment was made through Patreon. */
+    SponsorshipPaymentSource["Patreon"] = "PATREON";
+})(SponsorshipPaymentSource || (SponsorshipPaymentSource = {}));
+/** The privacy of a sponsorship */
+var SponsorshipPrivacy;
+(function (SponsorshipPrivacy) {
+    /** Private */
+    SponsorshipPrivacy["Private"] = "PRIVATE";
+    /** Public */
+    SponsorshipPrivacy["Public"] = "PUBLIC";
+})(SponsorshipPrivacy || (SponsorshipPrivacy = {}));
+/** The possible default commit messages for squash merges. */
+var SquashMergeCommitMessage;
+(function (SquashMergeCommitMessage) {
+    /** Default to a blank commit message. */
+    SquashMergeCommitMessage["Blank"] = "BLANK";
+    /** Default to the branch's commit messages. */
+    SquashMergeCommitMessage["CommitMessages"] = "COMMIT_MESSAGES";
+    /** Default to the pull request's body. */
+    SquashMergeCommitMessage["PrBody"] = "PR_BODY";
+})(SquashMergeCommitMessage || (SquashMergeCommitMessage = {}));
+/** The possible default commit titles for squash merges. */
+var SquashMergeCommitTitle;
+(function (SquashMergeCommitTitle) {
+    /** Default to the commit's title (if only one commit) or the pull request's title (when more than one commit). */
+    SquashMergeCommitTitle["CommitOrPrTitle"] = "COMMIT_OR_PR_TITLE";
+    /** Default to the pull request's title. */
+    SquashMergeCommitTitle["PrTitle"] = "PR_TITLE";
+})(SquashMergeCommitTitle || (SquashMergeCommitTitle = {}));
+/** Properties by which star connections can be ordered. */
+var StarOrderField;
+(function (StarOrderField) {
+    /** Allows ordering a list of stars by when they were created. */
+    StarOrderField["StarredAt"] = "STARRED_AT";
+})(StarOrderField || (StarOrderField = {}));
+/** The possible commit status states. */
+var StatusState;
+(function (StatusState) {
+    /** Status is errored. */
+    StatusState["Error"] = "ERROR";
+    /** Status is expected. */
+    StatusState["Expected"] = "EXPECTED";
+    /** Status is failing. */
+    StatusState["Failure"] = "FAILURE";
+    /** Status is pending. */
+    StatusState["Pending"] = "PENDING";
+    /** Status is successful. */
+    StatusState["Success"] = "SUCCESS";
+})(StatusState || (StatusState = {}));
+/** The possible states of a subscription. */
+var SubscriptionState;
+(function (SubscriptionState) {
+    /** The User is never notified. */
+    SubscriptionState["Ignored"] = "IGNORED";
+    /** The User is notified of all conversations. */
+    SubscriptionState["Subscribed"] = "SUBSCRIBED";
+    /** The User is only notified when participating or @mentioned. */
+    SubscriptionState["Unsubscribed"] = "UNSUBSCRIBED";
+})(SubscriptionState || (SubscriptionState = {}));
+/** Properties by which team discussion comment connections can be ordered. */
+var TeamDiscussionCommentOrderField;
+(function (TeamDiscussionCommentOrderField) {
+    /** Allows sequential ordering of team discussion comments (which is equivalent to chronological ordering). */
+    TeamDiscussionCommentOrderField["Number"] = "NUMBER";
+})(TeamDiscussionCommentOrderField || (TeamDiscussionCommentOrderField = {}));
+/** Properties by which team discussion connections can be ordered. */
+var TeamDiscussionOrderField;
+(function (TeamDiscussionOrderField) {
+    /** Allows chronological ordering of team discussions. */
+    TeamDiscussionOrderField["CreatedAt"] = "CREATED_AT";
+})(TeamDiscussionOrderField || (TeamDiscussionOrderField = {}));
+/** Properties by which team member connections can be ordered. */
+var TeamMemberOrderField;
+(function (TeamMemberOrderField) {
+    /** Order team members by creation time */
+    TeamMemberOrderField["CreatedAt"] = "CREATED_AT";
+    /** Order team members by login */
+    TeamMemberOrderField["Login"] = "LOGIN";
+})(TeamMemberOrderField || (TeamMemberOrderField = {}));
+/** The possible team member roles; either 'maintainer' or 'member'. */
+var TeamMemberRole;
+(function (TeamMemberRole) {
+    /** A team maintainer has permission to add and remove team members. */
+    TeamMemberRole["Maintainer"] = "MAINTAINER";
+    /** A team member has no administrative permissions on the team. */
+    TeamMemberRole["Member"] = "MEMBER";
+})(TeamMemberRole || (TeamMemberRole = {}));
+/** Defines which types of team members are included in the returned list. Can be one of IMMEDIATE, CHILD_TEAM or ALL. */
+var TeamMembershipType;
+(function (TeamMembershipType) {
+    /** Includes immediate and child team members for the team. */
+    TeamMembershipType["All"] = "ALL";
+    /** Includes only child team members for the team. */
+    TeamMembershipType["ChildTeam"] = "CHILD_TEAM";
+    /** Includes only immediate members of the team. */
+    TeamMembershipType["Immediate"] = "IMMEDIATE";
+})(TeamMembershipType || (TeamMembershipType = {}));
+/** The possible team notification values. */
+var TeamNotificationSetting;
+(function (TeamNotificationSetting) {
+    /** No one will receive notifications. */
+    TeamNotificationSetting["NotificationsDisabled"] = "NOTIFICATIONS_DISABLED";
+    /** Everyone will receive notifications when the team is @mentioned. */
+    TeamNotificationSetting["NotificationsEnabled"] = "NOTIFICATIONS_ENABLED";
+})(TeamNotificationSetting || (TeamNotificationSetting = {}));
+/** Properties by which team connections can be ordered. */
+var TeamOrderField;
+(function (TeamOrderField) {
+    /** Allows ordering a list of teams by name. */
+    TeamOrderField["Name"] = "NAME";
+})(TeamOrderField || (TeamOrderField = {}));
+/** The possible team privacy values. */
+var TeamPrivacy;
+(function (TeamPrivacy) {
+    /** A secret team can only be seen by its members. */
+    TeamPrivacy["Secret"] = "SECRET";
+    /** A visible team can be seen and @mentioned by every member of the organization. */
+    TeamPrivacy["Visible"] = "VISIBLE";
+})(TeamPrivacy || (TeamPrivacy = {}));
+/** Properties by which team repository connections can be ordered. */
+var TeamRepositoryOrderField;
+(function (TeamRepositoryOrderField) {
+    /** Order repositories by creation time */
+    TeamRepositoryOrderField["CreatedAt"] = "CREATED_AT";
+    /** Order repositories by name */
+    TeamRepositoryOrderField["Name"] = "NAME";
+    /** Order repositories by permission */
+    TeamRepositoryOrderField["Permission"] = "PERMISSION";
+    /** Order repositories by push time */
+    TeamRepositoryOrderField["PushedAt"] = "PUSHED_AT";
+    /** Order repositories by number of stargazers */
+    TeamRepositoryOrderField["Stargazers"] = "STARGAZERS";
+    /** Order repositories by update time */
+    TeamRepositoryOrderField["UpdatedAt"] = "UPDATED_AT";
+})(TeamRepositoryOrderField || (TeamRepositoryOrderField = {}));
+/** The possible team review assignment algorithms */
+var TeamReviewAssignmentAlgorithm;
+(function (TeamReviewAssignmentAlgorithm) {
+    /** Balance review load across the entire team */
+    TeamReviewAssignmentAlgorithm["LoadBalance"] = "LOAD_BALANCE";
+    /** Alternate reviews between each team member */
+    TeamReviewAssignmentAlgorithm["RoundRobin"] = "ROUND_ROBIN";
+})(TeamReviewAssignmentAlgorithm || (TeamReviewAssignmentAlgorithm = {}));
+/** The role of a user on a team. */
+var TeamRole;
+(function (TeamRole) {
+    /** User has admin rights on the team. */
+    TeamRole["Admin"] = "ADMIN";
+    /** User is a member of the team. */
+    TeamRole["Member"] = "MEMBER";
+})(TeamRole || (TeamRole = {}));
+/** The possible states of a thread subscription form action */
+var ThreadSubscriptionFormAction;
+(function (ThreadSubscriptionFormAction) {
+    /** The User cannot subscribe or unsubscribe to the thread */
+    ThreadSubscriptionFormAction["None"] = "NONE";
+    /** The User can subscribe to the thread */
+    ThreadSubscriptionFormAction["Subscribe"] = "SUBSCRIBE";
+    /** The User can unsubscribe to the thread */
+    ThreadSubscriptionFormAction["Unsubscribe"] = "UNSUBSCRIBE";
+})(ThreadSubscriptionFormAction || (ThreadSubscriptionFormAction = {}));
+/** The possible states of a subscription. */
+var ThreadSubscriptionState;
+(function (ThreadSubscriptionState) {
+    /** The subscription status is currently disabled. */
+    ThreadSubscriptionState["Disabled"] = "DISABLED";
+    /** The User is never notified because they are ignoring the list */
+    ThreadSubscriptionState["IgnoringList"] = "IGNORING_LIST";
+    /** The User is never notified because they are ignoring the thread */
+    ThreadSubscriptionState["IgnoringThread"] = "IGNORING_THREAD";
+    /** The User is not recieving notifications from this thread */
+    ThreadSubscriptionState["None"] = "NONE";
+    /** The User is notified becuase they are watching the list */
+    ThreadSubscriptionState["SubscribedToList"] = "SUBSCRIBED_TO_LIST";
+    /** The User is notified because they are subscribed to the thread */
+    ThreadSubscriptionState["SubscribedToThread"] = "SUBSCRIBED_TO_THREAD";
+    /** The User is notified because they chose custom settings for this thread. */
+    ThreadSubscriptionState["SubscribedToThreadEvents"] = "SUBSCRIBED_TO_THREAD_EVENTS";
+    /** The User is notified because they chose custom settings for this thread. */
+    ThreadSubscriptionState["SubscribedToThreadType"] = "SUBSCRIBED_TO_THREAD_TYPE";
+    /** The subscription status is currently unavailable. */
+    ThreadSubscriptionState["Unavailable"] = "UNAVAILABLE";
+})(ThreadSubscriptionState || (ThreadSubscriptionState = {}));
+/** Reason that the suggested topic is declined. */
+var TopicSuggestionDeclineReason;
+(function (TopicSuggestionDeclineReason) {
+    /**
+     * The suggested topic is not relevant to the repository.
+     * @deprecated Suggested topics are no longer supported Removal on 2024-04-01 UTC.
+     */
+    TopicSuggestionDeclineReason["NotRelevant"] = "NOT_RELEVANT";
+    /**
+     * The viewer does not like the suggested topic.
+     * @deprecated Suggested topics are no longer supported Removal on 2024-04-01 UTC.
+     */
+    TopicSuggestionDeclineReason["PersonalPreference"] = "PERSONAL_PREFERENCE";
+    /**
+     * The suggested topic is too general for the repository.
+     * @deprecated Suggested topics are no longer supported Removal on 2024-04-01 UTC.
+     */
+    TopicSuggestionDeclineReason["TooGeneral"] = "TOO_GENERAL";
+    /**
+     * The suggested topic is too specific for the repository (e.g. #ruby-on-rails-version-4-2-1).
+     * @deprecated Suggested topics are no longer supported Removal on 2024-04-01 UTC.
+     */
+    TopicSuggestionDeclineReason["TooSpecific"] = "TOO_SPECIFIC";
+})(TopicSuggestionDeclineReason || (TopicSuggestionDeclineReason = {}));
+/** The possible states of a tracked issue. */
+var TrackedIssueStates;
+(function (TrackedIssueStates) {
+    /** The tracked issue is closed */
+    TrackedIssueStates["Closed"] = "CLOSED";
+    /** The tracked issue is open */
+    TrackedIssueStates["Open"] = "OPEN";
+})(TrackedIssueStates || (TrackedIssueStates = {}));
+/** Filters by whether or not 2FA is enabled and if the method configured is considered secure or insecure. */
+var TwoFactorCredentialSecurityType;
+(function (TwoFactorCredentialSecurityType) {
+    /** No method of two-factor authentication. */
+    TwoFactorCredentialSecurityType["Disabled"] = "DISABLED";
+    /** Has an insecure method of two-factor authentication. GitHub currently defines this as SMS two-factor authentication. */
+    TwoFactorCredentialSecurityType["Insecure"] = "INSECURE";
+    /** Has only secure methods of two-factor authentication. */
+    TwoFactorCredentialSecurityType["Secure"] = "SECURE";
+})(TwoFactorCredentialSecurityType || (TwoFactorCredentialSecurityType = {}));
+/** The possible durations that a user can be blocked for. */
+var UserBlockDuration;
+(function (UserBlockDuration) {
+    /** The user was blocked for 1 day */
+    UserBlockDuration["OneDay"] = "ONE_DAY";
+    /** The user was blocked for 30 days */
+    UserBlockDuration["OneMonth"] = "ONE_MONTH";
+    /** The user was blocked for 7 days */
+    UserBlockDuration["OneWeek"] = "ONE_WEEK";
+    /** The user was blocked permanently */
+    UserBlockDuration["Permanent"] = "PERMANENT";
+    /** The user was blocked for 3 days */
+    UserBlockDuration["ThreeDays"] = "THREE_DAYS";
+})(UserBlockDuration || (UserBlockDuration = {}));
+/** Properties by which user status connections can be ordered. */
+var UserStatusOrderField;
+(function (UserStatusOrderField) {
+    /** Order user statuses by when they were updated. */
+    UserStatusOrderField["UpdatedAt"] = "UPDATED_AT";
+})(UserStatusOrderField || (UserStatusOrderField = {}));
+/** Whether a user being viewed contains public or private information. */
+var UserViewType;
+(function (UserViewType) {
+    /** A user containing information only visible to the authenticated user. */
+    UserViewType["Private"] = "PRIVATE";
+    /** A user that is publicly visible. */
+    UserViewType["Public"] = "PUBLIC";
+})(UserViewType || (UserViewType = {}));
+/** Properties by which verifiable domain connections can be ordered. */
+var VerifiableDomainOrderField;
+(function (VerifiableDomainOrderField) {
+    /** Order verifiable domains by their creation date. */
+    VerifiableDomainOrderField["CreatedAt"] = "CREATED_AT";
+    /** Order verifiable domains by the domain name. */
+    VerifiableDomainOrderField["Domain"] = "DOMAIN";
+})(VerifiableDomainOrderField || (VerifiableDomainOrderField = {}));
+/** Properties by which workflow run connections can be ordered. */
+var WorkflowRunOrderField;
+(function (WorkflowRunOrderField) {
+    /** Order workflow runs by most recently created */
+    WorkflowRunOrderField["CreatedAt"] = "CREATED_AT";
+})(WorkflowRunOrderField || (WorkflowRunOrderField = {}));
+/** The possible states for a workflow. */
+var WorkflowState;
+(function (WorkflowState) {
+    /** The workflow is active. */
+    WorkflowState["Active"] = "ACTIVE";
+    /** The workflow was deleted from the git repository. */
+    WorkflowState["Deleted"] = "DELETED";
+    /** The workflow was disabled by default on a fork. */
+    WorkflowState["DisabledFork"] = "DISABLED_FORK";
+    /** The workflow was disabled for inactivity in the repository. */
+    WorkflowState["DisabledInactivity"] = "DISABLED_INACTIVITY";
+    /** The workflow was disabled manually. */
+    WorkflowState["DisabledManually"] = "DISABLED_MANUALLY";
+})(WorkflowState || (WorkflowState = {}));
+const GetIssueDetailsDocument = gql `
+    query GetIssueDetails($owner: String!, $repo: String!, $issueNumber: Int!, $commentsCursor: String, $reactionsCursor: String) {
+  repository(owner: $owner, name: $repo) {
+    owner {
+      login
+      __typename
+    }
+    name
+    nameWithOwner
+    issue(number: $issueNumber) {
+      id
+      number
+      title
+      body
+      state
+      createdAt
+      updatedAt
+      closedAt
+      author {
+        login
+        __typename
+      }
+      assignees(first: 100) {
+        nodes {
+          login
+          __typename
+        }
+      }
+      reactions(first: 100, after: $reactionsCursor) {
+        totalCount
+        pageInfo {
+          hasNextPage
+          endCursor
+        }
+        nodes {
+          content
+          createdAt
+          user {
+            login
+            __typename
+          }
+        }
+      }
+      comments(first: 100, after: $commentsCursor) {
+        totalCount
+        pageInfo {
+          hasNextPage
+          endCursor
+        }
+        nodes {
+          createdAt
+          author {
+            login
+            __typename
+          }
+          reactions(first: 100) {
+            totalCount
+            pageInfo {
+              hasNextPage
+              endCursor
+            }
+            nodes {
+              content
+              createdAt
+              user {
+                login
+                __typename
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+    `;
+const GetProjectFieldsDocument = gql `
+    query GetProjectFields($owner: String!, $repo: String!, $projectNumber: Int!) {
+  repository(owner: $owner, name: $repo) {
+    projectV2(number: $projectNumber) {
+      id
+      fields(first: 100) {
+        nodes {
+          __typename
+          ... on ProjectV2FieldCommon {
+            id
+            name
+            dataType
+          }
+        }
+      }
+    }
+  }
+}
+    `;
+const GetProjectItemsDocument = gql `
+    query GetProjectItems($owner: String!, $repo: String!, $projectNumber: Int!, $cursor: String) {
+  repository(owner: $owner, name: $repo) {
+    projectV2(number: $projectNumber) {
+      id
+      title
+      items(first: 100, after: $cursor) {
+        pageInfo {
+          hasNextPage
+          endCursor
+        }
+        nodes {
+          id
+          __typename
+          content {
+            __typename
+            ... on Issue {
+              id
+              number
+              repository {
+                name
+                owner {
+                  login
+                  __typename
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+    `;
+const UpdateProjectItemFieldDocument = gql `
+    mutation UpdateProjectItemField($itemId: ID!, $fieldId: ID!, $projectId: ID!, $value: String!) {
+  updateProjectV2ItemFieldValue(
+    input: {itemId: $itemId, fieldId: $fieldId, projectId: $projectId, value: {text: $value}}
+  ) {
+    projectV2Item {
+      id
+    }
+  }
+}
+    `;
+const defaultWrapper = (action, _operationName, _operationType, _variables) => action();
+function getSdk(client, withWrapper = defaultWrapper) {
+    return {
+        GetIssueDetails(variables, requestHeaders, signal) {
+            return withWrapper((wrappedRequestHeaders) => client.request({ document: GetIssueDetailsDocument, variables, requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders }, signal }), 'GetIssueDetails', 'query', variables);
+        },
+        GetProjectFields(variables, requestHeaders, signal) {
+            return withWrapper((wrappedRequestHeaders) => client.request({ document: GetProjectFieldsDocument, variables, requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders }, signal }), 'GetProjectFields', 'query', variables);
+        },
+        GetProjectItems(variables, requestHeaders, signal) {
+            return withWrapper((wrappedRequestHeaders) => client.request({ document: GetProjectItemsDocument, variables, requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders }, signal }), 'GetProjectItems', 'query', variables);
+        },
+        UpdateProjectItemField(variables, requestHeaders, signal) {
+            return withWrapper((wrappedRequestHeaders) => client.request({ document: UpdateProjectItemFieldDocument, variables, requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders }, signal }), 'UpdateProjectItemField', 'mutation', variables);
+        }
+    };
+}
+
+var EngagementClassification;
+(function (EngagementClassification) {
+    EngagementClassification["Hot"] = "Hot";
+})(EngagementClassification || (EngagementClassification = {}));
+
+/**
+ * Update project field with engagement scores
+ */
+async function updateProjectWithScores(config, graphql, response) {
+    if (!config.applyScores || !config.projectNumber) {
+        coreExports.info('Skipping project update');
+        return;
+    }
+    coreExports.info(`Updating project #${config.projectNumber} with engagement scores`);
+    const projectField = await getProjectField(graphql, config.repoOwner, config.repoName, config.projectNumber, config.projectColumn);
+    if (!projectField) {
+        coreExports.warning(`Field "${config.projectColumn}" not found in project`);
+        return;
+    }
+    // Get the project ID for the mutation
+    const project = await getProjectDetails(graphql, config.repoOwner, config.repoName, config.projectNumber);
+    if (!project || !project.items || project.items.length === 0) {
+        coreExports.warning('No project items found or unable to determine project ID');
+        return;
+    }
+    // Update each issue's engagement score
+    let updatedCount = 0;
+    for (const item of response.items) {
+        if (item.id) {
+            try {
+                await updateProjectItem(graphql, config, item.id, projectField.id, project.id, item.engagement.score.toString());
+                updatedCount++;
+            }
+            catch (error) {
+                coreExports.warning(`Failed to update item ${item.id}: ${error}`);
+            }
+        }
+    }
+    coreExports.info(`Updated ${updatedCount} project items with engagement scores`);
+}
+/**
+ * Get project field information
+ */
+async function getProjectField(graphql, owner, repo, projectNumber, fieldName) {
+    const result = await graphql.GetProjectFields({
+        owner,
+        repo,
+        projectNumber
+    });
+    const project = result.repository?.projectV2;
+    if (!project) {
+        return null;
+    }
+    const field = project.fields.nodes?.find((f) => {
+        // Check if it's a ProjectV2Field (which has name and id)
+        return f?.__typename === 'ProjectV2Field' && f?.name === fieldName;
+    });
+    if (!field || field.__typename !== 'ProjectV2Field') {
+        return null;
+    }
+    return { id: field.id, name: field.name };
+}
+/**
+ * Get all items from a project
+ */
+async function getProjectDetails(graphql, owner, repo, projectNumber) {
+    coreExports.info(`Fetching all items from project #${projectNumber}`);
+    const result = await graphql.GetProjectItems({
+        owner,
+        repo,
+        projectNumber,
+        cursor: null
+    });
+    const projectData = result.repository?.projectV2;
+    if (!projectData) {
+        throw new Error(`Project #${projectNumber} not found`);
+    }
+    // Create the project object
+    const project = {
+        id: projectData.id,
+        owner,
+        number: projectNumber,
+        items: []
+    };
+    // Add first batch of items
+    let cursor = addItems(projectData.items, project.items, projectData.id);
+    // Paginate through remaining items
+    while (cursor) {
+        const nextResult = await graphql.GetProjectItems({
+            owner,
+            repo,
+            projectNumber,
+            cursor
+        });
+        cursor = addItems(nextResult?.repository?.projectV2?.items, project.items, projectData.id);
+    }
+    return project;
+}
+/**
+ * Update a project item field
+ */
+async function updateProjectItem(graphql, config, itemId, fieldId, projectId, value) {
+    if (config.dryRun) {
+        coreExports.info(`Dry run: Skipping updating project item ${itemId} field ${fieldId} with value "${value}"`);
+        return;
+    }
+    await graphql.UpdateProjectItemField({
+        itemId,
+        fieldId,
+        projectId,
+        value
+    });
+}
+function addItems(items, allItems, projectId) {
+    if (!items?.nodes) {
+        return null;
+    }
+    items.nodes.forEach((item) => {
+        if (!item) {
+            return;
+        }
+        // TODO: add other item types
+        if (item?.content?.__typename !== 'Issue') {
+            return;
+        }
+        allItems.push({
+            id: item.id,
+            projectId: projectId,
+            type: item.content.__typename,
+            content: {
+                id: item.content.id,
+                owner: item.content.repository.owner.login,
+                repo: item.content.repository.name,
+                number: item.content.number
+            }
+        });
+    });
+    if (!items.pageInfo.hasNextPage) {
+        return null;
+    }
+    return items.pageInfo.endCursor;
+}
+
+/**
+ * Get historic issue details by filtering activity to 7 days ago
+ */
+function getHistoricalIssueDetails(issue) {
+    const now = new Date();
+    const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+    // If the issue is newer than 7 days, return it as-is
+    if (issue.createdAt > sevenDaysAgo) {
+        return {
+            ...issue,
+            comments: [],
+            reactions: []
+        };
+    }
+    // Filter reactions to only include those created before 7 days ago
+    const historicReactions = (issue.reactions || []).filter((reaction) => {
+        return reaction.createdAt <= sevenDaysAgo;
+    });
+    // Create historic snapshot by filtering comments and reactions to 7 days ago
+    const historicComments = (issue.comments || [])
+        .filter((comment) => {
+        return comment.createdAt <= sevenDaysAgo;
+    })
+        .map((comment) => {
+        // Filter comment reactions to only include those created before 7 days ago
+        const commentHistoricReactions = (comment.reactions || []).filter((reaction) => {
+            return reaction.createdAt <= sevenDaysAgo;
+        });
+        return {
+            ...comment,
+            reactions: commentHistoricReactions
+        };
+    });
+    const historicIssue = {
+        ...issue,
+        comments: historicComments || [],
+        reactions: historicReactions || [],
+        updatedAt: sevenDaysAgo
+    };
+    return historicIssue;
+}
+/**
+ * Get unique contributors to an issue
+ */
+function getUniqueContributorsCount(issue) {
+    const contributors = new Set();
+    // Add issue author
+    contributors.add(issue.user.login);
+    // Add assignees
+    issue.assignees.forEach((assignee) => contributors.add(assignee.login));
+    // Add comment authors
+    issue.comments?.forEach((comment) => contributors.add(comment.user.login));
+    return contributors.size;
+}
+/**
+ * Get time since last activity in days
+ */
+function getDaysSinceLastActivity(issue) {
+    const lastUpdate = issue.updatedAt;
+    const now = new Date();
+    const diffMs = now.getTime() - lastUpdate.getTime();
+    const diffDays = diffMs / (1000 * 60 * 60 * 24);
+    return Math.ceil(diffDays);
+}
+/**
+ * Get issue age in days
+ */
+function getDaysSinceCreation(issue) {
+    const created = issue.createdAt;
+    const now = new Date();
+    const diffMs = now.getTime() - created.getTime();
+    const diffDays = diffMs / (1000 * 60 * 60 * 24);
+    return Math.ceil(diffDays);
+}
+/**
+ * Calculate engagement score for an issue based on the engagement algorithm
+ */
+function calculateScore(issue) {
+    // Components:
+    // - Number of Comments       => Indicates discussion and interest
+    // - Number of Reactions      => Shows emotional engagement
+    // - Number of Contributors   => Reflects the diversity of input
+    // - Time Since Last Activity => More recent activity indicates higher engagement
+    // - Issue Age                => Older issues might need more attention
+    // - Number of Linked PRs     => Shows active work on the issue (not implemented)
+    const totalComments = (issue.comments || []).length;
+    const totalCommentReactions = (issue.comments || []).reduce((sum, comment) => sum + (comment.reactions || []).length, 0);
+    const totalReactions = (issue.reactions || []).length + totalCommentReactions;
+    const contributors = getUniqueContributorsCount(issue);
+    const lastActivity = Math.max(1, getDaysSinceLastActivity(issue));
+    const issueAge = Math.max(1, getDaysSinceCreation(issue));
+    const linkedPullRequests = 0; // Not implemented yet
+    // Weights
+    const CommentsWeight = 3;
+    const ReactionsWeight = 1;
+    const ContributorsWeight = 2;
+    const LastActivityWeight = 1;
+    const IssueAgeWeight = 1;
+    const LinkedPullRequestsWeight = 2;
+    const score = CommentsWeight * totalComments +
+        ReactionsWeight * totalReactions +
+        ContributorsWeight * contributors +
+        LastActivityWeight * (1 / lastActivity) +
+        IssueAgeWeight * (1 / issueAge) +
+        LinkedPullRequestsWeight * linkedPullRequests;
+    return Math.round(score);
+}
+/**
+ * Calculate previous score (7 days ago) based on historical issue details
+ */
+async function calculateHistoricalScore(issue) {
+    const historicIssue = getHistoricalIssueDetails(issue);
+    return calculateScore(historicIssue);
+}
+
+/**
+ * Run the complete engagement scoring workflow
+ * @param config - The triage configuration
+ * @returns Promise<string> - The engagement response file path
+ */
+async function runEngagementWorkflow(config) {
+    coreExports.info('Running in engagement scoring mode');
+    const graphql = new GraphQLClient('https://api.github.com/graphql', {
+        headers: {
+            Authorization: `Bearer ${config.token}`
+        }
+    });
+    const sdk = getSdk(graphql);
+    const engagementResponse = await calculateEngagementScores(config, sdk);
+    coreExports.info(`Calculated engagement scores for ${engagementResponse.totalItems} items`);
+    // Update project with scores if requested
+    if (config.applyScores) {
+        await updateProjectWithScores(config, sdk, engagementResponse);
+    }
+    // Save engagement response to file
+    const engagementFile = `${config.tempDir}/engagement-response.json`;
+    await fs.promises.writeFile(engagementFile, JSON.stringify(engagementResponse, null, 2));
+    return engagementFile;
+}
+/**
+ * Calculate engagement scores for issues in a project or single issue
+ * @param config - Configuration object containing project and authentication details
+ * @param graphql - GraphQL SDK instance for making API calls
+ * @returns Promise<EngagementResponse> - The engagement response with scores
+ */
+async function calculateEngagementScores(config, graphql) {
+    if (config.projectNumber && config.projectNumber > 0) {
+        return await calculateProjectEngagementScores(config, graphql);
+    }
+    else if (config.issueNumber && config.issueNumber > 0) {
+        return await calculateIssueEngagementScores(config, graphql);
+    }
+    else {
+        throw new Error('Either project number or issue number must be specified');
+    }
+}
+/**
+ * Calculate engagement scores for a single issue
+ */
+async function calculateIssueEngagementScores(config, graphql) {
+    coreExports.info(`Calculating engagement score for issue #${config.issueNumber}`);
+    const issueDetails = await getIssueDetails(graphql, config.repoOwner, config.repoName, config.issueNumber);
+    const item = await createEngagementItem(issueDetails);
+    return {
+        items: [item],
+        totalItems: 1
+    };
+}
+/**
+ * Calculate engagement scores for all issues in a project
+ */
+async function calculateProjectEngagementScores(config, graphql) {
+    coreExports.info(`Calculating engagement scores for project #${config.projectNumber}`);
+    const projectNumber = config.projectNumber;
+    const project = await getProjectDetails(graphql, config.repoOwner, config.repoName, projectNumber);
+    if (!project || !project.items || project.items.length === 0) {
+        coreExports.warning('No project items found or unable to determine project ID');
+        return {
+            items: [],
+            totalItems: 0
+        };
+    }
+    coreExports.info(`Found ${project.items.length} items in project #${projectNumber}`);
+    const items = [];
+    for (const projectItem of project.items) {
+        const issueDetails = await getIssueDetails(graphql, projectItem.content.owner, projectItem.content.repo, projectItem.content.number);
+        const item = await createEngagementItem(issueDetails, projectItem.id);
+        items.push(item);
+    }
+    return {
+        items,
+        totalItems: items.length,
+        project: {
+            id: project.id,
+            owner: project.owner,
+            number: project.number
+        }
+    };
+}
+/**
+ * Helper function to create engagement item - avoids code duplication
+ */
+async function createEngagementItem(issueDetails, projectItemId) {
+    const score = calculateScore(issueDetails);
+    const previousScore = await calculateHistoricalScore(issueDetails);
+    const item = {
+        ...(projectItemId && { id: projectItemId }),
+        issue: {
+            id: issueDetails.id,
+            owner: issueDetails.owner,
+            repo: issueDetails.repo,
+            number: issueDetails.number
+        },
+        engagement: {
+            score,
+            previousScore,
+            classification: score > previousScore ? EngagementClassification.Hot : undefined
+        }
+    };
+    return item;
+}
+
+/**
+ * Enum for triage modes
+ */
+var TriageMode;
+(function (TriageMode) {
+    TriageMode["IssueTriage"] = "issue-triage";
+    TriageMode["EngagementScore"] = "engagement-score";
+})(TriageMode || (TriageMode = {}));
 /**
  * The main function for the action.
  *
@@ -40748,11 +48244,29 @@ async function applyLabels(octokit, mergedResponse, config) {
 async function run() {
     const DEFAULT_AI_ENDPOINT = 'https://models.github.ai/inference';
     const DEFAULT_AI_MODEL = 'openai/gpt-4o';
+    const DEFAULT_PROJECT_COLUMN_NAME = 'Engagement Score';
     let config;
-    let shouldRemoveReactions = false;
     try {
+        // Get inputs for mode determination
+        const template = coreExports.getInput('template');
+        const projectInput = coreExports.getInput('project');
+        const issueInput = coreExports.getInput('issue');
+        const issueContext = githubExports.context.issue?.number || 0;
+        // Determine triage mode
+        const triageMode = template === TriageMode.EngagementScore ? TriageMode.EngagementScore : TriageMode.IssueTriage;
+        // Validate inputs based on mode
+        if (triageMode === TriageMode.EngagementScore) {
+            if (!projectInput && !issueInput) {
+                throw new Error('Either project or issue must be specified when using engagement-score template');
+            }
+        }
+        else {
+            // For normal triage mode, default to current issue if not specified
+            if (!issueInput && !issueContext) {
+                throw new Error('Issue number is required for triage mode');
+            }
+        }
         // Initialize configuration object
-        const issueNumberStr = coreExports.getInput('issue') || githubExports.context.issue.number.toString();
         const token = coreExports.getInput('token') ||
             process.env.TRIAGE_GITHUB_TOKEN ||
             process.env.GITHUB_TOKEN ||
@@ -40762,21 +48276,25 @@ async function run() {
         config = {
             aiEndpoint: coreExports.getInput('ai-endpoint') || process.env.TRIAGE_AI_ENDPOINT || DEFAULT_AI_ENDPOINT,
             aiModel: coreExports.getInput('ai-model') || process.env.TRIAGE_AI_MODEL || DEFAULT_AI_MODEL,
+            aiToken: aiToken,
             applyComment: coreExports.getBooleanInput('apply-comment'),
-            commentFooter: coreExports.getInput('comment-footer'),
             applyLabels: coreExports.getBooleanInput('apply-labels'),
-            issueNumber: parseInt(issueNumberStr, 10),
+            applyScores: coreExports.getBooleanInput('apply-scores'),
+            commentFooter: coreExports.getInput('comment-footer'),
+            dryRun: coreExports.getBooleanInput('dry-run') || false,
+            issueNumber: issueInput ? parseInt(issueInput, 10) : issueContext,
+            label: coreExports.getInput('label'),
+            labelPrefix: coreExports.getInput('label-prefix'),
+            projectColumn: coreExports.getInput('project-column') || DEFAULT_PROJECT_COLUMN_NAME,
+            projectNumber: projectInput ? parseInt(projectInput, 10) : 0,
             repoName: githubExports.context.repo.repo,
             repoOwner: githubExports.context.repo.owner,
             repository: `${githubExports.context.repo.owner}/${githubExports.context.repo.repo}`,
             tempDir: process.env.RUNNER_TEMP || require$$0.tmpdir(),
-            template: coreExports.getInput('template'),
-            token: token,
-            aiToken: aiToken,
-            label: coreExports.getInput('label'),
-            labelPrefix: coreExports.getInput('label-prefix'),
-            dryRun: coreExports.getBooleanInput('dry-run') || false
+            template: template,
+            token: token
         };
+        // Initial validation checks
         if (config.dryRun) {
             coreExports.info('Running in dry-run mode. No changes will be made.');
         }
@@ -40787,23 +48305,14 @@ async function run() {
             coreExports.info('No specific AI token provided, using GitHub token as fallback.');
         }
         let responseFile = '';
-        const shouldAddLabels = config.template ? true : false;
-        const shouldAddSummary = config.applyLabels || config.applyComment;
-        const shouldAddReactions = shouldAddLabels || shouldAddSummary;
-        shouldRemoveReactions = shouldAddSummary;
-        // Step 1: Add eyes reaction at the start
-        if (shouldAddReactions) {
-            await manageReactions(config, true);
+        // Run the appropriate workflow based on the triage mode
+        if (triageMode === TriageMode.EngagementScore) {
+            responseFile = await runEngagementWorkflow(config);
         }
-        // Step 2: Select labels if template is provided
-        if (shouldAddLabels) {
-            responseFile = await selectLabels(config);
+        else {
+            responseFile = await runTriageWorkflow(config);
         }
-        // Step 3: Apply labels and comment if requested
-        if (shouldAddSummary) {
-            await applyLabelsAndComment(config);
-        }
-        // Step 4: Set the response file output
+        // Set the response file output
         coreExports.setOutput('response-file', responseFile);
     }
     catch (error) {
@@ -40813,12 +48322,6 @@ async function run() {
         }
         else {
             coreExports.setFailed(`An unknown error occurred: ${JSON.stringify(error)}`);
-        }
-    }
-    finally {
-        // Step 5: Remove eyes reaction at the end if needed
-        if (shouldRemoveReactions && config) {
-            await manageReactions(config, false);
         }
     }
 }

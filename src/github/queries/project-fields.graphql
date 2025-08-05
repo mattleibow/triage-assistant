@@ -1,0 +1,24 @@
+# Get field information from a GitHub Project v2
+#
+# Example values
+#   owner: mattleibow
+#   repo: triage-assistant
+#   projectNumber: 8
+
+query GetProjectFields($owner: String!, $repo: String!, $projectNumber: Int!) {
+  repository(owner: $owner, name: $repo) {
+    projectV2(number: $projectNumber) {
+      id
+      fields(first: 100) {
+        nodes {
+          __typename
+          ... on ProjectV2FieldCommon {
+            id
+            name
+            dataType
+          }
+        }
+      }
+    }
+  }
+}
