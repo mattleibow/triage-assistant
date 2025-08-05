@@ -11,6 +11,7 @@ query GetProjectFields($owner: String!, $repo: String!, $projectNumber: Int!) {
       id
       fields(first: 100) {
         nodes {
+          __typename
           ... on ProjectV2FieldCommon {
             id
             name

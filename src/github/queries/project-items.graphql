@@ -18,7 +18,9 @@ query GetProjectItems($owner: String!, $repo: String!, $projectNumber: Int!, $cu
         }
         nodes {
           id
+          __typename
           content {
+            __typename
             ... on Issue {
               id
               number
@@ -26,6 +28,7 @@ query GetProjectItems($owner: String!, $repo: String!, $projectNumber: Int!, $cu
                 name
                 owner {
                   login
+                  __typename
                 }
               }
             }

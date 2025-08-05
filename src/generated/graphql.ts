@@ -35651,7 +35651,7 @@ export type GetProjectFieldsQueryVariables = Exact<{
 }>;
 
 
-export type GetProjectFieldsQuery = { __typename?: 'Query', repository?: { __typename?: 'Repository', projectV2?: { __typename?: 'ProjectV2', id: string, fields: { __typename?: 'ProjectV2FieldConfigurationConnection', nodes?: Array<{ __typename?: 'ProjectV2Field', id: string, name: string, dataType: ProjectV2FieldType } | { __typename?: 'ProjectV2IterationField', id: string, name: string, dataType: ProjectV2FieldType } | { __typename?: 'ProjectV2SingleSelectField', id: string, name: string, dataType: ProjectV2FieldType } | null> | null } } | null } | null };
+export type GetProjectFieldsQuery = { __typename?: 'Query', repository?: { __typename?: 'Repository', projectV2?: { __typename?: 'ProjectV2', id: string, fields: { __typename?: 'ProjectV2FieldConfigurationConnection', nodes?: Array<{ __typename: 'ProjectV2Field', id: string, name: string, dataType: ProjectV2FieldType } | { __typename: 'ProjectV2IterationField', id: string, name: string, dataType: ProjectV2FieldType } | { __typename: 'ProjectV2SingleSelectField', id: string, name: string, dataType: ProjectV2FieldType } | null> | null } } | null } | null };
 
 export type GetProjectItemsQueryVariables = Exact<{
   owner: Scalars['String']['input'];
@@ -35661,7 +35661,7 @@ export type GetProjectItemsQueryVariables = Exact<{
 }>;
 
 
-export type GetProjectItemsQuery = { __typename?: 'Query', repository?: { __typename?: 'Repository', projectV2?: { __typename?: 'ProjectV2', id: string, title: string, items: { __typename?: 'ProjectV2ItemConnection', pageInfo: { __typename?: 'PageInfo', hasNextPage: boolean, endCursor?: string | null }, nodes?: Array<{ __typename?: 'ProjectV2Item', id: string, content?: { __typename?: 'DraftIssue' } | { __typename?: 'Issue', id: string, number: number, repository: { __typename?: 'Repository', name: string, owner: { __typename?: 'Organization', login: string } | { __typename?: 'User', login: string } } } | { __typename?: 'PullRequest' } | null } | null> | null } } | null } | null };
+export type GetProjectItemsQuery = { __typename?: 'Query', repository?: { __typename?: 'Repository', projectV2?: { __typename?: 'ProjectV2', id: string, title: string, items: { __typename?: 'ProjectV2ItemConnection', pageInfo: { __typename?: 'PageInfo', hasNextPage: boolean, endCursor?: string | null }, nodes?: Array<{ __typename: 'ProjectV2Item', id: string, content?: { __typename: 'DraftIssue' } | { __typename: 'Issue', id: string, number: number, repository: { __typename?: 'Repository', name: string, owner: { __typename: 'Organization', login: string } | { __typename: 'User', login: string } } } | { __typename: 'PullRequest' } | null } | null> | null } } | null } | null };
 
 export type UpdateProjectItemFieldMutationVariables = Exact<{
   itemId: Scalars['ID']['input'];
@@ -35757,6 +35757,7 @@ export const GetProjectFieldsDocument = gql`
       id
       fields(first: 100) {
         nodes {
+          __typename
           ... on ProjectV2FieldCommon {
             id
             name
@@ -35781,7 +35782,9 @@ export const GetProjectItemsDocument = gql`
         }
         nodes {
           id
+          __typename
           content {
+            __typename
             ... on Issue {
               id
               number
@@ -35789,6 +35792,7 @@ export const GetProjectItemsDocument = gql`
                 name
                 owner {
                   login
+                  __typename
                 }
               }
             }

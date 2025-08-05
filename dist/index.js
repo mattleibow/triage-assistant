@@ -47788,6 +47788,7 @@ const GetProjectFieldsDocument = gql `
       id
       fields(first: 100) {
         nodes {
+          __typename
           ... on ProjectV2FieldCommon {
             id
             name
@@ -47812,7 +47813,9 @@ const GetProjectItemsDocument = gql `
         }
         nodes {
           id
+          __typename
           content {
+            __typename
             ... on Issue {
               id
               number
@@ -47820,6 +47823,7 @@ const GetProjectItemsDocument = gql `
                 name
                 owner {
                   login
+                  __typename
                 }
               }
             }

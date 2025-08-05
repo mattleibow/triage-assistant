@@ -36,5 +36,6 @@ export default {
       }
     ]
   },
+  setupFiles: ['./__tests__/jest.setup.ts'],
   verbose: true
 }
