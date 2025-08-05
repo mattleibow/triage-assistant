@@ -1,13 +1,23 @@
 # AI Triage Assistant
 
-[![GitHub Super-Linter](https://github.com/mattleibow/triage-assistant/actions/workflows/linter.yml/badge.svg)](https://github.com/super-linter/super-linter)
-![CI](https://github.com/mattleibow/triage-assistant/actions/workflows/ci.yml/badge.svg)
+[![GitHub Super-Linter](https://github.com/mattleibow/triage-assistant/actions/workflows/check-linter.yml/badge.svg)](https://github.com/super-linter/super-linter)
+![CI](https://github.com/mattleibow/triage-assistant/actions/workflows/check-ci.yml/badge.svg)
 [![Check dist/](https://github.com/mattleibow/triage-assistant/actions/workflows/check-dist.yml/badge.svg)](https://github.com/mattleibow/triage-assistant/actions/workflows/check-dist.yml)
-[![CodeQL](https://github.com/mattleibow/triage-assistant/actions/workflows/codeql-analysis.yml/badge.svg)](https://github.com/mattleibow/triage-assistant/actions/workflows/codeql-analysis.yml)
+[![CodeQL](https://github.com/mattleibow/triage-assistant/actions/workflows/check-codeql-analysis.yml/badge.svg)](https://github.com/mattleibow/triage-assistant/actions/workflows/check-codeql-analysis.yml)
 [![Coverage](./badges/coverage.svg)](./badges/coverage.svg)
 
-An AI-powered GitHub Action that automatically triages issues and pull requests by analyzing their content and applying
-appropriate labels using large language models.
+An AI-powered GitHub Action that provides sophisticated issue and pull request triage capabilities. Features include
+AI-powered label application using large language models and comprehensive engagement scoring for project
+prioritization.
+
+## Features
+
+- **AI-Powered Triage**: Automatically analyze issue content and apply appropriate labels using advanced language models
+- **Engagement Scoring**: Calculate numerical engagement scores based on community activity and interaction
+- **Multi-Mode Operation**: Seamlessly switch between AI triage and engagement scoring workflows
+- **GitHub Projects Integration**: Automatically update project fields with calculated engagement scores
+- **Flexible Configuration**: Support for custom AI models, endpoints, and extensive configuration options
+- **Dry-Run Support**: Test configurations safely without making actual changes
 
 ## Usage
 
@@ -35,7 +45,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Determine area label
-        uses: mattleibow/triage-assistant@v0
+        uses: mattleibow/triage-assistant@v0.7.0
         with:
           label-prefix: 'area-'
           template: 'single-label'
@@ -49,25 +59,25 @@ For more sophisticated triage workflows, you can use multiple steps with differe
 ```yaml
 steps:
   - name: Determine overlap labels
-    uses: mattleibow/triage-assistant@v0
+    uses: mattleibow/triage-assistant@v0.7.0
     with:
       label-prefix: 'overlap-'
       template: 'multi-label'
 
   - name: Determine area label
-    uses: mattleibow/triage-assistant@v0
+    uses: mattleibow/triage-assistant@v0.7.0
     with:
       label-prefix: 'area-'
       template: 'single-label'
 
   - name: Check for regression
-    uses: mattleibow/triage-assistant@v0
+    uses: mattleibow/triage-assistant@v0.7.0
     with:
       label: 'regression'
       template: 'regression'
 
   - name: Apply all labels and add comment
-    uses: mattleibow/triage-assistant@v0
+    uses: mattleibow/triage-assistant@v0.7.0
     with:
       apply-labels: true
       apply-comment: true
@@ -91,7 +101,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Triage specific issue
-        uses: mattleibow/triage-assistant@v0
+        uses: mattleibow/triage-assistant@v0.7.0
         with:
           issue: ${{ inputs.issue_number }}
           template: 'single-label'
@@ -107,7 +117,8 @@ jobs:
 | Name             | Description                                                                                      | Default                 | Required |
 | ---------------- | ------------------------------------------------------------------------------------------------ | ----------------------- | -------- |
 | `issue`          | The issue number to triage                                                                       | Current issue/PR number | No       |
-| `token`          | GitHub token for API access                                                                      | `${{ github.token }}`   | No       |
+| `token`          | GitHub token for API access                                                                      | `''`                    | No       |
+| `fallback-token` | Fallback GitHub token for API access                                                             | `${{ github.token }}`   | No       |
 | `template`       | Triage template: `multi-label`, `single-label`, `regression`, `missing-info`, `engagement-score` | `''`                    | No       |
 | `label`          | Specific label to evaluate                                                                       | `''`                    | No       |
 | `label-prefix`   | Prefix for label search (e.g., `area-`, `platform/`)                                             | `''`                    | No       |
@@ -176,7 +187,7 @@ Calculate engagement scores for all issues in a GitHub Project:
 
 ```yaml
 - name: Calculate engagement scores for project
-  uses: mattleibow/triage-assistant@v0
+  uses: mattleibow/triage-assistant@v0.7.0
   with:
     template: engagement-score
     project: 1 # Your project number
@@ -190,7 +201,7 @@ Calculate engagement score for a specific issue:
 
 ```yaml
 - name: Calculate engagement score for issue
-  uses: mattleibow/triage-assistant@v0
+  uses: mattleibow/triage-assistant@v0.7.0
   with:
     template: engagement-score
     issue: 123 # Specific issue number
@@ -247,13 +258,41 @@ permissions:
 
 ## AI Model Configuration
 
-The action uses AI models from GitHub Models by default. You can configure the model using environment variables:
+The action uses AI models from GitHub Models by default, but supports custom endpoints and models. You can configure the
+AI model using inputs or environment variables:
+
+### Using Inputs
+
+```yaml
+- name: Triage with custom AI model
+  uses: mattleibow/triage-assistant@v0.7.0
+  with:
+    template: single-label
+    label-prefix: 'area-'
+    ai-model: 'openai/gpt-4o-mini'
+    ai-endpoint: 'https://models.github.ai/inference'
+    ai-token: ${{ secrets.CUSTOM_AI_TOKEN }}
+```
+
+### Using Environment Variables
 
 ```yaml
 env:
   TRIAGE_AI_MODEL: openai/gpt-4o-mini # Use a specific model
   TRIAGE_AI_ENDPOINT: https://models.github.ai/inference # Custom endpoint
+  TRIAGE_AI_TOKEN: ${{ secrets.CUSTOM_AI_TOKEN }} # Custom token
 ```
+
+### Supported Models
+
+The action works with any OpenAI-compatible API. Popular models include:
+
+- `openai/gpt-4o` (default) - Most capable, higher cost
+- `openai/gpt-4o-mini` - Faster and more cost-effective
+- `openai/gpt-3.5-turbo` - Budget-friendly option
+
+**Note:** The action automatically falls back to using your GitHub token for authentication if no specific AI token is
+provided.
 
 ## Permissions
 
@@ -282,8 +321,8 @@ permissions:
 
 ## Example: Complete Triage Setup
 
-For a complete example of how to set up automated triage, see the [triage.yml](./.github/workflows/triage.yml) workflow
-in this repository.
+For a complete example of how to set up automated triage, see the
+[triage-labels.yml](./.github/workflows/triage-labels.yml) workflow in this repository.
 
 ### Example: Engagement Scoring Workflow
 
@@ -309,7 +348,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Calculate engagement scores for project
-        uses: mattleibow/triage-assistant@v0
+        uses: mattleibow/triage-assistant@v0.7.0
         with:
           template: engagement-score
           project: 1 # Replace with your project number
@@ -320,7 +359,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Calculate engagement score for specific issue
-        uses: mattleibow/triage-assistant@v0
+        uses: mattleibow/triage-assistant@v0.7.0
         with:
           template: engagement-score
           issue: ${{ github.event.issue.number }}
@@ -350,7 +389,7 @@ jobs:
     steps:
       # Step 1: Apply AI-powered labels
       - name: Apply area labels
-        uses: mattleibow/triage-assistant@v0
+        uses: mattleibow/triage-assistant@v0.7.0
         with:
           template: multi-label
           label-prefix: 'area-'
@@ -359,7 +398,7 @@ jobs:
 
       # Step 2: Calculate engagement score
       - name: Calculate engagement score
-        uses: mattleibow/triage-assistant@v0
+        uses: mattleibow/triage-assistant@v0.7.0
         with:
           template: engagement-score
           issue: ${{ github.event.issue.number }}
