@@ -35644,14 +35644,14 @@ export type GetIssueDetailsQueryVariables = Exact<{
 
 export type GetIssueDetailsQuery = { __typename?: 'Query', repository?: { __typename?: 'Repository', name: string, nameWithOwner: string, owner: { __typename: 'Organization', login: string } | { __typename: 'User', login: string }, issue?: { __typename?: 'Issue', id: string, number: number, title: string, body: string, state: IssueState, createdAt: any, updatedAt: any, closedAt?: any | null, author?: { __typename: 'Bot', login: string } | { __typename: 'EnterpriseUserAccount', login: string } | { __typename: 'Mannequin', login: string } | { __typename: 'Organization', login: string } | { __typename: 'User', login: string } | null, assignees: { __typename?: 'UserConnection', nodes?: Array<{ __typename: 'User', login: string } | null> | null }, reactions: { __typename?: 'ReactionConnection', totalCount: number, pageInfo: { __typename?: 'PageInfo', hasNextPage: boolean, endCursor?: string | null }, nodes?: Array<{ __typename?: 'Reaction', content: ReactionContent, createdAt: any, user?: { __typename: 'User', login: string } | null } | null> | null }, comments: { __typename?: 'IssueCommentConnection', totalCount: number, pageInfo: { __typename?: 'PageInfo', hasNextPage: boolean, endCursor?: string | null }, nodes?: Array<{ __typename?: 'IssueComment', createdAt: any, author?: { __typename: 'Bot', login: string } | { __typename: 'EnterpriseUserAccount', login: string } | { __typename: 'Mannequin', login: string } | { __typename: 'Organization', login: string } | { __typename: 'User', login: string } | null, reactions: { __typename?: 'ReactionConnection', totalCount: number, pageInfo: { __typename?: 'PageInfo', hasNextPage: boolean, endCursor?: string | null }, nodes?: Array<{ __typename?: 'Reaction', content: ReactionContent, createdAt: any, user?: { __typename: 'User', login: string } | null } | null> | null } } | null> | null } } | null } | null };
 
-export type GetProjectFieldQueryVariables = Exact<{
+export type GetProjectFieldsQueryVariables = Exact<{
   owner: Scalars['String']['input'];
   repo: Scalars['String']['input'];
   projectNumber: Scalars['Int']['input'];
 }>;
 
 
-export type GetProjectFieldQuery = { __typename?: 'Query', repository?: { __typename?: 'Repository', projectV2?: { __typename?: 'ProjectV2', id: string, fields: { __typename?: 'ProjectV2FieldConfigurationConnection', nodes?: Array<{ __typename?: 'ProjectV2Field', id: string, name: string, dataType: ProjectV2FieldType } | { __typename?: 'ProjectV2IterationField' } | { __typename?: 'ProjectV2SingleSelectField' } | null> | null } } | null } | null };
+export type GetProjectFieldsQuery = { __typename?: 'Query', repository?: { __typename?: 'Repository', projectV2?: { __typename?: 'ProjectV2', id: string, fields: { __typename?: 'ProjectV2FieldConfigurationConnection', nodes?: Array<{ __typename?: 'ProjectV2Field', id: string, name: string, dataType: ProjectV2FieldType } | { __typename?: 'ProjectV2IterationField', id: string, name: string, dataType: ProjectV2FieldType } | { __typename?: 'ProjectV2SingleSelectField', id: string, name: string, dataType: ProjectV2FieldType } | null> | null } } | null } | null };
 
 export type GetProjectItemsQueryVariables = Exact<{
   owner: Scalars['String']['input'];
@@ -35661,7 +35661,7 @@ export type GetProjectItemsQueryVariables = Exact<{
 }>;
 
 
-export type GetProjectItemsQuery = { __typename?: 'Query', repository?: { __typename?: 'Repository', projectV2?: { __typename?: 'ProjectV2', id: string, items: { __typename?: 'ProjectV2ItemConnection', pageInfo: { __typename?: 'PageInfo', hasNextPage: boolean, endCursor?: string | null }, nodes?: Array<{ __typename?: 'ProjectV2Item', id: string, content?: { __typename?: 'DraftIssue' } | { __typename?: 'Issue', id: string, number: number, repository: { __typename?: 'Repository', name: string, owner: { __typename?: 'Organization', login: string } | { __typename?: 'User', login: string } } } | { __typename?: 'PullRequest' } | null } | null> | null } } | null } | null };
+export type GetProjectItemsQuery = { __typename?: 'Query', repository?: { __typename?: 'Repository', projectV2?: { __typename?: 'ProjectV2', id: string, title: string, items: { __typename?: 'ProjectV2ItemConnection', pageInfo: { __typename?: 'PageInfo', hasNextPage: boolean, endCursor?: string | null }, nodes?: Array<{ __typename?: 'ProjectV2Item', id: string, content?: { __typename?: 'DraftIssue' } | { __typename?: 'Issue', id: string, number: number, repository: { __typename?: 'Repository', name: string, owner: { __typename?: 'Organization', login: string } | { __typename?: 'User', login: string } } } | { __typename?: 'PullRequest' } | null } | null> | null } } | null } | null };
 
 export type UpdateProjectItemFieldMutationVariables = Exact<{
   itemId: Scalars['ID']['input'];
@@ -35750,14 +35750,14 @@ export const GetIssueDetailsDocument = gql`
   }
 }
     `;
-export const GetProjectFieldDocument = gql`
-    query GetProjectField($owner: String!, $repo: String!, $projectNumber: Int!) {
+export const GetProjectFieldsDocument = gql`
+    query GetProjectFields($owner: String!, $repo: String!, $projectNumber: Int!) {
   repository(owner: $owner, name: $repo) {
     projectV2(number: $projectNumber) {
       id
       fields(first: 100) {
         nodes {
-          ... on ProjectV2Field {
+          ... on ProjectV2FieldCommon {
             id
             name
             dataType
@@ -35773,6 +35773,7 @@ export const GetProjectItemsDocument = gql`
   repository(owner: $owner, name: $repo) {
     projectV2(number: $projectNumber) {
       id
+      title
       items(first: 100, after: $cursor) {
         pageInfo {
           hasNextPage
@@ -35820,8 +35821,8 @@ export function getSdk(client: GraphQLClient, withWrapper: SdkFunctionWrapper = 
     GetIssueDetails(variables: GetIssueDetailsQueryVariables, requestHeaders?: GraphQLClientRequestHeaders, signal?: RequestInit['signal']): Promise<GetIssueDetailsQuery> {
       return withWrapper((wrappedRequestHeaders) => client.request<GetIssueDetailsQuery>({ document: GetIssueDetailsDocument, variables, requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders }, signal }), 'GetIssueDetails', 'query', variables);
     },
-    GetProjectField(variables: GetProjectFieldQueryVariables, requestHeaders?: GraphQLClientRequestHeaders, signal?: RequestInit['signal']): Promise<GetProjectFieldQuery> {
-      return withWrapper((wrappedRequestHeaders) => client.request<GetProjectFieldQuery>({ document: GetProjectFieldDocument, variables, requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders }, signal }), 'GetProjectField', 'query', variables);
+    GetProjectFields(variables: GetProjectFieldsQueryVariables, requestHeaders?: GraphQLClientRequestHeaders, signal?: RequestInit['signal']): Promise<GetProjectFieldsQuery> {
+      return withWrapper((wrappedRequestHeaders) => client.request<GetProjectFieldsQuery>({ document: GetProjectFieldsDocument, variables, requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders }, signal }), 'GetProjectFields', 'query', variables);
     },
     GetProjectItems(variables: GetProjectItemsQueryVariables, requestHeaders?: GraphQLClientRequestHeaders, signal?: RequestInit['signal']): Promise<GetProjectItemsQuery> {
       return withWrapper((wrappedRequestHeaders) => client.request<GetProjectItemsQuery>({ document: GetProjectItemsDocument, variables, requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders }, signal }), 'GetProjectItems', 'query', variables);

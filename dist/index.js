@@ -47781,14 +47781,14 @@ const GetIssueDetailsDocument = gql `
   }
 }
     `;
-const GetProjectFieldDocument = gql `
-    query GetProjectField($owner: String!, $repo: String!, $projectNumber: Int!) {
+const GetProjectFieldsDocument = gql `
+    query GetProjectFields($owner: String!, $repo: String!, $projectNumber: Int!) {
   repository(owner: $owner, name: $repo) {
     projectV2(number: $projectNumber) {
       id
       fields(first: 100) {
         nodes {
-          ... on ProjectV2Field {
+          ... on ProjectV2FieldCommon {
             id
             name
             dataType
@@ -47804,6 +47804,7 @@ const GetProjectItemsDocument = gql `
   repository(owner: $owner, name: $repo) {
     projectV2(number: $projectNumber) {
       id
+      title
       items(first: 100, after: $cursor) {
         pageInfo {
           hasNextPage
@@ -47846,8 +47847,8 @@ function getSdk(client, withWrapper = defaultWrapper) {
         GetIssueDetails(variables, requestHeaders, signal) {
             return withWrapper((wrappedRequestHeaders) => client.request({ document: GetIssueDetailsDocument, variables, requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders }, signal }), 'GetIssueDetails', 'query', variables);
         },
-        GetProjectField(variables, requestHeaders, signal) {
-            return withWrapper((wrappedRequestHeaders) => client.request({ document: GetProjectFieldDocument, variables, requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders }, signal }), 'GetProjectField', 'query', variables);
+        GetProjectFields(variables, requestHeaders, signal) {
+            return withWrapper((wrappedRequestHeaders) => client.request({ document: GetProjectFieldsDocument, variables, requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders }, signal }), 'GetProjectFields', 'query', variables);
         },
         GetProjectItems(variables, requestHeaders, signal) {
             return withWrapper((wrappedRequestHeaders) => client.request({ document: GetProjectItemsDocument, variables, requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders }, signal }), 'GetProjectItems', 'query', variables);
@@ -47902,7 +47903,7 @@ async function updateProjectWithScores(config, graphql, response) {
  * Get project field information
  */
 async function getProjectField(graphql, owner, repo, projectNumber, fieldName) {
-    const result = await graphql.GetProjectField({
+    const result = await graphql.GetProjectFields({
         owner,
         repo,
         projectNumber

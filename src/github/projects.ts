@@ -70,7 +70,7 @@ export async function getProjectField(
   projectNumber: number,
   fieldName: string
 ): Promise<{ id: string; name: string } | null> {
-  const result = await graphql.GetProjectField({
+  const result = await graphql.GetProjectFields({
     owner,
     repo,
     projectNumber

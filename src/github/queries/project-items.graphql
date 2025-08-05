@@ -1,0 +1,37 @@
+# Get all items from a GitHub Project v2 with pagination
+#
+# Example values
+#   owner: mattleibow
+#   repo: triage-assistant
+#   projectNumber: 8
+#   cursor: null
+
+query GetProjectItems($owner: String!, $repo: String!, $projectNumber: Int!, $cursor: String) {
+  repository(owner: $owner, name: $repo) {
+    projectV2(number: $projectNumber) {
+      id
+      title
+      items(first: 100, after: $cursor) {
+        pageInfo {
+          hasNextPage
+          endCursor
+        }
+        nodes {
+          id
+          content {
+            ... on Issue {
+              id
+              number
+              repository {
+                name
+                owner {
+                  login
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,10 @@
+# Update a project item field value
+mutation UpdateProjectItemField($itemId: ID!, $fieldId: ID!, $projectId: ID!, $value: String!) {
+  updateProjectV2ItemFieldValue(
+    input: { itemId: $itemId, fieldId: $fieldId, projectId: $projectId, value: { text: $value } }
+  ) {
+    projectV2Item {
+      id
+    }
+  }
+}
