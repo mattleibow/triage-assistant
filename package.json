@@ -66,13 +66,13 @@
     "@rollup/plugin-node-resolve": "^16.0.1",
     "@rollup/plugin-typescript": "^12.1.4",
     "@types/jest": "^30.0.0",
-    "@types/node": "^24.0.12",
+    "@types/node": "^24.2.0",
     "@types/uuid": "^10.0.0",
-    "@typescript-eslint/eslint-plugin": "^8.36.0",
+    "@typescript-eslint/eslint-plugin": "^8.39.0",
     "@typescript-eslint/parser": "^8.36.0",
     "cross-env": "^7.0.3",
     "dotenv": "^17.2.1",
-    "eslint": "^9.30.1",
+    "eslint": "^9.32.0",
     "eslint-config-prettier": "^10.1.5",
     "eslint-import-resolver-typescript": "^4.4.4",
     "eslint-plugin-import": "^2.32.0",
@@ -82,9 +82,9 @@
     "make-coverage-badge": "^1.2.0",
     "prettier": "^3.5.3",
     "prettier-eslint": "^16.4.2",
-    "rollup": "^4.45.1",
-    "ts-jest": "^29.4.0",
+    "rollup": "^4.46.2",
+    "ts-jest": "^29.4.1",
     "ts-jest-resolver": "^2.0.1",
-    "typescript": "^5.8.3"
+    "typescript": "^5.9.2"
   }
 }
