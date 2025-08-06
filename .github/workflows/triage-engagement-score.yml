@@ -9,17 +9,12 @@ on:
         required: false
         type: boolean
         default: false
-  # When someone opens a new pull request
-  pull_request:
-    types: [opened, reopened, synchronize]
+  # # When someone opens a new pull request
+  # pull_request:
+  #   types: [opened, reopened, synchronize]
   # Run every 6 hours
   schedule:
     - cron: '0 */6 * * *'
-
-permissions:
-  contents: read
-  issues: read
-  pull-requests: read
 
 jobs:
   score:
@@ -32,6 +27,7 @@ jobs:
       - name: Apply Engagement Scores to Project
         uses: ./
         with:
+          token: ${{ secrets.ENGAGEMENT_GITHUB_TOKEN }}
           template: engagement-score
           project: 8
           project-column: 'Engagement Score'
