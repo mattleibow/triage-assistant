@@ -18,7 +18,7 @@ on:
         required: true
         type: number
       dry_run:
-        description: 'Whether to run in dry run mode'
+        description: 'Dry Run (no writes)'
         required: false
         type: boolean
         default: false
