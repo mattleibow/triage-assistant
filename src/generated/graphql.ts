@@ -35664,10 +35664,10 @@ export type GetProjectItemsQueryVariables = Exact<{
 export type GetProjectItemsQuery = { __typename?: 'Query', repository?: { __typename?: 'Repository', projectV2?: { __typename?: 'ProjectV2', id: string, title: string, items: { __typename?: 'ProjectV2ItemConnection', pageInfo: { __typename?: 'PageInfo', hasNextPage: boolean, endCursor?: string | null }, nodes?: Array<{ __typename: 'ProjectV2Item', id: string, content?: { __typename: 'DraftIssue' } | { __typename: 'Issue', id: string, number: number, repository: { __typename?: 'Repository', name: string, owner: { __typename: 'Organization', login: string } | { __typename: 'User', login: string } } } | { __typename: 'PullRequest' } | null } | null> | null } } | null } | null };
 
 export type UpdateProjectItemFieldMutationVariables = Exact<{
-  itemId: Scalars['ID']['input'];
-  fieldId: Scalars['ID']['input'];
+  projectItemId: Scalars['ID']['input'];
+  projectFieldId: Scalars['ID']['input'];
   projectId: Scalars['ID']['input'];
-  value: Scalars['String']['input'];
+  engagementScoreNumber: Scalars['Float']['input'];
 }>;
 
 
@@ -35804,9 +35804,9 @@ export const GetProjectItemsDocument = gql`
 }
     `;
 export const UpdateProjectItemFieldDocument = gql`
-    mutation UpdateProjectItemField($itemId: ID!, $fieldId: ID!, $projectId: ID!, $value: String!) {
+    mutation UpdateProjectItemField($projectItemId: ID!, $projectFieldId: ID!, $projectId: ID!, $engagementScoreNumber: Float!) {
   updateProjectV2ItemFieldValue(
-    input: {itemId: $itemId, fieldId: $fieldId, projectId: $projectId, value: {text: $value}}
+    input: {itemId: $projectItemId, fieldId: $projectFieldId, projectId: $projectId, value: {number: $engagementScoreNumber}}
   ) {
     projectV2Item {
       id

@@ -47835,9 +47835,9 @@ const GetProjectItemsDocument = gql `
 }
     `;
 const UpdateProjectItemFieldDocument = gql `
-    mutation UpdateProjectItemField($itemId: ID!, $fieldId: ID!, $projectId: ID!, $value: String!) {
+    mutation UpdateProjectItemField($projectItemId: ID!, $projectFieldId: ID!, $projectId: ID!, $engagementScoreNumber: Float!) {
   updateProjectV2ItemFieldValue(
-    input: {itemId: $itemId, fieldId: $fieldId, projectId: $projectId, value: {text: $value}}
+    input: {itemId: $projectItemId, fieldId: $projectFieldId, projectId: $projectId, value: {number: $engagementScoreNumber}}
   ) {
     projectV2Item {
       id
@@ -47893,7 +47893,7 @@ async function updateProjectWithScores(config, graphql, response) {
     for (const item of response.items) {
         if (item.id) {
             try {
-                await updateProjectItem(graphql, config, item.id, projectField.id, project.id, item.engagement.score.toString());
+                await updateProjectItem(graphql, config, item.id, projectField.id, project.id, item.engagement.score);
                 updatedCount++;
             }
             catch (error) {
@@ -47970,10 +47970,10 @@ async function updateProjectItem(graphql, config, itemId, fieldId, projectId, va
         return;
     }
     await graphql.UpdateProjectItemField({
-        itemId,
-        fieldId,
-        projectId,
-        value
+        projectItemId: itemId,
+        projectFieldId: fieldId,
+        projectId: projectId,
+        engagementScoreNumber: value
     });
 }
 function addItems(items, allItems, projectId) {
