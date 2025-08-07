@@ -97,13 +97,13 @@ describe('GitHub Projects', () => {
 
   describe('updateProjectItem', () => {
     it('updateProjectItem calls UpdateProjectItemField', async () => {
-      await updateProjectItem(getSdk, mockConfig, 'item1', 'field1', 'proj1', '42')
+      await updateProjectItem(getSdk, mockConfig, 'item1', 'field1', 'proj1', 42)
 
       expect(getSdk.UpdateProjectItemField).toHaveBeenCalledWith({
-        itemId: 'item1',
-        fieldId: 'field1',
+        projectItemId: 'item1',
+        projectFieldId: 'field1',
         projectId: 'proj1',
-        value: '42'
+        engagementScoreNumber: 42
       })
     })
 
@@ -113,7 +113,7 @@ describe('GitHub Projects', () => {
         dryRun: true
       }
 
-      await updateProjectItem(getSdk, config, 'item1', 'field1', 'proj1', '42')
+      await updateProjectItem(getSdk, config, 'item1', 'field1', 'proj1', 42)
 
       expect(getSdk.UpdateProjectItemField).not.toHaveBeenCalled()
     })

@@ -49,7 +49,7 @@ export async function updateProjectWithScores(
   for (const item of response.items) {
     if (item.id) {
       try {
-        await updateProjectItem(graphql, config, item.id, projectField.id, project.id, item.engagement.score.toString())
+        await updateProjectItem(graphql, config, item.id, projectField.id, project.id, item.engagement.score)
         updatedCount++
       } catch (error) {
         core.warning(`Failed to update item ${item.id}: ${error}`)
@@ -151,7 +151,7 @@ export async function updateProjectItem(
   itemId: string,
   fieldId: string,
   projectId: string,
-  value: string
+  value: number
 ): Promise<void> {
   if (config.dryRun) {
     core.info(`Dry run: Skipping updating project item ${itemId} field ${fieldId} with value "${value}"`)
@@ -159,10 +159,10 @@ export async function updateProjectItem(
   }
 
   await graphql.UpdateProjectItemField({
-    itemId,
-    fieldId,
-    projectId,
-    value
+    projectItemId: itemId,
+    projectFieldId: fieldId,
+    projectId: projectId,
+    engagementScoreNumber: value
   })
 }
 

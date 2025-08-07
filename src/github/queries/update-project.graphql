@@ -1,7 +1,24 @@
 # Update a project item field value
-mutation UpdateProjectItemField($itemId: ID!, $fieldId: ID!, $projectId: ID!, $value: String!) {
+#
+# Example values
+#   projectItemId: PVTI_lAHOABC7qM4A-32Izgc_fjo
+#   projectFieldId: PVTF_lAHOABC7qM4A-32IzgyVxkI
+#   projectId: PVT_kwHOABC7qM4A-32I
+#   engagementScoreNumber: 16
+
+mutation UpdateProjectItemField(
+  $projectItemId: ID!
+  $projectFieldId: ID!
+  $projectId: ID!
+  $engagementScoreNumber: Float!
+) {
   updateProjectV2ItemFieldValue(
-    input: { itemId: $itemId, fieldId: $fieldId, projectId: $projectId, value: { text: $value } }
+    input: {
+      itemId: $projectItemId
+      fieldId: $projectFieldId
+      projectId: $projectId
+      value: { number: $engagementScoreNumber }
+    }
   ) {
     projectV2Item {
       id
