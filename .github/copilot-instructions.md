@@ -389,17 +389,119 @@ When adding any new functionality, you must write comprehensive tests that follo
 
 - Group related tests with descriptive `describe` blocks
 - Use clear test names that explain the scenario being tested
-- Follow existing mock patterns in `__tests__/` directory
+- **ALWAYS follow the FileSystemMock patterns from `__tests__/github/issues.test.ts`**
 - Create realistic test data that mirrors actual GitHub responses
 - Test both success and failure scenarios consistently
+- **NEVER use Jest mocks for file system operations** - use FileSystemMock exclusively
 
 **Mock Strategy:**
 
-- Use Jest mocks for external APIs and file system operations
-- Create comprehensive mock data that covers real-world scenarios
-- Mock at the module level rather than individual function level when possible
-- Avoid over-mocking - test real logic where appropriate
-- Use fixtures in `__tests__/testData/` for complex mock data
+- **File System Operations** - NEVER use Jest mocks for file system operations. Always use `const inMemoryFs = new FileSystemMock()` from `__tests__/helpers/filesystem-mock.ts`
+- **External APIs** - Use Jest mocks for GitHub API and other external service operations
+- **GitHub API Mocking** - Use the fixture patterns in `__fixtures__/` for Octokit and GraphQL mocking
+- **Create comprehensive mock data** that covers real-world scenarios
+- **Mock at the module level** rather than individual function level when possible
+- **Avoid over-mocking** - test real logic where appropriate
+- **Use fixtures in `__tests__/testData/`** for complex mock data
+
+**Critical File System Testing Rules:**
+
+- **NEVER use `fs.existsSync()`** as it cannot be mocked properly. Always use `fs.promises.readFile()` or `fs.promises.readdir()` with try/catch blocks for file existence checking
+- **Always use FileSystemMock** instead of Jest file system mocks
+- **Follow the pattern in `__tests__/github/issues.test.ts`** for proper file system testing structure
+
+### Repository-Specific Testing Patterns
+
+This repository has established testing patterns that MUST be followed:
+
+**File System Testing Setup:**
+
+```typescript
+import { FileSystemMock } from '../helpers/filesystem-mock.js'
+
+describe('YourModule', () => {
+  const inMemoryFs = new FileSystemMock()
+
+  beforeEach(() => {
+    jest.clearAllMocks()
+    jest.resetAllMocks()
+    inMemoryFs.setup()  // Sets up file system mocks
+  })
+
+  afterEach(() => {
+    jest.restoreAllMocks()
+    inMemoryFs.teardown()  // Cleans up file system mocks
+  })
+})
+```
+
+**Creating Test Files:**
+
+```typescript
+// Use inMemoryFs.forceSet() to create test files
+inMemoryFs.forceSet('/test/path/config.yml', 'yaml content here')
+inMemoryFs.forceSet('/test/path/data.json', JSON.stringify({ key: 'value' }))
+```
+
+**Testing File Operations:**
+
+```typescript
+// Test file reading
+const result = await someFunction('/test/path')
+expect(fs.promises.readFile).toHaveBeenCalledWith('/test/path/config.yml', 'utf8')
+
+// Test file existence by attempting to read, NOT by using existsSync
+try {
+  await fs.promises.readFile('/nonexistent/file.txt', 'utf8')
+} catch (error) {
+  // Handle file not found case
+}
+```
+
+**File System Error Handling:**
+
+- Always use `try/catch` blocks with `fs.promises.readFile()` for file existence checks
+- Never use `fs.existsSync()` - use `readFile()` and catch the error instead
+- Test both success and error scenarios for all file operations
+
+**Required Test Structure for Any File System Operations:**
+
+1. **Setup Phase** - Use `inMemoryFs.setup()` in `beforeEach`
+2. **File Creation** - Use `inMemoryFs.forceSet()` to create test files
+3. **Function Testing** - Call your functions and verify they interact with files correctly
+4. **Cleanup Phase** - Use `inMemoryFs.teardown()` in `afterEach`
+
+### Critical Testing Constraints
+
+**Forbidden Patterns:**
+
+- ❌ `jest.spyOn(fs, 'existsSync')` - Never mock existsSync
+- ❌ `jest.mock('fs')` - Never mock the entire fs module
+- ❌ Using `fs.existsSync()` in source code - Cannot be tested properly
+
+**Required Patterns:**
+
+- ✅ `const inMemoryFs = new FileSystemMock()` - Always use for file operations
+- ✅ `inMemoryFs.setup()` and `inMemoryFs.teardown()` - Proper lifecycle management
+- ✅ `inMemoryFs.forceSet(path, content)` - Create test files
+- ✅ Use `fs.promises.readFile()` with try/catch for file existence checks
+- ✅ Follow existing test patterns in `__tests__/github/issues.test.ts` exactly
+
+### Reference Test Files
+
+When writing tests, always reference these files for proper patterns:
+
+- **`__tests__/github/issues.test.ts`** - Perfect example of FileSystemMock usage, file operations testing, and overall test structure
+- **`__tests__/engagement/engagement-config.test.ts`** - Example of configuration file testing with YAML content
+- **`__tests__/helpers/filesystem-mock.ts`** - The FileSystemMock implementation itself
+
+**Key Learning Points from Reference Files:**
+
+1. **File System Setup Pattern** - All tests follow the same `beforeEach`/`afterEach` pattern with `inMemoryFs.setup()` and `teardown()`
+2. **Mock Organization** - External API mocks are handled separately from file system mocks
+3. **Test Data Creation** - Use `inMemoryFs.forceSet()` to create files with realistic content
+4. **Error Testing** - Always test both success and failure scenarios for file operations
+5. **Assertion Patterns** - Verify both the function results AND the underlying file system calls
 
 **Specific Testing Focus Areas:**
 
