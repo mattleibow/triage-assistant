@@ -366,6 +366,62 @@ describe('IssueDetails', () => {
 
       expect(result).toBeGreaterThan(0)
     })
+
+    it('should use custom weights when provided', () => {
+      const customWeights = {
+        comments: 10,
+        reactions: 5,
+        contributors: 1,
+        lastActivity: 0,
+        issueAge: 0,
+        linkedPullRequests: 0
+      }
+
+      const result = calculateScore(mockIssueDetails, customWeights)
+
+      // Expected calculation with custom weights:
+      // Comments: 10 * 2 = 20 (2 comments)
+      // Reactions: 5 * (2 + 3) = 25 (issue reactions + comment reactions)
+      // Contributors: 1 * 5 = 5 (5 unique contributors)
+      // Last Activity: 0 * (1/2) = 0
+      // Issue Age: 0 * (1/9) = 0
+      // Linked PRs: 0 * 0 = 0
+      // Total: 20 + 25 + 5 + 0 + 0 + 0 = 50
+
+      expect(result).toBe(50)
+    })
+
+    it('should use default weights when custom weights are partial', () => {
+      const partialWeights = {
+        comments: 5,
+        reactions: 3
+        // Other weights should use defaults
+      }
+
+      const result = calculateScore(mockIssueDetails, partialWeights)
+
+      // Should use custom weights for comments and reactions, defaults for others
+      expect(result).toBeGreaterThan(0)
+      
+      // Let's verify it's different from the default calculation
+      const defaultResult = calculateScore(mockIssueDetails)
+      expect(result).not.toBe(defaultResult)
+    })
+
+    it('should handle zero custom weights', () => {
+      const zeroWeights = {
+        comments: 0,
+        reactions: 0,
+        contributors: 0,
+        lastActivity: 0,
+        issueAge: 0,
+        linkedPullRequests: 0
+      }
+
+      const result = calculateScore(mockIssueDetails, zeroWeights)
+
+      expect(result).toBe(0)
+    })
   })
 
   describe('calculateHistoricalScore', () => {
@@ -403,6 +459,23 @@ describe('IssueDetails', () => {
       const result = await calculateHistoricalScore(noHistoricActivityIssue)
 
       expect(result).toBeGreaterThan(0) // Should still have basic score from contributors
+    })
+
+    it('should accept custom weights for historical scoring', async () => {
+      const customWeights = {
+        comments: 1,
+        reactions: 1,
+        contributors: 1,
+        lastActivity: 0,
+        issueAge: 0,
+        linkedPullRequests: 0
+      }
+
+      const result = await calculateHistoricalScore(mockIssueDetails, customWeights)
+      const defaultResult = await calculateHistoricalScore(mockIssueDetails)
+
+      expect(result).not.toBe(defaultResult)
+      expect(result).toBeGreaterThan(0)
     })
   })
 

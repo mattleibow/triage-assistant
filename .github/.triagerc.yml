@@ -1,0 +1,9 @@
+# AI Triage Assistant Configuration
+engagement:
+  weights:
+    comments: 4
+    reactions: 2
+    contributors: 3
+    lastActivity: 1
+    issueAge: 1
+    linkedPullRequests: 2
