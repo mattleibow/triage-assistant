@@ -38,6 +38,7 @@ The action operates through a unified entry point with mode selection via the `T
 
 - **`engagement.ts`** - Main workflow orchestration for engagement scoring
 - **`engagement-types.ts`** - TypeScript interfaces for engagement data structures
+- **`engagement-config.ts`** - YAML configuration loading and weight management
 
 #### GitHub Integration Module (`src/github/`)
 
@@ -67,19 +68,39 @@ The action operates through a unified entry point with mode selection via the `T
 
 ### Mathematical Algorithm
 
-The scoring system uses a weighted algorithm with carefully balanced factors:
+The scoring system uses a configurable weighted algorithm that can be customized via YAML configuration files:
 
 ```typescript
-Score = (Comments × 3) + (Reactions × 1) + (Contributors × 2) + (TimeFactors × 1) + (PullRequests × 2)
+Score = (Comments × comments_weight) + (Reactions × reactions_weight) + 
+        (Contributors × contributors_weight) + (TimeFactors × time_weights) + 
+        (PullRequests × pr_weight)
 ```
 
 **Scoring Components:**
 
-- **Comments (3x)** - Discussion volume indicates high interest and complexity
-- **Reactions (1x)** - Emotional engagement and community sentiment
-- **Contributors (2x)** - Diversity of input reflects broad community interest
-- **Time Factors (1x)** - Recent activity and issue age for relevance
-- **Pull Requests (2x)** - Active development work on the issue
+- **Comments** - Discussion volume indicates high interest and complexity
+- **Reactions** - Emotional engagement and community sentiment
+- **Contributors** - Diversity of input reflects broad community interest
+- **Time Factors** - Recent activity and issue age for relevance
+- **Pull Requests** - Active development work on the issue
+
+### Configuration System
+
+The scoring weights are loaded from YAML configuration files in this priority order:
+
+1. `.triagerc.yml` in repository root
+2. `.github/.triagerc.yml` in .github directory
+3. Default values if no config found
+
+**Default Weights:**
+- Comments: 3, Reactions: 1, Contributors: 2, Time Factors: 1, Pull Requests: 2
+
+**Configuration Module (`src/engagement/engagement-config.ts`):**
+
+- **YAML Config Loading** - Parses `.triagerc.yml` files for weight customization
+- **Default Weight Management** - Fallback to sensible defaults when config missing
+- **Graceful Error Handling** - Invalid YAML or missing files don't break functionality
+- **Type Safety** - TypeScript interfaces for configuration validation
 
 ### Historic Analysis Features
 
@@ -118,6 +139,33 @@ Score = (Comments × 3) + (Reactions × 1) + (Contributors × 2) + (TimeFactors 
 - `project-column` - Field name in project to update (default: "Engagement Score")
 - `apply-scores` - Controls whether to update project items with calculated scores
 - `dry-run` - Run calculations without making changes
+
+### Weight Configuration
+
+The engagement scoring system supports customizable weights via YAML configuration:
+
+**Configuration Files (checked in order):**
+- `.triagerc.yml` in repository root
+- `.github/.triagerc.yml` in .github directory
+
+**Example Configuration:**
+```yaml
+engagement:
+  weights:
+    comments: 4           # Emphasize discussion-heavy issues
+    reactions: 2          # Give more weight to community sentiment
+    contributors: 3       # Prioritize diverse participation
+    lastActivity: 1       # Standard recency weighting
+    issueAge: 1          # Standard age weighting
+    linkedPullRequests: 5 # Heavily prioritize active development
+```
+
+**Configuration Loading Process:**
+1. Check for `.triagerc.yml` in workspace root
+2. Fall back to `.github/.triagerc.yml` if root config not found
+3. Use default weights if no configuration files exist
+4. Merge partial configurations with defaults (missing weights use defaults)
+5. Log loaded configuration for debugging
 
 ## GraphQL Integration Architecture
 
