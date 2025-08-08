@@ -48006,6 +48006,118 @@ function addItems(items, allItems, projectId) {
     return items.pageInfo.endCursor;
 }
 
+/**
+ * Get historic issue details by filtering activity to 7 days ago
+ */
+function getHistoricalIssueDetails(issue) {
+    const now = new Date();
+    const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+    // If the issue is newer than 7 days, return it as-is
+    if (issue.createdAt > sevenDaysAgo) {
+        return {
+            ...issue,
+            comments: [],
+            reactions: []
+        };
+    }
+    // Filter reactions to only include those created before 7 days ago
+    const historicReactions = (issue.reactions || []).filter((reaction) => {
+        return reaction.createdAt <= sevenDaysAgo;
+    });
+    // Create historic snapshot by filtering comments and reactions to 7 days ago
+    const historicComments = (issue.comments || [])
+        .filter((comment) => {
+        return comment.createdAt <= sevenDaysAgo;
+    })
+        .map((comment) => {
+        // Filter comment reactions to only include those created before 7 days ago
+        const commentHistoricReactions = (comment.reactions || []).filter((reaction) => {
+            return reaction.createdAt <= sevenDaysAgo;
+        });
+        return {
+            ...comment,
+            reactions: commentHistoricReactions
+        };
+    });
+    const historicIssue = {
+        ...issue,
+        comments: historicComments || [],
+        reactions: historicReactions || [],
+        updatedAt: sevenDaysAgo
+    };
+    return historicIssue;
+}
+/**
+ * Get unique contributors to an issue
+ */
+function getUniqueContributorsCount(issue) {
+    const contributors = new Set();
+    // Add issue author
+    contributors.add(issue.user.login);
+    // Add assignees
+    issue.assignees.forEach((assignee) => contributors.add(assignee.login));
+    // Add comment authors
+    issue.comments?.forEach((comment) => contributors.add(comment.user.login));
+    return contributors.size;
+}
+/**
+ * Get time since last activity in days
+ */
+function getDaysSinceLastActivity(issue) {
+    const lastUpdate = issue.updatedAt;
+    const now = new Date();
+    const diffMs = now.getTime() - lastUpdate.getTime();
+    const diffDays = diffMs / (1000 * 60 * 60 * 24);
+    return Math.ceil(diffDays);
+}
+/**
+ * Get issue age in days
+ */
+function getDaysSinceCreation(issue) {
+    const created = issue.createdAt;
+    const now = new Date();
+    const diffMs = now.getTime() - created.getTime();
+    const diffDays = diffMs / (1000 * 60 * 60 * 24);
+    return Math.ceil(diffDays);
+}
+/**
+ * Calculate engagement score for an issue based on the engagement algorithm
+ * @param issue - The issue details to score
+ * @param weights - Custom weights for scoring components
+ */
+function calculateScore(issue, weights) {
+    // Components:
+    // - Number of Comments       => Indicates discussion and interest
+    // - Number of Reactions      => Shows emotional engagement
+    // - Number of Contributors   => Reflects the diversity of input
+    // - Time Since Last Activity => More recent activity indicates higher engagement
+    // - Issue Age                => Older issues might need more attention
+    // - Number of Linked PRs     => Shows active work on the issue (not implemented)
+    const totalComments = (issue.comments || []).length;
+    const totalCommentReactions = (issue.comments || []).reduce((sum, comment) => sum + (comment.reactions || []).length, 0);
+    const totalReactions = (issue.reactions || []).length + totalCommentReactions;
+    const contributors = getUniqueContributorsCount(issue);
+    const lastActivity = Math.max(1, getDaysSinceLastActivity(issue));
+    const issueAge = Math.max(1, getDaysSinceCreation(issue));
+    const linkedPullRequests = 0; // Not implemented yet
+    const score = weights.comments * totalComments +
+        weights.reactions * totalReactions +
+        weights.contributors * contributors +
+        weights.lastActivity * (1 / lastActivity) +
+        weights.issueAge * (1 / issueAge) +
+        weights.linkedPullRequests * linkedPullRequests;
+    return Math.round(score);
+}
+/**
+ * Calculate previous score (7 days ago) based on historical issue details
+ * @param issue - The issue details to score
+ * @param weights - Custom weights for scoring components
+ */
+async function calculateHistoricalScore(issue, weights) {
+    const historicIssue = getHistoricalIssueDetails(issue);
+    return calculateScore(historicIssue, weights);
+}
+
 /*! js-yaml 4.1.0 https://github.com/nodeca/js-yaml @license MIT */
 function isNothing(subject) {
   return (typeof subject === 'undefined') || (subject === null);
@@ -50824,22 +50936,17 @@ const DEFAULT_ENGAGEMENT_WEIGHTS = {
  * @returns Combined configuration with defaults applied
  */
 async function loadTriageConfig(workspacePath = '.') {
-    const configPaths = [
-        path.join(workspacePath, '.triagerc.yml'),
-        path.join(workspacePath, '.github', '.triagerc.yml')
-    ];
+    const configPaths = [path.join(workspacePath, '.triagerc.yml'), path.join(workspacePath, '.github', '.triagerc.yml')];
     let config = {};
     for (const configPath of configPaths) {
         try {
-            if (fs.existsSync(configPath)) {
-                coreExports.info(`Loading triage configuration from ${configPath}`);
-                const fileContent = await fs.promises.readFile(configPath, 'utf8');
-                const parsedConfig = load(fileContent);
-                if (parsedConfig && typeof parsedConfig === 'object') {
-                    config = parsedConfig;
-                    coreExports.info(`Successfully loaded configuration from ${configPath}`);
-                    break;
-                }
+            coreExports.info(`Loading triage configuration from ${configPath}`);
+            const fileContent = await fs.promises.readFile(configPath, 'utf8');
+            const parsedConfig = load(fileContent);
+            if (parsedConfig && typeof parsedConfig === 'object') {
+                config = parsedConfig;
+                coreExports.info(`Successfully loaded configuration from ${configPath}`);
+                break;
             }
         }
         catch (error) {
@@ -50858,127 +50965,6 @@ async function loadTriageConfig(workspacePath = '.') {
     };
     coreExports.info(`Using engagement weights: ${JSON.stringify(mergedWeights)}`);
     return mergedWeights;
-}
-
-/**
- * Get historic issue details by filtering activity to 7 days ago
- */
-function getHistoricalIssueDetails(issue) {
-    const now = new Date();
-    const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-    // If the issue is newer than 7 days, return it as-is
-    if (issue.createdAt > sevenDaysAgo) {
-        return {
-            ...issue,
-            comments: [],
-            reactions: []
-        };
-    }
-    // Filter reactions to only include those created before 7 days ago
-    const historicReactions = (issue.reactions || []).filter((reaction) => {
-        return reaction.createdAt <= sevenDaysAgo;
-    });
-    // Create historic snapshot by filtering comments and reactions to 7 days ago
-    const historicComments = (issue.comments || [])
-        .filter((comment) => {
-        return comment.createdAt <= sevenDaysAgo;
-    })
-        .map((comment) => {
-        // Filter comment reactions to only include those created before 7 days ago
-        const commentHistoricReactions = (comment.reactions || []).filter((reaction) => {
-            return reaction.createdAt <= sevenDaysAgo;
-        });
-        return {
-            ...comment,
-            reactions: commentHistoricReactions
-        };
-    });
-    const historicIssue = {
-        ...issue,
-        comments: historicComments || [],
-        reactions: historicReactions || [],
-        updatedAt: sevenDaysAgo
-    };
-    return historicIssue;
-}
-/**
- * Get unique contributors to an issue
- */
-function getUniqueContributorsCount(issue) {
-    const contributors = new Set();
-    // Add issue author
-    contributors.add(issue.user.login);
-    // Add assignees
-    issue.assignees.forEach((assignee) => contributors.add(assignee.login));
-    // Add comment authors
-    issue.comments?.forEach((comment) => contributors.add(comment.user.login));
-    return contributors.size;
-}
-/**
- * Get time since last activity in days
- */
-function getDaysSinceLastActivity(issue) {
-    const lastUpdate = issue.updatedAt;
-    const now = new Date();
-    const diffMs = now.getTime() - lastUpdate.getTime();
-    const diffDays = diffMs / (1000 * 60 * 60 * 24);
-    return Math.ceil(diffDays);
-}
-/**
- * Get issue age in days
- */
-function getDaysSinceCreation(issue) {
-    const created = issue.createdAt;
-    const now = new Date();
-    const diffMs = now.getTime() - created.getTime();
-    const diffDays = diffMs / (1000 * 60 * 60 * 24);
-    return Math.ceil(diffDays);
-}
-/**
- * Calculate engagement score for an issue based on the engagement algorithm
- * @param issue - The issue details to score
- * @param weights - Optional custom weights for scoring components (uses defaults if not provided)
- */
-function calculateScore(issue, weights) {
-    // Components:
-    // - Number of Comments       => Indicates discussion and interest
-    // - Number of Reactions      => Shows emotional engagement
-    // - Number of Contributors   => Reflects the diversity of input
-    // - Time Since Last Activity => More recent activity indicates higher engagement
-    // - Issue Age                => Older issues might need more attention
-    // - Number of Linked PRs     => Shows active work on the issue (not implemented)
-    const totalComments = (issue.comments || []).length;
-    const totalCommentReactions = (issue.comments || []).reduce((sum, comment) => sum + (comment.reactions || []).length, 0);
-    const totalReactions = (issue.reactions || []).length + totalCommentReactions;
-    const contributors = getUniqueContributorsCount(issue);
-    const lastActivity = Math.max(1, getDaysSinceLastActivity(issue));
-    const issueAge = Math.max(1, getDaysSinceCreation(issue));
-    const linkedPullRequests = 0; // Not implemented yet
-    // Use provided weights or fall back to defaults
-    const effectiveWeights = {
-        comments: weights?.comments ?? DEFAULT_ENGAGEMENT_WEIGHTS.comments,
-        reactions: weights?.reactions ?? DEFAULT_ENGAGEMENT_WEIGHTS.reactions,
-        contributors: weights?.contributors ?? DEFAULT_ENGAGEMENT_WEIGHTS.contributors,
-        lastActivity: weights?.lastActivity ?? DEFAULT_ENGAGEMENT_WEIGHTS.lastActivity,
-        issueAge: weights?.issueAge ?? DEFAULT_ENGAGEMENT_WEIGHTS.issueAge,
-        linkedPullRequests: weights?.linkedPullRequests ?? DEFAULT_ENGAGEMENT_WEIGHTS.linkedPullRequests
-    };
-    const score = effectiveWeights.comments * totalComments +
-        effectiveWeights.reactions * totalReactions +
-        effectiveWeights.contributors * contributors +
-        effectiveWeights.lastActivity * (1 / lastActivity) +
-        effectiveWeights.issueAge * (1 / issueAge) +
-        effectiveWeights.linkedPullRequests * linkedPullRequests;
-    return Math.round(score);
-}
-/**
- * Calculate previous score (7 days ago) based on historical issue details
- * @param issue - The issue details to score
- * @param weights - Optional custom weights for scoring components
- */
-async function calculateHistoricalScore(issue, weights) {
-    const historicIssue = getHistoricalIssueDetails(issue);
-    return calculateScore(historicIssue, weights);
 }
 
 /**

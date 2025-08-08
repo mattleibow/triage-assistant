@@ -171,7 +171,8 @@ involvement. It calculates numerical scores using a configurable weighted algori
 
 ### Configuration
 
-The engagement scoring weights can be customized using a YAML configuration file. The system looks for configuration in the following order:
+The engagement scoring weights can be customized using a YAML configuration file. The system looks for configuration in
+the following order:
 
 1. `.triagerc.yml` in the repository root
 2. `.github/.triagerc.yml` in the .github directory
@@ -188,19 +189,19 @@ engagement:
   weights:
     # Weight for number of comments (default: 3)
     comments: 3
-    
-    # Weight for reactions (👍, ❤️, 🎉, etc.) (default: 1)  
+
+    # Weight for reactions (👍, ❤️, 🎉, etc.) (default: 1)
     reactions: 1
-    
+
     # Weight for number of unique contributors (default: 2)
     contributors: 2
-    
+
     # Weight for recency of last activity (default: 1)
     lastActivity: 1
-    
+
     # Weight for issue age factor (default: 1)
     issueAge: 1
-    
+
     # Weight for linked pull requests (default: 2)
     linkedPullRequests: 2
 ```
@@ -208,6 +209,7 @@ engagement:
 #### Custom Weight Examples
 
 **Emphasize highly discussed issues:**
+
 ```yaml
 engagement:
   weights:
@@ -220,6 +222,7 @@ engagement:
 ```
 
 **Focus on active development:**
+
 ```yaml
 engagement:
   weights:
@@ -244,7 +247,7 @@ The engagement scoring algorithm analyzes the following configurable factors:
 The final score is calculated using your configured weights (or defaults if not specified):
 
 ```
-Score = (Comments × weight) + (Reactions × weight) + (Contributors × weight) + 
+Score = (Comments × weight) + (Reactions × weight) + (Contributors × weight) +
         (Time Factors × weight) + (Pull Requests × weight)
 ```
 
@@ -286,23 +289,25 @@ Calculate engagement score for a specific issue:
 
 ### Algorithm Details
 
-The engagement score is calculated using your configured weights. If no configuration file is provided, the system uses these default weights:
+The engagement score is calculated using your configured weights. If no configuration file is provided, the system uses
+these default weights:
 
 ```yaml
 engagement:
   weights:
-    comments: 3          # Discussion volume indicates high interest
-    reactions: 1         # Emotional engagement and community sentiment  
-    contributors: 2      # Diversity of input reflects broad interest
-    lastActivity: 1      # Recent activity indicates current relevance
-    issueAge: 1          # Issue age for prioritization
-    linkedPullRequests: 2  # Active development work
+    comments: 3 # Discussion volume indicates high interest
+    reactions: 1 # Emotional engagement and community sentiment
+    contributors: 2 # Diversity of input reflects broad interest
+    lastActivity: 1 # Recent activity indicates current relevance
+    issueAge: 1 # Issue age for prioritization
+    linkedPullRequests: 2 # Active development work
 ```
 
 **Customizable Formula:**
+
 ```
-Score = (Comments × comments_weight) + (Reactions × reactions_weight) + 
-        (Contributors × contributors_weight) + (Time Factors × time_weights) + 
+Score = (Comments × comments_weight) + (Reactions × reactions_weight) +
+        (Contributors × contributors_weight) + (Time Factors × time_weights) +
         (Pull Requests × pr_weight)
 ```
 

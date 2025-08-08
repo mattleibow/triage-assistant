@@ -416,7 +416,7 @@ describe('IssueDetails', () => {
 
       // Should use custom weights for comments and reactions
       expect(result).toBeGreaterThan(0)
-      
+
       // Let's verify it's different from the default calculation
       const defaultResult = calculateScore(mockIssueDetails, defaultWeights)
       expect(result).not.toBe(defaultResult)

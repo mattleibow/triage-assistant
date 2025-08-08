@@ -71,8 +71,8 @@ The action operates through a unified entry point with mode selection via the `T
 The scoring system uses a configurable weighted algorithm that can be customized via YAML configuration files:
 
 ```typescript
-Score = (Comments × comments_weight) + (Reactions × reactions_weight) + 
-        (Contributors × contributors_weight) + (TimeFactors × time_weights) + 
+Score = (Comments × comments_weight) + (Reactions × reactions_weight) +
+        (Contributors × contributors_weight) + (TimeFactors × time_weights) +
         (PullRequests × pr_weight)
 ```
 
@@ -93,6 +93,7 @@ The scoring weights are loaded from YAML configuration files in this priority or
 3. Default values if no config found
 
 **Default Weights:**
+
 - Comments: 3, Reactions: 1, Contributors: 2, Time Factors: 1, Pull Requests: 2
 
 **Configuration Module (`src/engagement/engagement-config.ts`):**
@@ -145,22 +146,25 @@ The scoring weights are loaded from YAML configuration files in this priority or
 The engagement scoring system supports customizable weights via YAML configuration:
 
 **Configuration Files (checked in order):**
+
 - `.triagerc.yml` in repository root
 - `.github/.triagerc.yml` in .github directory
 
 **Example Configuration:**
+
 ```yaml
 engagement:
   weights:
-    comments: 4           # Emphasize discussion-heavy issues
-    reactions: 2          # Give more weight to community sentiment
-    contributors: 3       # Prioritize diverse participation
-    lastActivity: 1       # Standard recency weighting
-    issueAge: 1          # Standard age weighting
+    comments: 4 # Emphasize discussion-heavy issues
+    reactions: 2 # Give more weight to community sentiment
+    contributors: 3 # Prioritize diverse participation
+    lastActivity: 1 # Standard recency weighting
+    issueAge: 1 # Standard age weighting
     linkedPullRequests: 5 # Heavily prioritize active development
 ```
 
 **Configuration Loading Process:**
+
 1. Check for `.triagerc.yml` in workspace root
 2. Fall back to `.github/.triagerc.yml` if root config not found
 3. Use default weights if no configuration files exist
@@ -396,7 +400,8 @@ When adding any new functionality, you must write comprehensive tests that follo
 
 **Mock Strategy:**
 
-- **File System Operations** - NEVER use Jest mocks for file system operations. Always use `const inMemoryFs = new FileSystemMock()` from `__tests__/helpers/filesystem-mock.ts`
+- **File System Operations** - NEVER use Jest mocks for file system operations. Always use
+  `const inMemoryFs = new FileSystemMock()` from `__tests__/helpers/filesystem-mock.ts`
 - **External APIs** - Use Jest mocks for GitHub API and other external service operations
 - **GitHub API Mocking** - Use the fixture patterns in `__fixtures__/` for Octokit and GraphQL mocking
 - **Create comprehensive mock data** that covers real-world scenarios
@@ -406,7 +411,8 @@ When adding any new functionality, you must write comprehensive tests that follo
 
 **Critical File System Testing Rules:**
 
-- **NEVER use `fs.existsSync()`** as it cannot be mocked properly. Always use `fs.promises.readFile()` or `fs.promises.readdir()` with try/catch blocks for file existence checking
+- **NEVER use `fs.existsSync()`** as it cannot be mocked properly. Always use `fs.promises.readFile()` or
+  `fs.promises.readdir()` with try/catch blocks for file existence checking
 - **Always use FileSystemMock** instead of Jest file system mocks
 - **Follow the pattern in `__tests__/github/issues.test.ts`** for proper file system testing structure
 
@@ -425,12 +431,12 @@ describe('YourModule', () => {
   beforeEach(() => {
     jest.clearAllMocks()
     jest.resetAllMocks()
-    inMemoryFs.setup()  // Sets up file system mocks
+    inMemoryFs.setup() // Sets up file system mocks
   })
 
   afterEach(() => {
     jest.restoreAllMocks()
-    inMemoryFs.teardown()  // Cleans up file system mocks
+    inMemoryFs.teardown() // Cleans up file system mocks
   })
 })
 ```
@@ -491,13 +497,15 @@ try {
 
 When writing tests, always reference these files for proper patterns:
 
-- **`__tests__/github/issues.test.ts`** - Perfect example of FileSystemMock usage, file operations testing, and overall test structure
+- **`__tests__/github/issues.test.ts`** - Perfect example of FileSystemMock usage, file operations testing, and overall
+  test structure
 - **`__tests__/engagement/engagement-config.test.ts`** - Example of configuration file testing with YAML content
 - **`__tests__/helpers/filesystem-mock.ts`** - The FileSystemMock implementation itself
 
 **Key Learning Points from Reference Files:**
 
-1. **File System Setup Pattern** - All tests follow the same `beforeEach`/`afterEach` pattern with `inMemoryFs.setup()` and `teardown()`
+1. **File System Setup Pattern** - All tests follow the same `beforeEach`/`afterEach` pattern with `inMemoryFs.setup()`
+   and `teardown()`
 2. **Mock Organization** - External API mocks are handled separately from file system mocks
 3. **Test Data Creation** - Use `inMemoryFs.forceSet()` to create files with realistic content
 4. **Error Testing** - Always test both success and failure scenarios for file operations

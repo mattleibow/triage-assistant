@@ -42,10 +42,7 @@ export const DEFAULT_ENGAGEMENT_WEIGHTS: EngagementWeights = {
  * @returns Combined configuration with defaults applied
  */
 export async function loadTriageConfig(workspacePath: string = '.'): Promise<EngagementWeights> {
-  const configPaths = [
-    path.join(workspacePath, '.triagerc.yml'),
-    path.join(workspacePath, '.github', '.triagerc.yml')
-  ]
+  const configPaths = [path.join(workspacePath, '.triagerc.yml'), path.join(workspacePath, '.github', '.triagerc.yml')]
 
   let config: TriageConfig = {}
 
@@ -54,14 +51,16 @@ export async function loadTriageConfig(workspacePath: string = '.'): Promise<Eng
       core.info(`Loading triage configuration from ${configPath}`)
       const fileContent = await fs.promises.readFile(configPath, 'utf8')
       const parsedConfig = yaml.load(fileContent) as TriageConfig
-      
+
       if (parsedConfig && typeof parsedConfig === 'object') {
         config = parsedConfig
         core.info(`Successfully loaded configuration from ${configPath}`)
         break
       }
     } catch (error) {
-      core.warning(`Failed to load configuration from ${configPath}: ${error instanceof Error ? error.message : 'Unknown error'}`)
+      core.warning(
+        `Failed to load configuration from ${configPath}: ${error instanceof Error ? error.message : 'Unknown error'}`
+      )
     }
   }
 

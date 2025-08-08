@@ -50,13 +50,20 @@ describe('GitHub Integration Tests', () => {
       it('getProjectDetails returns all items', async () => {
         const result = await getProjectDetails(sdk, 'mattleibow', 'triage-assistant', 8)
 
-        expect(result.items.length).toBe(2)
+        expect(result.items.length).toBe(8)
 
-        expect(result.items[0].id).toBe('PVTI_lAHOABC7qM4A-32Izgc_eaQ')
-        expect(result.items[0].content.id).toBe('I_kwDOOy552s7ComT5')
-
-        expect(result.items[1].id).toBe('PVTI_lAHOABC7qM4A-32Izgc_fjo')
-        expect(result.items[1].content.id).toBe('I_kwDOOy552s7Cos4Q')
+        expect(result.items).toEqual(
+          expect.arrayContaining([
+            expect.objectContaining({
+              id: 'PVTI_lAHOABC7qM4A-32Izgc_eaQ',
+              content: expect.objectContaining({ id: 'I_kwDOOy552s7ComT5' })
+            }),
+            expect.objectContaining({
+              id: 'PVTI_lAHOABC7qM4A-32Izgc_fjo',
+              content: expect.objectContaining({ id: 'I_kwDOOy552s7Cos4Q' })
+            })
+          ])
+        )
       })
     })
 

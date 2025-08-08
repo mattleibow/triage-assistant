@@ -9,27 +9,26 @@ engagement:
     # Weight for number of comments (default: 3)
     # Higher values emphasize discussions with many comments
     comments: 3
-    
+
     # Weight for reactions (👍, ❤️, 🎉, etc.) (default: 1)
     # Higher values emphasize community sentiment
     reactions: 1
-    
+
     # Weight for number of unique contributors (default: 2)
     # Higher values emphasize issues with diverse participation
     contributors: 2
-    
+
     # Weight for recency of last activity (default: 1)
     # Higher values emphasize recently active issues
     lastActivity: 1
-    
+
     # Weight for issue age factor (default: 1)
     # Higher values emphasize older issues that need attention
     issueAge: 1
-    
+
     # Weight for linked pull requests (default: 2)
     # Higher values emphasize issues with active development
     linkedPullRequests: 2
-
 # Example custom configurations:
 #
 # Emphasize highly discussed issues:
