@@ -53,7 +53,7 @@ export async function runEngagementWorkflow(config: EverythingConfig): Promise<s
 export async function calculateEngagementScores(
   config: EngagementConfig,
   graphql: GraphQLSdk,
-  weights: Required<EngagementWeights>
+  weights: EngagementWeights
 ): Promise<EngagementResponse> {
   if (config.projectNumber && config.projectNumber > 0) {
     return await calculateProjectEngagementScores(config, graphql, weights)
@@ -70,7 +70,7 @@ export async function calculateEngagementScores(
 async function calculateIssueEngagementScores(
   config: EngagementConfig,
   graphql: GraphQLSdk,
-  weights: Required<EngagementWeights>
+  weights: EngagementWeights
 ): Promise<EngagementResponse> {
   core.info(`Calculating engagement score for issue #${config.issueNumber}`)
 
@@ -89,7 +89,7 @@ async function calculateIssueEngagementScores(
 async function calculateProjectEngagementScores(
   config: EngagementConfig,
   graphql: GraphQLSdk,
-  weights: Required<EngagementWeights>
+  weights: EngagementWeights
 ): Promise<EngagementResponse> {
   core.info(`Calculating engagement scores for project #${config.projectNumber}`)
 
@@ -134,8 +134,8 @@ async function calculateProjectEngagementScores(
  */
 export async function createEngagementItem(
   issueDetails: IssueDetails,
-  projectItemId?: string,
-  weights?: Required<EngagementWeights>
+  projectItemId: string | undefined,
+  weights: EngagementWeights
 ): Promise<EngagementItem> {
   const score = calculateScore(issueDetails, weights)
   const previousScore = await calculateHistoricalScore(issueDetails, weights)

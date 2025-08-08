@@ -1,5 +1,5 @@
 import { IssueDetails } from './types.js'
-import { EngagementWeights, DEFAULT_ENGAGEMENT_WEIGHTS } from '../engagement/engagement-config.js'
+import { EngagementWeights } from '../engagement/engagement-config.js'
 
 /**
  * Get historic issue details by filtering activity to 7 days ago
@@ -92,9 +92,9 @@ export function getDaysSinceCreation(issue: IssueDetails): number {
 /**
  * Calculate engagement score for an issue based on the engagement algorithm
  * @param issue - The issue details to score
- * @param weights - Optional custom weights for scoring components (uses defaults if not provided)
+ * @param weights - Custom weights for scoring components
  */
-export function calculateScore(issue: IssueDetails, weights?: Partial<EngagementWeights>): number {
+export function calculateScore(issue: IssueDetails, weights: EngagementWeights): number {
   // Components:
   // - Number of Comments       => Indicates discussion and interest
   // - Number of Reactions      => Shows emotional engagement
@@ -114,23 +114,13 @@ export function calculateScore(issue: IssueDetails, weights?: Partial<Engagement
   const issueAge = Math.max(1, getDaysSinceCreation(issue))
   const linkedPullRequests = 0 // Not implemented yet
 
-  // Use provided weights or fall back to defaults
-  const effectiveWeights = {
-    comments: weights?.comments ?? DEFAULT_ENGAGEMENT_WEIGHTS.comments,
-    reactions: weights?.reactions ?? DEFAULT_ENGAGEMENT_WEIGHTS.reactions,
-    contributors: weights?.contributors ?? DEFAULT_ENGAGEMENT_WEIGHTS.contributors,
-    lastActivity: weights?.lastActivity ?? DEFAULT_ENGAGEMENT_WEIGHTS.lastActivity,
-    issueAge: weights?.issueAge ?? DEFAULT_ENGAGEMENT_WEIGHTS.issueAge,
-    linkedPullRequests: weights?.linkedPullRequests ?? DEFAULT_ENGAGEMENT_WEIGHTS.linkedPullRequests
-  }
-
   const score =
-    effectiveWeights.comments * totalComments +
-    effectiveWeights.reactions * totalReactions +
-    effectiveWeights.contributors * contributors +
-    effectiveWeights.lastActivity * (1 / lastActivity) +
-    effectiveWeights.issueAge * (1 / issueAge) +
-    effectiveWeights.linkedPullRequests * linkedPullRequests
+    weights.comments * totalComments +
+    weights.reactions * totalReactions +
+    weights.contributors * contributors +
+    weights.lastActivity * (1 / lastActivity) +
+    weights.issueAge * (1 / issueAge) +
+    weights.linkedPullRequests * linkedPullRequests
 
   return Math.round(score)
 }
@@ -138,9 +128,9 @@ export function calculateScore(issue: IssueDetails, weights?: Partial<Engagement
 /**
  * Calculate previous score (7 days ago) based on historical issue details
  * @param issue - The issue details to score
- * @param weights - Optional custom weights for scoring components
+ * @param weights - Custom weights for scoring components
  */
-export async function calculateHistoricalScore(issue: IssueDetails, weights?: Partial<EngagementWeights>): Promise<number> {
+export async function calculateHistoricalScore(issue: IssueDetails, weights: EngagementWeights): Promise<number> {
   const historicIssue = getHistoricalIssueDetails(issue)
   return calculateScore(historicIssue, weights)
 }

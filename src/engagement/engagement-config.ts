@@ -7,12 +7,12 @@ import * as yaml from 'js-yaml'
  * Configuration interface for engagement scoring weights
  */
 export interface EngagementWeights {
-  comments?: number
-  reactions?: number
-  contributors?: number
-  lastActivity?: number
-  issueAge?: number
-  linkedPullRequests?: number
+  comments: number
+  reactions: number
+  contributors: number
+  lastActivity: number
+  issueAge: number
+  linkedPullRequests: number
 }
 
 /**
@@ -20,14 +20,14 @@ export interface EngagementWeights {
  */
 export interface TriageConfig {
   engagement?: {
-    weights?: EngagementWeights
+    weights?: Partial<EngagementWeights>
   }
 }
 
 /**
  * Default engagement weights that match the current hardcoded values
  */
-export const DEFAULT_ENGAGEMENT_WEIGHTS: Required<EngagementWeights> = {
+export const DEFAULT_ENGAGEMENT_WEIGHTS: EngagementWeights = {
   comments: 3,
   reactions: 1,
   contributors: 2,
@@ -41,7 +41,7 @@ export const DEFAULT_ENGAGEMENT_WEIGHTS: Required<EngagementWeights> = {
  * @param workspacePath - The workspace path to search for config files
  * @returns Combined configuration with defaults applied
  */
-export async function loadTriageConfig(workspacePath: string = '.'): Promise<Required<EngagementWeights>> {
+export async function loadTriageConfig(workspacePath: string = '.'): Promise<EngagementWeights> {
   const configPaths = [
     path.join(workspacePath, '.triagerc.yml'),
     path.join(workspacePath, '.github', '.triagerc.yml')
@@ -51,16 +51,14 @@ export async function loadTriageConfig(workspacePath: string = '.'): Promise<Req
 
   for (const configPath of configPaths) {
     try {
-      if (fs.existsSync(configPath)) {
-        core.info(`Loading triage configuration from ${configPath}`)
-        const fileContent = await fs.promises.readFile(configPath, 'utf8')
-        const parsedConfig = yaml.load(fileContent) as TriageConfig
-        
-        if (parsedConfig && typeof parsedConfig === 'object') {
-          config = parsedConfig
-          core.info(`Successfully loaded configuration from ${configPath}`)
-          break
-        }
+      core.info(`Loading triage configuration from ${configPath}`)
+      const fileContent = await fs.promises.readFile(configPath, 'utf8')
+      const parsedConfig = yaml.load(fileContent) as TriageConfig
+      
+      if (parsedConfig && typeof parsedConfig === 'object') {
+        config = parsedConfig
+        core.info(`Successfully loaded configuration from ${configPath}`)
+        break
       }
     } catch (error) {
       core.warning(`Failed to load configuration from ${configPath}: ${error instanceof Error ? error.message : 'Unknown error'}`)
@@ -69,7 +67,7 @@ export async function loadTriageConfig(workspacePath: string = '.'): Promise<Req
 
   // Merge with defaults
   const weights = config.engagement?.weights || {}
-  const mergedWeights: Required<EngagementWeights> = {
+  const mergedWeights: EngagementWeights = {
     comments: weights.comments ?? DEFAULT_ENGAGEMENT_WEIGHTS.comments,
     reactions: weights.reactions ?? DEFAULT_ENGAGEMENT_WEIGHTS.reactions,
     contributors: weights.contributors ?? DEFAULT_ENGAGEMENT_WEIGHTS.contributors,

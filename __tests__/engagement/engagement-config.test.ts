@@ -1,64 +1,84 @@
 import { jest } from '@jest/globals'
+import * as core from '../../__fixtures__/actions/core.js'
+import { FileSystemMock } from '../helpers/filesystem-mock.js'
 import {
   loadTriageConfig,
-  DEFAULT_ENGAGEMENT_WEIGHTS
+  DEFAULT_ENGAGEMENT_WEIGHTS,
+  EngagementWeights
 } from '../../src/engagement/engagement-config.js'
 
-// Mock fs module
-const mockExistsSync = jest.fn() as jest.MockedFunction<typeof import('fs').existsSync>
-const mockReadFile = jest.fn() as jest.MockedFunction<typeof import('fs').promises.readFile>
-
-jest.mock('fs', () => ({
-  existsSync: mockExistsSync,
-  promises: {
-    readFile: mockReadFile
-  }
-}))
+// Mock dependencies using fixtures
+jest.unstable_mockModule('@actions/core', () => core)
 
 describe('EngagementConfig', () => {
-  const originalCwd = process.cwd()
+  const inMemoryFs = new FileSystemMock()
 
   beforeEach(() => {
     jest.clearAllMocks()
+    jest.resetAllMocks()
+
+    // Mock file system operations
+    inMemoryFs.setup()
   })
 
   afterEach(() => {
-    process.chdir(originalCwd)
+    jest.restoreAllMocks()
+    inMemoryFs.teardown()
   })
 
   describe('loadTriageConfig', () => {
     it('should return default weights when no config file exists', async () => {
-      mockExistsSync.mockReturnValue(false)
-
       const result = await loadTriageConfig('/test/workspace')
 
       expect(result).toEqual(DEFAULT_ENGAGEMENT_WEIGHTS)
     })
 
     it('should load config from .triagerc.yml', async () => {
-      mockExistsSync.mockImplementation((filePath) => 
-        filePath === '/test/workspace/.triagerc.yml'
-      )
-      mockReadFile.mockResolvedValue(
-        'engagement:\n  weights:\n    comments: 5\n    reactions: 2' as any
-      )
+      const configContent = `
+engagement:
+  weights:
+    comments: 5
+    reactions: 2
+    contributors: 3
+`
+      inMemoryFs.forceSet('/test/workspace/.triagerc.yml', configContent)
 
       const result = await loadTriageConfig('/test/workspace')
 
       expect(result).toEqual({
         ...DEFAULT_ENGAGEMENT_WEIGHTS,
         comments: 5,
-        reactions: 2
+        reactions: 2,
+        contributors: 3
+      })
+    })
+
+    it('should load config from .github/.triagerc.yml when root config not found', async () => {
+      const configContent = `
+engagement:
+  weights:
+    comments: 4
+    linkedPullRequests: 3
+`
+      inMemoryFs.forceSet('/test/workspace/.github/.triagerc.yml', configContent)
+
+      const result = await loadTriageConfig('/test/workspace')
+
+      expect(result).toEqual({
+        ...DEFAULT_ENGAGEMENT_WEIGHTS,
+        comments: 4,
+        linkedPullRequests: 3
       })
     })
 
     it('should merge partial weights with defaults', async () => {
-      mockExistsSync.mockImplementation((filePath) => 
-        filePath === '/test/workspace/.triagerc.yml'
-      )
-      mockReadFile.mockResolvedValue(
-        'engagement:\n  weights:\n    comments: 8\n    lastActivity: 3' as any
-      )
+      const configContent = `
+engagement:
+  weights:
+    comments: 8
+    lastActivity: 3
+`
+      inMemoryFs.forceSet('/test/workspace/.triagerc.yml', configContent)
 
       const result = await loadTriageConfig('/test/workspace')
 
@@ -73,23 +93,85 @@ describe('EngagementConfig', () => {
     })
 
     it('should handle invalid YAML gracefully', async () => {
-      mockExistsSync.mockReturnValue(true)
-      mockReadFile.mockResolvedValue(
-        'invalid: yaml: content: [' as any
-      )
+      const invalidYaml = 'invalid: yaml: content: ['
+      inMemoryFs.forceSet('/test/workspace/.triagerc.yml', invalidYaml)
 
       const result = await loadTriageConfig('/test/workspace')
 
       expect(result).toEqual(DEFAULT_ENGAGEMENT_WEIGHTS)
     })
 
-    it('should handle file read errors gracefully', async () => {
-      mockExistsSync.mockReturnValue(true)
-      mockReadFile.mockRejectedValue(new Error('Permission denied'))
+    it('should handle missing engagement section', async () => {
+      const configContent = `
+other:
+  config: value
+`
+      inMemoryFs.forceSet('/test/workspace/.triagerc.yml', configContent)
 
       const result = await loadTriageConfig('/test/workspace')
 
       expect(result).toEqual(DEFAULT_ENGAGEMENT_WEIGHTS)
+    })
+
+    it('should handle missing weights section', async () => {
+      const configContent = `
+engagement:
+  other: value
+`
+      inMemoryFs.forceSet('/test/workspace/.triagerc.yml', configContent)
+
+      const result = await loadTriageConfig('/test/workspace')
+
+      expect(result).toEqual(DEFAULT_ENGAGEMENT_WEIGHTS)
+    })
+
+    it('should prefer root config over .github config', async () => {
+      const rootConfig = `
+engagement:
+  weights:
+    comments: 10
+`
+      const githubConfig = `
+engagement:
+  weights:
+    comments: 5
+`
+      inMemoryFs.forceSet('/test/workspace/.triagerc.yml', rootConfig)
+      inMemoryFs.forceSet('/test/workspace/.github/.triagerc.yml', githubConfig)
+
+      const result = await loadTriageConfig('/test/workspace')
+
+      expect(result).toEqual({
+        ...DEFAULT_ENGAGEMENT_WEIGHTS,
+        comments: 10
+      })
+    })
+
+    it('should handle complete custom weights configuration', async () => {
+      const configContent = `
+engagement:
+  weights:
+    comments: 5
+    reactions: 3
+    contributors: 4
+    lastActivity: 2
+    issueAge: 1
+    linkedPullRequests: 6
+`
+      inMemoryFs.forceSet('/test/workspace/.triagerc.yml', configContent)
+
+      const result = await loadTriageConfig('/test/workspace')
+
+      const expected: EngagementWeights = {
+        comments: 5,
+        reactions: 3,
+        contributors: 4,
+        lastActivity: 2,
+        issueAge: 1,
+        linkedPullRequests: 6
+      }
+
+      expect(result).toEqual(expected)
     })
   })
 
@@ -103,6 +185,16 @@ describe('EngagementConfig', () => {
         issueAge: 1,
         linkedPullRequests: 2
       })
+    })
+
+    it('should have all required weight properties', () => {
+      const weights = DEFAULT_ENGAGEMENT_WEIGHTS
+      expect(typeof weights.comments).toBe('number')
+      expect(typeof weights.reactions).toBe('number')
+      expect(typeof weights.contributors).toBe('number')
+      expect(typeof weights.lastActivity).toBe('number')
+      expect(typeof weights.issueAge).toBe('number')
+      expect(typeof weights.linkedPullRequests).toBe('number')
     })
   })
 })
