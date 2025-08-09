@@ -6,6 +6,33 @@ import * as path from 'path'
 import { InferenceConfig } from '../config.js'
 
 /**
+ * Sanitizes content for safe logging by truncating and removing potential sensitive data
+ * @param content Content to sanitize
+ * @param maxLength Maximum length for logged content
+ * @returns Sanitized content safe for logging
+ */
+function sanitizeForLogging(content: string, maxLength: number = 200): string {
+  // Remove potential tokens, keys, secrets (basic patterns)
+  const sensitivePatterns = [
+    /(?:token|key|secret|password)[\s:=]+[a-zA-Z0-9+/=_-]{20,}/gi,
+    /ghp_[a-zA-Z0-9]{36}/g, // GitHub personal access tokens
+    /github_pat_[a-zA-Z0-9_]{82}/g, // GitHub fine-grained tokens
+  ]
+  
+  let sanitized = content
+  sensitivePatterns.forEach(pattern => {
+    sanitized = sanitized.replace(pattern, '[REDACTED]')
+  })
+  
+  // Truncate for logging
+  if (sanitized.length > maxLength) {
+    sanitized = sanitized.substring(0, maxLength) + '...[truncated]'
+  }
+  
+  return sanitized
+}
+
+/**
  * Runs AI inference to generate a response file.
  *
  * @param systemPrompt The system prompt content.
@@ -63,7 +90,7 @@ export async function runInference(
     await fs.promises.writeFile(responseFile, modelResponse, 'utf-8')
 
     core.info(`AI inference completed. Response written to: ${responseFile}`)
-    core.info(`Response content: ${modelResponse}`)
+    core.info(`Response content: ${sanitizeForLogging(modelResponse)}`)
   } catch (error) {
     core.error(`AI inference failed: ${error instanceof Error ? error.message : 'Unknown error'}`)
     throw error

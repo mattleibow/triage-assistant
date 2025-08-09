@@ -26,8 +26,11 @@ export async function generatePrompt(
 
   for (let line of lines) {
     // Replace placeholders
+    // Replace placeholders safely to prevent ReDoS
     for (const [key, value] of Object.entries(replacements)) {
-      line = line.replace(new RegExp(`{{${key}}}`, 'g'), String(value || ''))
+      // Escape special regex characters in the key to prevent ReDoS
+      const escapedKey = key.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+      line = line.replace(new RegExp(`{{${escapedKey}}}`, 'g'), String(value || ''))
     }
 
     // Check for EXEC: command prefix

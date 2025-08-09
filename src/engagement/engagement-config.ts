@@ -37,12 +37,45 @@ export const DEFAULT_ENGAGEMENT_WEIGHTS: EngagementWeights = {
 }
 
 /**
+ * Safely resolves and validates a config file path to prevent path traversal attacks
+ * @param basePath The base workspace path
+ * @param relativePath The relative path to the config file
+ * @returns The resolved and validated absolute path
+ */
+function safeConfigPath(basePath: string, relativePath: string): string {
+  const resolved = path.resolve(basePath, relativePath)
+  const normalizedBase = path.resolve(basePath)
+  
+  // Ensure the resolved path is within the base directory
+  // Use path.relative to check if we need to traverse up from base to reach resolved
+  const relative = path.relative(normalizedBase, resolved)
+  if (relative.startsWith('..') || path.isAbsolute(relative)) {
+    throw new Error(`Invalid config path: ${relativePath} resolves outside workspace`)
+  }
+  
+  return resolved
+}
+
+/**
  * Load triage configuration from .triagerc.yml or .github/.triagerc.yml
  * @param workspacePath - The workspace path to search for config files
  * @returns Combined configuration with defaults applied
  */
 export async function loadTriageConfig(workspacePath: string = '.'): Promise<EngagementWeights> {
-  const configPaths = [path.join(workspacePath, '.triagerc.yml'), path.join(workspacePath, '.github', '.triagerc.yml')]
+  // Validate and normalize workspace path to prevent directory traversal
+  const currentDir = process.cwd()
+  const normalizedWorkspace = path.resolve(workspacePath)
+  
+  // Ensure workspace path is within or at the current working directory
+  const relativeToCurrentDir = path.relative(currentDir, normalizedWorkspace)
+  if (relativeToCurrentDir.startsWith('..') || path.isAbsolute(relativeToCurrentDir)) {
+    throw new Error(`Invalid workspace path: ${workspacePath} resolves outside current directory`)
+  }
+  
+  const configPaths = [
+    safeConfigPath(normalizedWorkspace, '.triagerc.yml'),
+    safeConfigPath(normalizedWorkspace, '.github/.triagerc.yml')
+  ]
 
   let config: TriageConfig = {}
 
