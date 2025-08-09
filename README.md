@@ -246,7 +246,7 @@ The engagement scoring algorithm analyzes the following configurable factors:
 
 The final score is calculated using your configured weights (or defaults if not specified):
 
-```
+```txt
 Score = (Comments × weight) + (Reactions × weight) + (Contributors × weight) +
         (Time Factors × weight) + (Pull Requests × weight)
 ```
@@ -305,7 +305,7 @@ engagement:
 
 **Customizable Formula:**
 
-```
+```txt
 Score = (Comments × comments_weight) + (Reactions × reactions_weight) +
         (Contributors × contributors_weight) + (Time Factors × time_weights) +
         (Pull Requests × pr_weight)
