@@ -32,4 +32,4 @@ jobs:
           project: 8
           project-column: 'Engagement Score'
           apply-scores: true
-          dry-run: ${{ inputs.dry_run || github.event_name != 'pull_request' }}
+          dry-run: ${{ inputs.dry_run || github.event_name == 'pull_request' }}
