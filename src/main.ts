@@ -6,6 +6,45 @@ import { runEngagementWorkflow } from './engagement/engagement.js'
 import { EverythingConfig } from './config.js'
 
 /**
+ * Validates and sanitizes numeric input
+ * @param input Raw string input
+ * @param fieldName Field name for error messages
+ * @returns Validated number or 0 if invalid
+ */
+function validateNumericInput(input: string, fieldName: string): number {
+  if (!input.trim()) return 0
+  const num = parseInt(input, 10)
+  if (isNaN(num) || num < 0) {
+    core.warning(`Invalid ${fieldName}: ${input}. Using 0 as fallback.`)
+    return 0
+  }
+  return num
+}
+
+/**
+ * Validates repository identifier format
+ * @param owner Repository owner
+ * @param repo Repository name
+ */
+function validateRepositoryId(owner: string, repo: string): void {
+  const validPattern = /^[a-zA-Z0-9._-]+$/
+  if (!owner || !repo || !validPattern.test(owner) || !validPattern.test(repo)) {
+    throw new Error(`Invalid repository identifier: ${owner}/${repo}`)
+  }
+}
+
+/**
+ * Validates template name against allowed values
+ * @param template Template name to validate
+ */
+function validateTemplate(template: string): void {
+  const allowedTemplates = ['multi-label', 'single-label', 'regression', 'missing-info', 'engagement-score', '']
+  if (template && !allowedTemplates.includes(template)) {
+    throw new Error(`Invalid template: ${template}. Allowed values: ${allowedTemplates.filter(t => t).join(', ')}`)
+  }
+}
+
+/**
  * Enum for triage modes
  */
 enum TriageMode {
@@ -31,6 +70,12 @@ export async function run(): Promise<void> {
     const projectInput = core.getInput('project')
     const issueInput = core.getInput('issue')
     const issueContext = github.context.issue?.number || 0
+
+    // Validate template
+    validateTemplate(template)
+
+    // Validate repository context
+    validateRepositoryId(github.context.repo.owner, github.context.repo.repo)
 
     // Determine triage mode
     const triageMode = template === TriageMode.EngagementScore ? TriageMode.EngagementScore : TriageMode.IssueTriage
@@ -65,11 +110,11 @@ export async function run(): Promise<void> {
       applyScores: core.getBooleanInput('apply-scores'),
       commentFooter: core.getInput('comment-footer'),
       dryRun: core.getBooleanInput('dry-run') || false,
-      issueNumber: issueInput ? parseInt(issueInput, 10) : issueContext,
+      issueNumber: validateNumericInput(issueInput || issueContext.toString(), 'issue number'),
       label: core.getInput('label'),
       labelPrefix: core.getInput('label-prefix'),
       projectColumn: core.getInput('project-column') || DEFAULT_PROJECT_COLUMN_NAME,
-      projectNumber: projectInput ? parseInt(projectInput, 10) : 0,
+      projectNumber: validateNumericInput(projectInput, 'project number'),
       repoName: github.context.repo.repo,
       repoOwner: github.context.repo.owner,
       repository: `${github.context.repo.owner}/${github.context.repo.repo}`,

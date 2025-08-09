@@ -31665,8 +31665,11 @@ async function generatePrompt(templateContent, outputPath, replacements, config)
     const outputContent = [];
     for (let line of lines) {
         // Replace placeholders
+        // Replace placeholders safely to prevent ReDoS
         for (const [key, value] of Object.entries(replacements)) {
-            line = line.replace(new RegExp(`{{${key}}}`, 'g'), String(value || ''));
+            // Escape special regex characters in the key to prevent ReDoS
+            const escapedKey = key.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            line = line.replace(new RegExp(`{{${escapedKey}}}`, 'g'), String(value || ''));
         }
         // Check for EXEC: command prefix
         const execMatch = line.match(/^EXEC:\s*(.+)$/);
@@ -38782,6 +38785,29 @@ function getPathFromMapKey(mapKey) {
 }
 
 /**
+ * Sanitizes content for safe logging by truncating and removing potential sensitive data
+ * @param content Content to sanitize
+ * @param maxLength Maximum length for logged content
+ * @returns Sanitized content safe for logging
+ */
+function sanitizeForLogging(content, maxLength = 200) {
+    // Remove potential tokens, keys, secrets (basic patterns)
+    const sensitivePatterns = [
+        /(?:token|key|secret|password)[\s:=]+[a-zA-Z0-9+/=_-]{20,}/gi,
+        /ghp_[a-zA-Z0-9]{36}/g, // GitHub personal access tokens
+        /github_pat_[a-zA-Z0-9_]{82}/g, // GitHub fine-grained tokens
+    ];
+    let sanitized = content;
+    sensitivePatterns.forEach(pattern => {
+        sanitized = sanitized.replace(pattern, '[REDACTED]');
+    });
+    // Truncate for logging
+    if (sanitized.length > maxLength) {
+        sanitized = sanitized.substring(0, maxLength) + '...[truncated]';
+    }
+    return sanitized;
+}
+/**
  * Runs AI inference to generate a response file.
  *
  * @param systemPrompt The system prompt content.
@@ -38826,7 +38852,7 @@ async function runInference(systemPrompt, userPrompt, responseFile, maxTokens = 
         // Write the response to the specified file
         await fs.promises.writeFile(responseFile, modelResponse, 'utf-8');
         coreExports.info(`AI inference completed. Response written to: ${responseFile}`);
-        coreExports.info(`Response content: ${modelResponse}`);
+        coreExports.info(`Response content: ${sanitizeForLogging(modelResponse)}`);
     }
     catch (error) {
         coreExports.error(`AI inference failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
@@ -38960,6 +38986,25 @@ async function getFileContents(file) {
 }
 
 /**
+ * Sanitizes markdown content to prevent injection attacks while preserving formatting
+ * @param content Raw markdown content
+ * @returns Sanitized content safe for GitHub comments
+ */
+function sanitizeMarkdownContent(content) {
+    // Remove any potentially dangerous HTML/script tags
+    const htmlTagPattern = /<script[^>]*>.*?<\/script>/gi;
+    const dangerousHtml = /<(?:iframe|object|embed|form|input|meta|link)[^>]*>/gi;
+    let sanitized = content
+        .replace(htmlTagPattern, '[REMOVED: Script tag]')
+        .replace(dangerousHtml, '[REMOVED: Potentially dangerous HTML]');
+    // Limit length to prevent abuse
+    const MAX_COMMENT_LENGTH = 65536; // GitHub's comment limit
+    if (sanitized.length > MAX_COMMENT_LENGTH) {
+        sanitized = sanitized.substring(0, MAX_COMMENT_LENGTH - 100) + '\n\n[Content truncated for safety]';
+    }
+    return sanitized;
+}
+/**
  * Comments on an issue with the provided summary.
  *
  * @param summaryFile Path to the file containing the summary text.
@@ -38968,11 +39013,11 @@ async function getFileContents(file) {
  */
 async function commentOnIssue(octokit, summaryFile, config, footer) {
     const summary = await fs.promises.readFile(path.join(summaryFile), 'utf8');
-    const commentBody = `
+    const commentBody = sanitizeMarkdownContent(`
 ${summary}
 
 ${footer ?? ''}
-`.trim();
+`.trim());
     // If the comment body is empty, do not post an empty comment
     if (commentBody.length === 0) {
         return;
@@ -50931,12 +50976,40 @@ const DEFAULT_ENGAGEMENT_WEIGHTS = {
     linkedPullRequests: 2
 };
 /**
+ * Safely resolves and validates a config file path to prevent path traversal attacks
+ * @param basePath The base workspace path
+ * @param relativePath The relative path to the config file
+ * @returns The resolved and validated absolute path
+ */
+function safeConfigPath(basePath, relativePath) {
+    const resolved = path.resolve(basePath, relativePath);
+    const normalizedBase = path.resolve(basePath);
+    // Ensure the resolved path is within the base directory
+    // Use path.relative to check if we need to traverse up from base to reach resolved
+    const relative = path.relative(normalizedBase, resolved);
+    if (relative.startsWith('..') || path.isAbsolute(relative)) {
+        throw new Error(`Invalid config path: ${relativePath} resolves outside workspace`);
+    }
+    return resolved;
+}
+/**
  * Load triage configuration from .triagerc.yml or .github/.triagerc.yml
  * @param workspacePath - The workspace path to search for config files
  * @returns Combined configuration with defaults applied
  */
 async function loadTriageConfig(workspacePath = '.') {
-    const configPaths = [path.join(workspacePath, '.triagerc.yml'), path.join(workspacePath, '.github', '.triagerc.yml')];
+    // Validate and normalize workspace path to prevent directory traversal
+    const currentDir = process.cwd();
+    const normalizedWorkspace = path.resolve(workspacePath);
+    // Ensure workspace path is within or at the current working directory
+    const relativeToCurrentDir = path.relative(currentDir, normalizedWorkspace);
+    if (relativeToCurrentDir.startsWith('..') || path.isAbsolute(relativeToCurrentDir)) {
+        throw new Error(`Invalid workspace path: ${workspacePath} resolves outside current directory`);
+    }
+    const configPaths = [
+        safeConfigPath(normalizedWorkspace, '.triagerc.yml'),
+        safeConfigPath(normalizedWorkspace, '.github/.triagerc.yml')
+    ];
     let config = {};
     for (const configPath of configPaths) {
         try {
@@ -51078,6 +51151,43 @@ async function createEngagementItem(issueDetails, projectItemId, weights) {
 }
 
 /**
+ * Validates and sanitizes numeric input
+ * @param input Raw string input
+ * @param fieldName Field name for error messages
+ * @returns Validated number or 0 if invalid
+ */
+function validateNumericInput(input, fieldName) {
+    if (!input.trim())
+        return 0;
+    const num = parseInt(input, 10);
+    if (isNaN(num) || num < 0) {
+        coreExports.warning(`Invalid ${fieldName}: ${input}. Using 0 as fallback.`);
+        return 0;
+    }
+    return num;
+}
+/**
+ * Validates repository identifier format
+ * @param owner Repository owner
+ * @param repo Repository name
+ */
+function validateRepositoryId(owner, repo) {
+    const validPattern = /^[a-zA-Z0-9._-]+$/;
+    if (!owner || !repo || !validPattern.test(owner) || !validPattern.test(repo)) {
+        throw new Error(`Invalid repository identifier: ${owner}/${repo}`);
+    }
+}
+/**
+ * Validates template name against allowed values
+ * @param template Template name to validate
+ */
+function validateTemplate(template) {
+    const allowedTemplates = ['multi-label', 'single-label', 'regression', 'missing-info', 'engagement-score', ''];
+    if (template && !allowedTemplates.includes(template)) {
+        throw new Error(`Invalid template: ${template}. Allowed values: ${allowedTemplates.filter(t => t).join(', ')}`);
+    }
+}
+/**
  * Enum for triage modes
  */
 var TriageMode;
@@ -51101,6 +51211,10 @@ async function run() {
         const projectInput = coreExports.getInput('project');
         const issueInput = coreExports.getInput('issue');
         const issueContext = githubExports.context.issue?.number || 0;
+        // Validate template
+        validateTemplate(template);
+        // Validate repository context
+        validateRepositoryId(githubExports.context.repo.owner, githubExports.context.repo.repo);
         // Determine triage mode
         const triageMode = template === TriageMode.EngagementScore ? TriageMode.EngagementScore : TriageMode.IssueTriage;
         // Validate inputs based on mode
@@ -51131,11 +51245,11 @@ async function run() {
             applyScores: coreExports.getBooleanInput('apply-scores'),
             commentFooter: coreExports.getInput('comment-footer'),
             dryRun: coreExports.getBooleanInput('dry-run') || false,
-            issueNumber: issueInput ? parseInt(issueInput, 10) : issueContext,
+            issueNumber: validateNumericInput(issueInput || issueContext.toString(), 'issue number'),
             label: coreExports.getInput('label'),
             labelPrefix: coreExports.getInput('label-prefix'),
             projectColumn: coreExports.getInput('project-column') || DEFAULT_PROJECT_COLUMN_NAME,
-            projectNumber: projectInput ? parseInt(projectInput, 10) : 0,
+            projectNumber: validateNumericInput(projectInput, 'project number'),
             repoName: githubExports.context.repo.repo,
             repoOwner: githubExports.context.repo.owner,
             repository: `${githubExports.context.repo.owner}/${githubExports.context.repo.repo}`,

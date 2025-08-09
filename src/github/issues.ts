@@ -16,6 +16,29 @@ type GetIssueDetailsQueryIssueComments = NonNullable<
 >
 
 /**
+ * Sanitizes markdown content to prevent injection attacks while preserving formatting
+ * @param content Raw markdown content
+ * @returns Sanitized content safe for GitHub comments
+ */
+function sanitizeMarkdownContent(content: string): string {
+  // Remove any potentially dangerous HTML/script tags
+  const htmlTagPattern = /<script[^>]*>.*?<\/script>/gi
+  const dangerousHtml = /<(?:iframe|object|embed|form|input|meta|link)[^>]*>/gi
+  
+  let sanitized = content
+    .replace(htmlTagPattern, '[REMOVED: Script tag]')
+    .replace(dangerousHtml, '[REMOVED: Potentially dangerous HTML]')
+  
+  // Limit length to prevent abuse
+  const MAX_COMMENT_LENGTH = 65536 // GitHub's comment limit
+  if (sanitized.length > MAX_COMMENT_LENGTH) {
+    sanitized = sanitized.substring(0, MAX_COMMENT_LENGTH - 100) + '\n\n[Content truncated for safety]'
+  }
+  
+  return sanitized
+}
+
+/**
  * Comments on an issue with the provided summary.
  *
  * @param summaryFile Path to the file containing the summary text.
@@ -30,11 +53,11 @@ export async function commentOnIssue(
 ): Promise<void> {
   const summary = await fs.promises.readFile(path.join(summaryFile), 'utf8')
 
-  const commentBody = `
+  const commentBody = sanitizeMarkdownContent(`
 ${summary}
 
 ${footer ?? ''}
-`.trim()
+`.trim())
 
   // If the comment body is empty, do not post an empty comment
   if (commentBody.length === 0) {
