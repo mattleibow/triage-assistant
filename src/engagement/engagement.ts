@@ -8,6 +8,7 @@ import { getIssueDetails } from '../github/issues.js'
 import { getProjectDetails, updateProjectWithScores } from '../github/projects.js'
 import { calculateScore, calculateHistoricalScore } from '../github/issue-details.js'
 import { IssueDetails } from '../github/types.js'
+import { loadTriageConfig, EngagementWeights } from './engagement-config.js'
 
 /**
  * Run the complete engagement scoring workflow
@@ -17,6 +18,9 @@ import { IssueDetails } from '../github/types.js'
 export async function runEngagementWorkflow(config: EverythingConfig): Promise<string> {
   core.info('Running in engagement scoring mode')
 
+  // Load engagement weights from configuration file
+  const weights = await loadTriageConfig(process.cwd())
+
   const graphql = new GraphQLClient('https://api.github.com/graphql', {
     headers: {
       Authorization: `Bearer ${config.token}`
@@ -24,7 +28,7 @@ export async function runEngagementWorkflow(config: EverythingConfig): Promise<s
   })
   const sdk = getSdk(graphql)
 
-  const engagementResponse = await calculateEngagementScores(config, sdk)
+  const engagementResponse = await calculateEngagementScores(config, sdk, weights)
   core.info(`Calculated engagement scores for ${engagementResponse.totalItems} items`)
 
   // Update project with scores if requested
@@ -43,16 +47,18 @@ export async function runEngagementWorkflow(config: EverythingConfig): Promise<s
  * Calculate engagement scores for issues in a project or single issue
  * @param config - Configuration object containing project and authentication details
  * @param graphql - GraphQL SDK instance for making API calls
+ * @param weights - Engagement scoring weights configuration
  * @returns Promise<EngagementResponse> - The engagement response with scores
  */
 export async function calculateEngagementScores(
   config: EngagementConfig,
-  graphql: GraphQLSdk
+  graphql: GraphQLSdk,
+  weights: EngagementWeights
 ): Promise<EngagementResponse> {
   if (config.projectNumber && config.projectNumber > 0) {
-    return await calculateProjectEngagementScores(config, graphql)
+    return await calculateProjectEngagementScores(config, graphql, weights)
   } else if (config.issueNumber && config.issueNumber > 0) {
-    return await calculateIssueEngagementScores(config, graphql)
+    return await calculateIssueEngagementScores(config, graphql, weights)
   } else {
     throw new Error('Either project number or issue number must be specified')
   }
@@ -63,12 +69,13 @@ export async function calculateEngagementScores(
  */
 async function calculateIssueEngagementScores(
   config: EngagementConfig,
-  graphql: GraphQLSdk
+  graphql: GraphQLSdk,
+  weights: EngagementWeights
 ): Promise<EngagementResponse> {
   core.info(`Calculating engagement score for issue #${config.issueNumber}`)
 
   const issueDetails = await getIssueDetails(graphql, config.repoOwner, config.repoName, config.issueNumber!)
-  const item = await createEngagementItem(issueDetails)
+  const item = await createEngagementItem(issueDetails, undefined, weights)
 
   return {
     items: [item],
@@ -81,7 +88,8 @@ async function calculateIssueEngagementScores(
  */
 async function calculateProjectEngagementScores(
   config: EngagementConfig,
-  graphql: GraphQLSdk
+  graphql: GraphQLSdk,
+  weights: EngagementWeights
 ): Promise<EngagementResponse> {
   core.info(`Calculating engagement scores for project #${config.projectNumber}`)
 
@@ -106,7 +114,7 @@ async function calculateProjectEngagementScores(
       projectItem.content.repo,
       projectItem.content.number
     )
-    const item = await createEngagementItem(issueDetails, projectItem.id)
+    const item = await createEngagementItem(issueDetails, projectItem.id, weights)
     items.push(item)
   }
 
@@ -126,10 +134,11 @@ async function calculateProjectEngagementScores(
  */
 export async function createEngagementItem(
   issueDetails: IssueDetails,
-  projectItemId?: string
+  projectItemId: string | undefined,
+  weights: EngagementWeights
 ): Promise<EngagementItem> {
-  const score = calculateScore(issueDetails)
-  const previousScore = await calculateHistoricalScore(issueDetails)
+  const score = calculateScore(issueDetails, weights)
+  const previousScore = await calculateHistoricalScore(issueDetails, weights)
 
   const item: EngagementItem = {
     ...(projectItemId && { id: projectItemId }),

@@ -9,11 +9,22 @@ import {
 } from '../../src/github/issue-details.js'
 import { createEngagementItem } from '../../src/engagement/engagement.js'
 import { IssueDetails } from '../../src/github/types.js'
+import { EngagementWeights } from '../../src/engagement/engagement-config.js'
 
 describe('IssueDetails', () => {
   // Mock date for consistent testing
   const MOCK_NOW = new Date('2023-01-10T12:00:00Z')
   const MOCK_SEVEN_DAYS_AGO = new Date('2023-01-03T12:00:00Z')
+
+  // Default weights for testing
+  const defaultWeights: EngagementWeights = {
+    comments: 3,
+    reactions: 1,
+    contributors: 2,
+    lastActivity: 1,
+    issueAge: 1,
+    linkedPullRequests: 2
+  }
 
   const mockIssueDetails: IssueDetails = {
     id: '1',
@@ -287,7 +298,7 @@ describe('IssueDetails', () => {
 
   describe('calculateScore', () => {
     it('should calculate score based on weighted algorithm', () => {
-      const result = calculateScore(mockIssueDetails)
+      const result = calculateScore(mockIssueDetails, defaultWeights)
 
       // Expected calculation:
       // Comments: 3 * 2 = 6 (2 comments)
@@ -308,7 +319,7 @@ describe('IssueDetails', () => {
         updatedAt: new Date('2023-01-10T12:00:00Z')
       }
 
-      const result = calculateScore(sameTimingIssue)
+      const result = calculateScore(sameTimingIssue, defaultWeights)
 
       // Should use Math.max(1, ...) for both time factors
       expect(result).toBeGreaterThan(0)
@@ -320,7 +331,7 @@ describe('IssueDetails', () => {
         comments: []
       }
 
-      const result = calculateScore(noCommentsIssue)
+      const result = calculateScore(noCommentsIssue, defaultWeights)
 
       expect(result).toBeGreaterThan(0) // Should still have reactions and contributors
     })
@@ -338,7 +349,7 @@ describe('IssueDetails', () => {
         ]
       }
 
-      const result = calculateScore(noReactionsIssue)
+      const result = calculateScore(noReactionsIssue, defaultWeights)
 
       expect(result).toBeGreaterThan(0) // Should still have comments and contributors
     })
@@ -350,7 +361,7 @@ describe('IssueDetails', () => {
         comments: []
       }
 
-      const result = calculateScore(singleContributorIssue)
+      const result = calculateScore(singleContributorIssue, defaultWeights)
 
       expect(result).toBeGreaterThan(0)
     })
@@ -362,18 +373,77 @@ describe('IssueDetails', () => {
         comments: null as any
       }
 
-      const result = calculateScore(issueWithNullComments)
+      const result = calculateScore(issueWithNullComments, defaultWeights)
 
       expect(result).toBeGreaterThan(0)
+    })
+
+    it('should use custom weights when provided', () => {
+      const customWeights: EngagementWeights = {
+        comments: 10,
+        reactions: 5,
+        contributors: 1,
+        lastActivity: 0,
+        issueAge: 0,
+        linkedPullRequests: 0
+      }
+
+      const result = calculateScore(mockIssueDetails, customWeights)
+
+      // Expected calculation with custom weights:
+      // Comments: 10 * 2 = 20 (2 comments)
+      // Reactions: 5 * (2 + 3) = 25 (issue reactions + comment reactions)
+      // Contributors: 1 * 5 = 5 (5 unique contributors)
+      // Last Activity: 0 * (1/2) = 0
+      // Issue Age: 0 * (1/9) = 0
+      // Linked PRs: 0 * 0 = 0
+      // Total: 20 + 25 + 5 + 0 + 0 + 0 = 50
+
+      expect(result).toBe(50)
+    })
+
+    it('should use different weights for different calculations', () => {
+      const customWeights: EngagementWeights = {
+        comments: 5,
+        reactions: 3,
+        contributors: 2,
+        lastActivity: 1,
+        issueAge: 1,
+        linkedPullRequests: 2
+      }
+
+      const result = calculateScore(mockIssueDetails, customWeights)
+
+      // Should use custom weights for comments and reactions
+      expect(result).toBeGreaterThan(0)
+
+      // Let's verify it's different from the default calculation
+      const defaultResult = calculateScore(mockIssueDetails, defaultWeights)
+      expect(result).not.toBe(defaultResult)
+    })
+
+    it('should handle zero custom weights', () => {
+      const zeroWeights: EngagementWeights = {
+        comments: 0,
+        reactions: 0,
+        contributors: 0,
+        lastActivity: 0,
+        issueAge: 0,
+        linkedPullRequests: 0
+      }
+
+      const result = calculateScore(mockIssueDetails, zeroWeights)
+
+      expect(result).toBe(0)
     })
   })
 
   describe('calculateHistoricalScore', () => {
     it('should calculate score based on historical data', async () => {
-      const result = await calculateHistoricalScore(mockIssueDetails)
+      const result = await calculateHistoricalScore(mockIssueDetails, defaultWeights)
 
       // Should be lower than current score since historic data has less activity
-      const currentScore = calculateScore(mockIssueDetails)
+      const currentScore = calculateScore(mockIssueDetails, defaultWeights)
       expect(result).toBeLessThan(currentScore)
     })
 
@@ -383,7 +453,7 @@ describe('IssueDetails', () => {
         createdAt: new Date('2023-01-09T12:00:00Z') // 1 day ago
       }
 
-      const result = await calculateHistoricalScore(recentIssue)
+      const result = await calculateHistoricalScore(recentIssue, defaultWeights)
 
       expect(result).toBeGreaterThan(0) // Should still have score from contributors
     })
@@ -400,15 +470,32 @@ describe('IssueDetails', () => {
         ]
       }
 
-      const result = await calculateHistoricalScore(noHistoricActivityIssue)
+      const result = await calculateHistoricalScore(noHistoricActivityIssue, defaultWeights)
 
       expect(result).toBeGreaterThan(0) // Should still have basic score from contributors
+    })
+
+    it('should accept custom weights for historical scoring', async () => {
+      const customWeights: EngagementWeights = {
+        comments: 1,
+        reactions: 1,
+        contributors: 1,
+        lastActivity: 0,
+        issueAge: 0,
+        linkedPullRequests: 0
+      }
+
+      const result = await calculateHistoricalScore(mockIssueDetails, customWeights)
+      const defaultResult = await calculateHistoricalScore(mockIssueDetails, defaultWeights)
+
+      expect(result).not.toBe(defaultResult)
+      expect(result).toBeGreaterThan(0)
     })
   })
 
   describe('createEngagementItem', () => {
     it('should create engagement item for single issue', async () => {
-      const result = await createEngagementItem(mockIssueDetails)
+      const result = await createEngagementItem(mockIssueDetails, undefined, defaultWeights)
 
       expect(result).toEqual({
         issue: {
@@ -426,7 +513,7 @@ describe('IssueDetails', () => {
     })
 
     it('should create engagement item with project ID', async () => {
-      const result = await createEngagementItem(mockIssueDetails, 'project-item-123')
+      const result = await createEngagementItem(mockIssueDetails, 'project-item-123', defaultWeights)
 
       expect(result).toEqual({
         id: 'project-item-123',
@@ -471,7 +558,7 @@ describe('IssueDetails', () => {
         ]
       }
 
-      const result = await createEngagementItem(testIssue)
+      const result = await createEngagementItem(testIssue, undefined, defaultWeights)
 
       expect(result.engagement.classification).toBe('Hot')
     })
@@ -497,10 +584,10 @@ describe('IssueDetails', () => {
         ]
       }
 
-      const currentScore = calculateScore(testIssue)
-      const previousScore = await calculateHistoricalScore(testIssue)
+      const currentScore = calculateScore(testIssue, defaultWeights)
+      const previousScore = await calculateHistoricalScore(testIssue, defaultWeights)
 
-      const result = await createEngagementItem(testIssue)
+      const result = await createEngagementItem(testIssue, undefined, defaultWeights)
 
       // Verify that classification logic works correctly
       const expectedClassification = currentScore > previousScore ? 'Hot' : undefined
@@ -525,7 +612,7 @@ describe('IssueDetails', () => {
         assignees: []
       }
 
-      const result = await createEngagementItem(minimalIssue)
+      const result = await createEngagementItem(minimalIssue, undefined, defaultWeights)
 
       expect(result.issue.number).toBe(1)
       expect(result.engagement.score).toBeGreaterThan(0)

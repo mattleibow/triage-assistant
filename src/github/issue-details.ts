@@ -1,4 +1,5 @@
 import { IssueDetails } from './types.js'
+import { EngagementWeights } from '../engagement/engagement-config.js'
 
 /**
  * Get historic issue details by filtering activity to 7 days ago
@@ -90,8 +91,10 @@ export function getDaysSinceCreation(issue: IssueDetails): number {
 
 /**
  * Calculate engagement score for an issue based on the engagement algorithm
+ * @param issue - The issue details to score
+ * @param weights - Custom weights for scoring components
  */
-export function calculateScore(issue: IssueDetails): number {
+export function calculateScore(issue: IssueDetails, weights: EngagementWeights): number {
   // Components:
   // - Number of Comments       => Indicates discussion and interest
   // - Number of Reactions      => Shows emotional engagement
@@ -111,29 +114,23 @@ export function calculateScore(issue: IssueDetails): number {
   const issueAge = Math.max(1, getDaysSinceCreation(issue))
   const linkedPullRequests = 0 // Not implemented yet
 
-  // Weights
-  const CommentsWeight = 3
-  const ReactionsWeight = 1
-  const ContributorsWeight = 2
-  const LastActivityWeight = 1
-  const IssueAgeWeight = 1
-  const LinkedPullRequestsWeight = 2
-
   const score =
-    CommentsWeight * totalComments +
-    ReactionsWeight * totalReactions +
-    ContributorsWeight * contributors +
-    LastActivityWeight * (1 / lastActivity) +
-    IssueAgeWeight * (1 / issueAge) +
-    LinkedPullRequestsWeight * linkedPullRequests
+    weights.comments * totalComments +
+    weights.reactions * totalReactions +
+    weights.contributors * contributors +
+    weights.lastActivity * (1 / lastActivity) +
+    weights.issueAge * (1 / issueAge) +
+    weights.linkedPullRequests * linkedPullRequests
 
   return Math.round(score)
 }
 
 /**
  * Calculate previous score (7 days ago) based on historical issue details
+ * @param issue - The issue details to score
+ * @param weights - Custom weights for scoring components
  */
-export async function calculateHistoricalScore(issue: IssueDetails): Promise<number> {
+export async function calculateHistoricalScore(issue: IssueDetails, weights: EngagementWeights): Promise<number> {
   const historicIssue = getHistoricalIssueDetails(issue)
-  return calculateScore(historicIssue)
+  return calculateScore(historicIssue, weights)
 }

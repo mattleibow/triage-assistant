@@ -9,9 +9,9 @@ on:
         required: false
         type: boolean
         default: false
-  # # When someone opens a new pull request
-  # pull_request:
-  #   types: [opened, reopened, synchronize]
+  # When someone opens a new pull request
+  pull_request:
+    types: [opened, reopened, synchronize]
   # Run every 6 hours
   schedule:
     - cron: '0 */6 * * *'
@@ -32,4 +32,4 @@ jobs:
           project: 8
           project-column: 'Engagement Score'
           apply-scores: true
-          dry-run: ${{ inputs.dry_run || false }}
+          dry-run: ${{ inputs.dry_run || github.event_name == 'pull_request' }}
