@@ -354,6 +354,144 @@ describe('Main Multi-Mode Functionality', () => {
     })
   })
 
+  describe('Sub-Action Detection', () => {
+    it('should detect engagement-score sub-action from GITHUB_ACTION environment', async () => {
+      // Mock environment variables
+      const originalGithubAction = process.env.GITHUB_ACTION
+      process.env.GITHUB_ACTION = 'engagement-score'
+
+      core.getInput.mockImplementation((name: string) => {
+        switch (name) {
+          case 'project':
+            return '1'
+          case 'token':
+            return 'test-token'
+          default:
+            return ''
+        }
+      })
+
+      await run()
+
+      expect(mockRunEngagementWorkflow).toHaveBeenCalledWith(
+        expect.objectContaining({
+          template: 'engagement-score'
+        })
+      )
+      expect(mockRunTriageWorkflow).not.toHaveBeenCalled()
+
+      // Restore original environment
+      if (originalGithubAction !== undefined) {
+        process.env.GITHUB_ACTION = originalGithubAction
+      } else {
+        delete process.env.GITHUB_ACTION
+      }
+    })
+
+    it('should detect apply-labels sub-action from GITHUB_ACTION environment', async () => {
+      // Mock environment variables
+      const originalGithubAction = process.env.GITHUB_ACTION
+      process.env.GITHUB_ACTION = 'apply-labels'
+
+      core.getInput.mockImplementation((name: string) => {
+        switch (name) {
+          case 'issue':
+            return '123'
+          case 'token':
+            return 'test-token'
+          default:
+            return ''
+        }
+      })
+
+      await run()
+
+      expect(mockRunTriageWorkflow).toHaveBeenCalledWith(
+        expect.objectContaining({
+          template: 'issue-triage'
+        })
+      )
+      expect(mockRunEngagementWorkflow).not.toHaveBeenCalled()
+
+      // Restore original environment
+      if (originalGithubAction !== undefined) {
+        process.env.GITHUB_ACTION = originalGithubAction
+      } else {
+        delete process.env.GITHUB_ACTION
+      }
+    })
+
+    it('should detect engagement-score sub-action from GITHUB_ACTION_PATH environment', async () => {
+      // Mock environment variables
+      const originalGithubActionPath = process.env.GITHUB_ACTION_PATH
+      process.env.GITHUB_ACTION_PATH = '/some/path/engagement-score/action.yml'
+
+      core.getInput.mockImplementation((name: string) => {
+        switch (name) {
+          case 'issue':
+            return '123'
+          case 'token':
+            return 'test-token'
+          default:
+            return ''
+        }
+      })
+
+      await run()
+
+      expect(mockRunEngagementWorkflow).toHaveBeenCalledWith(
+        expect.objectContaining({
+          template: 'engagement-score'
+        })
+      )
+      expect(mockRunTriageWorkflow).not.toHaveBeenCalled()
+
+      // Restore original environment
+      if (originalGithubActionPath !== undefined) {
+        process.env.GITHUB_ACTION_PATH = originalGithubActionPath
+      } else {
+        delete process.env.GITHUB_ACTION_PATH
+      }
+    })
+
+    it('should fall back to template-based detection when no sub-action is detected', async () => {
+      // Ensure environment variables don't interfere
+      const originalGithubAction = process.env.GITHUB_ACTION
+      const originalGithubActionPath = process.env.GITHUB_ACTION_PATH
+      delete process.env.GITHUB_ACTION
+      delete process.env.GITHUB_ACTION_PATH
+
+      core.getInput.mockImplementation((name: string) => {
+        switch (name) {
+          case 'template':
+            return 'engagement-score'
+          case 'project':
+            return '1'
+          case 'token':
+            return 'test-token'
+          default:
+            return ''
+        }
+      })
+
+      await run()
+
+      expect(mockRunEngagementWorkflow).toHaveBeenCalledWith(
+        expect.objectContaining({
+          template: 'engagement-score'
+        })
+      )
+
+      // Restore original environment
+      if (originalGithubAction !== undefined) {
+        process.env.GITHUB_ACTION = originalGithubAction
+      }
+      if (originalGithubActionPath !== undefined) {
+        process.env.GITHUB_ACTION_PATH = originalGithubActionPath
+      }
+    })
+  })
+
   describe('Error Handling', () => {
     it('should handle errors from engagement workflow', async () => {
       core.getInput.mockImplementation((name: string) => {

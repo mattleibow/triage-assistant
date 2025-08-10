@@ -51086,6 +51086,23 @@ var TriageMode;
     TriageMode["EngagementScore"] = "engagement-score";
 })(TriageMode || (TriageMode = {}));
 /**
+ * Detects which sub-action is being used based on the action context
+ */
+function detectSubAction() {
+    // Check if we're running from a sub-action by examining the action name or path
+    const githubAction = process.env.GITHUB_ACTION || '';
+    const githubActionPath = process.env.GITHUB_ACTION_PATH || '';
+    // Check if running from engagement-score sub-action
+    if (githubAction.includes('engagement-score') || githubActionPath.includes('engagement-score')) {
+        return TriageMode.EngagementScore;
+    }
+    // Check if running from apply-labels sub-action
+    if (githubAction.includes('apply-labels') || githubActionPath.includes('apply-labels')) {
+        return TriageMode.IssueTriage;
+    }
+    return null;
+}
+/**
  * The main function for the action.
  *
  * @returns Resolves when the action is complete.
@@ -51101,8 +51118,19 @@ async function run() {
         const projectInput = coreExports.getInput('project');
         const issueInput = coreExports.getInput('issue');
         const issueContext = githubExports.context.issue?.number || 0;
-        // Determine triage mode
-        const triageMode = template === TriageMode.EngagementScore ? TriageMode.EngagementScore : TriageMode.IssueTriage;
+        // Detect sub-action or determine triage mode from template
+        const subAction = detectSubAction();
+        let triageMode;
+        if (subAction) {
+            // Sub-action detected, use that mode
+            triageMode = subAction;
+            coreExports.info(`Detected sub-action mode: ${triageMode}`);
+        }
+        else {
+            // Legacy mode detection based on template
+            triageMode = template === TriageMode.EngagementScore ? TriageMode.EngagementScore : TriageMode.IssueTriage;
+            coreExports.info(`Using template-based mode: ${triageMode}`);
+        }
         // Validate inputs based on mode
         if (triageMode === TriageMode.EngagementScore) {
             if (!projectInput && !issueInput) {
@@ -51140,7 +51168,7 @@ async function run() {
             repoOwner: githubExports.context.repo.owner,
             repository: `${githubExports.context.repo.owner}/${githubExports.context.repo.repo}`,
             tempDir: process.env.RUNNER_TEMP || require$$0.tmpdir(),
-            template: template,
+            template: subAction ? subAction : template,
             token: token
         };
         // Initial validation checks

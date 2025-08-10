@@ -14,6 +14,27 @@ enum TriageMode {
 }
 
 /**
+ * Detects which sub-action is being used based on the action context
+ */
+function detectSubAction(): TriageMode | null {
+  // Check if we're running from a sub-action by examining the action name or path
+  const githubAction = process.env.GITHUB_ACTION || ''
+  const githubActionPath = process.env.GITHUB_ACTION_PATH || ''
+  
+  // Check if running from engagement-score sub-action
+  if (githubAction.includes('engagement-score') || githubActionPath.includes('engagement-score')) {
+    return TriageMode.EngagementScore
+  }
+  
+  // Check if running from apply-labels sub-action
+  if (githubAction.includes('apply-labels') || githubActionPath.includes('apply-labels')) {
+    return TriageMode.IssueTriage
+  }
+  
+  return null
+}
+
+/**
  * The main function for the action.
  *
  * @returns Resolves when the action is complete.
@@ -32,8 +53,19 @@ export async function run(): Promise<void> {
     const issueInput = core.getInput('issue')
     const issueContext = github.context.issue?.number || 0
 
-    // Determine triage mode
-    const triageMode = template === TriageMode.EngagementScore ? TriageMode.EngagementScore : TriageMode.IssueTriage
+    // Detect sub-action or determine triage mode from template
+    const subAction = detectSubAction()
+    let triageMode: TriageMode
+    
+    if (subAction) {
+      // Sub-action detected, use that mode
+      triageMode = subAction
+      core.info(`Detected sub-action mode: ${triageMode}`)
+    } else {
+      // Legacy mode detection based on template
+      triageMode = template === TriageMode.EngagementScore ? TriageMode.EngagementScore : TriageMode.IssueTriage
+      core.info(`Using template-based mode: ${triageMode}`)
+    }
 
     // Validate inputs based on mode
     if (triageMode === TriageMode.EngagementScore) {
@@ -74,7 +106,7 @@ export async function run(): Promise<void> {
       repoOwner: github.context.repo.owner,
       repository: `${github.context.repo.owner}/${github.context.repo.repo}`,
       tempDir: process.env.RUNNER_TEMP || os.tmpdir(),
-      template: template,
+      template: subAction ? subAction : template,
       token: token
     }
 
