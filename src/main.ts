@@ -20,17 +20,17 @@ function detectSubAction(): TriageMode | null {
   // Check if we're running from a sub-action by examining the action name or path
   const githubAction = process.env.GITHUB_ACTION || ''
   const githubActionPath = process.env.GITHUB_ACTION_PATH || ''
-  
+
   // Check if running from engagement-score sub-action
   if (githubAction.includes('engagement-score') || githubActionPath.includes('engagement-score')) {
     return TriageMode.EngagementScore
   }
-  
+
   // Check if running from apply-labels sub-action
   if (githubAction.includes('apply-labels') || githubActionPath.includes('apply-labels')) {
     return TriageMode.IssueTriage
   }
-  
+
   return null
 }
 
@@ -56,7 +56,7 @@ export async function run(): Promise<void> {
     // Detect sub-action or determine triage mode from template
     const subAction = detectSubAction()
     let triageMode: TriageMode
-    
+
     if (subAction) {
       // Sub-action detected, use that mode
       triageMode = subAction
