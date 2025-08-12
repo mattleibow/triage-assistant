@@ -65,7 +65,15 @@ export async function loadTriageConfig(workspacePath: string = '.'): Promise<Eng
     try {
       core.info(`Attempting to load triage configuration from ${configPath}`)
       const fileContent = await fs.promises.readFile(configPath, 'utf8')
-      const parsedConfig = yaml.load(fileContent) as TriageConfig
+      
+      // Use safe YAML loading to prevent deserialization attacks
+      const parsedConfig = yaml.load(fileContent, {
+        schema: yaml.CORE_SCHEMA, // Use core schema instead of default (more restrictive)
+        json: false,              // Disable JSON parsing features
+        onWarning: (warning) => {
+          core.warning(`YAML parsing warning in ${configPath}: ${warning.message}`)
+        }
+      }) as TriageConfig
 
       if (parsedConfig && typeof parsedConfig === 'object') {
         config = parsedConfig

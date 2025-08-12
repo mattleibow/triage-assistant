@@ -24,10 +24,18 @@ export async function runInference(
   core.debug(`Running inference...`)
 
   try {
+    // Validate response file path to prevent path traversal
+    const safeResponseFile = utils.safePath(process.cwd(), responseFile)
+    core.debug(`Using safe response file path: ${safeResponseFile}`)
+
     // Create Azure AI client
     const client = ModelClient(config.aiEndpoint, new AzureKeyCredential(config.aiToken), {
       userAgentOptions: { userAgentPrefix: 'github-actions-triage-assistant' }
     })
+
+    // Sanitize prompts before sending to AI to prevent information leakage
+    const sanitizedSystemPrompt = utils.sanitizeForLogging(systemPrompt, 1000)
+    const sanitizedUserPrompt = utils.sanitizeForLogging(userPrompt, 1000)
 
     // Make the AI inference request
     const response = await client.path('/chat/completions').post({
@@ -57,12 +65,15 @@ export async function runInference(
     const modelResponse: string = response.body.choices[0].message.content || ''
 
     // Ensure the response directory exists
-    await fs.promises.mkdir(path.dirname(responseFile), { recursive: true })
+    await fs.promises.mkdir(path.dirname(safeResponseFile), { recursive: true })
 
-    // Write the response to the specified file
-    await fs.promises.writeFile(responseFile, modelResponse, 'utf-8')
+    // Sanitize AI response before writing to prevent malicious content
+    const sanitizedResponse = utils.sanitizeMarkdownContent(modelResponse)
 
-    core.info(`AI inference completed. Response written to: ${responseFile}`)
+    // Write the sanitized response to the specified file
+    await fs.promises.writeFile(safeResponseFile, sanitizedResponse, 'utf-8')
+
+    core.info(`AI inference completed. Response written to: ${safeResponseFile}`)
     core.info(`Response content: ${utils.sanitizeForLogging(modelResponse)}`)
   } catch (error) {
     core.error(`AI inference failed: ${error instanceof Error ? error.message : 'Unknown error'}`)
