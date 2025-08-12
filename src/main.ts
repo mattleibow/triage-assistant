@@ -10,7 +10,7 @@ import { EverythingConfig } from './config.js'
  * Validates template name against allowed values
  * @param template Template name to validate
  */
-function validateTemplate(template: string): void {
+export function validateTemplate(template: string): void {
   const allowedTemplates = ['multi-label', 'single-label', 'regression', 'missing-info', 'engagement-score', '']
   if (template && !allowedTemplates.includes(template)) {
     throw new Error(`Invalid template: ${template}. Allowed values: ${allowedTemplates.filter((t) => t).join(', ')}`)

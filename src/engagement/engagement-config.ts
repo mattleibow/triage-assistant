@@ -54,8 +54,8 @@ export async function loadTriageConfig(workspacePath: string = '.'): Promise<Eng
   }
 
   const configPaths = [
-    utils.safeConfigPath(normalizedWorkspace, '.triagerc.yml'),
-    utils.safeConfigPath(normalizedWorkspace, '.github/.triagerc.yml')
+    utils.safePath(normalizedWorkspace, '.triagerc.yml'),
+    utils.safePath(normalizedWorkspace, '.github/.triagerc.yml')
   ]
 
   let config: TriageConfig = {}

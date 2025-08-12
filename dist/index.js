@@ -31253,6 +31253,107 @@ function requireGithub () {
 var githubExports = requireGithub();
 
 /**
+ * Sanitizes content for safe logging by truncating and removing potential sensitive data
+ * @param content Content to sanitize
+ * @param maxLength Maximum length for logged content
+ * @returns Sanitized content safe for logging
+ */
+function sanitizeForLogging(content, maxLength = 200) {
+    // Remove potential tokens, keys, secrets (basic patterns)
+    const sensitivePatterns = [
+        /(?:token|key|secret|password)[\s:=]+[a-zA-Z0-9+/=_-]{20,}/gi,
+        /ghp_[a-zA-Z0-9]{36}/g, // GitHub personal access tokens
+        /github_pat_[a-zA-Z0-9_]{82}/g // GitHub fine-grained tokens
+    ];
+    let sanitized = content;
+    sensitivePatterns.forEach((pattern) => {
+        sanitized = sanitized.replace(pattern, '[REDACTED]');
+    });
+    // Truncate for logging
+    if (sanitized.length > maxLength) {
+        sanitized = sanitized.substring(0, maxLength) + '...[truncated]';
+    }
+    return sanitized;
+}
+/**
+ * Safely resolves and validates a path to prevent path traversal attacks
+ * @param basePath The base workspace path
+ * @param relativePath The relative path to resolve
+ * @returns The resolved and validated absolute path
+ */
+function safePath(basePath, relativePath) {
+    const resolved = path__default.resolve(basePath, relativePath);
+    const normalizedBase = path__default.resolve(basePath);
+    // Ensure the resolved path is within the base directory
+    // Use path.relative to check if we need to traverse up from base to reach resolved
+    const relative = path__default.relative(normalizedBase, resolved);
+    if (relative.startsWith('..') || path__default.isAbsolute(relative)) {
+        throw new Error(`Invalid path: ${relativePath} resolves outside base directory`);
+    }
+    return resolved;
+}
+/**
+ * Sanitizes markdown content to prevent injection attacks while preserving formatting
+ * @param content Raw markdown content
+ * @returns Sanitized content safe for GitHub comments
+ */
+function sanitizeMarkdownContent(content) {
+    // Remove any potentially dangerous HTML/script tags
+    const htmlTagPattern = /<script[^>]*>.*?<\/script>/gi;
+    const dangerousHtml = /<(?:iframe|object|embed|form|input|meta|link)[^>]*>/gi;
+    let sanitized = content
+        .replace(htmlTagPattern, '[REMOVED: Script tag]')
+        .replace(dangerousHtml, '[REMOVED: Potentially dangerous HTML]');
+    // Limit length to prevent abuse
+    const MAX_COMMENT_LENGTH = 65536; // GitHub's comment limit
+    if (sanitized.length > MAX_COMMENT_LENGTH) {
+        sanitized = sanitized.substring(0, MAX_COMMENT_LENGTH - 100) + '\n\n[Content truncated for safety]';
+    }
+    return sanitized;
+}
+/**
+ * Validates and sanitizes numeric input
+ * @param input Raw string input
+ * @param fieldName Field name for error messages
+ * @returns Validated number or 0 if invalid
+ */
+function validateNumericInput(input, fieldName) {
+    if (!input.trim())
+        return 0;
+    const num = parseInt(input, 10);
+    if (isNaN(num) || num < 0) {
+        coreExports.warning(`Invalid ${fieldName}: ${input}. Using 0 as fallback.`);
+        return 0;
+    }
+    return num;
+}
+/**
+ * Validates repository identifier format
+ * @param owner Repository owner
+ * @param repo Repository name
+ */
+function validateRepositoryId(owner, repo) {
+    const validPattern = /^[a-zA-Z0-9._-]+$/;
+    if (!owner || !repo || !validPattern.test(owner) || !validPattern.test(repo)) {
+        throw new Error(`Invalid repository identifier: ${owner}/${repo}`);
+    }
+}
+/**
+ * Substitutes template variables in a string with their corresponding values from a replacements map.
+ * @param replacements Map of variable names to their replacement values
+ * @param line The input string with template variables
+ * @returns The input string with all template variables replaced
+ */
+function substituteTemplateVariables(replacements, line) {
+    for (const [key, value] of Object.entries(replacements)) {
+        // Escape special regex characters in the key to prevent ReDoS
+        const escapedKey = key.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        line = line.replace(new RegExp(`{{${escapedKey}}}`, 'g'), String(value || ''));
+    }
+    return line;
+}
+
+/**
  * Convert array of 16 byte values to UUID string format of the form:
  * XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX
  */
@@ -31664,13 +31765,8 @@ async function generatePrompt(templateContent, outputPath, replacements, config)
     const lines = templateContent.split('\n');
     const outputContent = [];
     for (let line of lines) {
-        // Replace placeholders
         // Replace placeholders safely to prevent ReDoS
-        for (const [key, value] of Object.entries(replacements)) {
-            // Escape special regex characters in the key to prevent ReDoS
-            const escapedKey = key.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-            line = line.replace(new RegExp(`{{${escapedKey}}}`, 'g'), String(value || ''));
-        }
+        line = substituteTemplateVariables(replacements, line);
         // Check for EXEC: command prefix
         const execMatch = line.match(/^EXEC:\s*(.+)$/);
         if (execMatch) {
@@ -38785,29 +38881,6 @@ function getPathFromMapKey(mapKey) {
 }
 
 /**
- * Sanitizes content for safe logging by truncating and removing potential sensitive data
- * @param content Content to sanitize
- * @param maxLength Maximum length for logged content
- * @returns Sanitized content safe for logging
- */
-function sanitizeForLogging(content, maxLength = 200) {
-    // Remove potential tokens, keys, secrets (basic patterns)
-    const sensitivePatterns = [
-        /(?:token|key|secret|password)[\s:=]+[a-zA-Z0-9+/=_-]{20,}/gi,
-        /ghp_[a-zA-Z0-9]{36}/g, // GitHub personal access tokens
-        /github_pat_[a-zA-Z0-9_]{82}/g, // GitHub fine-grained tokens
-    ];
-    let sanitized = content;
-    sensitivePatterns.forEach(pattern => {
-        sanitized = sanitized.replace(pattern, '[REDACTED]');
-    });
-    // Truncate for logging
-    if (sanitized.length > maxLength) {
-        sanitized = sanitized.substring(0, maxLength) + '...[truncated]';
-    }
-    return sanitized;
-}
-/**
  * Runs AI inference to generate a response file.
  *
  * @param systemPrompt The system prompt content.
@@ -38985,25 +39058,6 @@ async function getFileContents(file) {
     return fileContents;
 }
 
-/**
- * Sanitizes markdown content to prevent injection attacks while preserving formatting
- * @param content Raw markdown content
- * @returns Sanitized content safe for GitHub comments
- */
-function sanitizeMarkdownContent(content) {
-    // Remove any potentially dangerous HTML/script tags
-    const htmlTagPattern = /<script[^>]*>.*?<\/script>/gi;
-    const dangerousHtml = /<(?:iframe|object|embed|form|input|meta|link)[^>]*>/gi;
-    let sanitized = content
-        .replace(htmlTagPattern, '[REMOVED: Script tag]')
-        .replace(dangerousHtml, '[REMOVED: Potentially dangerous HTML]');
-    // Limit length to prevent abuse
-    const MAX_COMMENT_LENGTH = 65536; // GitHub's comment limit
-    if (sanitized.length > MAX_COMMENT_LENGTH) {
-        sanitized = sanitized.substring(0, MAX_COMMENT_LENGTH - 100) + '\n\n[Content truncated for safety]';
-    }
-    return sanitized;
-}
 /**
  * Comments on an issue with the provided summary.
  *
@@ -50976,23 +51030,6 @@ const DEFAULT_ENGAGEMENT_WEIGHTS = {
     linkedPullRequests: 2
 };
 /**
- * Safely resolves and validates a config file path to prevent path traversal attacks
- * @param basePath The base workspace path
- * @param relativePath The relative path to the config file
- * @returns The resolved and validated absolute path
- */
-function safeConfigPath(basePath, relativePath) {
-    const resolved = path.resolve(basePath, relativePath);
-    const normalizedBase = path.resolve(basePath);
-    // Ensure the resolved path is within the base directory
-    // Use path.relative to check if we need to traverse up from base to reach resolved
-    const relative = path.relative(normalizedBase, resolved);
-    if (relative.startsWith('..') || path.isAbsolute(relative)) {
-        throw new Error(`Invalid config path: ${relativePath} resolves outside workspace`);
-    }
-    return resolved;
-}
-/**
  * Load triage configuration from .triagerc.yml or .github/.triagerc.yml
  * @param workspacePath - The workspace path to search for config files
  * @returns Combined configuration with defaults applied
@@ -51007,8 +51044,8 @@ async function loadTriageConfig(workspacePath = '.') {
         throw new Error(`Invalid workspace path: ${workspacePath} resolves outside current directory`);
     }
     const configPaths = [
-        safeConfigPath(normalizedWorkspace, '.triagerc.yml'),
-        safeConfigPath(normalizedWorkspace, '.github/.triagerc.yml')
+        safePath(normalizedWorkspace, '.triagerc.yml'),
+        safePath(normalizedWorkspace, '.github/.triagerc.yml')
     ];
     let config = {};
     for (const configPath of configPaths) {
@@ -51151,40 +51188,13 @@ async function createEngagementItem(issueDetails, projectItemId, weights) {
 }
 
 /**
- * Validates and sanitizes numeric input
- * @param input Raw string input
- * @param fieldName Field name for error messages
- * @returns Validated number or 0 if invalid
- */
-function validateNumericInput(input, fieldName) {
-    if (!input.trim())
-        return 0;
-    const num = parseInt(input, 10);
-    if (isNaN(num) || num < 0) {
-        coreExports.warning(`Invalid ${fieldName}: ${input}. Using 0 as fallback.`);
-        return 0;
-    }
-    return num;
-}
-/**
- * Validates repository identifier format
- * @param owner Repository owner
- * @param repo Repository name
- */
-function validateRepositoryId(owner, repo) {
-    const validPattern = /^[a-zA-Z0-9._-]+$/;
-    if (!owner || !repo || !validPattern.test(owner) || !validPattern.test(repo)) {
-        throw new Error(`Invalid repository identifier: ${owner}/${repo}`);
-    }
-}
-/**
  * Validates template name against allowed values
  * @param template Template name to validate
  */
 function validateTemplate(template) {
     const allowedTemplates = ['multi-label', 'single-label', 'regression', 'missing-info', 'engagement-score', ''];
     if (template && !allowedTemplates.includes(template)) {
-        throw new Error(`Invalid template: ${template}. Allowed values: ${allowedTemplates.filter(t => t).join(', ')}`);
+        throw new Error(`Invalid template: ${template}. Allowed values: ${allowedTemplates.filter((t) => t).join(', ')}`);
     }
 }
 /**

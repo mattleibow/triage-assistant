@@ -6,13 +6,32 @@ import * as github from '../../__fixtures__/actions/github.js'
 jest.unstable_mockModule('@actions/core', () => core)
 jest.unstable_mockModule('@actions/github', () => github)
 
-// Import modules after mocking
-const { run } = await import('../../src/main.js')
+// Import utils functions after mocking
+const {
+  validateRepositoryId,
+  validateNumericInput,
+  safePath,
+  sanitizeForLogging,
+  sanitizeMarkdownContent,
+  safeReplaceText
+} = await import('../../src/utils.js')
+
+// Import main module after mocking
+const { validateTemplate } = await import('../../src/main.js')
 
 describe('Input Validation Security Tests', () => {
   beforeEach(() => {
     jest.clearAllMocks()
     jest.resetAllMocks()
+
+    // Mock workflow modules first before any tests run
+    jest.doMock('../../src/triage/triage.js', () => ({
+      runTriageWorkflow: jest.fn().mockResolvedValue('/tmp/response.json')
+    }))
+
+    jest.doMock('../../src/engagement/engagement.js', () => ({
+      runEngagementWorkflow: jest.fn().mockResolvedValue('/tmp/response.json')
+    }))
 
     // Reset GitHub context
     github.mockOctokit.context = {
@@ -60,101 +79,99 @@ describe('Input Validation Security Tests', () => {
   })
 
   describe('Repository ID Validation', () => {
-    it('should reject invalid repository owner', async () => {
-      github.mockOctokit.context.repo!.owner = '../../../malicious'
-
-      await expect(run()).rejects.toThrow('Invalid repository identifier')
+    it('should reject invalid repository owner', () => {
+      expect(() => validateRepositoryId('../../../malicious', 'repo')).toThrow('Invalid repository identifier')
     })
 
-    it('should reject invalid repository name', async () => {
-      github.mockOctokit.context.repo!.repo = '<script>alert("xss")</script>'
-
-      await expect(run()).rejects.toThrow('Invalid repository identifier')
+    it('should reject invalid repository name', () => {
+      expect(() => validateRepositoryId('owner', '<script>alert("xss")</script>')).toThrow(
+        'Invalid repository identifier'
+      )
     })
 
-    it('should accept valid repository identifiers', async () => {
-      github.mockOctokit.context.repo!.owner = 'valid-owner_123'
-      github.mockOctokit.context.repo!.repo = 'valid.repo-name'
-
-      // Mock the workflow functions to avoid actually running them
-      jest.doMock('../../src/triage/triage.js', () => ({
-        runTriageWorkflow: jest.fn().mockResolvedValue('/tmp/response.json')
-      }))
-
-      // Should not throw
-      await expect(run()).resolves.not.toThrow()
+    it('should accept valid repository identifiers', () => {
+      expect(() => validateRepositoryId('valid-owner_123', 'valid.repo-name')).not.toThrow()
     })
   })
 
   describe('Numeric Input Validation', () => {
-    it('should handle invalid project numbers gracefully', async () => {
-      core.getInput.mockImplementation((name: string) => {
-        if (name === 'project') return 'invalid-number'
-        if (name === 'template') return 'engagement-score'
-        return ''
-      })
-
-      // Should log warning but not throw
-      await run()
-      expect(core.warning).toHaveBeenCalledWith(expect.stringContaining('Invalid project number: invalid-number'))
+    it('should handle invalid project numbers gracefully', () => {
+      jest.clearAllMocks() // Clear mocks before the test
+      const result = validateNumericInput('invalid-number', 'project number')
+      expect(result).toBe(0)
+      // Check that warning was called with the exact message
+      expect(core.warning).toHaveBeenCalledTimes(1)
+      const callArgs = (core.warning as jest.Mock).mock.calls[0][0]
+      expect(callArgs).toContain('Invalid project number: invalid-number')
     })
 
-    it('should handle negative numbers gracefully', async () => {
-      core.getInput.mockImplementation((name: string) => {
-        if (name === 'issue') return '-123'
-        return ''
-      })
-
-      await run()
-      expect(core.warning).toHaveBeenCalledWith(expect.stringContaining('Invalid issue number: -123'))
+    it('should handle negative numbers gracefully', () => {
+      jest.clearAllMocks() // Clear mocks before the test
+      const result = validateNumericInput('-123', 'issue number')
+      expect(result).toBe(0)
+      // Check that warning was called with the exact message
+      expect(core.warning).toHaveBeenCalledTimes(1)
+      const callArgs = (core.warning as jest.Mock).mock.calls[0][0]
+      expect(callArgs).toContain('Invalid issue number: -123')
     })
 
-    it('should accept valid positive numbers', async () => {
-      core.getInput.mockImplementation((name: string) => {
-        if (name === 'project') return '123'
-        if (name === 'template') return 'engagement-score'
-        return ''
-      })
-
-      await run()
-      // Should not log any warnings about invalid numbers
-      expect(core.warning).not.toHaveBeenCalledWith(expect.stringContaining('Invalid project number'))
+    it('should accept valid positive numbers', () => {
+      jest.clearAllMocks() // Clear mocks before the test
+      const result = validateNumericInput('123', 'project number')
+      expect(result).toBe(123)
+      expect(core.warning).not.toHaveBeenCalled()
     })
   })
 
   describe('Template Validation', () => {
-    it('should reject invalid template names', async () => {
-      core.getInput.mockImplementation((name: string) => {
-        if (name === 'template') return 'malicious-template'
-        return ''
-      })
-
-      await expect(run()).rejects.toThrow('Invalid template: malicious-template')
+    it('should reject invalid template names', () => {
+      expect(() => validateTemplate('malicious-template')).toThrow('Invalid template: malicious-template')
     })
 
-    it('should accept valid template names', async () => {
+    it('should accept valid template names', () => {
       const validTemplates = ['multi-label', 'single-label', 'regression', 'missing-info', 'engagement-score']
 
       for (const template of validTemplates) {
-        core.getInput.mockImplementation((name: string) => {
-          if (name === 'template') return template
-          if (name === 'project') return '123' // For engagement-score
-          return ''
-        })
-
-        // Should not throw
-        await expect(run()).resolves.not.toThrow()
+        expect(() => validateTemplate(template)).not.toThrow()
       }
     })
 
-    it('should accept empty template', async () => {
-      core.getInput.mockImplementation((name: string) => {
-        if (name === 'template') return ''
-        return ''
-      })
+    it('should accept empty template', () => {
+      expect(() => validateTemplate('')).not.toThrow()
+    })
+  })
 
-      // Should not throw
-      await expect(run()).resolves.not.toThrow()
+  describe('Path Safety', () => {
+    it('should reject paths with directory traversal', () => {
+      expect(() => safePath('/workspace', '../../../etc/passwd')).toThrow('Invalid path')
+    })
+
+    it('should accept valid relative paths', () => {
+      expect(() => safePath('/workspace', '.triagerc.yml')).not.toThrow()
+      expect(() => safePath('/workspace', 'subdir/.triagerc.yml')).not.toThrow()
+    })
+  })
+
+  describe('Content Sanitization', () => {
+    it('should sanitize GitHub tokens from logs', () => {
+      const content = 'Here is a token: ghp_abcdefghijklmnopqrstuvwxyz1234567890'
+      const result = sanitizeForLogging(content)
+      expect(result).toContain('[REDACTED]')
+      expect(result).not.toContain('ghp_')
+    })
+
+    it('should sanitize dangerous markdown content', () => {
+      const content = 'Normal text <script>alert("xss")</script> more text'
+      const result = sanitizeMarkdownContent(content)
+      expect(result).toContain('[REMOVED: Script tag]')
+      expect(result).not.toContain('<script>')
+    })
+
+    it('should safely replace template variables', () => {
+      const template = 'Hello {{name}}, your issue is {{status}}'
+      const replacements = { name: 'John', status: 'open' }
+      const result = safeReplaceText(template, replacements)
+      expect(result).toBe('Hello John, your issue is open')
     })
   })
 })

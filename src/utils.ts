@@ -29,12 +29,12 @@ export function sanitizeForLogging(content: string, maxLength: number = 200): st
 }
 
 /**
- * Safely resolves and validates a config file path to prevent path traversal attacks
+ * Safely resolves and validates a path to prevent path traversal attacks
  * @param basePath The base workspace path
- * @param relativePath The relative path to the config file
+ * @param relativePath The relative path to resolve
  * @returns The resolved and validated absolute path
  */
-export function safeConfigPath(basePath: string, relativePath: string): string {
+export function safePath(basePath: string, relativePath: string): string {
   const resolved = path.resolve(basePath, relativePath)
   const normalizedBase = path.resolve(basePath)
 
@@ -42,7 +42,7 @@ export function safeConfigPath(basePath: string, relativePath: string): string {
   // Use path.relative to check if we need to traverse up from base to reach resolved
   const relative = path.relative(normalizedBase, resolved)
   if (relative.startsWith('..') || path.isAbsolute(relative)) {
-    throw new Error(`Invalid config path: ${relativePath} resolves outside workspace`)
+    throw new Error(`Invalid path: ${relativePath} resolves outside base directory`)
   }
 
   return resolved
@@ -97,6 +97,22 @@ export function validateRepositoryId(owner: string, repo: string): void {
   if (!owner || !repo || !validPattern.test(owner) || !validPattern.test(repo)) {
     throw new Error(`Invalid repository identifier: ${owner}/${repo}`)
   }
+}
+
+/**
+ * Safely replaces template variables to prevent ReDoS attacks
+ * @param text Template text with variables
+ * @param replacements Map of variable names to values
+ * @returns Text with variables replaced
+ */
+export function safeReplaceText(text: string, replacements: Record<string, string | number | undefined>): string {
+  let result = text
+  for (const [key, value] of Object.entries(replacements)) {
+    // Escape special regex characters to prevent ReDoS
+    const escapedKey = key.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+    result = result.replace(new RegExp(`{{${escapedKey}}}`, 'g'), String(value || ''))
+  }
+  return result
 }
 
 /**

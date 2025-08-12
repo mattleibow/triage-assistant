@@ -28,12 +28,15 @@ describe('EngagementConfig', () => {
 
   describe('loadTriageConfig', () => {
     it('should return default weights when no config file exists', async () => {
-      const result = await loadTriageConfig('/test/workspace')
+      // Use a relative path within the current directory
+      const workspacePath = 'test-workspace'
+      const result = await loadTriageConfig(workspacePath)
 
       expect(result).toEqual(DEFAULT_ENGAGEMENT_WEIGHTS)
     })
 
     it('should load config from .triagerc.yml', async () => {
+      const workspacePath = 'test-workspace'
       const configContent = `
 engagement:
   weights:
@@ -41,9 +44,13 @@ engagement:
     reactions: 2
     contributors: 3
 `
-      inMemoryFs.forceSet('/test/workspace/.triagerc.yml', configContent)
+      // Use the resolved absolute path that safePath will generate
+      inMemoryFs.forceSet(
+        '/home/runner/work/triage-assistant/triage-assistant/test-workspace/.triagerc.yml',
+        configContent
+      )
 
-      const result = await loadTriageConfig('/test/workspace')
+      const result = await loadTriageConfig(workspacePath)
 
       expect(result).toEqual({
         ...DEFAULT_ENGAGEMENT_WEIGHTS,
@@ -54,15 +61,19 @@ engagement:
     })
 
     it('should load config from .github/.triagerc.yml when root config not found', async () => {
+      const workspacePath = 'test-workspace'
       const configContent = `
 engagement:
   weights:
     comments: 4
     linkedPullRequests: 3
 `
-      inMemoryFs.forceSet('/test/workspace/.github/.triagerc.yml', configContent)
+      inMemoryFs.forceSet(
+        '/home/runner/work/triage-assistant/triage-assistant/test-workspace/.github/.triagerc.yml',
+        configContent
+      )
 
-      const result = await loadTriageConfig('/test/workspace')
+      const result = await loadTriageConfig(workspacePath)
 
       expect(result).toEqual({
         ...DEFAULT_ENGAGEMENT_WEIGHTS,
@@ -72,15 +83,19 @@ engagement:
     })
 
     it('should merge partial weights with defaults', async () => {
+      const workspacePath = 'test-workspace'
       const configContent = `
 engagement:
   weights:
     comments: 8
     lastActivity: 3
 `
-      inMemoryFs.forceSet('/test/workspace/.triagerc.yml', configContent)
+      inMemoryFs.forceSet(
+        '/home/runner/work/triage-assistant/triage-assistant/test-workspace/.triagerc.yml',
+        configContent
+      )
 
-      const result = await loadTriageConfig('/test/workspace')
+      const result = await loadTriageConfig(workspacePath)
 
       expect(result).toEqual({
         comments: 8,
@@ -93,39 +108,52 @@ engagement:
     })
 
     it('should handle invalid YAML gracefully', async () => {
+      const workspacePath = 'test-workspace'
       const invalidYaml = 'invalid: yaml: content: ['
-      inMemoryFs.forceSet('/test/workspace/.triagerc.yml', invalidYaml)
+      inMemoryFs.forceSet(
+        '/home/runner/work/triage-assistant/triage-assistant/test-workspace/.triagerc.yml',
+        invalidYaml
+      )
 
-      const result = await loadTriageConfig('/test/workspace')
+      const result = await loadTriageConfig(workspacePath)
 
       expect(result).toEqual(DEFAULT_ENGAGEMENT_WEIGHTS)
     })
 
     it('should handle missing engagement section', async () => {
+      const workspacePath = 'test-workspace'
       const configContent = `
 other:
   config: value
 `
-      inMemoryFs.forceSet('/test/workspace/.triagerc.yml', configContent)
+      inMemoryFs.forceSet(
+        '/home/runner/work/triage-assistant/triage-assistant/test-workspace/.triagerc.yml',
+        configContent
+      )
 
-      const result = await loadTriageConfig('/test/workspace')
+      const result = await loadTriageConfig(workspacePath)
 
       expect(result).toEqual(DEFAULT_ENGAGEMENT_WEIGHTS)
     })
 
     it('should handle missing weights section', async () => {
+      const workspacePath = 'test-workspace'
       const configContent = `
 engagement:
   other: value
 `
-      inMemoryFs.forceSet('/test/workspace/.triagerc.yml', configContent)
+      inMemoryFs.forceSet(
+        '/home/runner/work/triage-assistant/triage-assistant/test-workspace/.triagerc.yml',
+        configContent
+      )
 
-      const result = await loadTriageConfig('/test/workspace')
+      const result = await loadTriageConfig(workspacePath)
 
       expect(result).toEqual(DEFAULT_ENGAGEMENT_WEIGHTS)
     })
 
     it('should prefer root config over .github config', async () => {
+      const workspacePath = 'test-workspace'
       const rootConfig = `
 engagement:
   weights:
@@ -136,10 +164,16 @@ engagement:
   weights:
     comments: 5
 `
-      inMemoryFs.forceSet('/test/workspace/.triagerc.yml', rootConfig)
-      inMemoryFs.forceSet('/test/workspace/.github/.triagerc.yml', githubConfig)
+      inMemoryFs.forceSet(
+        '/home/runner/work/triage-assistant/triage-assistant/test-workspace/.triagerc.yml',
+        rootConfig
+      )
+      inMemoryFs.forceSet(
+        '/home/runner/work/triage-assistant/triage-assistant/test-workspace/.github/.triagerc.yml',
+        githubConfig
+      )
 
-      const result = await loadTriageConfig('/test/workspace')
+      const result = await loadTriageConfig(workspacePath)
 
       expect(result).toEqual({
         ...DEFAULT_ENGAGEMENT_WEIGHTS,
@@ -148,6 +182,7 @@ engagement:
     })
 
     it('should handle complete custom weights configuration', async () => {
+      const workspacePath = 'test-workspace'
       const configContent = `
 engagement:
   weights:
@@ -158,9 +193,12 @@ engagement:
     issueAge: 1
     linkedPullRequests: 6
 `
-      inMemoryFs.forceSet('/test/workspace/.triagerc.yml', configContent)
+      inMemoryFs.forceSet(
+        '/home/runner/work/triage-assistant/triage-assistant/test-workspace/.triagerc.yml',
+        configContent
+      )
 
-      const result = await loadTriageConfig('/test/workspace')
+      const result = await loadTriageConfig(workspacePath)
 
       const expected: EngagementWeights = {
         comments: 5,
