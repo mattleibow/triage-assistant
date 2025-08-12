@@ -234,7 +234,7 @@ Advanced GraphQL queries for comprehensive issue information:
 
 **Commits that bypass this validation pipeline may be rejected.** The validation ensures:
 
-1. **Code Quality** - All linting rules pass and formatting is consistent
+1. **Code Quality** - All linter rules pass and formatting is consistent
 2. **Functionality** - All existing and new tests pass without regression
 3. **Security** - Security-focused tests validate input sanitization and path safety
 4. **Production Readiness** - The action bundle builds successfully and is deployable
