@@ -31627,14 +31627,12 @@ If this issue does not have strong evidence a regression, respond with:
 `;
 
 const systemPromptMissingInfo = `
-You are an expert triage assistant who evaluates if issue
-reports contain sufficient information to reproduce and
-diagnose reported problems.
+You are an expert triage assistant who evaluates if issue reports contain sufficient information to reproduce and diagnose reported problems.
 
 ## Essential Reproduction Information
 
 1. **Clear description** of the bug with observable behavior
-2. **Detailed steps to reproduce** with specific actions
+2. **Detailed steps to reproduce** with specific actions  
 3. **Code** via one of the following (in order of preference):
    - **Public repository link** (preferred)
    - **Minimal sample project** attachment
@@ -31648,8 +31646,8 @@ diagnose reported problems.
 ## Evaluation Guidelines
 
 1. Verify **steps to reproduce** are clear, specific, and complete
-2. Confirm **code samples/projects** are provided and accessible 
-3. Check if **environment details** are sufficient
+2. Confirm **code samples/projects** are provided and accessible
+3. Check if **environment details** are sufficient  
 4. Identify any **missing critical information**
 5. Determine if the problem can be **reliably reproduced**
 
@@ -31658,6 +31656,7 @@ diagnose reported problems.
 - Apply "s/needs-info" when:
   - Steps to reproduce are missing or vague
   - Expected/actual behavior is unclear
+  - Essential information is missing
 
 - Apply "s/needs-repro" when:
   - No code snippets, repository links, or sample projects are provided
@@ -31669,44 +31668,61 @@ diagnose reported problems.
 
 ## Response Format
 
-* Respond in valid and properly formatted JSON with the
-  following structure and only in this structure.
-* Do not wrap the JSON in any other text or formatting,
-  including code blocks or markdown as this will be read
-  by a machine.
-* Always include all relevant links in the response.
+Respond in valid and properly formatted JSON with the following structure. Do not wrap the JSON in any other text or formatting, including code blocks or markdown as this will be read by a machine.
 
-If issue has all necessary information:
+### If issue has all necessary information:
 
 {
+  "summary": "Brief summary of the issue",
   "repro": {
-    "links": [
-      "Link1",
-      "Link2"
-    ]
-  }
+    "has_clear_description": true,
+    "has_steps": true,
+    "has_code": true,
+    "links": ["link1", "link2"]
+  },
+  "missing": [],
+  "questions": [],
+  "labels": []
 }
 
-If issue is missing information:
+### If issue is missing information:
 
 {
+  "summary": "Brief summary of the issue", 
   "repro": {
-    "links": [
-      "Link1",
-      "Link2"
-    ]
+    "has_clear_description": true|false,
+    "has_steps": true|false,
+    "has_code": true|false,
+    "links": ["link1", "link2"]
   },
+  "missing": ["steps", "code", "description"],
+  "questions": [
+    "Question 1 asking for specific missing information",
+    "Question 2 asking for specific missing information",
+    "Question 3 asking for specific missing information",
+    "Question 4 asking for specific missing information", 
+    "Question 5 asking for specific missing information"
+  ],
   "labels": [
     {
-      "label": "NEEDS_INFO_LABEL",
-      "reason": "REASON_FOR_NEEDING_MORE_INFO"
+      "label": "s/needs-info",
+      "reason": "Specific reason for needing more information"
     },
     {
-      "label": "NEEDS_REPRO_CODE_LABEL",
-      "reason": "REASON_FOR_NEEDING_REPRO_CODE"
+      "label": "s/needs-repro", 
+      "reason": "Specific reason for needing reproduction code"
     }
   ]
 }
+
+## Guidelines for Questions
+
+- Ask up to 5 specific, actionable questions
+- Focus on the minimal set of missing items needed to reproduce the issue
+- Be friendly and helpful in tone
+- Don't ask for information that's already provided in the issue
+- Prioritize reproduction steps and code samples over environment details
+- Include security reminder if requesting logs or sensitive information
 `;
 
 const userPrompt$1 = `
@@ -39306,6 +39322,151 @@ function addComments(comments, allComments) {
     }
     return comments.pageInfo.endCursor;
 }
+/**
+ * Builds a user-friendly comment requesting missing information with a hidden marker for upserts.
+ *
+ * @param data The missing info payload containing structured data about what's missing
+ * @returns The formatted comment body with hidden HTML marker
+ */
+function buildNeedsInfoComment(data) {
+    const parts = [];
+    // Add friendly greeting and summary
+    parts.push(`Thank you for reporting this issue! To help us investigate and resolve it effectively, we need some additional information.`);
+    if (data.summary) {
+        parts.push(`\n**Issue Summary**: ${data.summary}`);
+    }
+    // Add missing information section if there are specific missing fields
+    if (data.missing && data.missing.length > 0) {
+        parts.push(`\n## Missing Information`);
+        const missingItems = data.missing.map((item) => {
+            switch (item.toLowerCase()) {
+                case 'steps':
+                    return 'Clear steps to reproduce the issue';
+                case 'code':
+                    return 'Code samples, repository link, or minimal reproducer';
+                case 'description':
+                    return 'Detailed description of the expected vs actual behavior';
+                default:
+                    return item;
+            }
+        });
+        parts.push(`We're missing the following information:\n${missingItems.map((item) => `- ${item}`).join('\n')}`);
+    }
+    // Add questions section if there are specific questions
+    if (data.questions && data.questions.length > 0) {
+        parts.push(`\n## Questions`);
+        parts.push(`Please help us by answering these questions:\n${data.questions.map((q, i) => `${i + 1}. ${q}`).join('\n')}`);
+    }
+    // Add helpful links section if available
+    if (data.repro && data.repro.links && data.repro.links.length > 0) {
+        parts.push(`\n## Helpful Links`);
+        parts.push(`${data.repro.links.map((link) => `- ${link}`).join('\n')}`);
+    }
+    // Add security reminder if logs might be requested
+    const hasLogRequest = data.questions?.some((q) => q.toLowerCase().includes('log') || q.toLowerCase().includes('error') || q.toLowerCase().includes('stack trace'));
+    if (hasLogRequest) {
+        parts.push(`\n> **Note**: When sharing logs or error messages, please review them first to ensure no sensitive information (API keys, passwords, personal data) is included.`);
+    }
+    // Add closing note
+    parts.push(`\nOnce you provide this information, we'll be able to investigate your issue more effectively. Thank you for your patience!`);
+    // Combine all parts with the hidden HTML marker for identification
+    const commentBody = parts.join('\n');
+    const hiddenMarker = `<!-- triage-assistant:needs-info-comment -->`;
+    return `${hiddenMarker}\n${commentBody}`;
+}
+/**
+ * Upserts a needs-info comment on an issue. If a comment with the hidden marker exists,
+ * it updates that comment. Otherwise, creates a new comment.
+ *
+ * @param octokit The GitHub API client
+ * @param data The missing info payload
+ * @param config The triage configuration
+ */
+async function upsertNeedsInfoComment(octokit, data, config) {
+    if (config.dryRun) {
+        const commentBody = buildNeedsInfoComment(data);
+        coreExports.info(`Dry run: Would upsert needs-info comment:\n${commentBody}`);
+        return;
+    }
+    const commentBody = buildNeedsInfoComment(data);
+    const hiddenMarker = '<!-- triage-assistant:needs-info-comment -->';
+    // Try to find existing needs-info comment
+    const comments = await octokit.rest.issues.listComments({
+        owner: config.repoOwner,
+        repo: config.repoName,
+        issue_number: config.issueNumber
+    });
+    const existingComment = comments.data.find((comment) => comment.body?.includes(hiddenMarker));
+    if (existingComment) {
+        // Update existing comment
+        await octokit.rest.issues.updateComment({
+            owner: config.repoOwner,
+            repo: config.repoName,
+            comment_id: existingComment.id,
+            body: commentBody
+        });
+        coreExports.info(`Updated existing needs-info comment (ID: ${existingComment.id})`);
+    }
+    else {
+        // Create new comment
+        await octokit.rest.issues.createComment({
+            owner: config.repoOwner,
+            repo: config.repoName,
+            issue_number: config.issueNumber,
+            body: commentBody
+        });
+        coreExports.info('Created new needs-info comment');
+    }
+}
+/**
+ * Syncs needs-info labels (s/needs-info, s/needs-repro) based on the missing info response.
+ * Adds labels if issues are found, removes them if nothing is missing.
+ *
+ * @param octokit The GitHub API client
+ * @param data The missing info payload
+ * @param config The triage configuration
+ */
+async function syncNeedsInfoLabels(octokit, data, config) {
+    if (config.dryRun) {
+        const labelsToAdd = data.labels?.map((l) => l.label) || [];
+        coreExports.info(`Dry run: Would sync needs-info labels: ${labelsToAdd.join(', ')}`);
+        return;
+    }
+    // Get current labels on the issue
+    const currentLabels = await octokit.rest.issues.listLabelsOnIssue({
+        owner: config.repoOwner,
+        repo: config.repoName,
+        issue_number: config.issueNumber
+    });
+    const currentLabelNames = currentLabels.data.map((label) => label.name);
+    const needsInfoLabel = 's/needs-info';
+    const needsReproLabel = 's/needs-repro';
+    // Determine which labels should be present based on the response
+    const shouldHaveLabels = new Set(data.labels?.map((l) => l.label) || []);
+    // Add labels that should be present but aren't
+    const labelsToAdd = Array.from(shouldHaveLabels).filter((label) => !currentLabelNames.includes(label));
+    if (labelsToAdd.length > 0) {
+        await octokit.rest.issues.addLabels({
+            owner: config.repoOwner,
+            repo: config.repoName,
+            issue_number: config.issueNumber,
+            labels: labelsToAdd
+        });
+        coreExports.info(`Added labels: ${labelsToAdd.join(', ')}`);
+    }
+    // Remove needs-info related labels that shouldn't be present
+    const needsInfoLabels = [needsInfoLabel, needsReproLabel];
+    const labelsToRemove = needsInfoLabels.filter((label) => currentLabelNames.includes(label) && !shouldHaveLabels.has(label));
+    for (const labelToRemove of labelsToRemove) {
+        await octokit.rest.issues.removeLabel({
+            owner: config.repoOwner,
+            repo: config.repoName,
+            issue_number: config.issueNumber,
+            name: labelToRemove
+        });
+        coreExports.info(`Removed label: ${labelToRemove}`);
+    }
+}
 
 const systemPrompt = `
 You are an assistant helping to triage GitHub issues. Your
@@ -39498,18 +39659,48 @@ async function mergeAndApplyTriage(octokit, config) {
     const mergedResponse = await mergeResponses('', responsesDir, mergedResponseFile);
     // Log the merged response for debugging
     coreExports.info(`Merged response: ${JSON.stringify(mergedResponse, null, 2)}`);
-    if (config.applyComment) {
-        // Generate summary response using AI
-        const summaryResponseFile = await generateSummary(config, mergedResponseFile);
-        // Comment on the issue
-        await commentOnIssue(octokit, summaryResponseFile, config, config.commentFooter);
+    // Check if this is a missing-info response (has structured missing info fields)
+    const isMissingInfoResponse = hasMissingInfoStructure(mergedResponse);
+    if (isMissingInfoResponse) {
+        await handleMissingInfoResponse(octokit, mergedResponse, config);
     }
-    if (config.applyLabels) {
-        // Collect all the labels from the merged response
-        const labels = mergedResponse.labels?.map((l) => l.label)?.filter(Boolean) || [];
-        // Apply labels to the issue
-        await applyLabelsToIssue(octokit, labels, config);
+    else {
+        // Handle regular triage responses
+        if (config.applyComment) {
+            // Generate summary response using AI
+            const summaryResponseFile = await generateSummary(config, mergedResponseFile);
+            // Comment on the issue
+            await commentOnIssue(octokit, summaryResponseFile, config, config.commentFooter);
+        }
+        if (config.applyLabels) {
+            // Collect all the labels from the merged response
+            const labels = mergedResponse.labels?.map((l) => l.label)?.filter(Boolean) || [];
+            // Apply labels to the issue
+            await applyLabelsToIssue(octokit, labels, config);
+        }
     }
+}
+/**
+ * Checks if a response has the structure of a missing-info response.
+ */
+function hasMissingInfoStructure(response) {
+    return (typeof response === 'object' &&
+        response !== null &&
+        'summary' in response &&
+        'repro' in response &&
+        'missing' in response &&
+        'questions' in response);
+}
+/**
+ * Handles missing-info responses by upserting comments and syncing labels.
+ */
+async function handleMissingInfoResponse(octokit, data, config) {
+    coreExports.info('Processing missing-info response');
+    // Always upsert the needs-info comment to provide user-friendly feedback
+    await upsertNeedsInfoComment(octokit, data, config);
+    // Sync labels based on what's missing
+    await syncNeedsInfoLabels(octokit, data, config);
+    coreExports.info('Missing-info response processing complete');
 }
 
 class ClientError extends Error {
