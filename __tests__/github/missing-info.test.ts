@@ -25,7 +25,6 @@ describe('Missing Info Functionality', () => {
   describe('buildNeedsInfoComment', () => {
     it('should build complete comment with all sections', () => {
       const data: MissingInfoPayload = {
-        summary: 'App crashes on startup',
         repro: {
           has_clear_description: true,
           has_steps: false,
@@ -44,7 +43,6 @@ describe('Missing Info Functionality', () => {
 
       expect(comment).toContain('<!-- triage-assistant:needs-info-comment -->')
       expect(comment).toContain('Thank you for reporting this issue!')
-      expect(comment).toContain('**Issue Summary**: App crashes on startup')
       expect(comment).toContain('## Missing Information')
       expect(comment).toContain('Clear steps to reproduce the issue')
       expect(comment).toContain('Code samples, repository link, or minimal reproducer')
@@ -57,7 +55,6 @@ describe('Missing Info Functionality', () => {
 
     it('should handle minimal data without optional sections', () => {
       const data: MissingInfoPayload = {
-        summary: 'Simple issue',
         repro: {
           has_clear_description: true,
           has_steps: true,
@@ -73,7 +70,6 @@ describe('Missing Info Functionality', () => {
 
       expect(comment).toContain('<!-- triage-assistant:needs-info-comment -->')
       expect(comment).toContain('Thank you for reporting this issue!')
-      expect(comment).toContain('**Issue Summary**: Simple issue')
       expect(comment).not.toContain('## Missing Information')
       expect(comment).not.toContain('## Questions')
       expect(comment).not.toContain('## Helpful Links')
@@ -82,7 +78,6 @@ describe('Missing Info Functionality', () => {
 
     it('should include security warning when logs are requested', () => {
       const data: MissingInfoPayload = {
-        summary: 'Error in logs',
         repro: {
           has_clear_description: true,
           has_steps: true,
@@ -102,7 +97,6 @@ describe('Missing Info Functionality', () => {
 
     it('should include security warning when stack trace is requested', () => {
       const data: MissingInfoPayload = {
-        summary: 'Exception thrown',
         repro: {
           has_clear_description: true,
           has_steps: true,
@@ -121,7 +115,6 @@ describe('Missing Info Functionality', () => {
 
     it('should properly map missing field names to descriptions', () => {
       const data: MissingInfoPayload = {
-        summary: 'Issue description',
         repro: {
           has_clear_description: false,
           has_steps: false,
@@ -143,7 +136,6 @@ describe('Missing Info Functionality', () => {
 
     it('should handle empty summary', () => {
       const data: MissingInfoPayload = {
-        summary: '',
         repro: {
           has_clear_description: true,
           has_steps: false,

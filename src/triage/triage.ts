@@ -106,7 +106,6 @@ function hasMissingInfoStructure(response: Record<string, unknown>): boolean {
   return (
     typeof response === 'object' &&
     response !== null &&
-    'summary' in response &&
     'repro' in response &&
     'missing' in response &&
     'questions' in response

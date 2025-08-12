@@ -353,10 +353,6 @@ export function buildNeedsInfoComment(data: MissingInfoPayload): string {
     `Thank you for reporting this issue! To help us investigate and resolve it effectively, we need some additional information.`
   )
 
-  if (data.summary) {
-    parts.push(`\n**Issue Summary**: ${data.summary}`)
-  }
-
   // Add missing information section if there are specific missing fields
   if (data.missing && data.missing.length > 0) {
     parts.push(`\n## Missing Information`)

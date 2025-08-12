@@ -12,7 +12,6 @@ export interface ReproInfo {
  * Represents the complete payload for missing info responses.
  */
 export interface MissingInfoPayload {
-  summary: string
   repro: ReproInfo
   missing: string[]
   questions: string[]
@@ -33,7 +32,6 @@ export interface MissingInfoPayload {
  *   - `label`: The name of the label.
  *   - `reason`: The reason why the label was applied.
  * @property remarks - An array of remarks or comments related to the triage.
- * @property summary - Optional summary for missing info responses.
  * @property repro - Optional reproduction information for missing info responses.
  * @property missing - Optional array of missing fields for missing info responses.
  * @property questions - Optional array of questions for missing info responses.
@@ -53,7 +51,6 @@ export interface TriageResponse {
   }>
 
   // Missing info specific fields (optional)
-  summary?: string
   repro?: ReproInfo
   missing?: string[]
   questions?: string[]
