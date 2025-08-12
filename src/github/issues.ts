@@ -2,6 +2,7 @@ import * as github from '@actions/github'
 import * as core from '@actions/core'
 import * as fs from 'fs'
 import * as path from 'path'
+import * as utils from '../utils.js'
 import { GetIssueDetailsQuery, Sdk as GraphQLSdk } from '../generated/graphql.js'
 import { GitHubIssueConfig, TriageConfig } from '../config.js'
 import { IssueDetails, ReactionData, CommentData, UserInfo } from './types.js'
@@ -14,29 +15,6 @@ type GetIssueDetailsQueryIssueReactions = NonNullable<
 type GetIssueDetailsQueryIssueComments = NonNullable<
   NonNullable<NonNullable<GetIssueDetailsQuery['repository']>['issue']>['comments']
 >
-
-/**
- * Sanitizes markdown content to prevent injection attacks while preserving formatting
- * @param content Raw markdown content
- * @returns Sanitized content safe for GitHub comments
- */
-function sanitizeMarkdownContent(content: string): string {
-  // Remove any potentially dangerous HTML/script tags
-  const htmlTagPattern = /<script[^>]*>.*?<\/script>/gi
-  const dangerousHtml = /<(?:iframe|object|embed|form|input|meta|link)[^>]*>/gi
-  
-  let sanitized = content
-    .replace(htmlTagPattern, '[REMOVED: Script tag]')
-    .replace(dangerousHtml, '[REMOVED: Potentially dangerous HTML]')
-  
-  // Limit length to prevent abuse
-  const MAX_COMMENT_LENGTH = 65536 // GitHub's comment limit
-  if (sanitized.length > MAX_COMMENT_LENGTH) {
-    sanitized = sanitized.substring(0, MAX_COMMENT_LENGTH - 100) + '\n\n[Content truncated for safety]'
-  }
-  
-  return sanitized
-}
 
 /**
  * Comments on an issue with the provided summary.
@@ -53,11 +31,13 @@ export async function commentOnIssue(
 ): Promise<void> {
   const summary = await fs.promises.readFile(path.join(summaryFile), 'utf8')
 
-  const commentBody = sanitizeMarkdownContent(`
+  const commentBody = utils.sanitizeMarkdownContent(
+    `
 ${summary}
 
 ${footer ?? ''}
-`.trim())
+`.trim()
+  )
 
   // If the comment body is empty, do not post an empty comment
   if (commentBody.length === 0) {

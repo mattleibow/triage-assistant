@@ -1,6 +1,7 @@
 import * as core from '@actions/core'
 import * as exec from '@actions/exec'
 import * as fs from 'fs'
+import * as utils from '../utils.js'
 import { PromptGenerationConfig } from '../config.js'
 
 /**
@@ -25,13 +26,8 @@ export async function generatePrompt(
   const outputContent: string[] = []
 
   for (let line of lines) {
-    // Replace placeholders
     // Replace placeholders safely to prevent ReDoS
-    for (const [key, value] of Object.entries(replacements)) {
-      // Escape special regex characters in the key to prevent ReDoS
-      const escapedKey = key.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
-      line = line.replace(new RegExp(`{{${escapedKey}}}`, 'g'), String(value || ''))
-    }
+    line = utils.substituteTemplateVariables(replacements, line)
 
     // Check for EXEC: command prefix
     const execMatch = line.match(/^EXEC:\s*(.+)$/)

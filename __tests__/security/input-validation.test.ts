@@ -1,54 +1,37 @@
-import { jest, describe, it, expect, beforeEach } from '@jest/globals'
+import { jest } from '@jest/globals'
+import * as core from '../../__fixtures__/actions/core.js'
+import * as github from '../../__fixtures__/actions/github.js'
 
-// Mock the modules before importing
-jest.unstable_mockModule('@actions/core', () => ({
-  getInput: jest.fn(),
-  getBooleanInput: jest.fn(),
-  info: jest.fn(),
-  warning: jest.fn(),
-  error: jest.fn(),
-  setFailed: jest.fn(),
-  setOutput: jest.fn(),
-  debug: jest.fn()
-}))
-
-jest.unstable_mockModule('@actions/github', () => ({
-  context: {
-    repo: { owner: 'test-owner', repo: 'test-repo' },
-    issue: { number: 123 }
-  }
-}))
+// Mock dependencies using fixtures
+jest.unstable_mockModule('@actions/core', () => core)
+jest.unstable_mockModule('@actions/github', () => github)
 
 // Import modules after mocking
-const core = await import('@actions/core')
-const github = await import('@actions/github')
 const { run } = await import('../../src/main.js')
-
-const mockCore = core as jest.Mocked<typeof core>
-const mockGithub = github as any
 
 describe('Input Validation Security Tests', () => {
   beforeEach(() => {
     jest.clearAllMocks()
-    
+    jest.resetAllMocks()
+
     // Reset GitHub context
-    mockGithub.context = {
+    github.mockOctokit.context = {
       repo: { owner: 'test-owner', repo: 'test-repo' },
-      issue: { number: 123 }
+      issue: { number: 123, owner: 'test-owner', repo: 'test-repo' }
     }
-    
+
     // Mock default inputs
-    mockCore.getInput.mockImplementation((name: string) => {
+    core.getInput.mockImplementation((name: string) => {
       const inputs: Record<string, string> = {
-        'template': '',
-        'project': '',
-        'issue': '',
+        template: '',
+        project: '',
+        issue: '',
         'ai-endpoint': '',
         'ai-model': '',
         'ai-token': '',
-        'token': 'test-token',
+        token: 'test-token',
         'fallback-token': 'fallback-token',
-        'label': '',
+        label: '',
         'label-prefix': '',
         'project-column': '',
         'comment-footer': '',
@@ -59,8 +42,8 @@ describe('Input Validation Security Tests', () => {
       }
       return inputs[name] || ''
     })
-    
-    mockCore.getBooleanInput.mockImplementation((name: string) => {
+
+    core.getBooleanInput.mockImplementation((name: string) => {
       const boolInputs: Record<string, boolean> = {
         'apply-labels': false,
         'apply-comment': false,
@@ -71,28 +54,33 @@ describe('Input Validation Security Tests', () => {
     })
   })
 
+  afterEach(() => {
+    jest.resetAllMocks()
+    github.mockOctokit.context = undefined as unknown as typeof github.mockOctokit.context
+  })
+
   describe('Repository ID Validation', () => {
     it('should reject invalid repository owner', async () => {
-      mockGithub.context.repo.owner = '../../../malicious'
-      
+      github.mockOctokit.context.repo!.owner = '../../../malicious'
+
       await expect(run()).rejects.toThrow('Invalid repository identifier')
     })
 
     it('should reject invalid repository name', async () => {
-      mockGithub.context.repo.repo = '<script>alert("xss")</script>'
-      
+      github.mockOctokit.context.repo!.repo = '<script>alert("xss")</script>'
+
       await expect(run()).rejects.toThrow('Invalid repository identifier')
     })
 
     it('should accept valid repository identifiers', async () => {
-      mockGithub.context.repo.owner = 'valid-owner_123'
-      mockGithub.context.repo.repo = 'valid.repo-name'
-      
+      github.mockOctokit.context.repo!.owner = 'valid-owner_123'
+      github.mockOctokit.context.repo!.repo = 'valid.repo-name'
+
       // Mock the workflow functions to avoid actually running them
       jest.doMock('../../src/triage/triage.js', () => ({
         runTriageWorkflow: jest.fn().mockResolvedValue('/tmp/response.json')
       }))
-      
+
       // Should not throw
       await expect(run()).resolves.not.toThrow()
     })
@@ -100,77 +88,71 @@ describe('Input Validation Security Tests', () => {
 
   describe('Numeric Input Validation', () => {
     it('should handle invalid project numbers gracefully', async () => {
-      mockCore.getInput = jest.fn().mockImplementation((name: string) => {
+      core.getInput.mockImplementation((name: string) => {
         if (name === 'project') return 'invalid-number'
         if (name === 'template') return 'engagement-score'
         return ''
       })
-      
+
       // Should log warning but not throw
       await run()
-      expect(mockCore.warning).toHaveBeenCalledWith(
-        expect.stringContaining('Invalid project number: invalid-number')
-      )
+      expect(core.warning).toHaveBeenCalledWith(expect.stringContaining('Invalid project number: invalid-number'))
     })
 
     it('should handle negative numbers gracefully', async () => {
-      mockCore.getInput = jest.fn().mockImplementation((name: string) => {
+      core.getInput.mockImplementation((name: string) => {
         if (name === 'issue') return '-123'
         return ''
       })
-      
+
       await run()
-      expect(mockCore.warning).toHaveBeenCalledWith(
-        expect.stringContaining('Invalid issue number: -123')
-      )
+      expect(core.warning).toHaveBeenCalledWith(expect.stringContaining('Invalid issue number: -123'))
     })
 
     it('should accept valid positive numbers', async () => {
-      mockCore.getInput = jest.fn().mockImplementation((name: string) => {
+      core.getInput.mockImplementation((name: string) => {
         if (name === 'project') return '123'
         if (name === 'template') return 'engagement-score'
         return ''
       })
-      
+
       await run()
       // Should not log any warnings about invalid numbers
-      expect(mockCore.warning).not.toHaveBeenCalledWith(
-        expect.stringContaining('Invalid project number')
-      )
+      expect(core.warning).not.toHaveBeenCalledWith(expect.stringContaining('Invalid project number'))
     })
   })
 
   describe('Template Validation', () => {
     it('should reject invalid template names', async () => {
-      mockCore.getInput = jest.fn().mockImplementation((name: string) => {
+      core.getInput.mockImplementation((name: string) => {
         if (name === 'template') return 'malicious-template'
         return ''
       })
-      
+
       await expect(run()).rejects.toThrow('Invalid template: malicious-template')
     })
 
     it('should accept valid template names', async () => {
       const validTemplates = ['multi-label', 'single-label', 'regression', 'missing-info', 'engagement-score']
-      
+
       for (const template of validTemplates) {
-        mockCore.getInput = jest.fn().mockImplementation((name: string) => {
+        core.getInput.mockImplementation((name: string) => {
           if (name === 'template') return template
           if (name === 'project') return '123' // For engagement-score
           return ''
         })
-        
+
         // Should not throw
         await expect(run()).resolves.not.toThrow()
       }
     })
 
     it('should accept empty template', async () => {
-      mockCore.getInput = jest.fn().mockImplementation((name: string) => {
+      core.getInput.mockImplementation((name: string) => {
         if (name === 'template') return ''
         return ''
       })
-      
+
       // Should not throw
       await expect(run()).resolves.not.toThrow()
     })
