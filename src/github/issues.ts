@@ -2,6 +2,7 @@ import * as github from '@actions/github'
 import * as core from '@actions/core'
 import * as fs from 'fs'
 import * as path from 'path'
+import * as utils from '../utils.js'
 import { GetIssueDetailsQuery, Sdk as GraphQLSdk } from '../generated/graphql.js'
 import { GitHubIssueConfig, TriageConfig } from '../config.js'
 import { IssueDetails, ReactionData, CommentData, UserInfo } from './types.js'
@@ -30,11 +31,13 @@ export async function commentOnIssue(
 ): Promise<void> {
   const summary = await fs.promises.readFile(path.join(summaryFile), 'utf8')
 
-  const commentBody = `
+  const commentBody = utils.sanitizeMarkdownContent(
+    `
 ${summary}
 
 ${footer ?? ''}
 `.trim()
+  )
 
   // If the comment body is empty, do not post an empty comment
   if (commentBody.length === 0) {

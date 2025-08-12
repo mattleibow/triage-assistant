@@ -4,7 +4,7 @@ import { AzureKeyCredential } from '@azure/core-auth'
 import * as fs from 'fs'
 import * as path from 'path'
 import { InferenceConfig } from '../config.js'
-
+import * as utils from '../utils.js'
 /**
  * Runs AI inference to generate a response file.
  *
@@ -63,7 +63,7 @@ export async function runInference(
     await fs.promises.writeFile(responseFile, modelResponse, 'utf-8')
 
     core.info(`AI inference completed. Response written to: ${responseFile}`)
-    core.info(`Response content: ${modelResponse}`)
+    core.info(`Response content: ${utils.sanitizeForLogging(modelResponse)}`)
   } catch (error) {
     core.error(`AI inference failed: ${error instanceof Error ? error.message : 'Unknown error'}`)
     throw error

@@ -2,6 +2,7 @@ import * as fs from 'fs'
 import * as path from 'path'
 import * as core from '@actions/core'
 import * as yaml from 'js-yaml'
+import * as utils from '../utils.js'
 
 /**
  * Configuration interface for engagement scoring weights
@@ -42,26 +43,45 @@ export const DEFAULT_ENGAGEMENT_WEIGHTS: EngagementWeights = {
  * @returns Combined configuration with defaults applied
  */
 export async function loadTriageConfig(workspacePath: string = '.'): Promise<EngagementWeights> {
-  const configPaths = [path.join(workspacePath, '.triagerc.yml'), path.join(workspacePath, '.github', '.triagerc.yml')]
+  // Validate and normalize workspace path to prevent directory traversal
+  const currentDir = process.cwd()
+  const normalizedWorkspace = path.resolve(workspacePath)
+
+  // Ensure workspace path is within or at the current working directory
+  const relativeToCurrentDir = path.relative(currentDir, normalizedWorkspace)
+  if (relativeToCurrentDir.startsWith('..') || path.isAbsolute(relativeToCurrentDir)) {
+    throw new Error(`Invalid workspace path: ${workspacePath} resolves outside current directory`)
+  }
+
+  const configPaths = [
+    utils.safePath(normalizedWorkspace, '.triagerc.yml'),
+    utils.safePath(normalizedWorkspace, '.github/.triagerc.yml')
+  ]
 
   let config: TriageConfig = {}
 
+  const failedPaths: Map<string, string> = new Map()
   for (const configPath of configPaths) {
     try {
-      core.info(`Loading triage configuration from ${configPath}`)
+      core.info(`Attempting to load triage configuration from ${configPath}`)
       const fileContent = await fs.promises.readFile(configPath, 'utf8')
       const parsedConfig = yaml.load(fileContent) as TriageConfig
 
       if (parsedConfig && typeof parsedConfig === 'object') {
         config = parsedConfig
+        failedPaths.clear()
         core.info(`Successfully loaded configuration from ${configPath}`)
         break
       }
     } catch (error) {
-      core.warning(
-        `Failed to load configuration from ${configPath}: ${error instanceof Error ? error.message : 'Unknown error'}`
-      )
+      failedPaths.set(configPath, error instanceof Error ? error.message : 'Unknown error')
     }
+  }
+  if (failedPaths.size > 0) {
+    const details = Array.from(failedPaths.entries())
+      .map(([configPath, errorMessage]) => ` - ${configPath}: ${errorMessage}`)
+      .join('\n')
+    core.warning(`Failed to load configuration from the following paths:\n${details}`)
   }
 
   // Merge with defaults

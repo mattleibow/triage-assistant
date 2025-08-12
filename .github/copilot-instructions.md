@@ -221,6 +221,38 @@ Advanced GraphQL queries for comprehensive issue information:
 - `npm run local-action` - Local development testing with .env file
 - `npm run codegen` - GraphQL code generation from schema
 
+### ⚠️ CRITICAL: Pre-Commit Validation
+
+**ALWAYS run `npm run all` before committing ANY changes.** This command executes the complete validation pipeline:
+
+- **Code generation** - Updates GraphQL types from schema
+- **Formatting** - Ensures consistent code formatting with Prettier
+- **Linting** - Validates code style and catches potential issues with ESLint
+- **Testing** - Runs all 200+ tests with adequate coverage requirements
+- **Coverage** - Generates coverage reports and updates badges
+- **Packaging** - Builds production bundle for GitHub Actions
+
+**Commits that bypass this validation pipeline may be rejected.** The validation ensures:
+
+1. **Code Quality** - All linter rules pass and formatting is consistent
+2. **Functionality** - All existing and new tests pass without regression
+3. **Security** - Security-focused tests validate input sanitization and path safety
+4. **Production Readiness** - The action bundle builds successfully and is deployable
+
+**Example Pre-Commit Workflow:**
+
+```bash
+# Make your changes
+git add .
+
+# REQUIRED: Run complete validation before committing
+npm run all
+
+# Only commit after validation passes
+git commit -m "Your commit message"
+git push
+```
+
 ## Testing Infrastructure
 
 ### Comprehensive Test Strategy

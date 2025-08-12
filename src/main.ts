@@ -1,9 +1,21 @@
 import * as core from '@actions/core'
 import * as github from '@actions/github'
 import * as os from 'os'
+import * as utils from './utils.js'
 import { runTriageWorkflow } from './triage/triage.js'
 import { runEngagementWorkflow } from './engagement/engagement.js'
 import { EverythingConfig } from './config.js'
+
+/**
+ * Validates template name against allowed values
+ * @param template Template name to validate
+ */
+export function validateTemplate(template: string): void {
+  const allowedTemplates = ['multi-label', 'single-label', 'regression', 'missing-info', 'engagement-score', '']
+  if (template && !allowedTemplates.includes(template)) {
+    throw new Error(`Invalid template: ${template}. Allowed values: ${allowedTemplates.filter((t) => t).join(', ')}`)
+  }
+}
 
 /**
  * Enum for triage modes
@@ -31,6 +43,12 @@ export async function run(): Promise<void> {
     const projectInput = core.getInput('project')
     const issueInput = core.getInput('issue')
     const issueContext = github.context.issue?.number || 0
+
+    // Validate template
+    validateTemplate(template)
+
+    // Validate repository context
+    utils.validateRepositoryId(github.context.repo.owner, github.context.repo.repo)
 
     // Determine triage mode
     const triageMode = template === TriageMode.EngagementScore ? TriageMode.EngagementScore : TriageMode.IssueTriage
@@ -65,11 +83,11 @@ export async function run(): Promise<void> {
       applyScores: core.getBooleanInput('apply-scores'),
       commentFooter: core.getInput('comment-footer'),
       dryRun: core.getBooleanInput('dry-run') || false,
-      issueNumber: issueInput ? parseInt(issueInput, 10) : issueContext,
+      issueNumber: utils.validateNumericInput(issueInput || issueContext.toString(), 'issue number'),
       label: core.getInput('label'),
       labelPrefix: core.getInput('label-prefix'),
       projectColumn: core.getInput('project-column') || DEFAULT_PROJECT_COLUMN_NAME,
-      projectNumber: projectInput ? parseInt(projectInput, 10) : 0,
+      projectNumber: utils.validateNumericInput(projectInput, 'project number'),
       repoName: github.context.repo.repo,
       repoOwner: github.context.repo.owner,
       repository: `${github.context.repo.owner}/${github.context.repo.repo}`,
