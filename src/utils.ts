@@ -1,6 +1,8 @@
 import * as core from '@actions/core'
 import path from 'path'
 
+export const MAX_COMMENT_LENGTH = 65536 // GitHub's comment limit
+
 /**
  * Sanitizes content for safe logging by truncating and removing potential sensitive data
  * @param content Content to sanitize
@@ -54,16 +56,20 @@ export function safePath(basePath: string, relativePath: string): string {
  * @returns Sanitized content safe for GitHub comments
  */
 export function sanitizeMarkdownContent(content: string): string {
-  // Remove any potentially dangerous HTML/script tags
-  const htmlTagPattern = /<script[^>]*>.*?<\/script>/gi
-  const dangerousHtml = /<(?:iframe|object|embed|form|input|meta|link)[^>]*>/gi
+  // Match complete <script> blocks across lines
+  const scriptBlockPattern = /<script\b[^>]*>[\s\S]*?<\/script\s*>/gi
+  // Match complete paired dangerous elements (remove the whole block including closing tag and inner content)
+  const pairedDangerousBlocks = /<\s*(iframe|object|embed|form)\b[^>]*>[\s\S]*?<\s*\/\1\s*>/gi
+  // Match self-closing or standalone dangerous tags
+  const selfClosingDangerous = /<\s*(?:input|meta|link)\b[^>]*\/?\s*>/gi
 
+  // Remove any potentially dangerous HTML/script tags
   let sanitized = content
-    .replace(htmlTagPattern, '[REMOVED: Script tag]')
-    .replace(dangerousHtml, '[REMOVED: Potentially dangerous HTML]')
+    .replace(scriptBlockPattern, '[REMOVED: Script tag]')
+    .replace(pairedDangerousBlocks, '[REMOVED: Potentially dangerous HTML]')
+    .replace(selfClosingDangerous, '[REMOVED: Potentially dangerous HTML]')
 
   // Limit length to prevent abuse
-  const MAX_COMMENT_LENGTH = 65536 // GitHub's comment limit
   if (sanitized.length > MAX_COMMENT_LENGTH) {
     sanitized = sanitized.substring(0, MAX_COMMENT_LENGTH - 100) + '\n\n[Content truncated for safety]'
   }
@@ -100,28 +106,12 @@ export function validateRepositoryId(owner: string, repo: string): void {
 }
 
 /**
- * Safely replaces template variables to prevent ReDoS attacks
- * @param text Template text with variables
- * @param replacements Map of variable names to values
- * @returns Text with variables replaced
- */
-export function safeReplaceText(text: string, replacements: Record<string, string | number | undefined>): string {
-  let result = text
-  for (const [key, value] of Object.entries(replacements)) {
-    // Escape special regex characters to prevent ReDoS
-    const escapedKey = key.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
-    result = result.replace(new RegExp(`{{${escapedKey}}}`, 'g'), String(value || ''))
-  }
-  return result
-}
-
-/**
  * Substitutes template variables in a string with their corresponding values from a replacements map.
  * @param replacements Map of variable names to their replacement values
  * @param line The input string with template variables
  * @returns The input string with all template variables replaced
  */
-export function substituteTemplateVariables(replacements: Record<string, unknown>, line: string) {
+export function substituteTemplateVariables(line: string, replacements: Record<string, unknown>) {
   for (const [key, value] of Object.entries(replacements)) {
     // Escape special regex characters in the key to prevent ReDoS
     const escapedKey = key.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')

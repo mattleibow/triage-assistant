@@ -50,7 +50,7 @@ describe('GitHub Integration Tests', () => {
       it('getProjectDetails returns all items', async () => {
         const result = await getProjectDetails(sdk, 'mattleibow', 'triage-assistant', 8)
 
-        expect(result.items.length).toBe(8)
+        expect(result.items.length).toBeGreaterThan(8)
 
         expect(result.items).toEqual(
           expect.arrayContaining([

@@ -1,4 +1,3 @@
-import { jest, describe, it, expect, beforeEach } from '@jest/globals'
 import { loadTriageConfig } from '../../src/engagement/engagement-config.js'
 import { FileSystemMock } from '../helpers/filesystem-mock.js'
 
@@ -6,13 +5,10 @@ describe('Path Traversal Security Tests', () => {
   const inMemoryFs = new FileSystemMock()
 
   beforeEach(() => {
-    jest.clearAllMocks()
-    jest.resetAllMocks()
     inMemoryFs.setup()
   })
 
   afterEach(() => {
-    jest.restoreAllMocks()
     inMemoryFs.teardown()
   })
 

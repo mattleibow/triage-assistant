@@ -60,22 +60,28 @@ export async function loadTriageConfig(workspacePath: string = '.'): Promise<Eng
 
   let config: TriageConfig = {}
 
+  const failedPaths: Map<string, string> = new Map()
   for (const configPath of configPaths) {
     try {
-      core.info(`Loading triage configuration from ${configPath}`)
+      core.info(`Attempting to load triage configuration from ${configPath}`)
       const fileContent = await fs.promises.readFile(configPath, 'utf8')
       const parsedConfig = yaml.load(fileContent) as TriageConfig
 
       if (parsedConfig && typeof parsedConfig === 'object') {
         config = parsedConfig
+        failedPaths.clear()
         core.info(`Successfully loaded configuration from ${configPath}`)
         break
       }
     } catch (error) {
-      core.warning(
-        `Failed to load configuration from ${configPath}: ${error instanceof Error ? error.message : 'Unknown error'}`
-      )
+      failedPaths.set(configPath, error instanceof Error ? error.message : 'Unknown error')
     }
+  }
+  if (failedPaths.size > 0) {
+    const details = Array.from(failedPaths.entries())
+      .map(([configPath, errorMessage]) => ` - ${configPath}: ${errorMessage}`)
+      .join('\n')
+    core.warning(`Failed to load configuration from the following paths:\n${details}`)
   }
 
   // Merge with defaults

@@ -11,7 +11,6 @@ const mockGetIssue = jest.fn<typeof octokit.rest.issues.get>()
 const mockListComments = jest.fn<typeof octokit.rest.issues.listComments>()
 
 export const mockOctokit = {
-  context: undefined as unknown as Partial<typeof github.context>,
   rest: {
     issues: {
       createComment: mockCreateComment,

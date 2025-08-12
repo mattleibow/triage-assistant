@@ -26,8 +26,8 @@ export async function generatePrompt(
   const outputContent: string[] = []
 
   for (let line of lines) {
-    // Replace placeholders safely to prevent ReDoS
-    line = utils.substituteTemplateVariables(replacements, line)
+    // Replace placeholders safely
+    line = utils.substituteTemplateVariables(line, replacements)
 
     // Check for EXEC: command prefix
     const execMatch = line.match(/^EXEC:\s*(.+)$/)

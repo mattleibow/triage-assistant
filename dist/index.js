@@ -31252,6 +31252,7 @@ function requireGithub () {
 
 var githubExports = requireGithub();
 
+const MAX_COMMENT_LENGTH = 65536; // GitHub's comment limit
 /**
  * Sanitizes content for safe logging by truncating and removing potential sensitive data
  * @param content Content to sanitize
@@ -31298,14 +31299,18 @@ function safePath(basePath, relativePath) {
  * @returns Sanitized content safe for GitHub comments
  */
 function sanitizeMarkdownContent(content) {
+    // Match complete <script> blocks across lines
+    const scriptBlockPattern = /<script\b[^>]*>[\s\S]*?<\/script\s*>/gi;
+    // Match complete paired dangerous elements (remove the whole block including closing tag and inner content)
+    const pairedDangerousBlocks = /<\s*(iframe|object|embed|form)\b[^>]*>[\s\S]*?<\s*\/\1\s*>/gi;
+    // Match self-closing or standalone dangerous tags
+    const selfClosingDangerous = /<\s*(?:input|meta|link)\b[^>]*\/?\s*>/gi;
     // Remove any potentially dangerous HTML/script tags
-    const htmlTagPattern = /<script[^>]*>.*?<\/script>/gi;
-    const dangerousHtml = /<(?:iframe|object|embed|form|input|meta|link)[^>]*>/gi;
     let sanitized = content
-        .replace(htmlTagPattern, '[REMOVED: Script tag]')
-        .replace(dangerousHtml, '[REMOVED: Potentially dangerous HTML]');
+        .replace(scriptBlockPattern, '[REMOVED: Script tag]')
+        .replace(pairedDangerousBlocks, '[REMOVED: Potentially dangerous HTML]')
+        .replace(selfClosingDangerous, '[REMOVED: Potentially dangerous HTML]');
     // Limit length to prevent abuse
-    const MAX_COMMENT_LENGTH = 65536; // GitHub's comment limit
     if (sanitized.length > MAX_COMMENT_LENGTH) {
         sanitized = sanitized.substring(0, MAX_COMMENT_LENGTH - 100) + '\n\n[Content truncated for safety]';
     }
@@ -31344,7 +31349,7 @@ function validateRepositoryId(owner, repo) {
  * @param line The input string with template variables
  * @returns The input string with all template variables replaced
  */
-function substituteTemplateVariables(replacements, line) {
+function substituteTemplateVariables(line, replacements) {
     for (const [key, value] of Object.entries(replacements)) {
         // Escape special regex characters in the key to prevent ReDoS
         const escapedKey = key.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -31765,8 +31770,8 @@ async function generatePrompt(templateContent, outputPath, replacements, config)
     const lines = templateContent.split('\n');
     const outputContent = [];
     for (let line of lines) {
-        // Replace placeholders safely to prevent ReDoS
-        line = substituteTemplateVariables(replacements, line);
+        // Replace placeholders safely
+        line = substituteTemplateVariables(line, replacements);
         // Check for EXEC: command prefix
         const execMatch = line.match(/^EXEC:\s*(.+)$/);
         if (execMatch) {
@@ -51048,20 +51053,28 @@ async function loadTriageConfig(workspacePath = '.') {
         safePath(normalizedWorkspace, '.github/.triagerc.yml')
     ];
     let config = {};
+    const failedPaths = new Map();
     for (const configPath of configPaths) {
         try {
-            coreExports.info(`Loading triage configuration from ${configPath}`);
+            coreExports.info(`Attempting to load triage configuration from ${configPath}`);
             const fileContent = await fs.promises.readFile(configPath, 'utf8');
             const parsedConfig = load(fileContent);
             if (parsedConfig && typeof parsedConfig === 'object') {
                 config = parsedConfig;
+                failedPaths.clear();
                 coreExports.info(`Successfully loaded configuration from ${configPath}`);
                 break;
             }
         }
         catch (error) {
-            coreExports.warning(`Failed to load configuration from ${configPath}: ${error instanceof Error ? error.message : 'Unknown error'}`);
+            failedPaths.set(configPath, error instanceof Error ? error.message : 'Unknown error');
         }
+    }
+    if (failedPaths.size > 0) {
+        const details = Array.from(failedPaths.entries())
+            .map(([configPath, errorMessage]) => ` - ${configPath}: ${errorMessage}`)
+            .join('\n');
+        coreExports.warning(`Failed to load configuration from the following paths:\n${details}`);
     }
     // Merge with defaults
     const weights = config.engagement?.weights || {};
