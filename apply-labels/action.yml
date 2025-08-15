@@ -1,0 +1,82 @@
+name: 'AI Triage Assistant - Apply Labels'
+description: 'An AI assistant that triages issues by applying labels based on the issue content.'
+author: 'mattleibow'
+
+branding:
+  icon: 'tag'
+  color: 'blue'
+
+inputs:
+  # GitHub token input
+  token:
+    description: 'GitHub token for API access'
+    required: false
+    default: ''
+  fallback-token:
+    description: 'Fallback GitHub token for API access'
+    required: false
+    default: '${{ github.token }}'
+
+  # AI model and endpoint inputs
+  ai-endpoint:
+    description: 'Endpoint to use for AI inference'
+    required: false
+    default: ''
+  ai-model:
+    description: 'Model to use for AI inference'
+    required: false
+    default: ''
+  ai-token:
+    description: 'Token for AI inference'
+    required: false
+    default: ''
+
+  # Issue targeting
+  issue:
+    description: 'The issue number of the issue to triage'
+    required: false
+    default: ''
+
+  # Label selection inputs
+  template:
+    description: 'Triage template to use: multi-label, single-label, regression, missing-info'
+    required: false
+    default: 'multi-label'
+  label:
+    description: 'The specific label to use'
+    required: false
+    default: ''
+  label-prefix:
+    description: 'Prefix for label search (e.g., platform/, area-, etc.)'
+    required: false
+    default: ''
+
+  # Label and comment posting inputs
+  apply-labels:
+    description: 'Whether to apply labels to the issue'
+    required: false
+    default: 'false'
+  apply-comment:
+    description: 'Whether to comment on the issue with the AI response'
+    required: false
+    default: 'false'
+  comment-footer:
+    description: 'Footer text to append to the AI response comment'
+    required: false
+    default:
+      '_This entire triage process was automated by AI and mistakes may have been made. Please let us know so we can
+      continue to improve._'
+
+  # General options
+  dry-run:
+    description: 'Whether to run the action in dry-run mode (no changes made)'
+    required: false
+    default: 'false'
+
+outputs:
+  response-file:
+    description: 'The file that contains the result of AI inference'
+
+runs:
+  using: node20
+  main: ../dist/apply-labels.js

@@ -4,6 +4,14 @@ import path from 'path'
 export const MAX_COMMENT_LENGTH = 65536 // GitHub's comment limit
 
 /**
+ * Enum for triage modes
+ */
+export enum TriageMode {
+  ApplyLabels = 'apply-labels',
+  EngagementScore = 'engagement-score'
+}
+
+/**
  * Sanitizes content for safe logging by truncating and removing potential sensitive data
  * @param content Content to sanitize
  * @param maxLength Maximum length for logged content
@@ -102,6 +110,17 @@ export function validateRepositoryId(owner: string, repo: string): void {
   const validPattern = /^[a-zA-Z0-9._-]+$/
   if (!owner || !repo || !validPattern.test(owner) || !validPattern.test(repo)) {
     throw new Error(`Invalid repository identifier: ${owner}/${repo}`)
+  }
+}
+
+/**
+ * Validates template name against allowed values
+ * @param template Template name to validate
+ */
+export function validateTemplate(template: string): void {
+  const allowedTemplates = ['multi-label', 'single-label', 'regression', 'missing-info', 'engagement-score', '']
+  if (template && !allowedTemplates.includes(template)) {
+    throw new Error(`Invalid template: ${template}. Allowed values: ${allowedTemplates.filter((t) => t).join(', ')}`)
   }
 }
 

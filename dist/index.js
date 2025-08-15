@@ -31254,6 +31254,14 @@ var githubExports = requireGithub();
 
 const MAX_COMMENT_LENGTH = 65536; // GitHub's comment limit
 /**
+ * Enum for triage modes
+ */
+var TriageMode;
+(function (TriageMode) {
+    TriageMode["ApplyLabels"] = "apply-labels";
+    TriageMode["EngagementScore"] = "engagement-score";
+})(TriageMode || (TriageMode = {}));
+/**
  * Sanitizes content for safe logging by truncating and removing potential sensitive data
  * @param content Content to sanitize
  * @param maxLength Maximum length for logged content
@@ -31341,6 +31349,16 @@ function validateRepositoryId(owner, repo) {
     const validPattern = /^[a-zA-Z0-9._-]+$/;
     if (!owner || !repo || !validPattern.test(owner) || !validPattern.test(repo)) {
         throw new Error(`Invalid repository identifier: ${owner}/${repo}`);
+    }
+}
+/**
+ * Validates template name against allowed values
+ * @param template Template name to validate
+ */
+function validateTemplate(template) {
+    const allowedTemplates = ['multi-label', 'single-label', 'regression', 'missing-info', 'engagement-score', ''];
+    if (template && !allowedTemplates.includes(template)) {
+        throw new Error(`Invalid template: ${template}. Allowed values: ${allowedTemplates.filter((t) => t).join(', ')}`);
     }
 }
 /**
@@ -51201,57 +51219,43 @@ async function createEngagementItem(issueDetails, projectItemId, weights) {
 }
 
 /**
- * Validates template name against allowed values
- * @param template Template name to validate
+ * Common workflow execution logic
  */
-function validateTemplate(template) {
-    const allowedTemplates = ['multi-label', 'single-label', 'regression', 'missing-info', 'engagement-score', ''];
-    if (template && !allowedTemplates.includes(template)) {
-        throw new Error(`Invalid template: ${template}. Allowed values: ${allowedTemplates.filter((t) => t).join(', ')}`);
-    }
-}
-/**
- * Enum for triage modes
- */
-var TriageMode;
-(function (TriageMode) {
-    TriageMode["IssueTriage"] = "issue-triage";
-    TriageMode["EngagementScore"] = "engagement-score";
-})(TriageMode || (TriageMode = {}));
-/**
- * The main function for the action.
- *
- * @returns Resolves when the action is complete.
- */
-async function run() {
+async function runWorkflow(triageModeOverride) {
     const DEFAULT_AI_ENDPOINT = 'https://models.github.ai/inference';
     const DEFAULT_AI_MODEL = 'openai/gpt-4o';
     const DEFAULT_PROJECT_COLUMN_NAME = 'Engagement Score';
     let config;
     try {
-        // Get inputs for mode determination
-        const template = coreExports.getInput('template');
+        // Get template and triage mode
+        const template = coreExports.getInput('template', { required: false });
+        const triageMode = triageModeOverride ||
+            (template === TriageMode.EngagementScore ? TriageMode.EngagementScore : TriageMode.ApplyLabels);
+        // For apply labels mode, template is required
+        if (triageMode === TriageMode.ApplyLabels) {
+            if (!template) {
+                throw new Error('Template is required for applying labels');
+            }
+        }
+        // Make sure templates are the ones we support
+        validateTemplate(template);
+        // Get project and issue numbers
         const projectInput = coreExports.getInput('project');
         const issueInput = coreExports.getInput('issue');
         const issueContext = githubExports.context.issue?.number || 0;
-        // Validate template
-        validateTemplate(template);
-        // Validate repository context
-        validateRepositoryId(githubExports.context.repo.owner, githubExports.context.repo.repo);
-        // Determine triage mode
-        const triageMode = template === TriageMode.EngagementScore ? TriageMode.EngagementScore : TriageMode.IssueTriage;
-        // Validate inputs based on mode
+        // Make sure they are correct for the mode
         if (triageMode === TriageMode.EngagementScore) {
             if (!projectInput && !issueInput) {
-                throw new Error('Either project or issue must be specified when using engagement-score template');
+                throw new Error('Either project or issue must be specified when calculating engagement scores');
             }
         }
-        else {
-            // For normal triage mode, default to current issue if not specified
+        else if (triageMode === TriageMode.ApplyLabels) {
             if (!issueInput && !issueContext) {
-                throw new Error('Issue number is required for triage mode');
+                throw new Error('Issue number is required for applying labels');
             }
         }
+        // Validate repository context
+        validateRepositoryId(githubExports.context.repo.owner, githubExports.context.repo.repo);
         // Initialize configuration object
         const token = coreExports.getInput('token') ||
             process.env.TRIAGE_GITHUB_TOKEN ||
@@ -51263,11 +51267,11 @@ async function run() {
             aiEndpoint: coreExports.getInput('ai-endpoint') || process.env.TRIAGE_AI_ENDPOINT || DEFAULT_AI_ENDPOINT,
             aiModel: coreExports.getInput('ai-model') || process.env.TRIAGE_AI_MODEL || DEFAULT_AI_MODEL,
             aiToken: aiToken,
-            applyComment: coreExports.getBooleanInput('apply-comment'),
-            applyLabels: coreExports.getBooleanInput('apply-labels'),
-            applyScores: coreExports.getBooleanInput('apply-scores'),
+            applyComment: coreExports.getInput('apply-comment')?.toLowerCase() === 'true',
+            applyLabels: coreExports.getInput('apply-labels')?.toLowerCase() === 'true',
+            applyScores: coreExports.getInput('apply-scores')?.toLowerCase() === 'true',
             commentFooter: coreExports.getInput('comment-footer'),
-            dryRun: coreExports.getBooleanInput('dry-run') || false,
+            dryRun: coreExports.getInput('dry-run')?.toLowerCase() === 'true',
             issueNumber: validateNumericInput(issueInput || issueContext.toString(), 'issue number'),
             label: coreExports.getInput('label'),
             labelPrefix: coreExports.getInput('label-prefix'),
@@ -51293,9 +51297,11 @@ async function run() {
         let responseFile = '';
         // Run the appropriate workflow based on the triage mode
         if (triageMode === TriageMode.EngagementScore) {
+            coreExports.info('Running engagement scoring workflow');
             responseFile = await runEngagementWorkflow(config);
         }
         else {
+            coreExports.info('Running apply labels workflow');
             responseFile = await runTriageWorkflow(config);
         }
         // Set the response file output
@@ -51310,6 +51316,14 @@ async function run() {
             coreExports.setFailed(`An unknown error occurred: ${JSON.stringify(error)}`);
         }
     }
+}
+/**
+ * The main function for the action (backward compatibility)
+ *
+ * @returns Resolves when the action is complete.
+ */
+async function run() {
+    await runWorkflow();
 }
 
 /**

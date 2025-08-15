@@ -19,7 +19,7 @@ export interface EngagementWeights {
 /**
  * Configuration interface for the .triagerc.yml file
  */
-export interface TriageConfig {
+export interface TriageConfigFile {
   engagement?: {
     weights?: Partial<EngagementWeights>
   }
@@ -58,14 +58,14 @@ export async function loadTriageConfig(workspacePath: string = '.'): Promise<Eng
     utils.safePath(normalizedWorkspace, '.github/.triagerc.yml')
   ]
 
-  let config: TriageConfig = {}
+  let config: TriageConfigFile = {}
 
   const failedPaths: Map<string, string> = new Map()
   for (const configPath of configPaths) {
     try {
       core.info(`Attempting to load triage configuration from ${configPath}`)
       const fileContent = await fs.promises.readFile(configPath, 'utf8')
-      const parsedConfig = yaml.load(fileContent) as TriageConfig
+      const parsedConfig = yaml.load(fileContent) as TriageConfigFile
 
       if (parsedConfig && typeof parsedConfig === 'object') {
         config = parsedConfig
