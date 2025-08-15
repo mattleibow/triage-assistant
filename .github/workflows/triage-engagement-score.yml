@@ -21,11 +21,15 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      # print all environment variables
+      - name: Print Environment Variables
+        run: printenv
+        shell: bash
+
       - name: Apply Engagement Scores to Project
         uses: ./engagement-score/
         with:
           token: ${{ secrets.ENGAGEMENT_GITHUB_TOKEN }}
-          template: engagement-score
           project: 8
           project-column: 'Engagement Score'
           apply-scores: true
