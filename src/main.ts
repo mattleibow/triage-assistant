@@ -26,35 +26,9 @@ enum TriageMode {
 }
 
 /**
- * Detects which sub-action or template is being used based on the action context
+ * Detects triage mode based on template for backward compatibility
  */
-function detectTriageMode(template?: string): TriageMode {
-  // Check if we're running from a sub-action by examining the action name or path
-  const githubAction = process.env.GITHUB_ACTION || ''
-  const githubActionPath = process.env.GITHUB_ACTION_PATH || ''
-
-  // print all environment variables
-  for (const [key, value] of Object.entries(process.env)) {
-    core.info(`Environment variable ${key}: ${value}`)
-  }
-
-  // Log for debugging
-  core.info(
-    `Detecting triage mode using action name: ${githubAction}, action path: ${githubActionPath} and template: ${template}`
-  )
-
-  // Check if running from engagement-score sub-action
-  if (githubAction.includes('engagement-score') || githubActionPath.includes('engagement-score')) {
-    core.info(`Detected engagement-score sub-action mode`)
-    return TriageMode.EngagementScore
-  }
-
-  // Check if running from apply-labels sub-action
-  if (githubAction.includes('apply-labels') || githubActionPath.includes('apply-labels')) {
-    core.info(`Detected apply-labels sub-action mode`)
-    return TriageMode.ApplyLabels
-  }
-
+function detectTriageModeFromTemplate(template?: string): TriageMode {
   // Check which mode based on an explicit template
   const triageMode = template === TriageMode.EngagementScore ? TriageMode.EngagementScore : TriageMode.ApplyLabels
   core.info(`Using template ${template} to determine triage mode: ${triageMode}`)
@@ -63,11 +37,9 @@ function detectTriageMode(template?: string): TriageMode {
 }
 
 /**
- * The main function for the action.
- *
- * @returns Resolves when the action is complete.
+ * Common workflow execution logic
  */
-export async function run(): Promise<void> {
+async function runWorkflow(triageMode: TriageMode | null, isSubAction: boolean = false): Promise<void> {
   const DEFAULT_AI_ENDPOINT = 'https://models.github.ai/inference'
   const DEFAULT_AI_MODEL = 'openai/gpt-4o'
   const DEFAULT_PROJECT_COLUMN_NAME = 'Engagement Score'
@@ -77,10 +49,12 @@ export async function run(): Promise<void> {
   try {
     // Get inputs for mode determination
     const template = core.getInput('template')
-    const triageMode = detectTriageMode(template)
     const projectInput = core.getInput('project')
     const issueInput = core.getInput('issue')
     const issueContext = github.context.issue?.number || 0
+
+    // For backward compatibility, detect mode from template if not explicitly set
+    const finalTriageMode = triageMode || detectTriageModeFromTemplate(template)
 
     // Validate template
     validateTemplate(template)
@@ -89,21 +63,21 @@ export async function run(): Promise<void> {
     utils.validateRepositoryId(github.context.repo.owner, github.context.repo.repo)
 
     // Validate inputs based on mode
-    if (triageMode === TriageMode.EngagementScore) {
+    if (finalTriageMode === TriageMode.EngagementScore) {
       if (!projectInput && !issueInput) {
         throw new Error('Either project or issue must be specified when using engagement-score template')
       }
-    } else if (triageMode === TriageMode.ApplyLabels) {
+    } else if (finalTriageMode === TriageMode.ApplyLabels) {
       // For apply labels mode, default to current issue if not specified
       if (!issueInput && !issueContext) {
         throw new Error('Issue number is required for triage mode')
       }
-      // For apply labels mode, template is also required
-      if (!template) {
+      // For apply labels mode, template is required when using main action (not sub-actions)
+      if (!template && !isSubAction) {
         throw new Error('Template is required for triage mode')
       }
     } else {
-      throw new Error(`Unknown triage mode: ${triageMode}`)
+      throw new Error(`Unknown triage mode: ${finalTriageMode}`)
     }
 
     // Initialize configuration object
@@ -151,9 +125,11 @@ export async function run(): Promise<void> {
     let responseFile = ''
 
     // Run the appropriate workflow based on the triage mode
-    if (triageMode === TriageMode.EngagementScore) {
+    if (finalTriageMode === TriageMode.EngagementScore) {
+      core.info('Running engagement scoring workflow')
       responseFile = await runEngagementWorkflow(config)
     } else {
+      core.info('Running apply labels workflow')
       responseFile = await runTriageWorkflow(config)
     }
 
@@ -167,4 +143,35 @@ export async function run(): Promise<void> {
       core.setFailed(`An unknown error occurred: ${JSON.stringify(error)}`)
     }
   }
+}
+
+/**
+ * The main function for the action (backward compatibility)
+ *
+ * @returns Resolves when the action is complete.
+ */
+export async function run(): Promise<void> {
+  // Get inputs for mode determination
+  const template = core.getInput('template')
+  const triageMode = template ? detectTriageModeFromTemplate(template) : null
+
+  await runWorkflow(triageMode, false)
+}
+
+/**
+ * Entry point for apply-labels sub-action
+ *
+ * @returns Resolves when the action is complete.
+ */
+export async function runApplyLabels(): Promise<void> {
+  await runWorkflow(TriageMode.ApplyLabels, true)
+}
+
+/**
+ * Entry point for engagement-score sub-action
+ *
+ * @returns Resolves when the action is complete.
+ */
+export async function runEngagementScore(): Promise<void> {
+  await runWorkflow(TriageMode.EngagementScore, true)
 }

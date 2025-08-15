@@ -421,4 +421,110 @@ describe('Main Multi-Mode Functionality', () => {
       expect(core.info).toHaveBeenCalledWith('Running in dry-run mode. No changes will be made.')
     })
   })
+
+  describe('Sub-Action Functions', () => {
+    beforeEach(() => {
+      jest.clearAllMocks()
+    })
+
+    it('should run apply-labels sub-action without requiring template', async () => {
+      core.getInput.mockImplementation((name: string) => {
+        switch (name) {
+          case 'issue':
+            return '999'
+          case 'token':
+            return 'test-token'
+          default:
+            return ''
+        }
+      })
+
+      const { runApplyLabels } = await import('../src/main.js')
+      await runApplyLabels()
+
+      expect(mockRunTriageWorkflow).toHaveBeenCalledWith(
+        expect.objectContaining({
+          issueNumber: 999,
+          template: '',
+          token: 'test-token'
+        })
+      )
+      expect(mockRunEngagementWorkflow).not.toHaveBeenCalled()
+    })
+
+    it('should run engagement-score sub-action without requiring template', async () => {
+      core.getInput.mockImplementation((name: string) => {
+        switch (name) {
+          case 'project':
+            return '456'
+          case 'token':
+            return 'test-token'
+          default:
+            return ''
+        }
+      })
+
+      const { runEngagementScore } = await import('../src/main.js')
+      await runEngagementScore()
+
+      expect(mockRunEngagementWorkflow).toHaveBeenCalledWith(
+        expect.objectContaining({
+          projectNumber: 456,
+          template: '',
+          token: 'test-token'
+        })
+      )
+      expect(mockRunTriageWorkflow).not.toHaveBeenCalled()
+    })
+
+    it('should allow apply-labels sub-action to work with template input', async () => {
+      core.getInput.mockImplementation((name: string) => {
+        switch (name) {
+          case 'template':
+            return 'multi-label'
+          case 'issue':
+            return '777'
+          case 'token':
+            return 'test-token'
+          default:
+            return ''
+        }
+      })
+
+      const { runApplyLabels } = await import('../src/main.js')
+      await runApplyLabels()
+
+      expect(mockRunTriageWorkflow).toHaveBeenCalledWith(
+        expect.objectContaining({
+          issueNumber: 777,
+          template: 'multi-label',
+          token: 'test-token'
+        })
+      )
+    })
+
+    it('should allow engagement-score sub-action to work with issue input', async () => {
+      core.getInput.mockImplementation((name: string) => {
+        switch (name) {
+          case 'issue':
+            return '789'
+          case 'token':
+            return 'test-token'
+          default:
+            return ''
+        }
+      })
+
+      const { runEngagementScore } = await import('../src/main.js')
+      await runEngagementScore()
+
+      expect(mockRunEngagementWorkflow).toHaveBeenCalledWith(
+        expect.objectContaining({
+          issueNumber: 789,
+          template: '',
+          token: 'test-token'
+        })
+      )
+    })
+  })
 })
