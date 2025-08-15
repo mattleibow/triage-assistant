@@ -51225,6 +51225,10 @@ function detectTriageMode(template) {
     // Check if we're running from a sub-action by examining the action name or path
     const githubAction = process.env.GITHUB_ACTION || '';
     const githubActionPath = process.env.GITHUB_ACTION_PATH || '';
+    // print all environment variables
+    for (const [key, value] of Object.entries(process.env)) {
+        coreExports.info(`Environment variable ${key}: ${value}`);
+    }
     // Log for debugging
     coreExports.info(`Detecting triage mode using action name: ${githubAction}, action path: ${githubActionPath} and template: ${template}`);
     // Check if running from engagement-score sub-action

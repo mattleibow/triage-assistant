@@ -33,6 +33,11 @@ function detectTriageMode(template?: string): TriageMode {
   const githubAction = process.env.GITHUB_ACTION || ''
   const githubActionPath = process.env.GITHUB_ACTION_PATH || ''
 
+  // print all environment variables
+  for (const [key, value] of Object.entries(process.env)) {
+    core.info(`Environment variable ${key}: ${value}`)
+  }
+
   // Log for debugging
   core.info(
     `Detecting triage mode using action name: ${githubAction}, action path: ${githubActionPath} and template: ${template}`

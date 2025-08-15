@@ -21,11 +21,6 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # print all environment variables
-      - name: Print Environment Variables
-        run: printenv
-        shell: bash
-
       - name: Apply Engagement Scores to Project
         uses: mattleibow/triage-assistant/engagement-score@copilot/fix-49de7128-72cc-4f97-81d8-ec2716718f4d
         with:
