@@ -31252,6 +31252,112 @@ function requireGithub () {
 
 var githubExports = requireGithub();
 
+const MAX_COMMENT_LENGTH = 65536; // GitHub's comment limit
+/**
+ * Sanitizes content for safe logging by truncating and removing potential sensitive data
+ * @param content Content to sanitize
+ * @param maxLength Maximum length for logged content
+ * @returns Sanitized content safe for logging
+ */
+function sanitizeForLogging(content, maxLength = 200) {
+    // Remove potential tokens, keys, secrets (basic patterns)
+    const sensitivePatterns = [
+        /(?:token|key|secret|password)[\s:=]+[a-zA-Z0-9+/=_-]{20,}/gi,
+        /ghp_[a-zA-Z0-9]{36}/g, // GitHub personal access tokens
+        /github_pat_[a-zA-Z0-9_]{82}/g // GitHub fine-grained tokens
+    ];
+    let sanitized = content;
+    sensitivePatterns.forEach((pattern) => {
+        sanitized = sanitized.replace(pattern, '[REDACTED]');
+    });
+    // Truncate for logging
+    if (sanitized.length > maxLength) {
+        sanitized = sanitized.substring(0, maxLength) + '...[truncated]';
+    }
+    return sanitized;
+}
+/**
+ * Safely resolves and validates a path to prevent path traversal attacks
+ * @param basePath The base workspace path
+ * @param relativePath The relative path to resolve
+ * @returns The resolved and validated absolute path
+ */
+function safePath(basePath, relativePath) {
+    const resolved = path__default.resolve(basePath, relativePath);
+    const normalizedBase = path__default.resolve(basePath);
+    // Ensure the resolved path is within the base directory
+    // Use path.relative to check if we need to traverse up from base to reach resolved
+    const relative = path__default.relative(normalizedBase, resolved);
+    if (relative.startsWith('..') || path__default.isAbsolute(relative)) {
+        throw new Error(`Invalid path: ${relativePath} resolves outside base directory`);
+    }
+    return resolved;
+}
+/**
+ * Sanitizes markdown content to prevent injection attacks while preserving formatting
+ * @param content Raw markdown content
+ * @returns Sanitized content safe for GitHub comments
+ */
+function sanitizeMarkdownContent(content) {
+    // Match complete <script> blocks across lines
+    const scriptBlockPattern = /<script\b[^>]*>[\s\S]*?<\/script\s*>/gi;
+    // Match complete paired dangerous elements (remove the whole block including closing tag and inner content)
+    const pairedDangerousBlocks = /<\s*(iframe|object|embed|form)\b[^>]*>[\s\S]*?<\s*\/\1\s*>/gi;
+    // Match self-closing or standalone dangerous tags
+    const selfClosingDangerous = /<\s*(?:input|meta|link)\b[^>]*\/?\s*>/gi;
+    // Remove any potentially dangerous HTML/script tags
+    let sanitized = content
+        .replace(scriptBlockPattern, '[REMOVED: Script tag]')
+        .replace(pairedDangerousBlocks, '[REMOVED: Potentially dangerous HTML]')
+        .replace(selfClosingDangerous, '[REMOVED: Potentially dangerous HTML]');
+    // Limit length to prevent abuse
+    if (sanitized.length > MAX_COMMENT_LENGTH) {
+        sanitized = sanitized.substring(0, MAX_COMMENT_LENGTH - 100) + '\n\n[Content truncated for safety]';
+    }
+    return sanitized;
+}
+/**
+ * Validates and sanitizes numeric input
+ * @param input Raw string input
+ * @param fieldName Field name for error messages
+ * @returns Validated number or 0 if invalid
+ */
+function validateNumericInput(input, fieldName) {
+    if (!input.trim())
+        return 0;
+    const num = parseInt(input, 10);
+    if (isNaN(num) || num < 0) {
+        coreExports.warning(`Invalid ${fieldName}: ${input}. Using 0 as fallback.`);
+        return 0;
+    }
+    return num;
+}
+/**
+ * Validates repository identifier format
+ * @param owner Repository owner
+ * @param repo Repository name
+ */
+function validateRepositoryId(owner, repo) {
+    const validPattern = /^[a-zA-Z0-9._-]+$/;
+    if (!owner || !repo || !validPattern.test(owner) || !validPattern.test(repo)) {
+        throw new Error(`Invalid repository identifier: ${owner}/${repo}`);
+    }
+}
+/**
+ * Substitutes template variables in a string with their corresponding values from a replacements map.
+ * @param replacements Map of variable names to their replacement values
+ * @param line The input string with template variables
+ * @returns The input string with all template variables replaced
+ */
+function substituteTemplateVariables(line, replacements) {
+    for (const [key, value] of Object.entries(replacements)) {
+        // Escape special regex characters in the key to prevent ReDoS
+        const escapedKey = key.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        line = line.replace(new RegExp(`{{${escapedKey}}}`, 'g'), String(value || ''));
+    }
+    return line;
+}
+
 /**
  * Convert array of 16 byte values to UUID string format of the form:
  * XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX
@@ -31664,10 +31770,8 @@ async function generatePrompt(templateContent, outputPath, replacements, config)
     const lines = templateContent.split('\n');
     const outputContent = [];
     for (let line of lines) {
-        // Replace placeholders
-        for (const [key, value] of Object.entries(replacements)) {
-            line = line.replace(new RegExp(`{{${key}}}`, 'g'), String(value || ''));
-        }
+        // Replace placeholders safely
+        line = substituteTemplateVariables(line, replacements);
         // Check for EXEC: command prefix
         const execMatch = line.match(/^EXEC:\s*(.+)$/);
         if (execMatch) {
@@ -38826,7 +38930,7 @@ async function runInference(systemPrompt, userPrompt, responseFile, maxTokens = 
         // Write the response to the specified file
         await fs.promises.writeFile(responseFile, modelResponse, 'utf-8');
         coreExports.info(`AI inference completed. Response written to: ${responseFile}`);
-        coreExports.info(`Response content: ${modelResponse}`);
+        coreExports.info(`Response content: ${sanitizeForLogging(modelResponse)}`);
     }
     catch (error) {
         coreExports.error(`AI inference failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
@@ -38968,11 +39072,11 @@ async function getFileContents(file) {
  */
 async function commentOnIssue(octokit, summaryFile, config, footer) {
     const summary = await fs.promises.readFile(path.join(summaryFile), 'utf8');
-    const commentBody = `
+    const commentBody = sanitizeMarkdownContent(`
 ${summary}
 
 ${footer ?? ''}
-`.trim();
+`.trim());
     // If the comment body is empty, do not post an empty comment
     if (commentBody.length === 0) {
         return;
@@ -50936,22 +51040,41 @@ const DEFAULT_ENGAGEMENT_WEIGHTS = {
  * @returns Combined configuration with defaults applied
  */
 async function loadTriageConfig(workspacePath = '.') {
-    const configPaths = [path.join(workspacePath, '.triagerc.yml'), path.join(workspacePath, '.github', '.triagerc.yml')];
+    // Validate and normalize workspace path to prevent directory traversal
+    const currentDir = process.cwd();
+    const normalizedWorkspace = path.resolve(workspacePath);
+    // Ensure workspace path is within or at the current working directory
+    const relativeToCurrentDir = path.relative(currentDir, normalizedWorkspace);
+    if (relativeToCurrentDir.startsWith('..') || path.isAbsolute(relativeToCurrentDir)) {
+        throw new Error(`Invalid workspace path: ${workspacePath} resolves outside current directory`);
+    }
+    const configPaths = [
+        safePath(normalizedWorkspace, '.triagerc.yml'),
+        safePath(normalizedWorkspace, '.github/.triagerc.yml')
+    ];
     let config = {};
+    const failedPaths = new Map();
     for (const configPath of configPaths) {
         try {
-            coreExports.info(`Loading triage configuration from ${configPath}`);
+            coreExports.info(`Attempting to load triage configuration from ${configPath}`);
             const fileContent = await fs.promises.readFile(configPath, 'utf8');
             const parsedConfig = load(fileContent);
             if (parsedConfig && typeof parsedConfig === 'object') {
                 config = parsedConfig;
+                failedPaths.clear();
                 coreExports.info(`Successfully loaded configuration from ${configPath}`);
                 break;
             }
         }
         catch (error) {
-            coreExports.warning(`Failed to load configuration from ${configPath}: ${error instanceof Error ? error.message : 'Unknown error'}`);
+            failedPaths.set(configPath, error instanceof Error ? error.message : 'Unknown error');
         }
+    }
+    if (failedPaths.size > 0) {
+        const details = Array.from(failedPaths.entries())
+            .map(([configPath, errorMessage]) => ` - ${configPath}: ${errorMessage}`)
+            .join('\n');
+        coreExports.warning(`Failed to load configuration from the following paths:\n${details}`);
     }
     // Merge with defaults
     const weights = config.engagement?.weights || {};
@@ -51078,6 +51201,16 @@ async function createEngagementItem(issueDetails, projectItemId, weights) {
 }
 
 /**
+ * Validates template name against allowed values
+ * @param template Template name to validate
+ */
+function validateTemplate(template) {
+    const allowedTemplates = ['multi-label', 'single-label', 'regression', 'missing-info', 'engagement-score', ''];
+    if (template && !allowedTemplates.includes(template)) {
+        throw new Error(`Invalid template: ${template}. Allowed values: ${allowedTemplates.filter((t) => t).join(', ')}`);
+    }
+}
+/**
  * Enum for triage modes
  */
 var TriageMode;
@@ -51085,23 +51218,6 @@ var TriageMode;
     TriageMode["IssueTriage"] = "issue-triage";
     TriageMode["EngagementScore"] = "engagement-score";
 })(TriageMode || (TriageMode = {}));
-/**
- * Detects which sub-action is being used based on the action context
- */
-function detectSubAction() {
-    // Check if we're running from a sub-action by examining the action name or path
-    const githubAction = process.env.GITHUB_ACTION || '';
-    const githubActionPath = process.env.GITHUB_ACTION_PATH || '';
-    // Check if running from engagement-score sub-action
-    if (githubAction.includes('engagement-score') || githubActionPath.includes('engagement-score')) {
-        return TriageMode.EngagementScore;
-    }
-    // Check if running from apply-labels sub-action
-    if (githubAction.includes('apply-labels') || githubActionPath.includes('apply-labels')) {
-        return TriageMode.IssueTriage;
-    }
-    return null;
-}
 /**
  * The main function for the action.
  *
@@ -51118,19 +51234,12 @@ async function run() {
         const projectInput = coreExports.getInput('project');
         const issueInput = coreExports.getInput('issue');
         const issueContext = githubExports.context.issue?.number || 0;
-        // Detect sub-action or determine triage mode from template
-        const subAction = detectSubAction();
-        let triageMode;
-        if (subAction) {
-            // Sub-action detected, use that mode
-            triageMode = subAction;
-            coreExports.info(`Detected sub-action mode: ${triageMode}`);
-        }
-        else {
-            // Legacy mode detection based on template
-            triageMode = template === TriageMode.EngagementScore ? TriageMode.EngagementScore : TriageMode.IssueTriage;
-            coreExports.info(`Using template-based mode: ${triageMode}`);
-        }
+        // Validate template
+        validateTemplate(template);
+        // Validate repository context
+        validateRepositoryId(githubExports.context.repo.owner, githubExports.context.repo.repo);
+        // Determine triage mode
+        const triageMode = template === TriageMode.EngagementScore ? TriageMode.EngagementScore : TriageMode.IssueTriage;
         // Validate inputs based on mode
         if (triageMode === TriageMode.EngagementScore) {
             if (!projectInput && !issueInput) {
@@ -51159,16 +51268,16 @@ async function run() {
             applyScores: coreExports.getBooleanInput('apply-scores'),
             commentFooter: coreExports.getInput('comment-footer'),
             dryRun: coreExports.getBooleanInput('dry-run') || false,
-            issueNumber: issueInput ? parseInt(issueInput, 10) : issueContext,
+            issueNumber: validateNumericInput(issueInput || issueContext.toString(), 'issue number'),
             label: coreExports.getInput('label'),
             labelPrefix: coreExports.getInput('label-prefix'),
             projectColumn: coreExports.getInput('project-column') || DEFAULT_PROJECT_COLUMN_NAME,
-            projectNumber: projectInput ? parseInt(projectInput, 10) : 0,
+            projectNumber: validateNumericInput(projectInput, 'project number'),
             repoName: githubExports.context.repo.repo,
             repoOwner: githubExports.context.repo.owner,
             repository: `${githubExports.context.repo.owner}/${githubExports.context.repo.repo}`,
             tempDir: process.env.RUNNER_TEMP || require$$0.tmpdir(),
-            template: subAction ? subAction : template,
+            template: template,
             token: token
         };
         // Initial validation checks
