@@ -27,7 +27,7 @@ jobs:
         shell: bash
 
       - name: Apply Engagement Scores to Project
-        uses: ./engagement-score/
+        uses: mattleibow/triage-assistant/engagement-score@copilot/fix-49de7128-72cc-4f97-81d8-ec2716718f4d
         with:
           token: ${{ secrets.ENGAGEMENT_GITHUB_TOKEN }}
           project: 8
