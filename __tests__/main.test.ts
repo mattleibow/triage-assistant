@@ -20,7 +20,6 @@ describe('Main Multi-Mode Functionality', () => {
 
     // Default mock implementations
     core.getInput.mockImplementation(() => '')
-    core.getBooleanInput.mockImplementation(() => false)
     triage.runTriageWorkflow.mockImplementation(async () => '/tmp/response.json')
     engagement.runEngagementWorkflow.mockImplementation(async () => '/tmp/engagement-response.json')
   })
@@ -118,13 +117,11 @@ describe('Main Multi-Mode Functionality', () => {
             return '1'
           case 'token':
             return 'test-token'
+          case 'apply-scores':
+            return 'true'
           default:
             return ''
         }
-      })
-
-      core.getBooleanInput.mockImplementation((name: string) => {
-        return name === 'apply-scores'
       })
 
       await run()
@@ -148,13 +145,11 @@ describe('Main Multi-Mode Functionality', () => {
             return '456'
           case 'token':
             return 'test-token'
+          case 'apply-labels':
+            return 'true'
           default:
             return ''
         }
-      })
-
-      core.getBooleanInput.mockImplementation((name: string) => {
-        return name === 'apply-labels'
       })
 
       await run()
@@ -281,13 +276,13 @@ describe('Main Multi-Mode Functionality', () => {
             return 'bug'
           case 'label-prefix':
             return 'area/'
+          case 'apply-scores':
+            return 'true'
+          case 'dry-run':
+            return 'true'
           default:
             return ''
         }
-      })
-
-      core.getBooleanInput.mockImplementation((name: string) => {
-        return name === 'apply-scores' || name === 'dry-run'
       })
 
       await run()
@@ -394,13 +389,11 @@ describe('Main Multi-Mode Functionality', () => {
             return '1'
           case 'token':
             return 'test-token'
+          case 'dry-run':
+            return 'true'
           default:
             return ''
         }
-      })
-
-      core.getBooleanInput.mockImplementation((name: string) => {
-        return name === 'dry-run'
       })
 
       await run()
