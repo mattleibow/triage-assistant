@@ -1,45 +1,15 @@
 import * as core from '@actions/core'
 import * as github from '@actions/github'
 import * as os from 'os'
-import * as utils from './utils.js'
+import { TriageMode, validateInputs, validateNumericInput, validateRepositoryId, validateTemplate } from './utils.js'
 import { runTriageWorkflow } from './triage/triage.js'
 import { runEngagementWorkflow } from './engagement/engagement.js'
 import { EverythingConfig } from './config.js'
 
 /**
- * Validates template name against allowed values
- * @param template Template name to validate
- */
-export function validateTemplate(template: string): void {
-  const allowedTemplates = ['multi-label', 'single-label', 'regression', 'missing-info', 'engagement-score', '']
-  if (template && !allowedTemplates.includes(template)) {
-    throw new Error(`Invalid template: ${template}. Allowed values: ${allowedTemplates.filter((t) => t).join(', ')}`)
-  }
-}
-
-/**
- * Enum for triage modes
- */
-enum TriageMode {
-  ApplyLabels = 'apply-labels',
-  EngagementScore = 'engagement-score'
-}
-
-/**
- * Detects triage mode based on template for backward compatibility
- */
-function detectTriageModeFromTemplate(template?: string): TriageMode {
-  // Check which mode based on an explicit template
-  const triageMode = template === TriageMode.EngagementScore ? TriageMode.EngagementScore : TriageMode.ApplyLabels
-  core.info(`Using template ${template} to determine triage mode: ${triageMode}`)
-
-  return triageMode
-}
-
-/**
  * Common workflow execution logic
  */
-async function runWorkflow(triageMode: TriageMode | null, isSubAction: boolean = false): Promise<void> {
+async function runWorkflow(triageModeOverride?: TriageMode): Promise<void> {
   const DEFAULT_AI_ENDPOINT = 'https://models.github.ai/inference'
   const DEFAULT_AI_MODEL = 'openai/gpt-4o'
   const DEFAULT_PROJECT_COLUMN_NAME = 'Engagement Score'
@@ -52,33 +22,18 @@ async function runWorkflow(triageMode: TriageMode | null, isSubAction: boolean =
     const projectInput = core.getInput('project')
     const issueInput = core.getInput('issue')
     const issueContext = github.context.issue?.number || 0
-
-    // For backward compatibility, detect mode from template if not explicitly set
-    const finalTriageMode = triageMode || detectTriageModeFromTemplate(template)
+    const triageMode =
+      triageModeOverride ||
+      (template === TriageMode.EngagementScore ? TriageMode.EngagementScore : TriageMode.ApplyLabels)
 
     // Validate template
     validateTemplate(template)
 
     // Validate repository context
-    utils.validateRepositoryId(github.context.repo.owner, github.context.repo.repo)
+    validateRepositoryId(github.context.repo.owner, github.context.repo.repo)
 
     // Validate inputs based on mode
-    if (finalTriageMode === TriageMode.EngagementScore) {
-      if (!projectInput && !issueInput) {
-        throw new Error('Either project or issue must be specified when using engagement-score template')
-      }
-    } else if (finalTriageMode === TriageMode.ApplyLabels) {
-      // For apply labels mode, default to current issue if not specified
-      if (!issueInput && !issueContext) {
-        throw new Error('Issue number is required for triage mode')
-      }
-      // For apply labels mode, template is required when using main action (not sub-actions)
-      if (!template && !isSubAction) {
-        throw new Error('Template is required for triage mode')
-      }
-    } else {
-      throw new Error(`Unknown triage mode: ${finalTriageMode}`)
-    }
+    validateInputs(triageMode, projectInput, issueInput, issueContext, template)
 
     // Initialize configuration object
     const token =
@@ -98,11 +53,11 @@ async function runWorkflow(triageMode: TriageMode | null, isSubAction: boolean =
       applyScores: core.getBooleanInput('apply-scores'),
       commentFooter: core.getInput('comment-footer'),
       dryRun: core.getBooleanInput('dry-run') || false,
-      issueNumber: utils.validateNumericInput(issueInput || issueContext.toString(), 'issue number'),
+      issueNumber: validateNumericInput(issueInput || issueContext.toString(), 'issue number'),
       label: core.getInput('label'),
       labelPrefix: core.getInput('label-prefix'),
       projectColumn: core.getInput('project-column') || DEFAULT_PROJECT_COLUMN_NAME,
-      projectNumber: utils.validateNumericInput(projectInput, 'project number'),
+      projectNumber: validateNumericInput(projectInput, 'project number'),
       repoName: github.context.repo.repo,
       repoOwner: github.context.repo.owner,
       repository: `${github.context.repo.owner}/${github.context.repo.repo}`,
@@ -125,7 +80,7 @@ async function runWorkflow(triageMode: TriageMode | null, isSubAction: boolean =
     let responseFile = ''
 
     // Run the appropriate workflow based on the triage mode
-    if (finalTriageMode === TriageMode.EngagementScore) {
+    if (triageMode === TriageMode.EngagementScore) {
       core.info('Running engagement scoring workflow')
       responseFile = await runEngagementWorkflow(config)
     } else {
@@ -151,11 +106,7 @@ async function runWorkflow(triageMode: TriageMode | null, isSubAction: boolean =
  * @returns Resolves when the action is complete.
  */
 export async function run(): Promise<void> {
-  // Get inputs for mode determination
-  const template = core.getInput('template')
-  const triageMode = template ? detectTriageModeFromTemplate(template) : null
-
-  await runWorkflow(triageMode, false)
+  await runWorkflow()
 }
 
 /**
@@ -164,7 +115,7 @@ export async function run(): Promise<void> {
  * @returns Resolves when the action is complete.
  */
 export async function runApplyLabels(): Promise<void> {
-  await runWorkflow(TriageMode.ApplyLabels, true)
+  await runWorkflow(TriageMode.ApplyLabels)
 }
 
 /**
@@ -173,5 +124,5 @@ export async function runApplyLabels(): Promise<void> {
  * @returns Resolves when the action is complete.
  */
 export async function runEngagementScore(): Promise<void> {
-  await runWorkflow(TriageMode.EngagementScore, true)
+  await runWorkflow(TriageMode.EngagementScore)
 }

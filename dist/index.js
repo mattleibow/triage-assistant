@@ -31254,6 +31254,14 @@ var githubExports = requireGithub();
 
 const MAX_COMMENT_LENGTH = 65536; // GitHub's comment limit
 /**
+ * Enum for triage modes
+ */
+var TriageMode;
+(function (TriageMode) {
+    TriageMode["ApplyLabels"] = "apply-labels";
+    TriageMode["EngagementScore"] = "engagement-score";
+})(TriageMode || (TriageMode = {}));
+/**
  * Sanitizes content for safe logging by truncating and removing potential sensitive data
  * @param content Content to sanitize
  * @param maxLength Maximum length for logged content
@@ -31341,6 +31349,44 @@ function validateRepositoryId(owner, repo) {
     const validPattern = /^[a-zA-Z0-9._-]+$/;
     if (!owner || !repo || !validPattern.test(owner) || !validPattern.test(repo)) {
         throw new Error(`Invalid repository identifier: ${owner}/${repo}`);
+    }
+}
+/**
+ * Validates inputs for the triage workflow
+ * @param triageMode The triage mode
+ * @param projectInput The project input
+ * @param issueInput The issue input
+ * @param issueContext The issue context
+ * @param template The template
+ */
+function validateInputs(triageMode, projectInput, issueInput, issueContext, template) {
+    if (triageMode === TriageMode.EngagementScore) {
+        if (!projectInput && !issueInput) {
+            throw new Error('Either project or issue must be specified when calculating engagement scores');
+        }
+    }
+    else if (triageMode === TriageMode.ApplyLabels) {
+        // For apply labels mode, default to current issue if not specified
+        if (!issueInput && !issueContext) {
+            throw new Error('Issue number is required for applying labels');
+        }
+        // For apply labels mode, template is required
+        if (!template) {
+            throw new Error('Template is required for applying labels');
+        }
+    }
+    else {
+        throw new Error(`Unknown triage mode: ${triageMode}`);
+    }
+}
+/**
+ * Validates template name against allowed values
+ * @param template Template name to validate
+ */
+function validateTemplate(template) {
+    const allowedTemplates = ['multi-label', 'single-label', 'regression', 'missing-info', 'engagement-score', ''];
+    if (template && !allowedTemplates.includes(template)) {
+        throw new Error(`Invalid template: ${template}. Allowed values: ${allowedTemplates.filter((t) => t).join(', ')}`);
     }
 }
 /**
@@ -51201,36 +51247,9 @@ async function createEngagementItem(issueDetails, projectItemId, weights) {
 }
 
 /**
- * Validates template name against allowed values
- * @param template Template name to validate
- */
-function validateTemplate(template) {
-    const allowedTemplates = ['multi-label', 'single-label', 'regression', 'missing-info', 'engagement-score', ''];
-    if (template && !allowedTemplates.includes(template)) {
-        throw new Error(`Invalid template: ${template}. Allowed values: ${allowedTemplates.filter((t) => t).join(', ')}`);
-    }
-}
-/**
- * Enum for triage modes
- */
-var TriageMode;
-(function (TriageMode) {
-    TriageMode["ApplyLabels"] = "apply-labels";
-    TriageMode["EngagementScore"] = "engagement-score";
-})(TriageMode || (TriageMode = {}));
-/**
- * Detects triage mode based on template for backward compatibility
- */
-function detectTriageModeFromTemplate(template) {
-    // Check which mode based on an explicit template
-    const triageMode = template === TriageMode.EngagementScore ? TriageMode.EngagementScore : TriageMode.ApplyLabels;
-    coreExports.info(`Using template ${template} to determine triage mode: ${triageMode}`);
-    return triageMode;
-}
-/**
  * Common workflow execution logic
  */
-async function runWorkflow(triageMode, isSubAction = false) {
+async function runWorkflow(triageModeOverride) {
     const DEFAULT_AI_ENDPOINT = 'https://models.github.ai/inference';
     const DEFAULT_AI_MODEL = 'openai/gpt-4o';
     const DEFAULT_PROJECT_COLUMN_NAME = 'Engagement Score';
@@ -51241,31 +51260,14 @@ async function runWorkflow(triageMode, isSubAction = false) {
         const projectInput = coreExports.getInput('project');
         const issueInput = coreExports.getInput('issue');
         const issueContext = githubExports.context.issue?.number || 0;
-        // For backward compatibility, detect mode from template if not explicitly set
-        const finalTriageMode = triageMode || detectTriageModeFromTemplate(template);
+        const triageMode = triageModeOverride ||
+            (template === TriageMode.EngagementScore ? TriageMode.EngagementScore : TriageMode.ApplyLabels);
         // Validate template
         validateTemplate(template);
         // Validate repository context
         validateRepositoryId(githubExports.context.repo.owner, githubExports.context.repo.repo);
         // Validate inputs based on mode
-        if (finalTriageMode === TriageMode.EngagementScore) {
-            if (!projectInput && !issueInput) {
-                throw new Error('Either project or issue must be specified when using engagement-score template');
-            }
-        }
-        else if (finalTriageMode === TriageMode.ApplyLabels) {
-            // For apply labels mode, default to current issue if not specified
-            if (!issueInput && !issueContext) {
-                throw new Error('Issue number is required for triage mode');
-            }
-            // For apply labels mode, template is required when using main action (not sub-actions)
-            if (!template && !isSubAction) {
-                throw new Error('Template is required for triage mode');
-            }
-        }
-        else {
-            throw new Error(`Unknown triage mode: ${finalTriageMode}`);
-        }
+        validateInputs(triageMode, projectInput, issueInput, issueContext, template);
         // Initialize configuration object
         const token = coreExports.getInput('token') ||
             process.env.TRIAGE_GITHUB_TOKEN ||
@@ -51306,7 +51308,7 @@ async function runWorkflow(triageMode, isSubAction = false) {
         }
         let responseFile = '';
         // Run the appropriate workflow based on the triage mode
-        if (finalTriageMode === TriageMode.EngagementScore) {
+        if (triageMode === TriageMode.EngagementScore) {
             coreExports.info('Running engagement scoring workflow');
             responseFile = await runEngagementWorkflow(config);
         }
@@ -51333,10 +51335,7 @@ async function runWorkflow(triageMode, isSubAction = false) {
  * @returns Resolves when the action is complete.
  */
 async function run() {
-    // Get inputs for mode determination
-    const template = coreExports.getInput('template');
-    const triageMode = template ? detectTriageModeFromTemplate(template) : null;
-    await runWorkflow(triageMode, false);
+    await runWorkflow();
 }
 
 /**

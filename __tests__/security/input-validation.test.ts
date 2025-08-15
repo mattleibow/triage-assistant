@@ -5,7 +5,6 @@ import * as core from '../../__fixtures__/actions/core.js'
 jest.unstable_mockModule('@actions/core', () => core)
 
 // Import the module being tested and mocked dependencies
-const { validateTemplate } = await import('../../src/main.js')
 const utils = await import('../../src/utils.js')
 
 describe('Input Validation Security Tests', () => {
@@ -67,19 +66,19 @@ describe('Input Validation Security Tests', () => {
 
   describe('Template Validation', () => {
     it('should reject invalid template names', () => {
-      expect(() => validateTemplate('malicious-template')).toThrow('Invalid template: malicious-template')
+      expect(() => utils.validateTemplate('malicious-template')).toThrow('Invalid template: malicious-template')
     })
 
     it('should accept valid template names', () => {
       const validTemplates = ['multi-label', 'single-label', 'regression', 'missing-info', 'engagement-score']
 
       for (const template of validTemplates) {
-        expect(() => validateTemplate(template)).not.toThrow()
+        expect(() => utils.validateTemplate(template)).not.toThrow()
       }
     })
 
     it('should accept empty template', () => {
-      expect(() => validateTemplate('')).not.toThrow()
+      expect(() => utils.validateTemplate('')).not.toThrow()
     })
   })
 
