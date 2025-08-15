@@ -1,0 +1,49 @@
+name: 'Platform-Specific Labeling'
+
+on:
+  issues:
+    types: [opened]
+  pull_request:
+    types: [opened]
+
+permissions:
+  contents: read
+  issues: write
+  pull-requests: write
+  models: read
+
+jobs:
+  platform-labeling:
+    runs-on: ubuntu-latest
+    steps:
+      # Apply platform-specific labels
+      - name: Apply platform labels
+        uses: mattleibow/triage-assistant/apply-labels@v0.7.0
+        with:
+          label-prefix: 'platform/'
+          template: 'multi-label'
+          apply-labels: true
+
+      # Apply OS-specific labels
+      - name: Apply OS labels
+        uses: mattleibow/triage-assistant/apply-labels@v0.7.0
+        with:
+          label-prefix: 'os-'
+          template: 'multi-label'
+          apply-labels: true
+
+      # Apply framework labels
+      - name: Apply framework labels
+        uses: mattleibow/triage-assistant/apply-labels@v0.7.0
+        with:
+          label-prefix: 'framework-'
+          template: 'single-label'
+          apply-labels: true
+
+      # Add final comment with all applied labels
+      - name: Add summary comment
+        uses: mattleibow/triage-assistant/apply-labels@v0.7.0
+        with:
+          template: 'multi-label'
+          apply-comment: true
+          comment-footer: 'Platform-specific triage completed automatically'

@@ -1,0 +1,43 @@
+name: 'Manual Triage'
+
+on:
+  workflow_dispatch:
+    inputs:
+      issue_number:
+        description: 'Issue number to triage'
+        required: true
+        type: number
+      template_type:
+        description: 'Triage template to use'
+        required: true
+        type: choice
+        options:
+          - multi-label
+          - single-label
+          - regression
+          - missing-info
+        default: 'multi-label'
+      label_prefix:
+        description: 'Label prefix (optional)'
+        required: false
+        type: string
+        default: 'area-'
+
+permissions:
+  contents: read
+  issues: write
+  pull-requests: write
+  models: read
+
+jobs:
+  manual-triage:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Triage specific issue
+        uses: mattleibow/triage-assistant/apply-labels@v0.7.0
+        with:
+          issue: ${{ inputs.issue_number }}
+          template: ${{ inputs.template_type }}
+          label-prefix: ${{ inputs.label_prefix }}
+          apply-labels: true
+          apply-comment: true

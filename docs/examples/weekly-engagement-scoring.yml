@@ -1,0 +1,27 @@
+name: 'Weekly Engagement Scoring'
+
+on:
+  schedule:
+    # Run weekly on Mondays at 9 AM UTC
+    - cron: '0 9 * * 1'
+  workflow_dispatch: # Allow manual triggering
+
+permissions:
+  contents: read
+  issues: read
+  pull-requests: read
+  repository-projects: write
+
+jobs:
+  engagement-scoring:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Calculate engagement scores for project
+        uses: mattleibow/triage-assistant/engagement-score@v0.7.0
+        with:
+          project: 1 # Replace with your project number
+          apply-scores: true
+          project-column: 'Engagement Score'
+          dry-run: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
