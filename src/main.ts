@@ -9,29 +9,40 @@ import { EverythingConfig } from './config.js'
  * Enum for triage modes
  */
 enum TriageMode {
-  IssueTriage = 'issue-triage',
+  ApplyLabels = 'apply-labels',
   EngagementScore = 'engagement-score'
 }
 
 /**
- * Detects which sub-action is being used based on the action context
+ * Detects which sub-action or template is being used based on the action context
  */
-function detectSubAction(): TriageMode | null {
+function detectTriageMode(template?: string): TriageMode {
   // Check if we're running from a sub-action by examining the action name or path
   const githubAction = process.env.GITHUB_ACTION || ''
   const githubActionPath = process.env.GITHUB_ACTION_PATH || ''
 
+  // Log for debugging
+  core.info(
+    `Detecting triage mode using action name: ${githubAction}, action path: ${githubActionPath} and template: ${template}`
+  )
+
   // Check if running from engagement-score sub-action
   if (githubAction.includes('engagement-score') || githubActionPath.includes('engagement-score')) {
+    core.info(`Detected engagement-score sub-action mode`)
     return TriageMode.EngagementScore
   }
 
   // Check if running from apply-labels sub-action
   if (githubAction.includes('apply-labels') || githubActionPath.includes('apply-labels')) {
-    return TriageMode.IssueTriage
+    core.info(`Detected apply-labels sub-action mode`)
+    return TriageMode.ApplyLabels
   }
 
-  return null
+  // Check which mode based on an explicit template
+  const triageMode = template === TriageMode.EngagementScore ? TriageMode.EngagementScore : TriageMode.ApplyLabels
+  core.info(`Using template ${template} to determine triage mode: ${triageMode}`)
+
+  return triageMode
 }
 
 /**
@@ -49,34 +60,27 @@ export async function run(): Promise<void> {
   try {
     // Get inputs for mode determination
     const template = core.getInput('template')
+    const triageMode = detectTriageMode(template)
     const projectInput = core.getInput('project')
     const issueInput = core.getInput('issue')
     const issueContext = github.context.issue?.number || 0
-
-    // Detect sub-action or determine triage mode from template
-    const subAction = detectSubAction()
-    let triageMode: TriageMode
-
-    if (subAction) {
-      // Sub-action detected, use that mode
-      triageMode = subAction
-      core.info(`Detected sub-action mode: ${triageMode}`)
-    } else {
-      // Legacy mode detection based on template
-      triageMode = template === TriageMode.EngagementScore ? TriageMode.EngagementScore : TriageMode.IssueTriage
-      core.info(`Using template-based mode: ${triageMode}`)
-    }
 
     // Validate inputs based on mode
     if (triageMode === TriageMode.EngagementScore) {
       if (!projectInput && !issueInput) {
         throw new Error('Either project or issue must be specified when using engagement-score template')
       }
-    } else {
-      // For normal triage mode, default to current issue if not specified
+    } else if (triageMode === TriageMode.ApplyLabels) {
+      // For apply labels mode, default to current issue if not specified
       if (!issueInput && !issueContext) {
         throw new Error('Issue number is required for triage mode')
       }
+      // For apply labels mode, template is also required
+      if (!template) {
+        throw new Error('Template is required for triage mode')
+      }
+    } else {
+      throw new Error(`Unknown triage mode: ${triageMode}`)
     }
 
     // Initialize configuration object
@@ -106,7 +110,7 @@ export async function run(): Promise<void> {
       repoOwner: github.context.repo.owner,
       repository: `${github.context.repo.owner}/${github.context.repo.repo}`,
       tempDir: process.env.RUNNER_TEMP || os.tmpdir(),
-      template: subAction ? subAction : template,
+      template: template,
       token: token
     }
 

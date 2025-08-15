@@ -58,7 +58,7 @@ jobs:
 
       - name: Determine OVERLAP label for the issue
         id: triage-overlap
-        uses: ./
+        uses: ./apply-labels/
         with:
           issue: ${{ steps.get-number.outputs.number }}
           label-prefix: 'overlap-'
@@ -66,7 +66,7 @@ jobs:
 
       - name: Determine AREA label for the issue
         id: triage-area
-        uses: ./
+        uses: ./apply-labels/
         with:
           issue: ${{ steps.get-number.outputs.number }}
           label-prefix: 'area-'
@@ -74,14 +74,14 @@ jobs:
 
       - name: Determine REGRESSION label for the issue
         id: triage-regression
-        uses: ./
+        uses: ./apply-labels/
         with:
           issue: ${{ steps.get-number.outputs.number }}
           label: 'regression'
           template: 'regression'
 
       - name: Apply Labels and Comment
-        uses: ./
+        uses: ./apply-labels/
         with:
           issue: ${{ steps.get-number.outputs.number }}
           apply-labels: true

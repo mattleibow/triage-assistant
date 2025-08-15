@@ -25,7 +25,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Apply Engagement Scores to Project
-        uses: ./
+        uses: ./engagement-score/
         with:
           token: ${{ secrets.ENGAGEMENT_GITHUB_TOKEN }}
           template: engagement-score
