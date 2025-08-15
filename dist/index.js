@@ -51215,9 +51215,33 @@ function validateTemplate(template) {
  */
 var TriageMode;
 (function (TriageMode) {
-    TriageMode["IssueTriage"] = "issue-triage";
+    TriageMode["ApplyLabels"] = "apply-labels";
     TriageMode["EngagementScore"] = "engagement-score";
 })(TriageMode || (TriageMode = {}));
+/**
+ * Detects which sub-action or template is being used based on the action context
+ */
+function detectTriageMode(template) {
+    // Check if we're running from a sub-action by examining the action name or path
+    const githubAction = process.env.GITHUB_ACTION || '';
+    const githubActionPath = process.env.GITHUB_ACTION_PATH || '';
+    // Log for debugging
+    coreExports.info(`Detecting triage mode using action name: ${githubAction}, action path: ${githubActionPath} and template: ${template}`);
+    // Check if running from engagement-score sub-action
+    if (githubAction.includes('engagement-score') || githubActionPath.includes('engagement-score')) {
+        coreExports.info(`Detected engagement-score sub-action mode`);
+        return TriageMode.EngagementScore;
+    }
+    // Check if running from apply-labels sub-action
+    if (githubAction.includes('apply-labels') || githubActionPath.includes('apply-labels')) {
+        coreExports.info(`Detected apply-labels sub-action mode`);
+        return TriageMode.ApplyLabels;
+    }
+    // Check which mode based on an explicit template
+    const triageMode = template === TriageMode.EngagementScore ? TriageMode.EngagementScore : TriageMode.ApplyLabels;
+    coreExports.info(`Using template ${template} to determine triage mode: ${triageMode}`);
+    return triageMode;
+}
 /**
  * The main function for the action.
  *
@@ -51231,6 +51255,7 @@ async function run() {
     try {
         // Get inputs for mode determination
         const template = coreExports.getInput('template');
+        const triageMode = detectTriageMode(template);
         const projectInput = coreExports.getInput('project');
         const issueInput = coreExports.getInput('issue');
         const issueContext = githubExports.context.issue?.number || 0;
@@ -51238,19 +51263,24 @@ async function run() {
         validateTemplate(template);
         // Validate repository context
         validateRepositoryId(githubExports.context.repo.owner, githubExports.context.repo.repo);
-        // Determine triage mode
-        const triageMode = template === TriageMode.EngagementScore ? TriageMode.EngagementScore : TriageMode.IssueTriage;
         // Validate inputs based on mode
         if (triageMode === TriageMode.EngagementScore) {
             if (!projectInput && !issueInput) {
                 throw new Error('Either project or issue must be specified when using engagement-score template');
             }
         }
-        else {
-            // For normal triage mode, default to current issue if not specified
+        else if (triageMode === TriageMode.ApplyLabels) {
+            // For apply labels mode, default to current issue if not specified
             if (!issueInput && !issueContext) {
                 throw new Error('Issue number is required for triage mode');
             }
+            // For apply labels mode, template is also required
+            if (!template) {
+                throw new Error('Template is required for triage mode');
+            }
+        }
+        else {
+            throw new Error(`Unknown triage mode: ${triageMode}`);
         }
         // Initialize configuration object
         const token = coreExports.getInput('token') ||
