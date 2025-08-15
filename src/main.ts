@@ -1,7 +1,7 @@
 import * as core from '@actions/core'
 import * as github from '@actions/github'
 import * as os from 'os'
-import { TriageMode, validateInputs, validateNumericInput, validateRepositoryId, validateTemplate } from './utils.js'
+import { TriageMode, validateNumericInput, validateRepositoryId, validateTemplate } from './utils.js'
 import { runTriageWorkflow } from './triage/triage.js'
 import { runEngagementWorkflow } from './engagement/engagement.js'
 import { EverythingConfig } from './config.js'
@@ -17,23 +17,40 @@ async function runWorkflow(triageModeOverride?: TriageMode): Promise<void> {
   let config: EverythingConfig | undefined
 
   try {
-    // Get inputs for mode determination
-    const template = core.getInput('template')
-    const projectInput = core.getInput('project')
-    const issueInput = core.getInput('issue')
-    const issueContext = github.context.issue?.number || 0
+    // Get template and triage mode
+    const template = core.getInput('template', { required: false })
     const triageMode =
       triageModeOverride ||
       (template === TriageMode.EngagementScore ? TriageMode.EngagementScore : TriageMode.ApplyLabels)
 
-    // Validate template
+    // For apply labels mode, template is required
+    if (triageMode === TriageMode.ApplyLabels) {
+      if (!template) {
+        throw new Error('Template is required for applying labels')
+      }
+    }
+
+    // Make sure templates are the ones we support
     validateTemplate(template)
+
+    // Get project and issue numbers
+    const projectInput = core.getInput('project')
+    const issueInput = core.getInput('issue')
+    const issueContext = github.context.issue?.number || 0
+
+    // Make sure they are correct for the mode
+    if (triageMode === TriageMode.EngagementScore) {
+      if (!projectInput && !issueInput) {
+        throw new Error('Either project or issue must be specified when calculating engagement scores')
+      }
+    } else if (triageMode === TriageMode.ApplyLabels) {
+      if (!issueInput && !issueContext) {
+        throw new Error('Issue number is required for applying labels')
+      }
+    }
 
     // Validate repository context
     validateRepositoryId(github.context.repo.owner, github.context.repo.repo)
-
-    // Validate inputs based on mode
-    validateInputs(triageMode, projectInput, issueInput, issueContext, template)
 
     // Initialize configuration object
     const token =
@@ -48,11 +65,11 @@ async function runWorkflow(triageModeOverride?: TriageMode): Promise<void> {
       aiEndpoint: core.getInput('ai-endpoint') || process.env.TRIAGE_AI_ENDPOINT || DEFAULT_AI_ENDPOINT,
       aiModel: core.getInput('ai-model') || process.env.TRIAGE_AI_MODEL || DEFAULT_AI_MODEL,
       aiToken: aiToken,
-      applyComment: core.getBooleanInput('apply-comment'),
-      applyLabels: core.getBooleanInput('apply-labels'),
-      applyScores: core.getBooleanInput('apply-scores'),
+      applyComment: core.getBooleanInput('apply-comment', { required: false }),
+      applyLabels: core.getBooleanInput('apply-labels', { required: false }),
+      applyScores: core.getBooleanInput('apply-scores', { required: false }),
       commentFooter: core.getInput('comment-footer'),
-      dryRun: core.getBooleanInput('dry-run') || false,
+      dryRun: core.getBooleanInput('dry-run', { required: false }),
       issueNumber: validateNumericInput(issueInput || issueContext.toString(), 'issue number'),
       label: core.getInput('label'),
       labelPrefix: core.getInput('label-prefix'),

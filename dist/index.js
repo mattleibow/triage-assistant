@@ -31352,34 +31352,6 @@ function validateRepositoryId(owner, repo) {
     }
 }
 /**
- * Validates inputs for the triage workflow
- * @param triageMode The triage mode
- * @param projectInput The project input
- * @param issueInput The issue input
- * @param issueContext The issue context
- * @param template The template
- */
-function validateInputs(triageMode, projectInput, issueInput, issueContext, template) {
-    if (triageMode === TriageMode.EngagementScore) {
-        if (!projectInput && !issueInput) {
-            throw new Error('Either project or issue must be specified when calculating engagement scores');
-        }
-    }
-    else if (triageMode === TriageMode.ApplyLabels) {
-        // For apply labels mode, default to current issue if not specified
-        if (!issueInput && !issueContext) {
-            throw new Error('Issue number is required for applying labels');
-        }
-        // For apply labels mode, template is required
-        if (!template) {
-            throw new Error('Template is required for applying labels');
-        }
-    }
-    else {
-        throw new Error(`Unknown triage mode: ${triageMode}`);
-    }
-}
-/**
  * Validates template name against allowed values
  * @param template Template name to validate
  */
@@ -51255,19 +51227,35 @@ async function runWorkflow(triageModeOverride) {
     const DEFAULT_PROJECT_COLUMN_NAME = 'Engagement Score';
     let config;
     try {
-        // Get inputs for mode determination
-        const template = coreExports.getInput('template');
+        // Get template and triage mode
+        const template = coreExports.getInput('template', { required: false });
+        const triageMode = triageModeOverride ||
+            (template === TriageMode.EngagementScore ? TriageMode.EngagementScore : TriageMode.ApplyLabels);
+        // For apply labels mode, template is required
+        if (triageMode === TriageMode.ApplyLabels) {
+            if (!template) {
+                throw new Error('Template is required for applying labels');
+            }
+        }
+        // Make sure templates are the ones we support
+        validateTemplate(template);
+        // Get project and issue numbers
         const projectInput = coreExports.getInput('project');
         const issueInput = coreExports.getInput('issue');
         const issueContext = githubExports.context.issue?.number || 0;
-        const triageMode = triageModeOverride ||
-            (template === TriageMode.EngagementScore ? TriageMode.EngagementScore : TriageMode.ApplyLabels);
-        // Validate template
-        validateTemplate(template);
+        // Make sure they are correct for the mode
+        if (triageMode === TriageMode.EngagementScore) {
+            if (!projectInput && !issueInput) {
+                throw new Error('Either project or issue must be specified when calculating engagement scores');
+            }
+        }
+        else if (triageMode === TriageMode.ApplyLabels) {
+            if (!issueInput && !issueContext) {
+                throw new Error('Issue number is required for applying labels');
+            }
+        }
         // Validate repository context
         validateRepositoryId(githubExports.context.repo.owner, githubExports.context.repo.repo);
-        // Validate inputs based on mode
-        validateInputs(triageMode, projectInput, issueInput, issueContext, template);
         // Initialize configuration object
         const token = coreExports.getInput('token') ||
             process.env.TRIAGE_GITHUB_TOKEN ||
@@ -51279,11 +51267,11 @@ async function runWorkflow(triageModeOverride) {
             aiEndpoint: coreExports.getInput('ai-endpoint') || process.env.TRIAGE_AI_ENDPOINT || DEFAULT_AI_ENDPOINT,
             aiModel: coreExports.getInput('ai-model') || process.env.TRIAGE_AI_MODEL || DEFAULT_AI_MODEL,
             aiToken: aiToken,
-            applyComment: coreExports.getBooleanInput('apply-comment'),
-            applyLabels: coreExports.getBooleanInput('apply-labels'),
-            applyScores: coreExports.getBooleanInput('apply-scores'),
+            applyComment: coreExports.getBooleanInput('apply-comment', { required: false }),
+            applyLabels: coreExports.getBooleanInput('apply-labels', { required: false }),
+            applyScores: coreExports.getBooleanInput('apply-scores', { required: false }),
             commentFooter: coreExports.getInput('comment-footer'),
-            dryRun: coreExports.getBooleanInput('dry-run') || false,
+            dryRun: coreExports.getBooleanInput('dry-run', { required: false }),
             issueNumber: validateNumericInput(issueInput || issueContext.toString(), 'issue number'),
             label: coreExports.getInput('label'),
             labelPrefix: coreExports.getInput('label-prefix'),

@@ -114,39 +114,6 @@ export function validateRepositoryId(owner: string, repo: string): void {
 }
 
 /**
- * Validates inputs for the triage workflow
- * @param triageMode The triage mode
- * @param projectInput The project input
- * @param issueInput The issue input
- * @param issueContext The issue context
- * @param template The template
- */
-export function validateInputs(
-  triageMode: TriageMode,
-  projectInput: string,
-  issueInput: string,
-  issueContext: number,
-  template: string
-) {
-  if (triageMode === TriageMode.EngagementScore) {
-    if (!projectInput && !issueInput) {
-      throw new Error('Either project or issue must be specified when calculating engagement scores')
-    }
-  } else if (triageMode === TriageMode.ApplyLabels) {
-    // For apply labels mode, default to current issue if not specified
-    if (!issueInput && !issueContext) {
-      throw new Error('Issue number is required for applying labels')
-    }
-    // For apply labels mode, template is required
-    if (!template) {
-      throw new Error('Template is required for applying labels')
-    }
-  } else {
-    throw new Error(`Unknown triage mode: ${triageMode}`)
-  }
-}
-
-/**
  * Validates template name against allowed values
  * @param template Template name to validate
  */
