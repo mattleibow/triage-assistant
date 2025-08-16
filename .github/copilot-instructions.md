@@ -6,6 +6,18 @@ This is a sophisticated TypeScript GitHub Action that provides multi-mode triage
 labeling and comprehensive engagement scoring. The action integrates with GitHub Projects v2, supports multiple
 operational modes, and includes extensive testing infrastructure.
 
+## Documentation Structure
+
+The project maintains a simplified README with focused documentation in the `docs/` folder:
+
+- **README.md** - Quick start guide with essential examples and overview
+- **docs/configuration.md** - Configuration file (`.triagerc.yml`) documentation
+- **docs/apply-labels.md** - AI-powered label application sub-action
+- **docs/engagement-score.md** - Community engagement scoring sub-action
+- **docs/troubleshooting.md** - Common issues, debugging, and solutions
+
+Each documentation file focuses on specific functionality without duplication across files.
+
 ## Architecture Overview
 
 ### Multi-Mode Operation System
