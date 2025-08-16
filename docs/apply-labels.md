@@ -39,34 +39,32 @@ The `apply-labels` sub-action focuses on AI-powered label application and issue 
 | --------------- | ------------------------------------------------- |
 | `response-file` | The file that contains the result of AI inference |
 
-## Template Behavior
+## Template Parameter Behavior
 
-The `template` parameter is **truly optional**. The action operates in two distinct modes:
+The `template` parameter controls whether AI analysis is performed:
 
-### With Template (AI-Powered Mode)
-
-When a template is provided, the action uses AI inference to analyze the issue content and automatically select
-appropriate labels based on the specified template logic.
+### AI-Powered Mode (template required)
+When a `template` is provided, the action uses AI to analyze the issue content and automatically select appropriate labels. The template parameter is **required** for AI analysis:
 
 ```yaml
-- uses: mattleibow/triage-assistant/apply-labels@v0.7.0
+- name: AI-powered label application  
+  uses: mattleibow/triage-assistant/apply-labels@v0.7.0
   with:
-    template: 'multi-label' # AI analyzes and selects labels
+    template: 'multi-label'  # Required for AI analysis
     apply-labels: true
+    apply-comment: true
 ```
 
-### Without Template (Merge-Only Mode)
-
-When no template is provided (`template: ''` or omitted), the action skips AI inference and only applies manually
-specified labels or performs merge operations. This is useful when you want to apply specific labels without AI
-analysis.
+### Non-AI Mode (template not needed)
+When no `template` is provided, the action skips AI analysis and only applies specific labels or comments that you explicitly specify:
 
 ```yaml
-- uses: mattleibow/triage-assistant/apply-labels@v0.7.0
+- name: Apply specific label without AI
+  uses: mattleibow/triage-assistant/apply-labels@v0.7.0
   with:
-    label: 'bug' # Apply specific label without AI
+    label: 'needs-info'      # Specific label to apply
     apply-labels: true
-    # No template needed
+    # No template parameter needed
 ```
 
 ## Triage Templates
@@ -136,30 +134,15 @@ analysis.
     dry-run: true
 ```
 
-### Apply Specific Label Without AI
-
-Apply a predetermined label without AI analysis:
+### Manual Label Application (No AI)
 
 ```yaml
-- name: Add bug label
+- name: Add specific label
   uses: mattleibow/triage-assistant/apply-labels@v0.7.0
   with:
-    label: 'bug'
+    label: 'needs-info'
     apply-labels: true
-    # No template parameter needed
-```
-
-### Merge Labels Only Mode
-
-Apply labels based on merge logic without AI inference:
-
-```yaml
-- name: Apply priority labels
-  uses: mattleibow/triage-assistant/apply-labels@v0.7.0
-  with:
-    label-prefix: 'priority-'
-    apply-labels: true
-    # Skips AI analysis, applies labels based on merge logic only
+    # No template parameter - skips AI analysis
 ```
 
 ## Required Permissions

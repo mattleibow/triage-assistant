@@ -8,11 +8,10 @@ on:
         required: true
         type: number
       template_type:
-        description: 'Triage template to use (leave empty for no AI analysis)'
-        required: false
+        description: 'Triage template to use'
+        required: true
         type: choice
         options:
-          - ''
           - multi-label
           - single-label
           - regression
@@ -23,11 +22,6 @@ on:
         required: false
         type: string
         default: 'area-'
-      specific_label:
-        description: 'Specific label to apply (when not using AI templates)'
-        required: false
-        type: string
-        default: ''
 
 permissions:
   contents: read
@@ -45,6 +39,5 @@ jobs:
           issue: ${{ inputs.issue_number }}
           template: ${{ inputs.template_type }}
           label-prefix: ${{ inputs.label_prefix }}
-          label: ${{ inputs.specific_label }}
           apply-labels: true
           apply-comment: true

@@ -18,27 +18,27 @@ The triage assistant provides focused sub-actions for specific functionality:
 
 #### Apply Labels Sub-Action
 
-With AI analysis:
+AI-powered label application (requires template):
 
 ```yaml
 - name: Apply labels to new issues
   uses: mattleibow/triage-assistant/apply-labels@v0.7.0
   with:
-    template: 'multi-label'
+    template: 'multi-label'  # Required for AI analysis
     label-prefix: 'area-'
     apply-labels: true
     apply-comment: true
 ```
 
-Without AI (specific labels only):
+Manual label application (no template needed):
 
 ```yaml
 - name: Apply specific label
   uses: mattleibow/triage-assistant/apply-labels@v0.7.0
   with:
-    label: 'needs-info'
+    label: 'needs-info'  # Specific label to apply
     apply-labels: true
-    # template parameter is optional
+    # No template parameter - skips AI analysis
 ```
 
 #### Engagement Score Sub-Action
@@ -116,15 +116,15 @@ jobs:
       - name: Check for regression
         uses: mattleibow/triage-assistant/apply-labels@v0.7.0
         with:
-          template: 'regression'
+          template: 'regression'  # Required for AI analysis
           label: 'regression'
 
-      - name: Add triage label (no AI)
+      - name: Add needs-info label (no AI)
         uses: mattleibow/triage-assistant/apply-labels@v0.7.0
         with:
-          label: 'triaged'
+          label: 'needs-info'  # Specific label to apply
           apply-labels: true
-          # No template needed for specific label application
+          # No template parameter - skips AI analysis
 
       - name: Apply all labels and comment
         uses: mattleibow/triage-assistant/apply-labels@v0.7.0
@@ -148,7 +148,7 @@ on:
 permissions:
   contents: read
   issues: read
-  projects: write
+  repository-projects: write
 
 jobs:
   engagement:
