@@ -114,7 +114,7 @@ A custom personal access token (PAT) or app token can:
 
 ```yaml
 - name: Triage with default token
-  uses: mattleibow/triage-assistant@v0.7.0
+  uses: mattleibow/triage-assistant/apply-labels@v0.7.0
   with:
     # Uses default github.token automatically
     template: multi-label
@@ -125,7 +125,7 @@ A custom personal access token (PAT) or app token can:
 
 ```yaml
 - name: Triage with custom token
-  uses: mattleibow/triage-assistant@v0.7.0
+  uses: mattleibow/triage-assistant/apply-labels@v0.7.0
   with:
     token: ${{ secrets.CUSTOM_GITHUB_TOKEN }}
     template: multi-label
@@ -138,7 +138,7 @@ You can specify a fallback token for additional reliability:
 
 ```yaml
 - name: Triage with fallback
-  uses: mattleibow/triage-assistant@v0.7.0
+  uses: mattleibow/triage-assistant/apply-labels@v0.7.0
   with:
     token: ${{ secrets.CUSTOM_GITHUB_TOKEN }}
     fallback-token: ${{ github.token }}
@@ -205,7 +205,7 @@ Test permissions without making changes:
 
 ```yaml
 - name: Test permissions
-  uses: mattleibow/triage-assistant@v0.7.0
+  uses: mattleibow/triage-assistant/apply-labels@v0.7.0
   with:
     template: multi-label
     apply-labels: true

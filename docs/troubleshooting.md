@@ -71,7 +71,7 @@ Test configurations without making changes:
 
 ```yaml
 - name: Test configuration
-  uses: mattleibow/triage-assistant@v0.7.0
+  uses: mattleibow/triage-assistant/apply-labels@v0.7.0
   with:
     template: multi-label
     dry-run: true

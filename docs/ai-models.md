@@ -10,7 +10,7 @@ You can configure the AI model using inputs or environment variables:
 
 ```yaml
 - name: Triage with custom AI model
-  uses: mattleibow/triage-assistant@v0.7.0
+  uses: mattleibow/triage-assistant/apply-labels@v0.7.0
   with:
     template: single-label
     label-prefix: 'area-'
@@ -58,7 +58,7 @@ For custom endpoints, provide your own authentication token:
 
 ```yaml
 - name: Use custom AI service
-  uses: mattleibow/triage-assistant@v0.7.0
+  uses: mattleibow/triage-assistant/apply-labels@v0.7.0
   with:
     ai-endpoint: 'https://api.openai.com/v1'
     ai-model: 'gpt-4'
@@ -88,7 +88,7 @@ For custom endpoints, provide your own authentication token:
 
 ```yaml
 - name: Production triage
-  uses: mattleibow/triage-assistant@v0.7.0
+  uses: mattleibow/triage-assistant/apply-labels@v0.7.0
   with:
     template: multi-label
     ai-model: 'openai/gpt-4o'
@@ -100,7 +100,7 @@ For custom endpoints, provide your own authentication token:
 
 ```yaml
 - name: Development testing
-  uses: mattleibow/triage-assistant@v0.7.0
+  uses: mattleibow/triage-assistant/apply-labels@v0.7.0
   with:
     template: single-label
     ai-model: 'openai/gpt-4o-mini'
@@ -111,7 +111,7 @@ For custom endpoints, provide your own authentication token:
 
 ```yaml
 - name: Custom AI service
-  uses: mattleibow/triage-assistant@v0.7.0
+  uses: mattleibow/triage-assistant/apply-labels@v0.7.0
   with:
     template: multi-label
     ai-endpoint: 'https://your-custom-endpoint.com/v1'
@@ -163,8 +163,12 @@ For custom endpoints, provide your own authentication token:
 
 ### Common Issues
 
-**Model not available**: Check GitHub Models availability for your account **Authentication failed**: Verify your AI
-token is correct and has access **Rate limit exceeded**: Reduce frequency or upgrade your plan **Invalid endpoint**:
-Ensure the endpoint URL is correct and accessible
+**Model not available**: Check GitHub Models availability for your account
+
+**Authentication failed**: Verify your AI token is correct and has access
+
+**Rate limit exceeded**: Reduce frequency or upgrade your plan
+
+**Invalid endpoint**: Ensure the endpoint URL is correct and accessible
 
 See [troubleshooting.md](troubleshooting.md) for more detailed troubleshooting information.
