@@ -148,7 +148,7 @@ on:
 permissions:
   contents: read
   issues: read
-  repository-projects: write
+  projects: write
 
 jobs:
   engagement:

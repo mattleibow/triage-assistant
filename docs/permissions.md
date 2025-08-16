@@ -23,7 +23,7 @@ permissions:
   contents: read # To read repository content
   issues: read # To read issue data for scoring
   pull-requests: read # To read PR data for scoring
-  repository-projects: write # To update project fields with scores
+  projects: write # To update project fields with scores
   models: read # To access GitHub Models (if AI features are used)
 ```
 
@@ -36,7 +36,7 @@ permissions:
   contents: read # To read repository content
   issues: write # To add labels and comments to issues
   pull-requests: write # To add labels and comments to pull requests
-  repository-projects: write # To update project fields with scores
+  projects: write # To update project fields with scores
   models: read # To access GitHub Models for AI inference
 ```
 
@@ -66,13 +66,18 @@ permissions:
 - Creating comments on pull requests
 - Updating PR metadata
 
-### `repository-projects: write`
+### `projects: write`
 
-**Required for**: Engagement scoring with project updates **Purpose**:
+**Required for**: Engagement scoring with project updates
 
-- Reading project structure and items
-- Updating project field values
-- Managing project item properties
+**Purpose**: This permission allows the action to interact with GitHub Projects v2 (the new Projects experience). It enables:
+
+- Reading project structure, fields, and items
+- Updating project field values (such as engagement scores)  
+- Managing project item properties and metadata
+- Accessing project data through the GitHub GraphQL API
+
+**Note**: This permission is specifically for GitHub Projects v2, not the deprecated Projects Classic. The action uses GraphQL queries like `projectV2` and mutations like `updateProjectV2ItemFieldValue` to modify project data.
 
 ### `models: read`
 
@@ -185,7 +190,7 @@ For organization repositories:
 
 **Cause**: Project access permissions **Solutions**:
 
-- Verify `repository-projects: write` permission
+- Verify `projects: write` permission
 - Ensure token has access to the project
 - Check project visibility settings
 

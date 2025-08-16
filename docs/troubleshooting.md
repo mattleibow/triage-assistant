@@ -36,7 +36,7 @@ This guide helps you resolve common issues when using the AI Triage Assistant.
 **Issue**: "Project not found" error **Solution**:
 
 - Ensure the project number is correct
-- Verify the token has `repository-projects: write` permission
+- Verify the token has `projects: write` permission
 - Check that the project is accessible with your current token
 
 ### Field Not Found
@@ -59,7 +59,7 @@ This guide helps you resolve common issues when using the AI Triage Assistant.
 
 **Issue**: Permission denied when updating project fields **Solution**:
 
-- Ensure your workflow has `repository-projects: write` permission
+- Ensure your workflow has `projects: write` permission
 - Check that your token has access to the specified project
 - Verify the project is in the same organization/repository
 

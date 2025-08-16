@@ -76,7 +76,7 @@ permissions:
   contents: read
   issues: read
   pull-requests: read
-  repository-projects: write
+  projects: write
 
 jobs:
   engagement-scoring:
@@ -140,7 +140,7 @@ permissions:
   contents: read # To read repository content
   issues: read # To read issue data for scoring
   pull-requests: read # To read PR data for scoring
-  repository-projects: write # To update project fields with scores
+  projects: write # To update project fields with scores
 ```
 
 ## Configuration
