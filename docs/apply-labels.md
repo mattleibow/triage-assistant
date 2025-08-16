@@ -25,7 +25,7 @@ The `apply-labels` sub-action focuses on AI-powered label application and issue 
 | `ai-model`       | Model to use for AI inference                               | `''`                  | No       |
 | `ai-token`       | Token for AI inference                                      | `''`                  | No       |
 | `issue`          | The issue number of the issue to triage                     | `''`                  | No       |
-| `template`       | Triage template to use                                      | `multi-label`         | No       |
+| `template`       | Triage template to use                                      | `''`                  | No       |
 | `label`          | The specific label to use                                   | `''`                  | No       |
 | `label-prefix`   | Prefix for label search (e.g., platform/, area-, etc.)      | `''`                  | No       |
 | `apply-labels`   | Whether to apply labels to the issue                        | `false`               | No       |
@@ -38,6 +38,36 @@ The `apply-labels` sub-action focuses on AI-powered label application and issue 
 | Name            | Description                                       |
 | --------------- | ------------------------------------------------- |
 | `response-file` | The file that contains the result of AI inference |
+
+## Template Behavior
+
+The `template` parameter is **truly optional**. The action operates in two distinct modes:
+
+### With Template (AI-Powered Mode)
+
+When a template is provided, the action uses AI inference to analyze the issue content and automatically select
+appropriate labels based on the specified template logic.
+
+```yaml
+- uses: mattleibow/triage-assistant/apply-labels@v0.7.0
+  with:
+    template: 'multi-label' # AI analyzes and selects labels
+    apply-labels: true
+```
+
+### Without Template (Merge-Only Mode)
+
+When no template is provided (`template: ''` or omitted), the action skips AI inference and only applies manually
+specified labels or performs merge operations. This is useful when you want to apply specific labels without AI
+analysis.
+
+```yaml
+- uses: mattleibow/triage-assistant/apply-labels@v0.7.0
+  with:
+    label: 'bug' # Apply specific label without AI
+    apply-labels: true
+    # No template needed
+```
 
 ## Triage Templates
 
@@ -104,6 +134,32 @@ The `apply-labels` sub-action focuses on AI-powered label application and issue 
     template: 'multi-label'
     label-prefix: 'area-'
     dry-run: true
+```
+
+### Apply Specific Label Without AI
+
+Apply a predetermined label without AI analysis:
+
+```yaml
+- name: Add bug label
+  uses: mattleibow/triage-assistant/apply-labels@v0.7.0
+  with:
+    label: 'bug'
+    apply-labels: true
+    # No template parameter needed
+```
+
+### Merge Labels Only Mode
+
+Apply labels based on merge logic without AI inference:
+
+```yaml
+- name: Apply priority labels
+  uses: mattleibow/triage-assistant/apply-labels@v0.7.0
+  with:
+    label-prefix: 'priority-'
+    apply-labels: true
+    # Skips AI analysis, applies labels based on merge logic only
 ```
 
 ## Required Permissions
