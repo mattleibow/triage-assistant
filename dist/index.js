@@ -31697,6 +31697,7 @@ diagnose reported problems.
 ### If issue has all necessary information:
 
 {
+  "summary": "Brief summary of the issue",
   "repro": {
     "has_clear_description": true,
     "has_steps": true,
@@ -31711,6 +31712,7 @@ diagnose reported problems.
 ### If issue is missing information:
 
 {
+  "summary": "Brief summary of the issue",
   "repro": {
     "has_clear_description": true|false,
     "has_steps": true|false,
@@ -39352,8 +39354,12 @@ function addComments(comments, allComments) {
  */
 function buildNeedsInfoComment(data) {
     const parts = [];
-    // Add friendly greeting and summary
+    // Add friendly greeting
     parts.push(`Thank you for reporting this issue! To help us investigate and resolve it effectively, we need some additional information.`);
+    // Add issue summary if provided
+    if (data.summary && data.summary.trim()) {
+        parts.push(`\n**Issue Summary**: ${data.summary}`);
+    }
     // Add missing information section if there are specific missing fields
     if (data.missing && data.missing.length > 0) {
         parts.push(`\n## Missing Information`);

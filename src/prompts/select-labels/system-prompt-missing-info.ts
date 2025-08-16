@@ -51,6 +51,7 @@ diagnose reported problems.
 ### If issue has all necessary information:
 
 {
+  "summary": "Brief summary of the issue",
   "repro": {
     "has_clear_description": true,
     "has_steps": true,
@@ -65,6 +66,7 @@ diagnose reported problems.
 ### If issue is missing information:
 
 {
+  "summary": "Brief summary of the issue",
   "repro": {
     "has_clear_description": true|false,
     "has_steps": true|false,

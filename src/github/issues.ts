@@ -348,10 +348,15 @@ function addComments(
 export function buildNeedsInfoComment(data: MissingInfoPayload): string {
   const parts: string[] = []
 
-  // Add friendly greeting and summary
+  // Add friendly greeting
   parts.push(
     `Thank you for reporting this issue! To help us investigate and resolve it effectively, we need some additional information.`
   )
+
+  // Add issue summary if provided
+  if (data.summary && data.summary.trim()) {
+    parts.push(`\n**Issue Summary**: ${data.summary}`)
+  }
 
   // Add missing information section if there are specific missing fields
   if (data.missing && data.missing.length > 0) {

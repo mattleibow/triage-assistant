@@ -23,7 +23,39 @@ describe('Missing Info Functionality', () => {
   })
 
   describe('buildNeedsInfoComment', () => {
-    it('should build complete comment with all sections', () => {
+    it('should build complete comment with all sections including summary', () => {
+      const data: MissingInfoPayload = {
+        summary: 'App crashes when opening settings dialog',
+        repro: {
+          has_clear_description: true,
+          has_steps: false,
+          has_code: false,
+          links: ['https://example.com/docs']
+        },
+        missing: ['steps', 'code'],
+        questions: ['Can you provide steps to reproduce the issue?', 'Can you share a minimal code sample?'],
+        labels: [
+          { label: 's/needs-info', reason: 'Missing reproduction steps' },
+          { label: 's/needs-repro', reason: 'No code sample provided' }
+        ]
+      }
+
+      const comment = buildNeedsInfoComment(data)
+
+      expect(comment).toContain('<!-- triage-assistant:needs-info-comment -->')
+      expect(comment).toContain('Thank you for reporting this issue!')
+      expect(comment).toContain('**Issue Summary**: App crashes when opening settings dialog')
+      expect(comment).toContain('## Missing Information')
+      expect(comment).toContain('Clear steps to reproduce the issue')
+      expect(comment).toContain('Code samples, repository link, or minimal reproducer')
+      expect(comment).toContain('## Questions')
+      expect(comment).toContain('1. Can you provide steps to reproduce the issue?')
+      expect(comment).toContain('2. Can you share a minimal code sample?')
+      expect(comment).toContain('## Helpful Links')
+      expect(comment).toContain('https://example.com/docs')
+    })
+
+    it('should build complete comment with all sections without summary', () => {
       const data: MissingInfoPayload = {
         repro: {
           has_clear_description: true,
@@ -43,6 +75,7 @@ describe('Missing Info Functionality', () => {
 
       expect(comment).toContain('<!-- triage-assistant:needs-info-comment -->')
       expect(comment).toContain('Thank you for reporting this issue!')
+      expect(comment).not.toContain('**Issue Summary**:')
       expect(comment).toContain('## Missing Information')
       expect(comment).toContain('Clear steps to reproduce the issue')
       expect(comment).toContain('Code samples, repository link, or minimal reproducer')
