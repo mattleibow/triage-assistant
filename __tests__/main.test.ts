@@ -1,57 +1,31 @@
 import { jest } from '@jest/globals'
 import * as core from '../__fixtures__/actions/core.js'
+import * as triage from '../__fixtures__/triage/triage.js'
+import * as engagement from '../__fixtures__/engagement/engagement.js'
+import * as github from '../__fixtures__/actions/github.js'
 
 // Mock dependencies using fixtures
 jest.unstable_mockModule('@actions/core', () => core)
-jest.unstable_mockModule('@actions/github', () => ({
-  context: {
-    repo: {
-      owner: 'test-owner',
-      repo: 'test-repo'
-    },
-    issue: {
-      number: 123
-    }
-  }
-}))
-
-// Mock dependencies
-jest.unstable_mockModule('../src/triage/triage.js', () => ({
-  runTriageWorkflow: jest.fn()
-}))
-
-jest.unstable_mockModule('../src/engagement/engagement.js', () => ({
-  runEngagementWorkflow: jest.fn()
-}))
+jest.unstable_mockModule('@actions/github', () => github)
+jest.unstable_mockModule('../src/triage/triage.js', () => triage)
+jest.unstable_mockModule('../src/engagement/engagement.js', () => engagement)
 
 // Import the module being tested
-const { run } = await import('../src/main.js')
-const { runTriageWorkflow } = await import('../src/triage/triage.js')
-const { runEngagementWorkflow } = await import('../src/engagement/engagement.js')
-
-// Type the mocks
-const mockRunTriageWorkflow = runTriageWorkflow as jest.MockedFunction<typeof runTriageWorkflow>
-const mockRunEngagementWorkflow = runEngagementWorkflow as jest.MockedFunction<typeof runEngagementWorkflow>
+const { run, runApplyLabels, runEngagementScore } = await import('../src/main.js')
 
 describe('Main Multi-Mode Functionality', () => {
   beforeEach(() => {
     jest.clearAllMocks()
+    jest.resetAllMocks()
 
     // Default mock implementations
-    core.getInput.mockImplementation((name: string) => {
-      switch (name) {
-        case 'token':
-          return 'test-token'
-        case 'fallback-token':
-          return 'fallback-token'
-        default:
-          return ''
-      }
-    })
+    core.getInput.mockImplementation(() => '')
+    triage.runTriageWorkflow.mockImplementation(async () => '/tmp/response.json')
+    engagement.runEngagementWorkflow.mockImplementation(async () => '/tmp/engagement-response.json')
+  })
 
-    core.getBooleanInput.mockReturnValue(false)
-    mockRunTriageWorkflow.mockResolvedValue('/tmp/response.json')
-    mockRunEngagementWorkflow.mockResolvedValue('/tmp/engagement-response.json')
+  afterEach(() => {
+    jest.resetAllMocks()
   })
 
   describe('Engagement Scoring Mode', () => {
@@ -73,7 +47,8 @@ describe('Main Multi-Mode Functionality', () => {
 
       await run()
 
-      expect(mockRunEngagementWorkflow).toHaveBeenCalledWith(
+      expect(core.setFailed).not.toHaveBeenCalled()
+      expect(engagement.runEngagementWorkflow).toHaveBeenCalledWith(
         expect.objectContaining({
           template: 'engagement-score',
           projectNumber: 1,
@@ -81,7 +56,7 @@ describe('Main Multi-Mode Functionality', () => {
           applyScores: false
         })
       )
-      expect(mockRunTriageWorkflow).not.toHaveBeenCalled()
+      expect(triage.runTriageWorkflow).not.toHaveBeenCalled()
       expect(core.setOutput).toHaveBeenCalledWith('response-file', '/tmp/engagement-response.json')
     })
 
@@ -101,7 +76,8 @@ describe('Main Multi-Mode Functionality', () => {
 
       await run()
 
-      expect(mockRunEngagementWorkflow).toHaveBeenCalledWith(
+      expect(core.setFailed).not.toHaveBeenCalled()
+      expect(engagement.runEngagementWorkflow).toHaveBeenCalledWith(
         expect.objectContaining({
           template: 'engagement-score',
           issueNumber: 456,
@@ -126,9 +102,10 @@ describe('Main Multi-Mode Functionality', () => {
       await run()
 
       expect(core.setFailed).toHaveBeenCalledWith(
-        'Either project or issue must be specified when using engagement-score template'
+        'Either project or issue must be specified when calculating engagement scores'
       )
-      expect(mockRunEngagementWorkflow).not.toHaveBeenCalled()
+      expect(engagement.runEngagementWorkflow).not.toHaveBeenCalled()
+      expect(triage.runTriageWorkflow).not.toHaveBeenCalled()
     })
 
     it('should handle apply-scores input correctly', async () => {
@@ -140,18 +117,17 @@ describe('Main Multi-Mode Functionality', () => {
             return '1'
           case 'token':
             return 'test-token'
+          case 'apply-scores':
+            return 'true'
           default:
             return ''
         }
       })
 
-      core.getBooleanInput.mockImplementation((name: string) => {
-        return name === 'apply-scores'
-      })
-
       await run()
 
-      expect(mockRunEngagementWorkflow).toHaveBeenCalledWith(
+      expect(core.setFailed).not.toHaveBeenCalled()
+      expect(engagement.runEngagementWorkflow).toHaveBeenCalledWith(
         expect.objectContaining({
           applyScores: true
         })
@@ -165,29 +141,35 @@ describe('Main Multi-Mode Functionality', () => {
         switch (name) {
           case 'template':
             return 'multi-label'
+          case 'issue':
+            return '456'
           case 'token':
             return 'test-token'
+          case 'apply-labels':
+            return 'true'
           default:
             return ''
         }
       })
 
-      core.getBooleanInput.mockImplementation((name: string) => {
-        return name === 'apply-labels'
-      })
-
       await run()
 
-      expect(mockRunTriageWorkflow).toHaveBeenCalledWith(
+      expect(core.setFailed).not.toHaveBeenCalled()
+      expect(triage.runTriageWorkflow).toHaveBeenCalledWith(
         expect.objectContaining({
-          template: 'multi-label'
+          template: 'multi-label',
+          issueNumber: 456
         })
       )
-      expect(mockRunEngagementWorkflow).not.toHaveBeenCalled()
+      expect(engagement.runEngagementWorkflow).not.toHaveBeenCalled()
       expect(core.setOutput).toHaveBeenCalledWith('response-file', '/tmp/response.json')
     })
 
     it('should use default issue number from context when not specified', async () => {
+      github.mockContext.issue = {
+        number: 123
+      }
+
       core.getInput.mockImplementation((name: string) => {
         switch (name) {
           case 'template':
@@ -201,7 +183,8 @@ describe('Main Multi-Mode Functionality', () => {
 
       await run()
 
-      expect(mockRunTriageWorkflow).toHaveBeenCalledWith(
+      expect(core.setFailed).not.toHaveBeenCalled()
+      expect(triage.runTriageWorkflow).toHaveBeenCalledWith(
         expect.objectContaining({
           issueNumber: 123 // From mocked context
         })
@@ -224,7 +207,8 @@ describe('Main Multi-Mode Functionality', () => {
 
       await run()
 
-      expect(mockRunTriageWorkflow).toHaveBeenCalledWith(
+      expect(core.setFailed).not.toHaveBeenCalled()
+      expect(triage.runTriageWorkflow).toHaveBeenCalledWith(
         expect.objectContaining({
           issueNumber: 999
         })
@@ -243,18 +227,14 @@ describe('Main Multi-Mode Functionality', () => {
         }
       })
 
-      core.getBooleanInput.mockImplementation((name: string) => {
-        return name === 'apply-labels'
-      })
-
-      mockRunTriageWorkflow.mockRejectedValue(new Error('Test error'))
+      triage.runTriageWorkflow.mockRejectedValue(new Error('Test error'))
 
       await run()
 
       expect(core.setFailed).toHaveBeenCalledWith('Test error')
     })
 
-    it('should handle no template provided', async () => {
+    it('should run triage workflow even when no template provided', async () => {
       core.getInput.mockImplementation((name: string) => {
         switch (name) {
           case 'token':
@@ -266,8 +246,14 @@ describe('Main Multi-Mode Functionality', () => {
 
       await run()
 
-      expect(mockRunTriageWorkflow).toHaveBeenCalled()
-      expect(mockRunEngagementWorkflow).not.toHaveBeenCalled()
+      expect(core.setFailed).not.toHaveBeenCalled()
+      expect(triage.runTriageWorkflow).toHaveBeenCalledWith(
+        expect.objectContaining({
+          template: '',
+          token: 'test-token'
+        })
+      )
+      expect(engagement.runEngagementWorkflow).not.toHaveBeenCalled()
     })
   })
 
@@ -295,18 +281,19 @@ describe('Main Multi-Mode Functionality', () => {
             return 'bug'
           case 'label-prefix':
             return 'area/'
+          case 'apply-scores':
+            return 'true'
+          case 'dry-run':
+            return 'true'
           default:
             return ''
         }
       })
 
-      core.getBooleanInput.mockImplementation((name: string) => {
-        return name === 'apply-scores' || name === 'dry-run'
-      })
-
       await run()
 
-      expect(mockRunEngagementWorkflow).toHaveBeenCalledWith(
+      expect(core.setFailed).not.toHaveBeenCalled()
+      expect(engagement.runEngagementWorkflow).toHaveBeenCalledWith(
         expect.objectContaining({
           template: 'engagement-score',
           projectNumber: 1,
@@ -342,7 +329,8 @@ describe('Main Multi-Mode Functionality', () => {
 
       await run()
 
-      expect(mockRunEngagementWorkflow).toHaveBeenCalledWith(
+      expect(core.setFailed).not.toHaveBeenCalled()
+      expect(engagement.runEngagementWorkflow).toHaveBeenCalledWith(
         expect.objectContaining({
           projectColumn: 'Engagement Score', // Default value
           applyScores: false, // Default value
@@ -369,7 +357,7 @@ describe('Main Multi-Mode Functionality', () => {
         }
       })
 
-      mockRunEngagementWorkflow.mockRejectedValue(new Error('Engagement error'))
+      engagement.runEngagementWorkflow.mockRejectedValue(new Error('Engagement error'))
 
       await run()
 
@@ -390,7 +378,7 @@ describe('Main Multi-Mode Functionality', () => {
         }
       })
 
-      mockRunEngagementWorkflow.mockRejectedValue('String error')
+      engagement.runEngagementWorkflow.mockRejectedValue('String error')
 
       await run()
 
@@ -406,18 +394,125 @@ describe('Main Multi-Mode Functionality', () => {
             return '1'
           case 'token':
             return 'test-token'
+          case 'dry-run':
+            return 'true'
           default:
             return ''
         }
       })
 
-      core.getBooleanInput.mockImplementation((name: string) => {
-        return name === 'dry-run'
-      })
-
       await run()
 
+      expect(core.setFailed).not.toHaveBeenCalled()
       expect(core.info).toHaveBeenCalledWith('Running in dry-run mode. No changes will be made.')
+    })
+  })
+
+  describe('Sub-Action Functions', () => {
+    beforeEach(() => {
+      jest.clearAllMocks()
+    })
+
+    it('should run apply-labels sub-action without template', async () => {
+      core.getInput.mockImplementation((name: string) => {
+        switch (name) {
+          case 'issue':
+            return '999'
+          case 'token':
+            return 'test-token'
+          default:
+            return ''
+        }
+      })
+
+      await runApplyLabels()
+
+      expect(core.setFailed).not.toHaveBeenCalled()
+      expect(triage.runTriageWorkflow).toHaveBeenCalledWith(
+        expect.objectContaining({
+          template: '',
+          issueNumber: 999,
+          token: 'test-token'
+        })
+      )
+      expect(engagement.runEngagementWorkflow).not.toHaveBeenCalled()
+    })
+
+    it('should run engagement-score sub-action without requiring template', async () => {
+      core.getInput.mockImplementation((name: string) => {
+        switch (name) {
+          case 'project':
+            return '456'
+          case 'token':
+            return 'test-token'
+          default:
+            return ''
+        }
+      })
+
+      await runEngagementScore()
+
+      expect(core.setFailed).not.toHaveBeenCalled()
+      expect(engagement.runEngagementWorkflow).toHaveBeenCalledWith(
+        expect.objectContaining({
+          projectNumber: 456,
+          template: '',
+          token: 'test-token'
+        })
+      )
+      expect(triage.runTriageWorkflow).not.toHaveBeenCalled()
+    })
+
+    it('should allow apply-labels sub-action to work with template input', async () => {
+      core.getInput.mockImplementation((name: string) => {
+        switch (name) {
+          case 'template':
+            return 'multi-label'
+          case 'issue':
+            return '777'
+          case 'token':
+            return 'test-token'
+          default:
+            return ''
+        }
+      })
+
+      const { runApplyLabels } = await import('../src/main.js')
+      await runApplyLabels()
+
+      expect(core.setFailed).not.toHaveBeenCalled()
+      expect(triage.runTriageWorkflow).toHaveBeenCalledWith(
+        expect.objectContaining({
+          issueNumber: 777,
+          template: 'multi-label',
+          token: 'test-token'
+        })
+      )
+    })
+
+    it('should allow engagement-score sub-action to work with issue input', async () => {
+      core.getInput.mockImplementation((name: string) => {
+        switch (name) {
+          case 'issue':
+            return '789'
+          case 'token':
+            return 'test-token'
+          default:
+            return ''
+        }
+      })
+
+      const { runEngagementScore } = await import('../src/main.js')
+      await runEngagementScore()
+
+      expect(core.setFailed).not.toHaveBeenCalled()
+      expect(engagement.runEngagementWorkflow).toHaveBeenCalledWith(
+        expect.objectContaining({
+          issueNumber: 789,
+          template: '',
+          token: 'test-token'
+        })
+      )
     })
   })
 })

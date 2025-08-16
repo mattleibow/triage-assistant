@@ -32,4 +32,13 @@ export const mockOctokit = {
   }
 }
 
+export const mockContext = {
+  repo: {
+    owner: 'test-owner',
+    repo: 'test-repo'
+  },
+  issue: undefined as unknown
+}
+
 export const octokit = mockOctokit as unknown as ReturnType<typeof github.getOctokit>
+export const context = mockContext as unknown as typeof github.context

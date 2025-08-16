@@ -1,0 +1,52 @@
+name: 'AI Triage Assistant - Engagement Score'
+description: 'Calculate and apply engagement scores to GitHub project issues based on community activity.'
+author: 'mattleibow'
+
+branding:
+  icon: 'trending-up'
+  color: 'blue'
+
+inputs:
+  # GitHub token input
+  token:
+    description: 'GitHub token for API access'
+    required: false
+    default: ''
+  fallback-token:
+    description: 'Fallback GitHub token for API access'
+    required: false
+    default: '${{ github.token }}'
+
+  # Issue targeting
+  issue:
+    description: 'The issue number of the issue to analyze (for single-issue analysis)'
+    required: false
+    default: ''
+
+  # Project targeting
+  project:
+    description: 'Project number for engagement scoring (required for project-wide scoring)'
+    required: false
+    default: ''
+  project-column:
+    description: 'Project column name to update with engagement scores'
+    required: false
+    default: 'Engagement Score'
+  apply-scores:
+    description: 'Whether to apply engagement scores to project items'
+    required: false
+    default: 'false'
+
+  # General options
+  dry-run:
+    description: 'Whether to run the action in dry-run mode (no changes made)'
+    required: false
+    default: 'false'
+
+outputs:
+  response-file:
+    description: 'The file that contains the engagement scoring results'
+
+runs:
+  using: node20
+  main: ../dist/engagement-score.js

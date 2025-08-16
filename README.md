@@ -110,6 +110,65 @@ jobs:
           apply-comment: true
 ```
 
+## Sub-Actions
+
+The triage assistant supports **sub-actions** similar to GitHub's cache action, allowing you to use specific
+functionality with cleaner syntax and focused inputs.
+
+### Available Sub-Actions
+
+#### `mattleibow/triage-assistant/apply-labels`
+
+Focuses on AI-powered label application and issue commenting.
+
+```yaml
+- name: Apply labels to issue
+  uses: mattleibow/triage-assistant/apply-labels@v0.7.0
+  with:
+    token: ${{ secrets.GITHUB_TOKEN }}
+    ai-token: ${{ secrets.AI_TOKEN }}
+    template: 'multi-label'
+    apply-labels: true
+    apply-comment: true
+```
+
+#### `mattleibow/triage-assistant/engagement-score`
+
+Focuses on calculating and applying engagement scores to project issues.
+
+```yaml
+- name: Calculate engagement scores
+  uses: mattleibow/triage-assistant/engagement-score@v0.7.0
+  with:
+    token: ${{ secrets.GITHUB_TOKEN }}
+    project: 123
+    apply-scores: true
+```
+
+### Sub-Action Benefits
+
+- **Cleaner configuration**: Only the inputs relevant to each specific function
+- **Better discoverability**: Clear separation of concerns
+- **Easier maintenance**: Focused documentation and examples
+- **Full backward compatibility**: Original usage patterns continue to work
+
+### Migration from Template-Based Usage
+
+You can easily migrate from the template-based approach:
+
+```yaml
+# Before (still works)
+- uses: mattleibow/triage-assistant@v0.7.0
+  with:
+    template: 'engagement-score'
+    project: 123
+
+# After (recommended)
+- uses: mattleibow/triage-assistant/engagement-score@v0.7.0
+  with:
+    project: 123
+```
+
 ## Inputs
 
 ### Triage Inputs

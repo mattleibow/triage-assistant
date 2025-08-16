@@ -1,36 +1,15 @@
 import * as core from '@actions/core'
 import * as github from '@actions/github'
 import * as os from 'os'
-import * as utils from './utils.js'
+import { TriageMode, validateNumericInput, validateRepositoryId, validateTemplate } from './utils.js'
 import { runTriageWorkflow } from './triage/triage.js'
 import { runEngagementWorkflow } from './engagement/engagement.js'
 import { EverythingConfig } from './config.js'
 
 /**
- * Validates template name against allowed values
- * @param template Template name to validate
+ * Common workflow execution logic
  */
-export function validateTemplate(template: string): void {
-  const allowedTemplates = ['multi-label', 'single-label', 'regression', 'missing-info', 'engagement-score', '']
-  if (template && !allowedTemplates.includes(template)) {
-    throw new Error(`Invalid template: ${template}. Allowed values: ${allowedTemplates.filter((t) => t).join(', ')}`)
-  }
-}
-
-/**
- * Enum for triage modes
- */
-enum TriageMode {
-  IssueTriage = 'issue-triage',
-  EngagementScore = 'engagement-score'
-}
-
-/**
- * The main function for the action.
- *
- * @returns Resolves when the action is complete.
- */
-export async function run(): Promise<void> {
+async function runWorkflow(triageModeOverride?: TriageMode): Promise<void> {
   const DEFAULT_AI_ENDPOINT = 'https://models.github.ai/inference'
   const DEFAULT_AI_MODEL = 'openai/gpt-4o'
   const DEFAULT_PROJECT_COLUMN_NAME = 'Engagement Score'
@@ -38,32 +17,33 @@ export async function run(): Promise<void> {
   let config: EverythingConfig | undefined
 
   try {
-    // Get inputs for mode determination
-    const template = core.getInput('template')
+    // Get template and triage mode
+    const template = core.getInput('template', { required: false })
+    const triageMode =
+      triageModeOverride ||
+      (template === TriageMode.EngagementScore ? TriageMode.EngagementScore : TriageMode.ApplyLabels)
+
+    // Make sure templates are the ones we support
+    validateTemplate(template)
+
+    // Get project and issue numbers
     const projectInput = core.getInput('project')
     const issueInput = core.getInput('issue')
     const issueContext = github.context.issue?.number || 0
 
-    // Validate template
-    validateTemplate(template)
-
-    // Validate repository context
-    utils.validateRepositoryId(github.context.repo.owner, github.context.repo.repo)
-
-    // Determine triage mode
-    const triageMode = template === TriageMode.EngagementScore ? TriageMode.EngagementScore : TriageMode.IssueTriage
-
-    // Validate inputs based on mode
+    // Make sure they are correct for the mode
     if (triageMode === TriageMode.EngagementScore) {
       if (!projectInput && !issueInput) {
-        throw new Error('Either project or issue must be specified when using engagement-score template')
+        throw new Error('Either project or issue must be specified when calculating engagement scores')
       }
-    } else {
-      // For normal triage mode, default to current issue if not specified
+    } else if (triageMode === TriageMode.ApplyLabels) {
       if (!issueInput && !issueContext) {
-        throw new Error('Issue number is required for triage mode')
+        throw new Error('Issue number is required for applying labels')
       }
     }
+
+    // Validate repository context
+    validateRepositoryId(github.context.repo.owner, github.context.repo.repo)
 
     // Initialize configuration object
     const token =
@@ -78,16 +58,16 @@ export async function run(): Promise<void> {
       aiEndpoint: core.getInput('ai-endpoint') || process.env.TRIAGE_AI_ENDPOINT || DEFAULT_AI_ENDPOINT,
       aiModel: core.getInput('ai-model') || process.env.TRIAGE_AI_MODEL || DEFAULT_AI_MODEL,
       aiToken: aiToken,
-      applyComment: core.getBooleanInput('apply-comment'),
-      applyLabels: core.getBooleanInput('apply-labels'),
-      applyScores: core.getBooleanInput('apply-scores'),
+      applyComment: core.getInput('apply-comment')?.toLowerCase() === 'true',
+      applyLabels: core.getInput('apply-labels')?.toLowerCase() === 'true',
+      applyScores: core.getInput('apply-scores')?.toLowerCase() === 'true',
       commentFooter: core.getInput('comment-footer'),
-      dryRun: core.getBooleanInput('dry-run') || false,
-      issueNumber: utils.validateNumericInput(issueInput || issueContext.toString(), 'issue number'),
+      dryRun: core.getInput('dry-run')?.toLowerCase() === 'true',
+      issueNumber: validateNumericInput(issueInput || issueContext.toString(), 'issue number'),
       label: core.getInput('label'),
       labelPrefix: core.getInput('label-prefix'),
       projectColumn: core.getInput('project-column') || DEFAULT_PROJECT_COLUMN_NAME,
-      projectNumber: utils.validateNumericInput(projectInput, 'project number'),
+      projectNumber: validateNumericInput(projectInput, 'project number'),
       repoName: github.context.repo.repo,
       repoOwner: github.context.repo.owner,
       repository: `${github.context.repo.owner}/${github.context.repo.repo}`,
@@ -111,8 +91,10 @@ export async function run(): Promise<void> {
 
     // Run the appropriate workflow based on the triage mode
     if (triageMode === TriageMode.EngagementScore) {
+      core.info('Running engagement scoring workflow')
       responseFile = await runEngagementWorkflow(config)
     } else {
+      core.info('Running apply labels workflow')
       responseFile = await runTriageWorkflow(config)
     }
 
@@ -126,4 +108,31 @@ export async function run(): Promise<void> {
       core.setFailed(`An unknown error occurred: ${JSON.stringify(error)}`)
     }
   }
+}
+
+/**
+ * The main function for the action (backward compatibility)
+ *
+ * @returns Resolves when the action is complete.
+ */
+export async function run(): Promise<void> {
+  await runWorkflow()
+}
+
+/**
+ * Entry point for apply-labels sub-action
+ *
+ * @returns Resolves when the action is complete.
+ */
+export async function runApplyLabels(): Promise<void> {
+  await runWorkflow(TriageMode.ApplyLabels)
+}
+
+/**
+ * Entry point for engagement-score sub-action
+ *
+ * @returns Resolves when the action is complete.
+ */
+export async function runEngagementScore(): Promise<void> {
+  await runWorkflow(TriageMode.EngagementScore)
 }
