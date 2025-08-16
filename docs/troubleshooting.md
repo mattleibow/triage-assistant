@@ -18,8 +18,7 @@ Common issues and solutions for the AI Triage Assistant.
 permissions:
   contents: read
   issues: write # For apply-labels
-  pull-requests: write # For apply-labels  
-  repository-projects: write # For engagement scoring
+  pull-requests: write # For apply-labels
   models: read # For AI inference
 ```
 
@@ -73,9 +72,18 @@ permissions:
 
 **Solutions**:
 - Ensure the project number is correct (check the project URL)
-- Verify your token has `repository-projects: write` permission
+- Verify your token has appropriate project access permissions
 - Make sure the project is associated with the repository or organization
 - For organization projects, ensure your token has organization access
+
+**Note**: GitHub Projects v2 permissions are handled through your token, not workflow permissions. Use a custom token with project access:
+
+```yaml
+- uses: mattleibow/triage-assistant/engagement-score@v0.7.0
+  with:
+    token: ${{ secrets.PROJECT_TOKEN }} # Token with project access
+    project: 123
+```
 
 **Finding project number**:
 - The project number is in the URL: `https://github.com/users/username/projects/123` → project number is `123`
@@ -109,7 +117,7 @@ permissions:
 **Problem**: `Error: Resource not accessible by integration`
 
 **Solutions**:
-- Ensure your workflow has `repository-projects: write` permission for project updates
+- Ensure your token has appropriate project read/write permissions
 - For organization projects, verify the token has appropriate organization permissions
 - Check that the project visibility allows access from your workflow
 
@@ -290,4 +298,4 @@ If you continue to experience issues:
 
 - [Configuration](configuration.md) - Customizing behavior
 - [Apply Labels Action](apply-labels.md) - AI-powered label application
-- [Engagement Score Action](engagement-score.md) - Community engagement scoring
+- [Engagement Score Action](engagement-score.md) - Community engagement scoring engagement scoring

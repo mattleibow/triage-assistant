@@ -87,8 +87,7 @@ Weights can be customized using a [configuration file](configuration.md).
 permissions:
   contents: read # To read repository content
   issues: read # To read issue data for scoring
-  pull-requests: read # To read PR data for scoring  
-  repository-projects: write # To update project fields with scores
+  pull-requests: read # To read PR data for scoring
 ```
 
 ### For Issue Analysis Only
@@ -98,6 +97,15 @@ permissions:
   contents: read # To read repository content
   issues: read # To read issue data for scoring
   pull-requests: read # To read PR data for scoring
+```
+
+**Note**: For project operations, you need a token with project access permissions. Use a custom token with appropriate project permissions:
+
+```yaml
+- uses: mattleibow/triage-assistant/engagement-score@v0.7.0
+  with:
+    token: ${{ secrets.PROJECT_TOKEN }} # Token with project access
+    project: 123
 ```
 
 ## Examples
@@ -117,7 +125,6 @@ permissions:
   contents: read
   issues: read
   pull-requests: read
-  repository-projects: write
 
 jobs:
   engagement-scoring:
@@ -126,6 +133,7 @@ jobs:
       - name: Calculate engagement scores for project
         uses: mattleibow/triage-assistant/engagement-score@v0.7.0
         with:
+          token: ${{ secrets.PROJECT_TOKEN }} # Custom token with project access
           project: 1 # Replace with your project number
           apply-scores: true
           project-column: 'Engagement Score'
@@ -145,7 +153,6 @@ permissions:
   contents: read
   issues: read
   pull-requests: read
-  repository-projects: write
 
 jobs:
   score-issue:
@@ -154,6 +161,7 @@ jobs:
       - name: Calculate engagement score for new issue
         uses: mattleibow/triage-assistant/engagement-score@v0.7.0
         with:
+          token: ${{ secrets.PROJECT_TOKEN }} # Custom token with project access
           issue: ${{ github.event.issue.number }}
           apply-scores: true
           project: 1 # Your project number
@@ -172,7 +180,6 @@ permissions:
   contents: read
   issues: write
   pull-requests: write
-  repository-projects: write
   models: read
 
 jobs:
