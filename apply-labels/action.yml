@@ -41,7 +41,7 @@ inputs:
   template:
     description: 'Triage template to use: multi-label, single-label, regression, missing-info'
     required: false
-    default: 'multi-label'
+    default: ''
   label:
     description: 'The specific label to use'
     required: false

@@ -234,7 +234,7 @@ describe('Main Multi-Mode Functionality', () => {
       expect(core.setFailed).toHaveBeenCalledWith('Test error')
     })
 
-    it('should fail when no template provided', async () => {
+    it('should run triage workflow even when no template provided', async () => {
       core.getInput.mockImplementation((name: string) => {
         switch (name) {
           case 'token':
@@ -246,8 +246,13 @@ describe('Main Multi-Mode Functionality', () => {
 
       await run()
 
-      expect(core.setFailed).toHaveBeenCalledWith('Template is required for applying labels')
-      expect(triage.runTriageWorkflow).not.toHaveBeenCalled()
+      expect(core.setFailed).not.toHaveBeenCalled()
+      expect(triage.runTriageWorkflow).toHaveBeenCalledWith(
+        expect.objectContaining({
+          template: '',
+          token: 'test-token'
+        })
+      )
       expect(engagement.runEngagementWorkflow).not.toHaveBeenCalled()
     })
   })
@@ -408,7 +413,7 @@ describe('Main Multi-Mode Functionality', () => {
       jest.clearAllMocks()
     })
 
-    it('should fail to run apply-labels sub-action without template', async () => {
+    it('should run apply-labels sub-action without template', async () => {
       core.getInput.mockImplementation((name: string) => {
         switch (name) {
           case 'issue':
@@ -422,8 +427,14 @@ describe('Main Multi-Mode Functionality', () => {
 
       await runApplyLabels()
 
-      expect(core.setFailed).toHaveBeenCalledWith('Template is required for applying labels')
-      expect(triage.runTriageWorkflow).not.toHaveBeenCalled()
+      expect(core.setFailed).not.toHaveBeenCalled()
+      expect(triage.runTriageWorkflow).toHaveBeenCalledWith(
+        expect.objectContaining({
+          template: '',
+          issueNumber: 999,
+          token: 'test-token'
+        })
+      )
       expect(engagement.runEngagementWorkflow).not.toHaveBeenCalled()
     })
 
