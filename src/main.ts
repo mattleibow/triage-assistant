@@ -23,12 +23,7 @@ async function runWorkflow(triageModeOverride?: TriageMode): Promise<void> {
       triageModeOverride ||
       (template === TriageMode.EngagementScore ? TriageMode.EngagementScore : TriageMode.ApplyLabels)
 
-    // For apply labels mode, template is required
-    if (triageMode === TriageMode.ApplyLabels) {
-      if (!template) {
-        throw new Error('Template is required for applying labels')
-      }
-    }
+    // Template is optional - if provided, AI triage is performed; if not, only merge and labels are applied
 
     // Make sure templates are the ones we support
     validateTemplate(template)
