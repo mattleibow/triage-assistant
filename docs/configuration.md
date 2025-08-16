@@ -1,6 +1,7 @@
 # Configuration
 
-The Triage Assistant supports customization through a YAML configuration file that controls engagement scoring weights and other settings.
+The Triage Assistant supports customization through a YAML configuration file that controls engagement scoring weights
+and other settings.
 
 ## Configuration File Location
 
@@ -42,14 +43,14 @@ engagement:
 
 If no configuration is provided, these default weights are used:
 
-| Factor | Default Weight | Description |
-|--------|----------------|-------------|
-| `comments` | 3 | Discussion volume indicates high interest |
-| `reactions` | 1 | Emotional engagement and community sentiment |
-| `contributors` | 2 | Diversity of input reflects broad interest |
-| `lastActivity` | 1 | Recent activity indicates current relevance |
-| `issueAge` | 1 | Issue age for prioritization |
-| `linkedPullRequests` | 2 | Active development work |
+| Factor               | Default Weight | Description                                  |
+| -------------------- | -------------- | -------------------------------------------- |
+| `comments`           | 3              | Discussion volume indicates high interest    |
+| `reactions`          | 1              | Emotional engagement and community sentiment |
+| `contributors`       | 2              | Diversity of input reflects broad interest   |
+| `lastActivity`       | 1              | Recent activity indicates current relevance  |
+| `issueAge`           | 1              | Issue age for prioritization                 |
+| `linkedPullRequests` | 2              | Active development work                      |
 
 ## Configuration Examples
 
@@ -115,7 +116,8 @@ Score = (Comments × comments_weight) + (Reactions × reactions_weight) +
         (Pull Requests × pr_weight)
 ```
 
-The algorithm also calculates a "previous score" based on activity from 7 days ago, allowing for trend analysis and identification of issues gaining or losing momentum.
+The algorithm also calculates a "previous score" based on activity from 7 days ago, allowing for trend analysis and
+identification of issues gaining or losing momentum.
 
 ## See Also
 

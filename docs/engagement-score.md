@@ -1,6 +1,7 @@
 # Engagement Score Action
 
-The `engagement-score` sub-action calculates numerical engagement scores for issues based on community activity and interaction patterns.
+The `engagement-score` sub-action calculates numerical engagement scores for issues based on community activity and
+interaction patterns.
 
 ## Usage
 
@@ -33,22 +34,22 @@ Calculate engagement score for a specific issue:
 
 ## Inputs
 
-| Name | Description | Default | Required |
-|------|-------------|---------|----------|
-| `token` | GitHub token for API access | `${{ github.token }}` | No |
-| `fallback-token` | Fallback GitHub token for API access | `${{ github.token }}` | No |
-| `project` | GitHub Project number for engagement scoring | `''` | No* |
-| `issue` | The issue number for single-issue analysis | `''` | No* |
-| `project-column` | Project field name to update with scores | `'Engagement Score'` | No |
-| `apply-scores` | Whether to apply scores to project items | `false` | No |
-| `dry-run` | Run in dry-run mode without making changes | `false` | No |
+| Name             | Description                                  | Default               | Required |
+| ---------------- | -------------------------------------------- | --------------------- | -------- |
+| `token`          | GitHub token for API access                  | `${{ github.token }}` | No       |
+| `fallback-token` | Fallback GitHub token for API access         | `${{ github.token }}` | No       |
+| `project`        | GitHub Project number for engagement scoring | `''`                  | No\*     |
+| `issue`          | The issue number for single-issue analysis   | `''`                  | No\*     |
+| `project-column` | Project field name to update with scores     | `'Engagement Score'`  | No       |
+| `apply-scores`   | Whether to apply scores to project items     | `false`               | No       |
+| `dry-run`        | Run in dry-run mode without making changes   | `false`               | No       |
 
-*Either `project` or `issue` must be specified.
+\*Either `project` or `issue` must be specified.
 
 ## Outputs
 
-| Name | Description |
-|------|-------------|
+| Name            | Description                                                |
+| --------------- | ---------------------------------------------------------- |
 | `response-file` | Path to the file containing the engagement analysis result |
 
 ## Scoring Algorithm
@@ -58,7 +59,7 @@ The engagement score is calculated using configurable weights for various factor
 ### Scoring Factors
 
 - **Comments** - Number of comments on the issue
-- **Reactions** - Total reactions (👍, 🎉, ❤️, etc.)  
+- **Reactions** - Total reactions (👍, 🎉, ❤️, etc.)
 - **Contributors** - Number of unique contributors
 - **Time Factors** - Days since last activity and issue age
 - **Pull Requests** - Number of linked pull requests
@@ -99,7 +100,8 @@ permissions:
   pull-requests: read # To read PR data for scoring
 ```
 
-**Note**: For project operations, you need a token with project access permissions. Use a custom token with appropriate project permissions:
+**Note**: For project operations, you need a token with project access permissions. Use a custom token with appropriate
+project permissions:
 
 ```yaml
 - uses: mattleibow/triage-assistant/engagement-score@v0.7.0
@@ -219,6 +221,7 @@ jobs:
 ### Project Field Updates
 
 The action will:
+
 - Find the specified project field by name
 - Update each project item with its calculated engagement score
 - Handle items from multiple repositories within the same project

@@ -1,6 +1,7 @@
 # Apply Labels Action
 
-The `apply-labels` sub-action focuses on AI-powered label application and issue commenting using advanced language models.
+The `apply-labels` sub-action focuses on AI-powered label application and issue commenting using advanced language
+models.
 
 ## Usage
 
@@ -37,7 +38,7 @@ steps:
       label-prefix: 'overlap-'
       template: 'multi-label'
 
-  - name: Determine area label  
+  - name: Determine area label
     uses: mattleibow/triage-assistant/apply-labels@v0.7.0
     with:
       label-prefix: 'area-'
@@ -58,26 +59,26 @@ steps:
 
 ## Inputs
 
-| Name | Description | Default | Required |
-|------|-------------|---------|----------|
-| `token` | GitHub token for API access | `${{ github.token }}` | No |
-| `fallback-token` | Fallback GitHub token for API access | `${{ github.token }}` | No |
-| `issue` | The issue number to triage | Current issue/PR number | No |
-| `template` | Triage template: `multi-label`, `single-label`, `regression`, `missing-info` | `''` | No |
-| `label` | Specific label to evaluate | `''` | No |
-| `label-prefix` | Prefix for label search (e.g., `area-`, `platform/`) | `''` | No |
-| `apply-labels` | Whether to apply labels to the issue | `false` | No |
-| `apply-comment` | Whether to add a comment with AI analysis | `false` | No |
-| `comment-footer` | Footer text for AI comments | Default disclaimer | No |
-| `dry-run` | Run in dry-run mode without making changes | `false` | No |
-| `ai-token` | Custom AI token for inference | Uses GitHub token | No |
-| `ai-endpoint` | Custom AI endpoint URL | GitHub Models endpoint | No |
-| `ai-model` | AI model to use for inference | `openai/gpt-4o` | No |
+| Name             | Description                                                                  | Default                 | Required |
+| ---------------- | ---------------------------------------------------------------------------- | ----------------------- | -------- |
+| `token`          | GitHub token for API access                                                  | `${{ github.token }}`   | No       |
+| `fallback-token` | Fallback GitHub token for API access                                         | `${{ github.token }}`   | No       |
+| `issue`          | The issue number to triage                                                   | Current issue/PR number | No       |
+| `template`       | Triage template: `multi-label`, `single-label`, `regression`, `missing-info` | `''`                    | No       |
+| `label`          | Specific label to evaluate                                                   | `''`                    | No       |
+| `label-prefix`   | Prefix for label search (e.g., `area-`, `platform/`)                         | `''`                    | No       |
+| `apply-labels`   | Whether to apply labels to the issue                                         | `false`                 | No       |
+| `apply-comment`  | Whether to add a comment with AI analysis                                    | `false`                 | No       |
+| `comment-footer` | Footer text for AI comments                                                  | Default disclaimer      | No       |
+| `dry-run`        | Run in dry-run mode without making changes                                   | `false`                 | No       |
+| `ai-token`       | Custom AI token for inference                                                | Uses GitHub token       | No       |
+| `ai-endpoint`    | Custom AI endpoint URL                                                       | GitHub Models endpoint  | No       |
+| `ai-model`       | AI model to use for inference                                                | `openai/gpt-4o`         | No       |
 
 ## Outputs
 
-| Name | Description |
-|------|-------------|
+| Name            | Description                                        |
+| --------------- | -------------------------------------------------- |
 | `response-file` | Path to the file containing the AI analysis result |
 
 ## Templates
@@ -85,7 +86,7 @@ steps:
 ### AI-Powered Triage Templates
 
 - **`single-label`**: Selects the best single label from available options
-- **`multi-label`**: Can select multiple relevant labels  
+- **`multi-label`**: Can select multiple relevant labels
 - **`regression`**: Specifically checks if an issue is a regression
 - **`missing-info`**: Identifies issues that need more information
 
@@ -125,7 +126,7 @@ steps:
 The action works with any OpenAI-compatible API:
 
 - `openai/gpt-4o` (default) - Most capable, higher cost
-- `openai/gpt-4o-mini` - Faster and more cost-effective  
+- `openai/gpt-4o-mini` - Faster and more cost-effective
 - `openai/gpt-3.5-turbo` - Budget-friendly option
 
 ## Required Permissions

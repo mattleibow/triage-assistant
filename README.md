@@ -6,7 +6,8 @@
 [![CodeQL](https://github.com/mattleibow/triage-assistant/actions/workflows/check-codeql-analysis.yml/badge.svg)](https://github.com/mattleibow/triage-assistant/actions/workflows/check-codeql-analysis.yml)
 [![Coverage](./badges/coverage.svg)](./badges/coverage.svg)
 
-An AI-powered GitHub Action that automatically triages issues and pull requests using advanced language models and calculates engagement scores based on community activity.
+An AI-powered GitHub Action that automatically triages issues and pull requests using advanced language models and
+calculates engagement scores based on community activity.
 
 ## Quick Start
 
@@ -183,12 +184,12 @@ Customize engagement scoring behavior with a `.triagerc.yml` file:
 ```yaml
 engagement:
   weights:
-    comments: 3      # Discussion volume
-    reactions: 1     # Community sentiment  
-    contributors: 2  # Diversity of input
-    lastActivity: 1  # Recent activity
-    issueAge: 1      # Issue age
-    linkedPullRequests: 2  # Active development
+    comments: 3 # Discussion volume
+    reactions: 1 # Community sentiment
+    contributors: 2 # Diversity of input
+    lastActivity: 1 # Recent activity
+    issueAge: 1 # Issue age
+    linkedPullRequests: 2 # Active development
 ```
 
 ## Documentation
