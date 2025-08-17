@@ -31697,7 +31697,6 @@ diagnose reported problems.
 ### If issue has all necessary information:
 
 {
-  "summary": "Brief summary of the issue",
   "repro": {
     "has_clear_description": true,
     "has_steps": true,
@@ -31712,7 +31711,6 @@ diagnose reported problems.
 ### If issue is missing information:
 
 {
-  "summary": "Brief summary of the issue",
   "repro": {
     "has_clear_description": true|false,
     "has_steps": true|false,
@@ -39356,10 +39354,6 @@ function buildNeedsInfoComment(data) {
     const parts = [];
     // Add friendly greeting
     parts.push(`Thank you for reporting this issue! To help us investigate and resolve it effectively, we need some additional information.`);
-    // Add issue summary if provided
-    if (data.summary && data.summary.trim()) {
-        parts.push(`\n**Issue Summary**: ${data.summary}`);
-    }
     // Add missing information section if there are specific missing fields
     if (data.missing && data.missing.length > 0) {
         parts.push(`\n## Missing Information`);
@@ -39441,55 +39435,6 @@ async function upsertNeedsInfoComment(octokit, data, config) {
             body: commentBody
         });
         coreExports.info('Created new needs-info comment');
-    }
-}
-/**
- * Syncs needs-info labels (s/needs-info, s/needs-repro) based on the missing info response.
- * Adds labels if issues are found, removes them if nothing is missing.
- *
- * @param octokit The GitHub API client
- * @param data The missing info payload
- * @param config The triage configuration
- */
-async function syncNeedsInfoLabels(octokit, data, config) {
-    if (config.dryRun) {
-        const labelsToAdd = data.labels?.map((l) => l.label) || [];
-        coreExports.info(`Dry run: Would sync needs-info labels: ${labelsToAdd.join(', ')}`);
-        return;
-    }
-    // Get current labels on the issue
-    const currentLabels = await octokit.rest.issues.listLabelsOnIssue({
-        owner: config.repoOwner,
-        repo: config.repoName,
-        issue_number: config.issueNumber
-    });
-    const currentLabelNames = currentLabels.data.map((label) => label.name);
-    const needsInfoLabel = 's/needs-info';
-    const needsReproLabel = 's/needs-repro';
-    // Determine which labels should be present based on the response
-    const shouldHaveLabels = new Set(data.labels?.map((l) => l.label) || []);
-    // Add labels that should be present but aren't
-    const labelsToAdd = Array.from(shouldHaveLabels).filter((label) => !currentLabelNames.includes(label));
-    if (labelsToAdd.length > 0) {
-        await octokit.rest.issues.addLabels({
-            owner: config.repoOwner,
-            repo: config.repoName,
-            issue_number: config.issueNumber,
-            labels: labelsToAdd
-        });
-        coreExports.info(`Added labels: ${labelsToAdd.join(', ')}`);
-    }
-    // Remove needs-info related labels that shouldn't be present
-    const needsInfoLabels = [needsInfoLabel, needsReproLabel];
-    const labelsToRemove = needsInfoLabels.filter((label) => currentLabelNames.includes(label) && !shouldHaveLabels.has(label));
-    for (const labelToRemove of labelsToRemove) {
-        await octokit.rest.issues.removeLabel({
-            owner: config.repoOwner,
-            repo: config.repoName,
-            issue_number: config.issueNumber,
-            name: labelToRemove
-        });
-        coreExports.info(`Removed label: ${labelToRemove}`);
     }
 }
 
@@ -39686,23 +39631,24 @@ async function mergeAndApplyTriage(octokit, config) {
     coreExports.info(`Merged response: ${JSON.stringify(mergedResponse, null, 2)}`);
     // Check if this is a missing-info response (has structured missing info fields)
     const isMissingInfoResponse = hasMissingInfoStructure(mergedResponse);
-    if (isMissingInfoResponse) {
-        await handleMissingInfoResponse(octokit, mergedResponse, config);
-    }
-    else {
-        // Handle regular triage responses
-        if (config.applyComment) {
-            // Generate summary response using AI
+    // Handle comments (either missing-info comment or regular summary comment)
+    if (config.applyComment) {
+        if (isMissingInfoResponse) {
+            // Upsert missing-info comment
+            await upsertNeedsInfoComment(octokit, mergedResponse, config);
+        }
+        else {
+            // Generate summary response using AI and comment on the issue
             const summaryResponseFile = await generateSummary(config, mergedResponseFile);
-            // Comment on the issue
             await commentOnIssue(octokit, summaryResponseFile, config, config.commentFooter);
         }
-        if (config.applyLabels) {
-            // Collect all the labels from the merged response
-            const labels = mergedResponse.labels?.map((l) => l.label)?.filter(Boolean) || [];
-            // Apply labels to the issue
-            await applyLabelsToIssue(octokit, labels, config);
-        }
+    }
+    // Handle labels (collect from both regular triage and missing-info responses)
+    if (config.applyLabels) {
+        // Collect all the labels from the merged response
+        const labels = mergedResponse.labels?.map((l) => l.label)?.filter(Boolean) || [];
+        // Apply labels to the issue (this will handle both regular and missing-info labels)
+        await applyLabelsToIssue(octokit, labels, config);
     }
 }
 /**
@@ -39714,17 +39660,6 @@ function hasMissingInfoStructure(response) {
         'repro' in response &&
         'missing' in response &&
         'questions' in response);
-}
-/**
- * Handles missing-info responses by upserting comments and syncing labels.
- */
-async function handleMissingInfoResponse(octokit, data, config) {
-    coreExports.info('Processing missing-info response');
-    // Always upsert the needs-info comment to provide user-friendly feedback
-    await upsertNeedsInfoComment(octokit, data, config);
-    // Sync labels based on what's missing
-    await syncNeedsInfoLabels(octokit, data, config);
-    coreExports.info('Missing-info response processing complete');
 }
 
 class ClientError extends Error {

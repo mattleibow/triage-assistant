@@ -3,14 +3,7 @@ import * as path from 'path'
 import * as github from '@actions/github'
 import { selectLabels } from '../prompts/select-labels.js'
 import { mergeResponses } from './merge.js'
-import {
-  commentOnIssue,
-  applyLabelsToIssue,
-  addEyes,
-  removeEyes,
-  upsertNeedsInfoComment,
-  syncNeedsInfoLabels
-} from '../github/issues.js'
+import { commentOnIssue, applyLabelsToIssue, addEyes, removeEyes, upsertNeedsInfoComment } from '../github/issues.js'
 import { generateSummary } from '../prompts/summary.js'
 import { EverythingConfig, ApplyLabelsConfig, ApplySummaryCommentConfig, TriageConfig } from '../config.js'
 import { MissingInfoPayload } from './triage-response.js'
@@ -77,25 +70,25 @@ export async function mergeAndApplyTriage(
   // Check if this is a missing-info response (has structured missing info fields)
   const isMissingInfoResponse = hasMissingInfoStructure(mergedResponse)
 
-  if (isMissingInfoResponse) {
-    await handleMissingInfoResponse(octokit, mergedResponse as MissingInfoPayload, config)
-  } else {
-    // Handle regular triage responses
-    if (config.applyComment) {
-      // Generate summary response using AI
+  // Handle comments (either missing-info comment or regular summary comment)
+  if (config.applyComment) {
+    if (isMissingInfoResponse) {
+      // Upsert missing-info comment
+      await upsertNeedsInfoComment(octokit, mergedResponse as MissingInfoPayload, config)
+    } else {
+      // Generate summary response using AI and comment on the issue
       const summaryResponseFile = await generateSummary(config, mergedResponseFile)
-
-      // Comment on the issue
       await commentOnIssue(octokit, summaryResponseFile, config, config.commentFooter)
     }
+  }
 
-    if (config.applyLabels) {
-      // Collect all the labels from the merged response
-      const labels = mergedResponse.labels?.map((l) => l.label)?.filter(Boolean) || []
+  // Handle labels (collect from both regular triage and missing-info responses)
+  if (config.applyLabels) {
+    // Collect all the labels from the merged response
+    const labels = mergedResponse.labels?.map((l) => l.label)?.filter(Boolean) || []
 
-      // Apply labels to the issue
-      await applyLabelsToIssue(octokit, labels, config)
-    }
+    // Apply labels to the issue (this will handle both regular and missing-info labels)
+    await applyLabelsToIssue(octokit, labels, config)
   }
 }
 
@@ -110,23 +103,4 @@ function hasMissingInfoStructure(response: Record<string, unknown>): boolean {
     'missing' in response &&
     'questions' in response
   )
-}
-
-/**
- * Handles missing-info responses by upserting comments and syncing labels.
- */
-async function handleMissingInfoResponse(
-  octokit: Octokit,
-  data: MissingInfoPayload,
-  config: ApplyLabelsConfig & ApplySummaryCommentConfig & TriageConfig
-): Promise<void> {
-  core.info('Processing missing-info response')
-
-  // Always upsert the needs-info comment to provide user-friendly feedback
-  await upsertNeedsInfoComment(octokit, data, config)
-
-  // Sync labels based on what's missing
-  await syncNeedsInfoLabels(octokit, data, config)
-
-  core.info('Missing-info response processing complete')
 }

@@ -12,7 +12,6 @@ export interface ReproInfo {
  * Represents the complete payload for missing info responses.
  */
 export interface MissingInfoPayload {
-  summary?: string
   repro: ReproInfo
   missing: string[]
   questions: string[]

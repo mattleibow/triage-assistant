@@ -23,9 +23,8 @@ describe('Missing Info Functionality', () => {
   })
 
   describe('buildNeedsInfoComment', () => {
-    it('should build complete comment with all sections including summary', () => {
+    it('should build complete comment with all sections', () => {
       const data: MissingInfoPayload = {
-        summary: 'App crashes when opening settings dialog',
         repro: {
           has_clear_description: true,
           has_steps: false,
@@ -44,7 +43,6 @@ describe('Missing Info Functionality', () => {
 
       expect(comment).toContain('<!-- triage-assistant:needs-info-comment -->')
       expect(comment).toContain('Thank you for reporting this issue!')
-      expect(comment).toContain('**Issue Summary**: App crashes when opening settings dialog')
       expect(comment).toContain('## Missing Information')
       expect(comment).toContain('Clear steps to reproduce the issue')
       expect(comment).toContain('Code samples, repository link, or minimal reproducer')
