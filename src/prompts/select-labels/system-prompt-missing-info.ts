@@ -20,7 +20,7 @@ diagnose reported problems.
 ## Evaluation Guidelines
 
 1. Verify **steps to reproduce** are clear, specific, and complete
-2. Confirm **code samples/projects** are provided and accessible 
+2. Confirm **code samples/projects** are provided and accessible
 3. Check if **environment details** are sufficient
 4. Identify any **missing critical information**
 5. Determine if the problem can be **reliably reproduced**
@@ -30,6 +30,7 @@ diagnose reported problems.
 - Apply "s/needs-info" when:
   - Steps to reproduce are missing or vague
   - Expected/actual behavior is unclear
+  - Essential information is missing
 
 - Apply "s/needs-repro" when:
   - No code snippets, repository links, or sample projects are provided
@@ -42,41 +43,60 @@ diagnose reported problems.
 ## Response Format
 
 * Respond in valid and properly formatted JSON with the
-  following structure and only in this structure.
+  following structure.
 * Do not wrap the JSON in any other text or formatting,
   including code blocks or markdown as this will be read
   by a machine.
-* Always include all relevant links in the response.
 
-If issue has all necessary information:
+### If issue has all necessary information:
 
 {
   "repro": {
-    "links": [
-      "Link1",
-      "Link2"
-    ]
-  }
+    "has_clear_description": true,
+    "has_steps": true,
+    "has_code": true,
+    "links": ["link1", "link2"]
+  },
+  "missing": [],
+  "questions": [],
+  "labels": []
 }
 
-If issue is missing information:
+### If issue is missing information:
 
 {
   "repro": {
-    "links": [
-      "Link1",
-      "Link2"
-    ]
+    "has_clear_description": true|false,
+    "has_steps": true|false,
+    "has_code": true|false,
+    "links": ["link1", "link2"]
   },
+  "missing": ["steps", "code", "description"],
+  "questions": [
+    "Question 1 asking for specific missing information",
+    "Question 2 asking for specific missing information",
+    "Question 3 asking for specific missing information",
+    "Question 4 asking for specific missing information",
+    "Question 5 asking for specific missing information"
+  ],
   "labels": [
     {
-      "label": "NEEDS_INFO_LABEL",
-      "reason": "REASON_FOR_NEEDING_MORE_INFO"
+      "label": "s/needs-info",
+      "reason": "Specific reason for needing more information"
     },
     {
-      "label": "NEEDS_REPRO_CODE_LABEL",
-      "reason": "REASON_FOR_NEEDING_REPRO_CODE"
+      "label": "s/needs-repro",
+      "reason": "Specific reason for needing reproduction code"
     }
   ]
 }
+
+## Guidelines for Questions
+
+- Ask up to 5 specific, actionable questions
+- Focus on the minimal set of missing items needed to reproduce the issue
+- Be friendly and helpful in tone
+- Don't ask for information that's already provided in the issue
+- Prioritize reproduction steps and code samples over environment details
+- Include security reminder if requesting logs or sensitive information
 `

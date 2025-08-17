@@ -3,7 +3,10 @@ import { jest } from '@jest/globals'
 
 // Mock GitHub API
 const mockCreateComment = jest.fn<typeof octokit.rest.issues.createComment>()
+const mockUpdateComment = jest.fn<typeof octokit.rest.issues.updateComment>()
 const mockAddLabels = jest.fn<typeof octokit.rest.issues.addLabels>()
+const mockRemoveLabel = jest.fn<typeof octokit.rest.issues.removeLabel>()
+const mockListLabelsOnIssue = jest.fn<typeof octokit.rest.issues.listLabelsOnIssue>()
 const mockCreateForIssue = jest.fn<typeof octokit.rest.reactions.createForIssue>()
 const mockListForIssue = jest.fn<typeof octokit.rest.reactions.listForIssue>()
 const mockDeleteForIssue = jest.fn<typeof octokit.rest.reactions.deleteForIssue>()
@@ -14,7 +17,10 @@ export const mockOctokit = {
   rest: {
     issues: {
       createComment: mockCreateComment,
+      updateComment: mockUpdateComment,
       addLabels: mockAddLabels,
+      removeLabel: mockRemoveLabel,
+      listLabelsOnIssue: mockListLabelsOnIssue,
       get: mockGetIssue,
       listComments: mockListComments
     },
