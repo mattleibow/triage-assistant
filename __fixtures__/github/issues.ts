@@ -6,6 +6,7 @@ import { jest } from '@jest/globals'
 
 export const commentOnIssue = jest.fn<typeof issues.commentOnIssue>()
 export const applyLabelsToIssue = jest.fn<typeof issues.applyLabelsToIssue>()
+export const removeLabelsFromIssue = jest.fn<typeof issues.removeLabelsFromIssue>()
 export const addEyes = jest.fn<typeof issues.addEyes>()
 export const removeEyes = jest.fn<typeof issues.removeEyes>()
 export const buildNeedsInfoComment = jest.fn<typeof issues.buildNeedsInfoComment>()

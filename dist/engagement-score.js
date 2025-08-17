@@ -39156,6 +39156,46 @@ async function applyLabelsToIssue(octokit, labels, config) {
     });
 }
 /**
+ * Removes labels from an issue.
+ *
+ * @param octokit The GitHub API client.
+ * @param labelsToRemove Array of label names to remove from the issue.
+ * @param config The triage configuration object.
+ */
+async function removeLabelsFromIssue(octokit, labelsToRemove, config) {
+    // Filter out empty labels
+    labelsToRemove = labelsToRemove?.filter((label) => label.trim().length > 0);
+    // If no labels to remove, return early
+    if (!labelsToRemove || labelsToRemove.length === 0) {
+        return;
+    }
+    if (config.dryRun) {
+        coreExports.info(`Dry run: Skipping removing labels: ${labelsToRemove.join(', ')}`);
+        return;
+    }
+    // Remove each label individually
+    for (const labelToRemove of labelsToRemove) {
+        try {
+            await octokit.rest.issues.removeLabel({
+                owner: config.repoOwner,
+                repo: config.repoName,
+                issue_number: config.issueNumber,
+                name: labelToRemove
+            });
+            coreExports.info(`Removed label: ${labelToRemove}`);
+        }
+        catch (error) {
+            // Label might not exist on the issue, which is fine
+            if (error && typeof error === 'object' && 'status' in error && error.status === 404) {
+                coreExports.info(`Label ${labelToRemove} was not found on issue (already removed or never existed)`);
+            }
+            else {
+                coreExports.warning(`Failed to remove label ${labelToRemove}: ${error}`);
+            }
+        }
+    }
+}
+/**
  * Adds an 'eyes' reaction to the specified issue using the provided Octokit instance and config.
  * Ignores errors if the reaction already exists or is successfully created.
  *
@@ -39631,6 +39671,14 @@ async function mergeAndApplyTriage(octokit, config) {
     coreExports.info(`Merged response: ${JSON.stringify(mergedResponse, null, 2)}`);
     // Check if this is a missing-info response (has structured missing info fields)
     const isMissingInfoResponse = hasMissingInfoStructure(mergedResponse);
+    // For missing-info responses, determine which labels should be removed (only if we're applying labels)
+    if (isMissingInfoResponse && config.applyLabels) {
+        const labelsToRemove = await determineMissingInfoLabelsToRemove(octokit, mergedResponse, config);
+        if (labelsToRemove.length > 0) {
+            // Add labelsToRemove to the merged response
+            mergedResponse.labelsToRemove = labelsToRemove;
+        }
+    }
     // Handle comments (either missing-info comment or regular summary comment)
     if (config.applyComment) {
         if (isMissingInfoResponse) {
@@ -39643,6 +39691,10 @@ async function mergeAndApplyTriage(octokit, config) {
             await commentOnIssue(octokit, summaryResponseFile, config, config.commentFooter);
         }
     }
+    // Handle label removal (if any labels need to be removed)
+    if (config.applyLabels && mergedResponse.labelsToRemove) {
+        await removeLabelsFromIssue(octokit, mergedResponse.labelsToRemove, config);
+    }
     // Handle labels (collect from both regular triage and missing-info responses)
     if (config.applyLabels) {
         // Collect all the labels from the merged response
@@ -39650,6 +39702,34 @@ async function mergeAndApplyTriage(octokit, config) {
         // Apply labels to the issue (this will handle both regular and missing-info labels)
         await applyLabelsToIssue(octokit, labels, config);
     }
+}
+/**
+ * Determines which missing-info labels should be removed based on the current response.
+ *
+ * @param octokit The GitHub API client.
+ * @param data The missing info payload.
+ * @param config The triage configuration object.
+ * @returns Array of label names that should be removed.
+ */
+async function determineMissingInfoLabelsToRemove(octokit, data, config) {
+    const labelsToRemove = [];
+    // Get current labels on the issue
+    const currentLabels = await octokit.rest.issues.listLabelsOnIssue({
+        owner: config.repoOwner,
+        repo: config.repoName,
+        issue_number: config.issueNumber
+    });
+    const currentLabelNames = currentLabels.data.map((label) => label.name);
+    const newLabelNames = new Set(data.labels?.map((l) => l.label) || []);
+    // Define the needs-info related labels that we manage
+    const needsInfoLabels = ['s/needs-info', 's/needs-repro'];
+    // Remove needs-info related labels that are currently on the issue but not in the new response
+    for (const needsInfoLabel of needsInfoLabels) {
+        if (currentLabelNames.includes(needsInfoLabel) && !newLabelNames.has(needsInfoLabel)) {
+            labelsToRemove.push(needsInfoLabel);
+        }
+    }
+    return labelsToRemove;
 }
 /**
  * Checks if a response has the structure of a missing-info response.

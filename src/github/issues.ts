@@ -92,6 +92,52 @@ export async function applyLabelsToIssue(
 }
 
 /**
+ * Removes labels from an issue.
+ *
+ * @param octokit The GitHub API client.
+ * @param labelsToRemove Array of label names to remove from the issue.
+ * @param config The triage configuration object.
+ */
+export async function removeLabelsFromIssue(
+  octokit: Octokit,
+  labelsToRemove: string[] | undefined,
+  config: GitHubIssueConfig & TriageConfig
+): Promise<void> {
+  // Filter out empty labels
+  labelsToRemove = labelsToRemove?.filter((label) => label.trim().length > 0)
+
+  // If no labels to remove, return early
+  if (!labelsToRemove || labelsToRemove.length === 0) {
+    return
+  }
+
+  if (config.dryRun) {
+    core.info(`Dry run: Skipping removing labels: ${labelsToRemove.join(', ')}`)
+    return
+  }
+
+  // Remove each label individually
+  for (const labelToRemove of labelsToRemove) {
+    try {
+      await octokit.rest.issues.removeLabel({
+        owner: config.repoOwner,
+        repo: config.repoName,
+        issue_number: config.issueNumber,
+        name: labelToRemove
+      })
+      core.info(`Removed label: ${labelToRemove}`)
+    } catch (error) {
+      // Label might not exist on the issue, which is fine
+      if (error && typeof error === 'object' && 'status' in error && error.status === 404) {
+        core.info(`Label ${labelToRemove} was not found on issue (already removed or never existed)`)
+      } else {
+        core.warning(`Failed to remove label ${labelToRemove}: ${error}`)
+      }
+    }
+  }
+}
+
+/**
  * Adds an 'eyes' reaction to the specified issue using the provided Octokit instance and config.
  * Ignores errors if the reaction already exists or is successfully created.
  *

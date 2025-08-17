@@ -16,9 +16,8 @@ type GetIssueDetailsQueryIssueCommentNodes = NonNullable<
 jest.unstable_mockModule('@actions/core', () => core)
 
 // Import the module being tested
-const { commentOnIssue, applyLabelsToIssue, addEyes, removeEyes, getIssueDetails } = await import(
-  '../../src/github/issues.js'
-)
+const { commentOnIssue, applyLabelsToIssue, removeLabelsFromIssue, addEyes, removeEyes, getIssueDetails } =
+  await import('../../src/github/issues.js')
 
 describe('GitHub Issues', () => {
   const testTempDir = '/tmp/test'
@@ -176,6 +175,75 @@ ${mockFooter}
       mockOctokit.rest.issues.addLabels.mockRejectedValue(new Error('API error'))
 
       await expect(applyLabelsToIssue(octokit, mockLabels, mockConfig)).rejects.toThrow('API error')
+    })
+  })
+
+  describe('removeLabelsFromIssue', () => {
+    const mockLabelsToRemove = ['s/needs-info', 's/needs-repro']
+
+    it('should remove labels from issue', async () => {
+      await removeLabelsFromIssue(octokit, mockLabelsToRemove, mockConfig)
+
+      expect(octokit.rest.issues.removeLabel).toHaveBeenCalledTimes(2)
+      expect(octokit.rest.issues.removeLabel).toHaveBeenCalledWith({
+        owner: 'owner',
+        repo: 'repo',
+        issue_number: 123,
+        name: 's/needs-info'
+      })
+      expect(octokit.rest.issues.removeLabel).toHaveBeenCalledWith({
+        owner: 'owner',
+        repo: 'repo',
+        issue_number: 123,
+        name: 's/needs-repro'
+      })
+      expect(core.info).toHaveBeenCalledWith('Removed label: s/needs-info')
+      expect(core.info).toHaveBeenCalledWith('Removed label: s/needs-repro')
+    })
+
+    it('should skip empty labels arrays', async () => {
+      await removeLabelsFromIssue(octokit, [], mockConfig)
+
+      expect(octokit.rest.issues.removeLabel).not.toHaveBeenCalled()
+    })
+
+    it('should skip when labels array is undefined', async () => {
+      await removeLabelsFromIssue(octokit, undefined, mockConfig)
+
+      expect(octokit.rest.issues.removeLabel).not.toHaveBeenCalled()
+    })
+
+    it('should filter out empty label strings', async () => {
+      await removeLabelsFromIssue(octokit, [...mockLabelsToRemove, ''], mockConfig)
+
+      expect(octokit.rest.issues.removeLabel).toHaveBeenCalledTimes(2)
+    })
+
+    it('should skip in dry run mode', async () => {
+      const dryRunConfig = { ...mockConfig, dryRun: true }
+
+      await removeLabelsFromIssue(octokit, mockLabelsToRemove, dryRunConfig)
+
+      expect(octokit.rest.issues.removeLabel).not.toHaveBeenCalled()
+      expect(core.info).toHaveBeenCalledWith('Dry run: Skipping removing labels: s/needs-info, s/needs-repro')
+    })
+
+    it('should handle 404 errors gracefully (label not found)', async () => {
+      mockOctokit.rest.issues.removeLabel.mockRejectedValueOnce({ status: 404 })
+
+      await removeLabelsFromIssue(octokit, ['non-existent-label'], mockConfig)
+
+      expect(core.info).toHaveBeenCalledWith(
+        'Label non-existent-label was not found on issue (already removed or never existed)'
+      )
+    })
+
+    it('should handle other GitHub API errors with warnings', async () => {
+      mockOctokit.rest.issues.removeLabel.mockRejectedValueOnce(new Error('API error'))
+
+      await removeLabelsFromIssue(octokit, ['some-label'], mockConfig)
+
+      expect(core.warning).toHaveBeenCalledWith('Failed to remove label some-label: Error: API error')
     })
   })
 

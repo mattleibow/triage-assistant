@@ -3,9 +3,22 @@ import * as path from 'path'
 import * as github from '@actions/github'
 import { selectLabels } from '../prompts/select-labels.js'
 import { mergeResponses } from './merge.js'
-import { commentOnIssue, applyLabelsToIssue, addEyes, removeEyes, upsertNeedsInfoComment } from '../github/issues.js'
+import {
+  commentOnIssue,
+  applyLabelsToIssue,
+  removeLabelsFromIssue,
+  addEyes,
+  removeEyes,
+  upsertNeedsInfoComment
+} from '../github/issues.js'
 import { generateSummary } from '../prompts/summary.js'
-import { EverythingConfig, ApplyLabelsConfig, ApplySummaryCommentConfig, TriageConfig } from '../config.js'
+import {
+  EverythingConfig,
+  ApplyLabelsConfig,
+  ApplySummaryCommentConfig,
+  TriageConfig,
+  GitHubIssueConfig
+} from '../config.js'
 import { MissingInfoPayload } from './triage-response.js'
 
 type Octokit = ReturnType<typeof github.getOctokit>
@@ -70,6 +83,19 @@ export async function mergeAndApplyTriage(
   // Check if this is a missing-info response (has structured missing info fields)
   const isMissingInfoResponse = hasMissingInfoStructure(mergedResponse)
 
+  // For missing-info responses, determine which labels should be removed (only if we're applying labels)
+  if (isMissingInfoResponse && config.applyLabels) {
+    const labelsToRemove = await determineMissingInfoLabelsToRemove(
+      octokit,
+      mergedResponse as MissingInfoPayload,
+      config
+    )
+    if (labelsToRemove.length > 0) {
+      // Add labelsToRemove to the merged response
+      mergedResponse.labelsToRemove = labelsToRemove
+    }
+  }
+
   // Handle comments (either missing-info comment or regular summary comment)
   if (config.applyComment) {
     if (isMissingInfoResponse) {
@@ -82,6 +108,11 @@ export async function mergeAndApplyTriage(
     }
   }
 
+  // Handle label removal (if any labels need to be removed)
+  if (config.applyLabels && mergedResponse.labelsToRemove) {
+    await removeLabelsFromIssue(octokit, mergedResponse.labelsToRemove, config)
+  }
+
   // Handle labels (collect from both regular triage and missing-info responses)
   if (config.applyLabels) {
     // Collect all the labels from the merged response
@@ -90,6 +121,44 @@ export async function mergeAndApplyTriage(
     // Apply labels to the issue (this will handle both regular and missing-info labels)
     await applyLabelsToIssue(octokit, labels, config)
   }
+}
+
+/**
+ * Determines which missing-info labels should be removed based on the current response.
+ *
+ * @param octokit The GitHub API client.
+ * @param data The missing info payload.
+ * @param config The triage configuration object.
+ * @returns Array of label names that should be removed.
+ */
+async function determineMissingInfoLabelsToRemove(
+  octokit: Octokit,
+  data: MissingInfoPayload,
+  config: GitHubIssueConfig & TriageConfig
+): Promise<string[]> {
+  const labelsToRemove: string[] = []
+
+  // Get current labels on the issue
+  const currentLabels = await octokit.rest.issues.listLabelsOnIssue({
+    owner: config.repoOwner,
+    repo: config.repoName,
+    issue_number: config.issueNumber
+  })
+
+  const currentLabelNames = currentLabels.data.map((label) => label.name)
+  const newLabelNames = new Set(data.labels?.map((l) => l.label) || [])
+
+  // Define the needs-info related labels that we manage
+  const needsInfoLabels = ['s/needs-info', 's/needs-repro']
+
+  // Remove needs-info related labels that are currently on the issue but not in the new response
+  for (const needsInfoLabel of needsInfoLabels) {
+    if (currentLabelNames.includes(needsInfoLabel) && !newLabelNames.has(needsInfoLabel)) {
+      labelsToRemove.push(needsInfoLabel)
+    }
+  }
+
+  return labelsToRemove
 }
 
 /**

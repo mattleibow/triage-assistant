@@ -310,4 +310,117 @@ describe('mergeAndApplyTriage', () => {
       path.join(customTempDir, 'triage-assistant', 'responses.json')
     )
   })
+
+  it('should handle missing-info response with label removal', async () => {
+    const mockMissingInfoResponse = {
+      repro: {
+        has_clear_description: true,
+        has_steps: false,
+        has_code: false,
+        links: []
+      },
+      missing: ['steps'],
+      questions: ['How do you reproduce this issue?'],
+      labels: [{ label: 's/needs-repro', reason: 'Missing reproduction steps' }]
+    }
+
+    // Mock current labels - issue has s/needs-info but response only wants s/needs-repro
+    const mockCurrentLabels = {
+      data: [{ name: 's/needs-info' }, { name: 'bug' }, { name: 's/needs-repro' }]
+    }
+
+    merge.mergeResponses.mockResolvedValue(mockMissingInfoResponse)
+    octokit.rest.issues.listLabelsOnIssue.mockResolvedValue(mockCurrentLabels)
+
+    await mergeAndApplyTriage(octokit, mockConfig)
+
+    // Verify missing-info comment was called
+    expect(issues.upsertNeedsInfoComment).toHaveBeenCalledWith(
+      octokit,
+      expect.objectContaining({
+        ...mockMissingInfoResponse,
+        labelsToRemove: ['s/needs-info'] // should remove s/needs-info since it's not in the new response
+      }),
+      mockConfig
+    )
+
+    // Verify label removal was called before adding new labels
+    expect(issues.removeLabelsFromIssue).toHaveBeenCalledWith(octokit, ['s/needs-info'], mockConfig)
+
+    // Verify labels were applied
+    expect(issues.applyLabelsToIssue).toHaveBeenCalledWith(octokit, ['s/needs-repro'], mockConfig)
+
+    // Verify regular summary generation was NOT called for missing-info response
+    expect(summary.generateSummary).not.toHaveBeenCalled()
+    expect(issues.commentOnIssue).not.toHaveBeenCalled()
+  })
+
+  it('should handle missing-info response without any labels to remove', async () => {
+    const mockMissingInfoResponse = {
+      repro: {
+        has_clear_description: true,
+        has_steps: false,
+        has_code: false,
+        links: []
+      },
+      missing: ['steps'],
+      questions: ['How do you reproduce this issue?'],
+      labels: [{ label: 's/needs-repro', reason: 'Missing reproduction steps' }]
+    }
+
+    // Mock current labels - issue already has the correct labels
+    const mockCurrentLabels = {
+      data: [{ name: 's/needs-repro' }, { name: 'bug' }]
+    }
+
+    merge.mergeResponses.mockResolvedValue(mockMissingInfoResponse)
+    octokit.rest.issues.listLabelsOnIssue.mockResolvedValue(mockCurrentLabels)
+
+    await mergeAndApplyTriage(octokit, mockConfig)
+
+    // Verify missing-info comment was called
+    expect(issues.upsertNeedsInfoComment).toHaveBeenCalledWith(
+      octokit,
+      mockMissingInfoResponse, // No labelsToRemove field should be added
+      mockConfig
+    )
+
+    // Verify label removal was NOT called since no labels need to be removed
+    expect(issues.removeLabelsFromIssue).not.toHaveBeenCalled()
+
+    // Verify labels were applied
+    expect(issues.applyLabelsToIssue).toHaveBeenCalledWith(octokit, ['s/needs-repro'], mockConfig)
+  })
+
+  it('should respect applyLabels=false for missing-info responses', async () => {
+    const configWithoutLabels = {
+      ...mockConfig,
+      applyComment: true,
+      applyLabels: false
+    }
+
+    const mockMissingInfoResponse = {
+      repro: {
+        has_clear_description: true,
+        has_steps: false,
+        has_code: false,
+        links: []
+      },
+      missing: ['steps'],
+      questions: ['How do you reproduce this issue?'],
+      labels: [{ label: 's/needs-repro', reason: 'Missing reproduction steps' }]
+    }
+
+    merge.mergeResponses.mockResolvedValue(mockMissingInfoResponse)
+
+    await mergeAndApplyTriage(octokit, configWithoutLabels)
+
+    // Verify missing-info comment was called
+    expect(issues.upsertNeedsInfoComment).toHaveBeenCalledWith(octokit, mockMissingInfoResponse, configWithoutLabels)
+
+    // Verify NO label operations were performed
+    expect(octokit.rest.issues.listLabelsOnIssue).not.toHaveBeenCalled()
+    expect(issues.removeLabelsFromIssue).not.toHaveBeenCalled()
+    expect(issues.applyLabelsToIssue).not.toHaveBeenCalled()
+  })
 })
