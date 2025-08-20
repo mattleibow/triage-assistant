@@ -490,7 +490,11 @@ describe('summary', () => {
         expect.stringContaining('Please summarize the results of this triage.'),
         expectedResponseFile,
         500,
-        mockConfig
+        {
+          aiEndpoint: mockConfig.aiEndpoint,
+          aiModel: mockConfig.aiModel,
+          aiToken: mockConfig.aiToken
+        }
       )
 
       // Verify return value

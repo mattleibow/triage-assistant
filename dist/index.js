@@ -38915,12 +38915,15 @@ function getPathFromMapKey(mapKey) {
 async function runInference(systemPrompt, userPrompt, responseFile, maxTokens = 200, config) {
     coreExports.debug(`Running inference...`);
     try {
+        coreExports.debug(`AI Endpoint: ${config.aiEndpoint}`);
+        coreExports.debug(`AI Token: ${config.aiToken}`);
+        coreExports.debug(`AI Model: ${config.aiModel}`);
         // Create Azure AI client
         const client = createClient(config.aiEndpoint, new AzureKeyCredential(config.aiToken), {
             userAgentOptions: { userAgentPrefix: 'github-actions-triage-assistant' }
         });
-        // Make the AI inference request
-        const response = await client.path('/chat/completions').post({
+        // Create the request message
+        const request = {
             body: {
                 messages: [
                     {
@@ -38935,7 +38938,10 @@ async function runInference(systemPrompt, userPrompt, responseFile, maxTokens = 
                 max_tokens: maxTokens,
                 model: config.aiModel
             }
-        });
+        };
+        coreExports.debug(`AI Request: ${JSON.stringify(request, null, 2)}`);
+        // Make the AI inference request
+        const response = await client.path('/chat/completions').post(request);
         if (isUnexpected(response)) {
             if (response.body?.error) {
                 throw response.body.error;
@@ -38979,7 +38985,11 @@ async function selectLabels(config) {
     const systemPrompt = await fs.promises.readFile(systemPromptPath, 'utf8');
     const userPrompt = await fs.promises.readFile(userPromptPath, 'utf8');
     const responseFile = path.join(responseDir, `response-${guid}.json`);
-    await runInference(systemPrompt, userPrompt, responseFile, 200, config);
+    await runInference(systemPrompt, userPrompt, responseFile, 200, {
+        aiEndpoint: config.aiEndpoint,
+        aiModel: config.aiModel,
+        aiToken: config.aiToken
+    });
     return responseFile;
 }
 /** * Generates a prompt file based on the provided template and configuration.
@@ -39451,7 +39461,11 @@ async function generateSummary(config, mergedResponseFile) {
     // Run AI inference to generate the summary
     const systemPrompt = await fs.promises.readFile(systemPromptPath, 'utf8');
     const userPrompt = await fs.promises.readFile(userPromptPath, 'utf8');
-    await runInference(systemPrompt, userPrompt, summaryResponseFile, 500, config);
+    await runInference(systemPrompt, userPrompt, summaryResponseFile, 500, {
+        aiEndpoint: config.aiEndpoint,
+        aiModel: config.aiModel,
+        aiToken: config.aiToken
+    });
     return summaryResponseFile;
 }
 /**

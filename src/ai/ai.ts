@@ -24,13 +24,17 @@ export async function runInference(
   core.debug(`Running inference...`)
 
   try {
+    core.debug(`AI Endpoint: ${config.aiEndpoint}`)
+    core.debug(`AI Token: ${config.aiToken}`)
+    core.debug(`AI Model: ${config.aiModel}`)
+
     // Create Azure AI client
     const client = ModelClient(config.aiEndpoint, new AzureKeyCredential(config.aiToken), {
       userAgentOptions: { userAgentPrefix: 'github-actions-triage-assistant' }
     })
 
-    // Make the AI inference request
-    const response = await client.path('/chat/completions').post({
+    // Create the request message
+    const request = {
       body: {
         messages: [
           {
@@ -45,7 +49,11 @@ export async function runInference(
         max_tokens: maxTokens,
         model: config.aiModel
       }
-    })
+    }
+    core.debug(`AI Request: ${JSON.stringify(request, null, 2)}`)
+
+    // Make the AI inference request
+    const response = await client.path('/chat/completions').post(request)
 
     if (isUnexpected(response)) {
       if (response.body?.error) {

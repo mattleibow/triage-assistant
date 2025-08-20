@@ -33,7 +33,11 @@ export async function selectLabels(config: SelectLabelsPromptConfig & InferenceC
   const systemPrompt = await fs.promises.readFile(systemPromptPath, 'utf8')
   const userPrompt = await fs.promises.readFile(userPromptPath, 'utf8')
   const responseFile = path.join(responseDir, `response-${guid}.json`)
-  await runInference(systemPrompt, userPrompt, responseFile, 200, config)
+  await runInference(systemPrompt, userPrompt, responseFile, 200, {
+    aiEndpoint: config.aiEndpoint,
+    aiModel: config.aiModel,
+    aiToken: config.aiToken
+  })
 
   return responseFile
 }

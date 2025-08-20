@@ -209,18 +209,26 @@ describe('selectLabels', () => {
         expect.stringContaining('A new issue has arrived'),
         responsePath,
         200,
-        mockConfig
+        {
+          aiEndpoint: mockConfig.aiEndpoint,
+          aiModel: mockConfig.aiModel,
+          aiToken: mockConfig.aiToken
+        }
       )
 
       // Verify the correct response file path is returned
       expect(result).toBe(responsePath)
     })
 
-    it('should pass the full config object to runInference', async () => {
+    it('should not pass the full config object to runInference', async () => {
       await selectLabels(mockConfig)
 
       const inferenceCall = ai.runInference.mock.calls[0]
-      expect(inferenceCall[4]).toBe(mockConfig) // Full config object should be passed
+      expect(inferenceCall[4]).toStrictEqual({
+        aiEndpoint: mockConfig.aiEndpoint,
+        aiModel: mockConfig.aiModel,
+        aiToken: mockConfig.aiToken
+      })
     })
 
     it('should handle file reading errors gracefully', async () => {

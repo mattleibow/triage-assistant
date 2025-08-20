@@ -34,7 +34,11 @@ export async function generateSummary(
   // Run AI inference to generate the summary
   const systemPrompt = await fs.promises.readFile(systemPromptPath, 'utf8')
   const userPrompt = await fs.promises.readFile(userPromptPath, 'utf8')
-  await runInference(systemPrompt, userPrompt, summaryResponseFile, 500, config)
+  await runInference(systemPrompt, userPrompt, summaryResponseFile, 500, {
+    aiEndpoint: config.aiEndpoint,
+    aiModel: config.aiModel,
+    aiToken: config.aiToken
+  })
 
   return summaryResponseFile
 }
