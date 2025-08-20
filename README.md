@@ -45,7 +45,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Determine area label
-        uses: mattleibow/triage-assistant@v0.7.0
+        uses: mattleibow/triage-assistant@v0.8.0
         with:
           label-prefix: 'area-'
           template: 'single-label'
@@ -59,25 +59,25 @@ For more sophisticated triage workflows, you can use multiple steps with differe
 ```yaml
 steps:
   - name: Determine overlap labels
-    uses: mattleibow/triage-assistant@v0.7.0
+    uses: mattleibow/triage-assistant@v0.8.0
     with:
       label-prefix: 'overlap-'
       template: 'multi-label'
 
   - name: Determine area label
-    uses: mattleibow/triage-assistant@v0.7.0
+    uses: mattleibow/triage-assistant@v0.8.0
     with:
       label-prefix: 'area-'
       template: 'single-label'
 
   - name: Check for regression
-    uses: mattleibow/triage-assistant@v0.7.0
+    uses: mattleibow/triage-assistant@v0.8.0
     with:
       label: 'regression'
       template: 'regression'
 
   - name: Apply all labels and add comment
-    uses: mattleibow/triage-assistant@v0.7.0
+    uses: mattleibow/triage-assistant@v0.8.0
     with:
       apply-labels: true
       apply-comment: true
@@ -101,7 +101,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Triage specific issue
-        uses: mattleibow/triage-assistant@v0.7.0
+        uses: mattleibow/triage-assistant@v0.8.0
         with:
           issue: ${{ inputs.issue_number }}
           template: 'single-label'
@@ -123,7 +123,7 @@ Focuses on AI-powered label application and issue commenting.
 
 ```yaml
 - name: Apply labels to issue
-  uses: mattleibow/triage-assistant/apply-labels@v0.7.0
+  uses: mattleibow/triage-assistant/apply-labels@v0.8.0
   with:
     token: ${{ secrets.GITHUB_TOKEN }}
     ai-token: ${{ secrets.AI_TOKEN }}
@@ -138,7 +138,7 @@ Focuses on calculating and applying engagement scores to project issues.
 
 ```yaml
 - name: Calculate engagement scores
-  uses: mattleibow/triage-assistant/engagement-score@v0.7.0
+  uses: mattleibow/triage-assistant/engagement-score@v0.8.0
   with:
     token: ${{ secrets.GITHUB_TOKEN }}
     project: 123
@@ -158,13 +158,13 @@ You can easily migrate from the template-based approach:
 
 ```yaml
 # Before (still works)
-- uses: mattleibow/triage-assistant@v0.7.0
+- uses: mattleibow/triage-assistant@v0.8.0
   with:
     template: 'engagement-score'
     project: 123
 
 # After (recommended)
-- uses: mattleibow/triage-assistant/engagement-score@v0.7.0
+- uses: mattleibow/triage-assistant/engagement-score@v0.8.0
   with:
     project: 123
 ```
@@ -318,7 +318,7 @@ Calculate engagement scores for all issues in a GitHub Project:
 
 ```yaml
 - name: Calculate engagement scores for project
-  uses: mattleibow/triage-assistant@v0.7.0
+  uses: mattleibow/triage-assistant@v0.8.0
   with:
     template: engagement-score
     project: 1 # Your project number
@@ -332,7 +332,7 @@ Calculate engagement score for a specific issue:
 
 ```yaml
 - name: Calculate engagement score for issue
-  uses: mattleibow/triage-assistant@v0.7.0
+  uses: mattleibow/triage-assistant@v0.8.0
   with:
     template: engagement-score
     issue: 123 # Specific issue number
@@ -406,7 +406,7 @@ AI model using inputs or environment variables:
 
 ```yaml
 - name: Triage with custom AI model
-  uses: mattleibow/triage-assistant@v0.7.0
+  uses: mattleibow/triage-assistant@v0.8.0
   with:
     template: single-label
     label-prefix: 'area-'
@@ -489,7 +489,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Calculate engagement scores for project
-        uses: mattleibow/triage-assistant@v0.7.0
+        uses: mattleibow/triage-assistant@v0.8.0
         with:
           template: engagement-score
           project: 1 # Replace with your project number
@@ -500,7 +500,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Calculate engagement score for specific issue
-        uses: mattleibow/triage-assistant@v0.7.0
+        uses: mattleibow/triage-assistant@v0.8.0
         with:
           template: engagement-score
           issue: ${{ github.event.issue.number }}
@@ -530,7 +530,7 @@ jobs:
     steps:
       # Step 1: Apply AI-powered labels
       - name: Apply area labels
-        uses: mattleibow/triage-assistant@v0.7.0
+        uses: mattleibow/triage-assistant@v0.8.0
         with:
           template: multi-label
           label-prefix: 'area-'
@@ -539,7 +539,7 @@ jobs:
 
       # Step 2: Calculate engagement score
       - name: Calculate engagement score
-        uses: mattleibow/triage-assistant@v0.7.0
+        uses: mattleibow/triage-assistant@v0.8.0
         with:
           template: engagement-score
           issue: ${{ github.event.issue.number }}
