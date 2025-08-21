@@ -525,6 +525,7 @@ ${mockFooter}
         headers: {},
         status: 200,
         url: 'https://api.github.com'
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
       } as Parameters<typeof mockOctokit.rest.search.issuesAndPullRequests.mockResolvedValue>[0] as any
 
       mockOctokit.rest.search.issuesAndPullRequests.mockResolvedValue(mockSearchResults)
@@ -550,6 +551,7 @@ ${mockFooter}
         headers: {},
         status: 200,
         url: 'https://api.github.com'
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
       } as Parameters<typeof mockOctokit.rest.search.issuesAndPullRequests.mockResolvedValue>[0] as any
 
       mockOctokit.rest.search.issuesAndPullRequests.mockResolvedValue(mockSearchResults)
@@ -616,7 +618,9 @@ ${mockFooter}
         dryRun: false
       }
 
-      mockOctokit.rest.issues.addLabels.mockResolvedValue({} as any)
+      mockOctokit.rest.issues.addLabels.mockResolvedValue({
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      } as any)
 
       await applyLabelsToBulkIssues(octokit, issueNumbers, labels, config)
 
@@ -653,7 +657,9 @@ ${mockFooter}
         dryRun: false
       }
 
-      mockOctokit.rest.issues.addLabels.mockResolvedValue({} as any)
+      mockOctokit.rest.issues.addLabels.mockResolvedValue({
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      } as any)
 
       await applyLabelsToBulkIssues(octokit, issueNumbers, labels, config)
 
