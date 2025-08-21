@@ -37,8 +37,9 @@ async function runWorkflow(triageModeOverride?: TriageMode): Promise<void> {
         throw new Error('Either project or issue must be specified when calculating engagement scores')
       }
     } else if (triageMode === TriageMode.ApplyLabels) {
-      if (!issueInput && !issueContext) {
-        throw new Error('Issue number is required for applying labels')
+      const searchQuery = core.getInput('search-query')
+      if (!issueInput && !issueContext && !searchQuery) {
+        throw new Error('Either issue number or search-query must be specified for applying labels')
       }
     }
 
@@ -71,6 +72,7 @@ async function runWorkflow(triageModeOverride?: TriageMode): Promise<void> {
       repoName: github.context.repo.repo,
       repoOwner: github.context.repo.owner,
       repository: `${github.context.repo.owner}/${github.context.repo.repo}`,
+      searchQuery: core.getInput('search-query') || undefined,
       tempDir: process.env.RUNNER_TEMP || os.tmpdir(),
       template: template,
       token: token

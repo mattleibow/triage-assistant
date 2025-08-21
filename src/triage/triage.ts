@@ -3,7 +3,14 @@ import * as path from 'path'
 import * as github from '@actions/github'
 import { selectLabels } from '../prompts/select-labels.js'
 import { mergeResponses } from './merge.js'
-import { commentOnIssue, applyLabelsToIssue, addEyes, removeEyes } from '../github/issues.js'
+import {
+  commentOnIssue,
+  applyLabelsToIssue,
+  addEyes,
+  removeEyes,
+  searchIssues,
+  applyLabelsToBulkIssues
+} from '../github/issues.js'
 import { generateSummary } from '../prompts/summary.js'
 import { EverythingConfig, ApplyLabelsConfig, ApplySummaryCommentConfig, TriageConfig } from '../config.js'
 
@@ -15,6 +22,12 @@ type Octokit = ReturnType<typeof github.getOctokit>
 export async function runTriageWorkflow(config: EverythingConfig): Promise<string> {
   const octokit = github.getOctokit(config.token)
 
+  // Handle bulk labeling with search query
+  if (config.searchQuery) {
+    return await runBulkLabelingWorkflow(octokit, config)
+  }
+
+  // Continue with single-issue workflow
   const shouldAddLabels = config.template ? true : false
   const shouldAddSummary = config.applyLabels || config.applyComment
   const shouldAddReactions = shouldAddLabels || shouldAddSummary
@@ -44,6 +57,61 @@ export async function runTriageWorkflow(config: EverythingConfig): Promise<strin
     if (shouldRemoveReactions) {
       await removeEyes(octokit, config)
     }
+  }
+}
+
+/**
+ * Run the bulk labeling workflow using search query
+ */
+async function runBulkLabelingWorkflow(octokit: Octokit, config: EverythingConfig): Promise<string> {
+  if (!config.searchQuery) {
+    throw new Error('Search query is required for bulk labeling')
+  }
+
+  core.info('Running bulk labeling workflow with search query')
+
+  try {
+    // Step 1: Search for issues matching the query
+    const issueNumbers = await searchIssues(octokit, config.searchQuery, config.repoOwner, config.repoName)
+
+    if (issueNumbers.length === 0) {
+      core.warning('No issues found matching the search query')
+      return ''
+    }
+
+    // Step 2: If we have a template, generate labels using AI for the first issue as a sample
+    let labels: string[] = []
+    if (config.template && issueNumbers.length > 0) {
+      // Use the first issue as a sample for AI label generation
+      const sampleConfig = { ...config, issueNumber: issueNumbers[0] }
+      await selectLabels(sampleConfig)
+
+      // Parse the response to extract labels
+      const mergedResponseFile = path.join(config.tempDir, 'triage-assistant', 'responses.json')
+      const responsesDir = path.join(config.tempDir, 'triage-assistant', 'responses')
+      const mergedResponse = await mergeResponses('', responsesDir, mergedResponseFile)
+
+      labels = mergedResponse.labels?.map((l) => l.label)?.filter(Boolean) || []
+      core.info(`Generated labels from AI analysis: ${labels.join(', ')}`)
+    }
+
+    // If we have specific labels configured, use those
+    if (config.label) {
+      labels = [config.label]
+      core.info(`Using configured label: ${config.label}`)
+    }
+
+    // Step 3: Apply labels to all found issues
+    if (config.applyLabels && labels.length > 0) {
+      await applyLabelsToBulkIssues(octokit, issueNumbers, labels, config)
+    } else if (labels.length === 0) {
+      core.warning('No labels to apply. Either specify a label or use a template for AI-generated labels.')
+    }
+
+    return ''
+  } catch (error) {
+    core.error(`Bulk labeling workflow failed: ${error instanceof Error ? error.message : String(error)}`)
+    throw error
   }
 }
 

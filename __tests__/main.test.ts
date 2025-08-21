@@ -408,6 +408,82 @@ describe('Main Multi-Mode Functionality', () => {
     })
   })
 
+  describe('Search Query Functionality', () => {
+    it('should handle search-query input for bulk labeling', async () => {
+      core.getInput.mockImplementation((name: string) => {
+        switch (name) {
+          case 'search-query':
+            return 'is:issue state:open created:>@today-30d'
+          case 'token':
+            return 'test-token'
+          case 'apply-labels':
+            return 'true'
+          case 'label':
+            return 'bulk-processed'
+          default:
+            return ''
+        }
+      })
+
+      await run()
+
+      expect(core.setFailed).not.toHaveBeenCalled()
+      expect(triage.runTriageWorkflow).toHaveBeenCalledWith(
+        expect.objectContaining({
+          searchQuery: 'is:issue state:open created:>@today-30d',
+          applyLabels: true,
+          label: 'bulk-processed'
+        })
+      )
+    })
+
+    it('should allow search-query without issue number', async () => {
+      core.getInput.mockImplementation((name: string) => {
+        switch (name) {
+          case 'search-query':
+            return 'is:issue state:open'
+          case 'token':
+            return 'test-token'
+          default:
+            return ''
+        }
+      })
+
+      // Clear any mocked issue context
+      github.mockContext.issue = undefined
+
+      await run()
+
+      expect(core.setFailed).not.toHaveBeenCalled()
+      expect(triage.runTriageWorkflow).toHaveBeenCalledWith(
+        expect.objectContaining({
+          searchQuery: 'is:issue state:open'
+        })
+      )
+    })
+
+    it('should require either issue number or search-query for apply labels mode', async () => {
+      core.getInput.mockImplementation((name: string) => {
+        switch (name) {
+          case 'token':
+            return 'test-token'
+          default:
+            return ''
+        }
+      })
+
+      // Clear any mocked issue context
+      github.mockContext.issue = undefined
+
+      await run()
+
+      expect(core.setFailed).toHaveBeenCalledWith(
+        'Either issue number or search-query must be specified for applying labels'
+      )
+      expect(triage.runTriageWorkflow).not.toHaveBeenCalled()
+    })
+  })
+
   describe('Sub-Action Functions', () => {
     beforeEach(() => {
       jest.clearAllMocks()

@@ -148,6 +148,142 @@ export async function removeEyes(octokit: Octokit, config: GitHubIssueConfig & T
 }
 
 /**
+ * Searches for issues using GitHub's search API
+ *
+ * @param octokit - An authenticated Octokit instance
+ * @param searchQuery - GitHub search query (e.g., "is:issue state:open created:>@today-30d")
+ * @param repoOwner - Repository owner (added to search if not already specified in query)
+ * @param repoName - Repository name (added to search if not already specified in query)
+ * @returns Array of issue numbers that match the search query
+ */
+export async function searchIssues(
+  octokit: Octokit,
+  searchQuery: string,
+  repoOwner: string,
+  repoName: string
+): Promise<number[]> {
+  try {
+    // Add repository filter to search if not already specified
+    let finalQuery = searchQuery.trim()
+    if (!finalQuery.includes('repo:')) {
+      finalQuery = `${finalQuery} repo:${repoOwner}/${repoName}`
+    }
+
+    core.info(`Searching for issues with query: ${finalQuery}`)
+
+    const searchResults = await octokit.rest.search.issuesAndPullRequests({
+      q: finalQuery,
+      per_page: 100, // GitHub's maximum per page
+      sort: 'updated',
+      order: 'desc'
+    })
+
+    const issueNumbers: number[] = []
+
+    for (const item of searchResults.data.items) {
+      // Only include issues (not pull requests)
+      if (!item.pull_request) {
+        issueNumbers.push(item.number)
+      }
+    }
+
+    core.info(`Found ${issueNumbers.length} issues matching the search query`)
+
+    // Handle pagination if there are more results
+    let page = 2
+    while (searchResults.data.items.length === 100 && page <= 10) {
+      // Limit to 10 pages (1000 issues) for safety
+      core.info(`Fetching page ${page} of search results...`)
+
+      const nextResults = await octokit.rest.search.issuesAndPullRequests({
+        q: finalQuery,
+        per_page: 100,
+        page: page,
+        sort: 'updated',
+        order: 'desc'
+      })
+
+      for (const item of nextResults.data.items) {
+        if (!item.pull_request) {
+          issueNumbers.push(item.number)
+        }
+      }
+
+      if (nextResults.data.items.length < 100) {
+        break
+      }
+      page++
+    }
+
+    core.info(`Total found: ${issueNumbers.length} issues`)
+    return issueNumbers
+  } catch (error) {
+    core.error(`Failed to search for issues: ${error instanceof Error ? error.message : String(error)}`)
+    throw new Error(`GitHub search failed: ${error instanceof Error ? error.message : String(error)}`)
+  }
+}
+
+/**
+ * Applies labels to multiple issues in bulk
+ *
+ * @param octokit - An authenticated Octokit instance
+ * @param issueNumbers - Array of issue numbers to apply labels to
+ * @param labels - Array of label names to apply
+ * @param config - Configuration containing repo info and dry-run setting
+ */
+export async function applyLabelsToBulkIssues(
+  octokit: Octokit,
+  issueNumbers: number[],
+  labels: string[],
+  config: Pick<GitHubIssueConfig & TriageConfig, 'repoOwner' | 'repoName' | 'dryRun'>
+): Promise<void> {
+  // Filter out empty labels
+  const filteredLabels = labels.filter((label) => label.trim().length > 0)
+
+  // If no labels to apply, return early
+  if (filteredLabels.length === 0) {
+    core.warning('No labels specified for bulk application')
+    return
+  }
+
+  if (config.dryRun) {
+    core.info(
+      `Dry run: Would apply labels [${filteredLabels.join(', ')}] to ${issueNumbers.length} issues: ${issueNumbers.join(', ')}`
+    )
+    return
+  }
+
+  core.info(`Applying labels [${filteredLabels.join(', ')}] to ${issueNumbers.length} issues`)
+
+  let successCount = 0
+  let errorCount = 0
+
+  for (const issueNumber of issueNumbers) {
+    try {
+      await octokit.rest.issues.addLabels({
+        owner: config.repoOwner,
+        repo: config.repoName,
+        issue_number: issueNumber,
+        labels: filteredLabels
+      })
+      successCount++
+      core.info(`✓ Applied labels to issue #${issueNumber}`)
+    } catch (error) {
+      errorCount++
+      core.error(
+        `✗ Failed to apply labels to issue #${issueNumber}: ${error instanceof Error ? error.message : String(error)}`
+      )
+    }
+  }
+
+  core.info(`Bulk labeling completed: ${successCount} successful, ${errorCount} failed`)
+
+  if (errorCount > 0) {
+    core.warning(`${errorCount} issues failed to be labeled. Check the logs above for details.`)
+  }
+}
+
+/**
  * Get detailed information about an issue including comments and reactions using GraphQL
  */
 export async function getIssueDetails(

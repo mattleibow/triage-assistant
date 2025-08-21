@@ -68,6 +68,7 @@ export interface ApplyReactionsConfig extends GitHubIssueConfig {
 export interface ApplyLabelsConfig extends GitHubIssueConfig {
   token: string
   applyLabels: boolean
+  searchQuery?: string
 }
 
 export interface ApplySummaryCommentConfig extends GitHubIssueConfig, SummaryPromptConfig, InferenceConfig {

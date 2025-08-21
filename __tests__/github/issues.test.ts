@@ -16,9 +16,15 @@ type GetIssueDetailsQueryIssueCommentNodes = NonNullable<
 jest.unstable_mockModule('@actions/core', () => core)
 
 // Import the module being tested
-const { commentOnIssue, applyLabelsToIssue, addEyes, removeEyes, getIssueDetails } = await import(
-  '../../src/github/issues.js'
-)
+const {
+  commentOnIssue,
+  applyLabelsToIssue,
+  addEyes,
+  removeEyes,
+  getIssueDetails,
+  searchIssues,
+  applyLabelsToBulkIssues
+} = await import('../../src/github/issues.js')
 
 describe('GitHub Issues', () => {
   const testTempDir = '/tmp/test'
@@ -501,6 +507,200 @@ ${mockFooter}
       expect(result.comments).toHaveLength(100)
       expect(result.comments[0].user.login).toBe('commenter1')
       expect(result.comments[99].user.login).toBe('commenter100')
+    })
+  })
+
+  describe('searchIssues', () => {
+    it('should search for issues and return issue numbers', async () => {
+      const mockSearchResults = {
+        data: {
+          total_count: 2,
+          incomplete_results: false,
+          items: [
+            { number: 123, pull_request: null },
+            { number: 124, pull_request: null },
+            { number: 125, pull_request: { id: 1 } } // This is a PR, should be filtered out
+          ]
+        },
+        headers: {},
+        status: 200,
+        url: 'https://api.github.com'
+      } as any
+
+      mockOctokit.rest.search.issuesAndPullRequests.mockResolvedValue(mockSearchResults)
+
+      const result = await searchIssues(octokit, 'is:issue state:open', 'owner', 'repo')
+
+      expect(mockOctokit.rest.search.issuesAndPullRequests).toHaveBeenCalledWith({
+        q: 'is:issue state:open repo:owner/repo',
+        per_page: 100,
+        sort: 'updated',
+        order: 'desc'
+      })
+      expect(result).toEqual([123, 124])
+    })
+
+    it('should not add repo filter if already present in query', async () => {
+      const mockSearchResults = {
+        data: {
+          total_count: 1,
+          incomplete_results: false,
+          items: [{ number: 123, pull_request: null }]
+        },
+        headers: {},
+        status: 200,
+        url: 'https://api.github.com'
+      } as any
+
+      mockOctokit.rest.search.issuesAndPullRequests.mockResolvedValue(mockSearchResults)
+
+      await searchIssues(octokit, 'is:issue repo:owner/repo state:open', 'owner', 'repo')
+
+      expect(mockOctokit.rest.search.issuesAndPullRequests).toHaveBeenCalledWith({
+        q: 'is:issue repo:owner/repo state:open',
+        per_page: 100,
+        sort: 'updated',
+        order: 'desc'
+      })
+    })
+
+    it('should handle pagination correctly', async () => {
+      const firstPageResults = {
+        data: {
+          total_count: 101,
+          incomplete_results: false,
+          items: new Array(100).fill(0).map((_, i) => ({ number: i + 1, pull_request: null }))
+        },
+        headers: {},
+        status: 200,
+        url: 'https://api.github.com'
+      } as any
+      const secondPageResults = {
+        data: {
+          total_count: 101,
+          incomplete_results: false,
+          items: [{ number: 101, pull_request: null }]
+        },
+        headers: {},
+        status: 200,
+        url: 'https://api.github.com'
+      } as any
+
+      mockOctokit.rest.search.issuesAndPullRequests
+        .mockResolvedValueOnce(firstPageResults)
+        .mockResolvedValueOnce(secondPageResults)
+
+      const result = await searchIssues(octokit, 'is:issue state:open', 'owner', 'repo')
+
+      expect(mockOctokit.rest.search.issuesAndPullRequests).toHaveBeenCalledTimes(2)
+      expect(result).toHaveLength(101)
+      expect(result[100]).toBe(101)
+    })
+
+    it('should handle API errors gracefully', async () => {
+      mockOctokit.rest.search.issuesAndPullRequests.mockRejectedValue(new Error('API Error'))
+
+      await expect(searchIssues(octokit, 'is:issue state:open', 'owner', 'repo')).rejects.toThrow(
+        'GitHub search failed: API Error'
+      )
+    })
+  })
+
+  describe('applyLabelsToBulkIssues', () => {
+    it('should apply labels to multiple issues', async () => {
+      const issueNumbers = [123, 124, 125]
+      const labels = ['bug', 'enhancement']
+      const config = {
+        repoOwner: 'owner',
+        repoName: 'repo',
+        dryRun: false
+      }
+
+      mockOctokit.rest.issues.addLabels.mockResolvedValue({} as any)
+
+      await applyLabelsToBulkIssues(octokit, issueNumbers, labels, config)
+
+      expect(mockOctokit.rest.issues.addLabels).toHaveBeenCalledTimes(3)
+      expect(mockOctokit.rest.issues.addLabels).toHaveBeenCalledWith({
+        owner: 'owner',
+        repo: 'repo',
+        issue_number: 123,
+        labels: ['bug', 'enhancement']
+      })
+    })
+
+    it('should handle dry run mode', async () => {
+      const issueNumbers = [123, 124]
+      const labels = ['bug']
+      const config = {
+        repoOwner: 'owner',
+        repoName: 'repo',
+        dryRun: true
+      }
+
+      await applyLabelsToBulkIssues(octokit, issueNumbers, labels, config)
+
+      expect(mockOctokit.rest.issues.addLabels).not.toHaveBeenCalled()
+      expect(core.info).toHaveBeenCalledWith(
+        'Dry run: Would apply labels [bug] to 2 issues: 123, 124'
+      )
+    })
+
+    it('should filter out empty labels', async () => {
+      const issueNumbers = [123]
+      const labels = ['bug', '', ' ', 'enhancement']
+      const config = {
+        repoOwner: 'owner',
+        repoName: 'repo',
+        dryRun: false
+      }
+
+      mockOctokit.rest.issues.addLabels.mockResolvedValue({} as any)
+
+      await applyLabelsToBulkIssues(octokit, issueNumbers, labels, config)
+
+      expect(mockOctokit.rest.issues.addLabels).toHaveBeenCalledWith({
+        owner: 'owner',
+        repo: 'repo',
+        issue_number: 123,
+        labels: ['bug', 'enhancement']
+      })
+    })
+
+    it('should continue on individual failures and report errors', async () => {
+      const issueNumbers = [123, 124, 125]
+      const labels = ['bug']
+      const config = {
+        repoOwner: 'owner',
+        repoName: 'repo',
+        dryRun: false
+      }
+
+      mockOctokit.rest.issues.addLabels
+        .mockResolvedValueOnce({} as any)
+        .mockRejectedValueOnce(new Error('API Error'))
+        .mockResolvedValueOnce({} as any)
+
+      await applyLabelsToBulkIssues(octokit, issueNumbers, labels, config)
+
+      expect(mockOctokit.rest.issues.addLabels).toHaveBeenCalledTimes(3)
+      expect(core.info).toHaveBeenCalledWith('Bulk labeling completed: 2 successful, 1 failed')
+      expect(core.error).toHaveBeenCalledWith('✗ Failed to apply labels to issue #124: API Error')
+    })
+
+    it('should return early if no labels provided', async () => {
+      const issueNumbers = [123]
+      const labels: string[] = []
+      const config = {
+        repoOwner: 'owner',
+        repoName: 'repo',
+        dryRun: false
+      }
+
+      await applyLabelsToBulkIssues(octokit, issueNumbers, labels, config)
+
+      expect(mockOctokit.rest.issues.addLabels).not.toHaveBeenCalled()
+      expect(core.warning).toHaveBeenCalledWith('No labels specified for bulk application')
     })
   })
 })
