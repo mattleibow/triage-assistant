@@ -525,7 +525,7 @@ ${mockFooter}
         headers: {},
         status: 200,
         url: 'https://api.github.com'
-      } as any
+      } as Parameters<typeof mockOctokit.rest.search.issuesAndPullRequests.mockResolvedValue>[0] as any
 
       mockOctokit.rest.search.issuesAndPullRequests.mockResolvedValue(mockSearchResults)
 
@@ -550,7 +550,7 @@ ${mockFooter}
         headers: {},
         status: 200,
         url: 'https://api.github.com'
-      } as any
+      } as Parameters<typeof mockOctokit.rest.search.issuesAndPullRequests.mockResolvedValue>[0] as any
 
       mockOctokit.rest.search.issuesAndPullRequests.mockResolvedValue(mockSearchResults)
 
@@ -572,9 +572,9 @@ ${mockFooter}
           items: new Array(100).fill(0).map((_, i) => ({ number: i + 1, pull_request: null }))
         },
         headers: {},
-        status: 200,
+        status: 200 as const,
         url: 'https://api.github.com'
-      } as any
+      } as unknown as Parameters<typeof mockOctokit.rest.search.issuesAndPullRequests.mockResolvedValue>[0]
       const secondPageResults = {
         data: {
           total_count: 101,
@@ -582,9 +582,9 @@ ${mockFooter}
           items: [{ number: 101, pull_request: null }]
         },
         headers: {},
-        status: 200,
+        status: 200 as const,
         url: 'https://api.github.com'
-      } as any
+      } as unknown as Parameters<typeof mockOctokit.rest.search.issuesAndPullRequests.mockResolvedValue>[0]
 
       mockOctokit.rest.search.issuesAndPullRequests
         .mockResolvedValueOnce(firstPageResults)
@@ -641,9 +641,7 @@ ${mockFooter}
       await applyLabelsToBulkIssues(octokit, issueNumbers, labels, config)
 
       expect(mockOctokit.rest.issues.addLabels).not.toHaveBeenCalled()
-      expect(core.info).toHaveBeenCalledWith(
-        'Dry run: Would apply labels [bug] to 2 issues: 123, 124'
-      )
+      expect(core.info).toHaveBeenCalledWith('Dry run: Would apply labels [bug] to 2 issues: 123, 124')
     })
 
     it('should filter out empty labels', async () => {
@@ -677,9 +675,9 @@ ${mockFooter}
       }
 
       mockOctokit.rest.issues.addLabels
-        .mockResolvedValueOnce({} as any)
+        .mockResolvedValueOnce({} as unknown as never)
         .mockRejectedValueOnce(new Error('API Error'))
-        .mockResolvedValueOnce({} as any)
+        .mockResolvedValueOnce({} as unknown as never)
 
       await applyLabelsToBulkIssues(octokit, issueNumbers, labels, config)
 

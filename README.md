@@ -13,6 +13,7 @@ prioritization.
 ## Features
 
 - **AI-Powered Triage**: Automatically analyze issue content and apply appropriate labels using advanced language models
+- **Bulk Label Application**: Apply labels to multiple issues using GitHub's powerful search syntax
 - **Engagement Scoring**: Calculate numerical engagement scores based on community activity and interaction
 - **Multi-Mode Operation**: Seamlessly switch between AI triage and engagement scoring workflows
 - **GitHub Projects Integration**: Automatically update project fields with calculated engagement scores
@@ -110,6 +111,83 @@ jobs:
           apply-comment: true
 ```
 
+### Bulk Label Application
+
+Apply labels to multiple issues at once using GitHub's powerful search syntax:
+
+```yaml
+name: 'Bulk Label Issues'
+on:
+  workflow_dispatch:
+    inputs:
+      search_query:
+        description: 'GitHub search query'
+        required: true
+        type: string
+      labels:
+        description: 'Labels to apply (comma-separated)'
+        required: true
+        type: string
+
+jobs:
+  bulk-label:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Apply labels to issues matching query
+        uses: mattleibow/triage-assistant@v0.8.0
+        with:
+          search-query: ${{ inputs.search_query }}
+          label: ${{ inputs.labels }}
+          apply-labels: true
+          dry-run: false
+```
+
+#### Search Query Examples
+
+Apply labels to issues created in the last 30 days:
+
+```yaml
+search-query: 'is:issue state:open created:>@today-30d'
+```
+
+Apply labels to issues created within a specific date range:
+
+```yaml
+search-query: 'is:issue state:open created:2025-08-01..2025-08-14'
+```
+
+Apply labels to issues with specific keywords:
+
+```yaml
+search-query: 'is:issue state:open "memory leak" in:title,body'
+```
+
+Apply labels to issues with specific labels already:
+
+```yaml
+search-query: 'is:issue state:open label:bug -label:triaged'
+```
+
+#### AI-Powered Bulk Labeling
+
+Combine search queries with AI analysis to apply intelligent labels:
+
+```yaml
+- name: AI bulk labeling for recent bugs
+  uses: mattleibow/triage-assistant@v0.8.0
+  with:
+    search-query: 'is:issue state:open label:bug created:>@today-7d'
+    template: 'multi-label'
+    label-prefix: 'area-'
+    apply-labels: true
+```
+
+This will:
+
+1. Find all open bug issues created in the last 7 days
+2. Use AI to analyze the first issue as a sample
+3. Apply the AI-suggested labels to all matching issues
+
 ## Sub-Actions
 
 The triage assistant supports **sub-actions** similar to GitHub's cache action, allowing you to use specific
@@ -176,6 +254,7 @@ You can easily migrate from the template-based approach:
 | Name             | Description                                                                                      | Default                 | Required |
 | ---------------- | ------------------------------------------------------------------------------------------------ | ----------------------- | -------- |
 | `issue`          | The issue number to triage                                                                       | Current issue/PR number | No       |
+| `search-query`   | GitHub search query for bulk labeling (e.g., `is:issue state:open created:>@today-30d`)          | `''`                    | No       |
 | `token`          | GitHub token for API access                                                                      | `''`                    | No       |
 | `fallback-token` | Fallback GitHub token for API access                                                             | `${{ github.token }}`   | No       |
 | `template`       | Triage template: `multi-label`, `single-label`, `regression`, `missing-info`, `engagement-score` | `''`                    | No       |

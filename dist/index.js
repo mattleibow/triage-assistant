@@ -39190,6 +39190,111 @@ async function removeEyes(octokit, config) {
     }
 }
 /**
+ * Searches for issues using GitHub's search API
+ *
+ * @param octokit - An authenticated Octokit instance
+ * @param searchQuery - GitHub search query (e.g., "is:issue state:open created:>@today-30d")
+ * @param repoOwner - Repository owner (added to search if not already specified in query)
+ * @param repoName - Repository name (added to search if not already specified in query)
+ * @returns Array of issue numbers that match the search query
+ */
+async function searchIssues(octokit, searchQuery, repoOwner, repoName) {
+    try {
+        // Add repository filter to search if not already specified
+        let finalQuery = searchQuery.trim();
+        if (!finalQuery.includes('repo:')) {
+            finalQuery = `${finalQuery} repo:${repoOwner}/${repoName}`;
+        }
+        coreExports.info(`Searching for issues with query: ${finalQuery}`);
+        const searchResults = await octokit.rest.search.issuesAndPullRequests({
+            q: finalQuery,
+            per_page: 100, // GitHub's maximum per page
+            sort: 'updated',
+            order: 'desc'
+        });
+        const issueNumbers = [];
+        for (const item of searchResults.data.items) {
+            // Only include issues (not pull requests)
+            if (!item.pull_request) {
+                issueNumbers.push(item.number);
+            }
+        }
+        coreExports.info(`Found ${issueNumbers.length} issues matching the search query`);
+        // Handle pagination if there are more results
+        let page = 2;
+        while (searchResults.data.items.length === 100 && page <= 10) {
+            // Limit to 10 pages (1000 issues) for safety
+            coreExports.info(`Fetching page ${page} of search results...`);
+            const nextResults = await octokit.rest.search.issuesAndPullRequests({
+                q: finalQuery,
+                per_page: 100,
+                page: page,
+                sort: 'updated',
+                order: 'desc'
+            });
+            for (const item of nextResults.data.items) {
+                if (!item.pull_request) {
+                    issueNumbers.push(item.number);
+                }
+            }
+            if (nextResults.data.items.length < 100) {
+                break;
+            }
+            page++;
+        }
+        coreExports.info(`Total found: ${issueNumbers.length} issues`);
+        return issueNumbers;
+    }
+    catch (error) {
+        coreExports.error(`Failed to search for issues: ${error instanceof Error ? error.message : String(error)}`);
+        throw new Error(`GitHub search failed: ${error instanceof Error ? error.message : String(error)}`);
+    }
+}
+/**
+ * Applies labels to multiple issues in bulk
+ *
+ * @param octokit - An authenticated Octokit instance
+ * @param issueNumbers - Array of issue numbers to apply labels to
+ * @param labels - Array of label names to apply
+ * @param config - Configuration containing repo info and dry-run setting
+ */
+async function applyLabelsToBulkIssues(octokit, issueNumbers, labels, config) {
+    // Filter out empty labels
+    const filteredLabels = labels.filter((label) => label.trim().length > 0);
+    // If no labels to apply, return early
+    if (filteredLabels.length === 0) {
+        coreExports.warning('No labels specified for bulk application');
+        return;
+    }
+    if (config.dryRun) {
+        coreExports.info(`Dry run: Would apply labels [${filteredLabels.join(', ')}] to ${issueNumbers.length} issues: ${issueNumbers.join(', ')}`);
+        return;
+    }
+    coreExports.info(`Applying labels [${filteredLabels.join(', ')}] to ${issueNumbers.length} issues`);
+    let successCount = 0;
+    let errorCount = 0;
+    for (const issueNumber of issueNumbers) {
+        try {
+            await octokit.rest.issues.addLabels({
+                owner: config.repoOwner,
+                repo: config.repoName,
+                issue_number: issueNumber,
+                labels: filteredLabels
+            });
+            successCount++;
+            coreExports.info(`✓ Applied labels to issue #${issueNumber}`);
+        }
+        catch (error) {
+            errorCount++;
+            coreExports.error(`✗ Failed to apply labels to issue #${issueNumber}: ${error instanceof Error ? error.message : String(error)}`);
+        }
+    }
+    coreExports.info(`Bulk labeling completed: ${successCount} successful, ${errorCount} failed`);
+    if (errorCount > 0) {
+        coreExports.warning(`${errorCount} issues failed to be labeled. Check the logs above for details.`);
+    }
+}
+/**
  * Get detailed information about an issue including comments and reactions using GraphQL
  */
 async function getIssueDetails(graphql, owner, repo, issueNumber) {
@@ -39475,6 +39580,11 @@ async function generatePromptFile(template, promptPath, config, mergedResponseFi
  */
 async function runTriageWorkflow(config) {
     const octokit = githubExports.getOctokit(config.token);
+    // Handle bulk labeling with search query
+    if (config.searchQuery) {
+        return await runBulkLabelingWorkflow(octokit, config);
+    }
+    // Continue with single-issue workflow
     const shouldAddLabels = config.template ? true : false;
     const shouldAddSummary = config.applyLabels || config.applyComment;
     const shouldAddReactions = shouldAddLabels || shouldAddSummary;
@@ -39500,6 +39610,53 @@ async function runTriageWorkflow(config) {
         if (shouldRemoveReactions) {
             await removeEyes(octokit, config);
         }
+    }
+}
+/**
+ * Run the bulk labeling workflow using search query
+ */
+async function runBulkLabelingWorkflow(octokit, config) {
+    if (!config.searchQuery) {
+        throw new Error('Search query is required for bulk labeling');
+    }
+    coreExports.info('Running bulk labeling workflow with search query');
+    try {
+        // Step 1: Search for issues matching the query
+        const issueNumbers = await searchIssues(octokit, config.searchQuery, config.repoOwner, config.repoName);
+        if (issueNumbers.length === 0) {
+            coreExports.warning('No issues found matching the search query');
+            return '';
+        }
+        // Step 2: If we have a template, generate labels using AI for the first issue as a sample
+        let labels = [];
+        if (config.template && issueNumbers.length > 0) {
+            // Use the first issue as a sample for AI label generation
+            const sampleConfig = { ...config, issueNumber: issueNumbers[0] };
+            await selectLabels(sampleConfig);
+            // Parse the response to extract labels
+            const mergedResponseFile = path.join(config.tempDir, 'triage-assistant', 'responses.json');
+            const responsesDir = path.join(config.tempDir, 'triage-assistant', 'responses');
+            const mergedResponse = await mergeResponses('', responsesDir, mergedResponseFile);
+            labels = mergedResponse.labels?.map((l) => l.label)?.filter(Boolean) || [];
+            coreExports.info(`Generated labels from AI analysis: ${labels.join(', ')}`);
+        }
+        // If we have specific labels configured, use those
+        if (config.label) {
+            labels = [config.label];
+            coreExports.info(`Using configured label: ${config.label}`);
+        }
+        // Step 3: Apply labels to all found issues
+        if (config.applyLabels && labels.length > 0) {
+            await applyLabelsToBulkIssues(octokit, issueNumbers, labels, config);
+        }
+        else if (labels.length === 0) {
+            coreExports.warning('No labels to apply. Either specify a label or use a template for AI-generated labels.');
+        }
+        return '';
+    }
+    catch (error) {
+        coreExports.error(`Bulk labeling workflow failed: ${error instanceof Error ? error.message : String(error)}`);
+        throw error;
     }
 }
 /**
@@ -51244,8 +51401,9 @@ async function runWorkflow(triageModeOverride) {
             }
         }
         else if (triageMode === TriageMode.ApplyLabels) {
-            if (!issueInput && !issueContext) {
-                throw new Error('Issue number is required for applying labels');
+            const searchQuery = coreExports.getInput('search-query');
+            if (!issueInput && !issueContext && !searchQuery) {
+                throw new Error('Either issue number or search-query must be specified for applying labels');
             }
         }
         // Validate repository context
@@ -51274,6 +51432,7 @@ async function runWorkflow(triageModeOverride) {
             repoName: githubExports.context.repo.repo,
             repoOwner: githubExports.context.repo.owner,
             repository: `${githubExports.context.repo.owner}/${githubExports.context.repo.repo}`,
+            searchQuery: coreExports.getInput('search-query') || undefined,
             tempDir: process.env.RUNNER_TEMP || require$$0.tmpdir(),
             template: template,
             token: token
