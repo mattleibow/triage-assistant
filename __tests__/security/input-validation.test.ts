@@ -64,21 +64,17 @@ describe('Input Validation Security Tests', () => {
     })
   })
 
-  describe('Template Validation', () => {
-    it('should reject invalid template names', () => {
-      expect(() => utils.validateTemplate('malicious-template')).toThrow('Invalid template: malicious-template')
+  describe('Mode Validation', () => {
+    it('should reject invalid mode names', () => {
+      expect(() => utils.validateMode('malicious-mode')).toThrow('Invalid mode: malicious-mode')
     })
 
-    it('should accept valid template names', () => {
-      const validTemplates = ['multi-label', 'single-label', 'regression', 'missing-info', 'engagement-score']
+    it('should accept valid mode names', () => {
+      const validModes = ['apply-labels', 'engagement-score']
 
-      for (const template of validTemplates) {
-        expect(() => utils.validateTemplate(template)).not.toThrow()
+      for (const mode of validModes) {
+        expect(() => utils.validateMode(mode)).not.toThrow()
       }
-    })
-
-    it('should accept empty template', () => {
-      expect(() => utils.validateTemplate('')).not.toThrow()
     })
   })
 

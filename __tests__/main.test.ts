@@ -163,7 +163,7 @@ describe('Main Multi-Mode Functionality', () => {
   })
 
   describe('Normal Triage Mode', () => {
-    it('should run normal triage workflow when template is not engagement-score', async () => {
+    it('should run normal triage workflow when mode is label-triage or default', async () => {
       config.loadConfigFile.mockImplementation(async () => ({
         engagement: {
           weights: { ...DEFAULT_ENGAGEMENT_WEIGHTS }
@@ -176,6 +176,8 @@ describe('Main Multi-Mode Functionality', () => {
       }))
       core.getInput.mockImplementation((name: string) => {
         switch (name) {
+          case 'mode':
+            return 'apply-labels'
           case 'issue':
             return '456'
           case 'token':
@@ -211,8 +213,8 @@ describe('Main Multi-Mode Functionality', () => {
 
       core.getInput.mockImplementation((name: string) => {
         switch (name) {
-          case 'template':
-            return 'single-label'
+          case 'mode':
+            return 'apply-labels'
           case 'token':
             return 'test-token'
           default:
@@ -226,6 +228,9 @@ describe('Main Multi-Mode Functionality', () => {
       expect(triage.runTriageWorkflow).toHaveBeenCalledWith(
         expect.objectContaining({
           issueNumber: 123 // From mocked context
+        }),
+        expect.objectContaining({
+          groups: {}
         })
       )
     })
@@ -233,8 +238,8 @@ describe('Main Multi-Mode Functionality', () => {
     it('should handle explicit issue number input', async () => {
       core.getInput.mockImplementation((name: string) => {
         switch (name) {
-          case 'template':
-            return 'single-label'
+          case 'mode':
+            return 'apply-labels'
           case 'issue':
             return '999'
           case 'token':
@@ -250,6 +255,9 @@ describe('Main Multi-Mode Functionality', () => {
       expect(triage.runTriageWorkflow).toHaveBeenCalledWith(
         expect.objectContaining({
           issueNumber: 999
+        }),
+        expect.objectContaining({
+          groups: {}
         })
       )
     })
@@ -257,8 +265,10 @@ describe('Main Multi-Mode Functionality', () => {
     it('should handle workflow errors correctly', async () => {
       core.getInput.mockImplementation((name: string) => {
         switch (name) {
-          case 'template':
-            return 'multi-label'
+          case 'mode':
+            return 'apply-labels'
+          case 'issue':
+            return '456'
           case 'token':
             return 'test-token'
           default:
@@ -273,9 +283,11 @@ describe('Main Multi-Mode Functionality', () => {
       expect(core.setFailed).toHaveBeenCalledWith('Test error')
     })
 
-    it('should run triage workflow even when no template provided', async () => {
+    it('should run triage workflow with default mode when no mode provided', async () => {
       core.getInput.mockImplementation((name: string) => {
         switch (name) {
+          case 'issue':
+            return '456'
           case 'token':
             return 'test-token'
           default:
@@ -288,8 +300,11 @@ describe('Main Multi-Mode Functionality', () => {
       expect(core.setFailed).not.toHaveBeenCalled()
       expect(triage.runTriageWorkflow).toHaveBeenCalledWith(
         expect.objectContaining({
-          template: '',
+          issueNumber: 456,
           token: 'test-token'
+        }),
+        expect.objectContaining({
+          groups: {}
         })
       )
       expect(engagement.runEngagementWorkflow).not.toHaveBeenCalled()
@@ -300,7 +315,7 @@ describe('Main Multi-Mode Functionality', () => {
     it('should parse all configuration options correctly', async () => {
       core.getInput.mockImplementation((name: string) => {
         switch (name) {
-          case 'template':
+          case 'mode':
             return 'engagement-score'
           case 'project':
             return '1'
@@ -316,10 +331,6 @@ describe('Main Multi-Mode Functionality', () => {
             return 'ai-token'
           case 'comment-footer':
             return 'Custom footer'
-          case 'label':
-            return 'bug'
-          case 'label-prefix':
-            return 'area/'
           case 'apply-scores':
             return 'true'
           case 'dry-run':
@@ -334,7 +345,6 @@ describe('Main Multi-Mode Functionality', () => {
       expect(core.setFailed).not.toHaveBeenCalled()
       expect(engagement.runEngagementWorkflow).toHaveBeenCalledWith(
         expect.objectContaining({
-          template: 'engagement-score',
           projectNumber: 1,
           projectColumn: 'Custom Score',
           applyScores: true,
@@ -343,11 +353,12 @@ describe('Main Multi-Mode Functionality', () => {
           aiModel: 'gpt-4',
           aiToken: 'ai-token',
           commentFooter: 'Custom footer',
-          label: 'bug',
-          labelPrefix: 'area/',
           dryRun: true,
           repoOwner: 'test-owner',
           repoName: 'test-repo'
+        }),
+        expect.objectContaining({
+          weights: expect.anything()
         })
       )
     })
@@ -355,7 +366,7 @@ describe('Main Multi-Mode Functionality', () => {
     it('should use default values when inputs are not provided', async () => {
       core.getInput.mockImplementation((name: string) => {
         switch (name) {
-          case 'template':
+          case 'mode':
             return 'engagement-score'
           case 'project':
             return '1'
@@ -376,6 +387,9 @@ describe('Main Multi-Mode Functionality', () => {
           dryRun: false, // Default value
           aiEndpoint: 'https://models.github.ai/inference', // Default value
           aiModel: 'openai/gpt-4o' // Default value
+        }),
+        expect.objectContaining({
+          weights: expect.anything()
         })
       )
     })
@@ -385,7 +399,7 @@ describe('Main Multi-Mode Functionality', () => {
     it('should handle errors from engagement workflow', async () => {
       core.getInput.mockImplementation((name: string) => {
         switch (name) {
-          case 'template':
+          case 'mode':
             return 'engagement-score'
           case 'project':
             return '1'
@@ -406,7 +420,7 @@ describe('Main Multi-Mode Functionality', () => {
     it('should handle non-Error objects', async () => {
       core.getInput.mockImplementation((name: string) => {
         switch (name) {
-          case 'template':
+          case 'mode':
             return 'engagement-score'
           case 'project':
             return '1'
@@ -427,7 +441,7 @@ describe('Main Multi-Mode Functionality', () => {
     it('should handle dry-run mode correctly', async () => {
       core.getInput.mockImplementation((name: string) => {
         switch (name) {
-          case 'template':
+          case 'mode':
             return 'engagement-score'
           case 'project':
             return '1'
@@ -452,7 +466,7 @@ describe('Main Multi-Mode Functionality', () => {
       jest.clearAllMocks()
     })
 
-    it('should run apply-labels sub-action without template', async () => {
+    it('should run apply-labels sub-action without mode', async () => {
       core.getInput.mockImplementation((name: string) => {
         switch (name) {
           case 'issue':
@@ -469,15 +483,17 @@ describe('Main Multi-Mode Functionality', () => {
       expect(core.setFailed).not.toHaveBeenCalled()
       expect(triage.runTriageWorkflow).toHaveBeenCalledWith(
         expect.objectContaining({
-          template: '',
           issueNumber: 999,
           token: 'test-token'
+        }),
+        expect.objectContaining({
+          groups: {}
         })
       )
       expect(engagement.runEngagementWorkflow).not.toHaveBeenCalled()
     })
 
-    it('should run engagement-score sub-action without requiring template', async () => {
+    it('should run engagement-score sub-action without requiring mode', async () => {
       core.getInput.mockImplementation((name: string) => {
         switch (name) {
           case 'project':
@@ -495,18 +511,20 @@ describe('Main Multi-Mode Functionality', () => {
       expect(engagement.runEngagementWorkflow).toHaveBeenCalledWith(
         expect.objectContaining({
           projectNumber: 456,
-          template: '',
           token: 'test-token'
+        }),
+        expect.objectContaining({
+          weights: expect.anything()
         })
       )
       expect(triage.runTriageWorkflow).not.toHaveBeenCalled()
     })
 
-    it('should allow apply-labels sub-action to work with template input', async () => {
+    it('should allow apply-labels sub-action to work with mode input', async () => {
       core.getInput.mockImplementation((name: string) => {
         switch (name) {
-          case 'template':
-            return 'multi-label'
+          case 'mode':
+            return 'apply-labels'
           case 'issue':
             return '777'
           case 'token':
@@ -523,8 +541,10 @@ describe('Main Multi-Mode Functionality', () => {
       expect(triage.runTriageWorkflow).toHaveBeenCalledWith(
         expect.objectContaining({
           issueNumber: 777,
-          template: 'multi-label',
           token: 'test-token'
+        }),
+        expect.objectContaining({
+          groups: {}
         })
       )
     })
@@ -548,8 +568,10 @@ describe('Main Multi-Mode Functionality', () => {
       expect(engagement.runEngagementWorkflow).toHaveBeenCalledWith(
         expect.objectContaining({
           issueNumber: 789,
-          template: '',
           token: 'test-token'
+        }),
+        expect.objectContaining({
+          weights: expect.anything()
         })
       )
     })

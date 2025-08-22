@@ -1,14 +1,14 @@
 import { jest } from '@jest/globals'
 import path from 'path'
-import * as core from '../../__fixtures__/actions/core.js'
-import { FileSystemMock } from '../helpers/filesystem-mock.js'
-import { EngagementWeights } from '../../src/engagement/engagement-config.js'
+import * as core from '../__fixtures__/actions/core.js'
+import { FileSystemMock } from './helpers/filesystem-mock.js'
+import { ConfigFileEngagementWeights } from '../src/config-file.js'
 
 // Mock dependencies using fixtures
 jest.unstable_mockModule('@actions/core', () => core)
 
 // Import the module being tested
-const { loadTriageConfig, DEFAULT_ENGAGEMENT_WEIGHTS } = await import('../../src/engagement/engagement-config.js')
+const { loadConfigFile, DEFAULT_ENGAGEMENT_WEIGHTS } = await import('../src/config-file.js')
 
 describe('EngagementConfig', () => {
   const inMemoryFs = new FileSystemMock()
@@ -27,11 +27,11 @@ describe('EngagementConfig', () => {
     inMemoryFs.teardown()
   })
 
-  describe('loadTriageConfig', () => {
+  describe('loadConfigFile', () => {
     it('should return default weights when no config file exists', async () => {
-      const result = await loadTriageConfig(testWorkspacePath)
+      const result = await loadConfigFile(testWorkspacePath)
 
-      expect(result).toEqual(DEFAULT_ENGAGEMENT_WEIGHTS)
+      expect(result.engagement.weights).toEqual(DEFAULT_ENGAGEMENT_WEIGHTS)
       expect(core.warning).toHaveBeenCalledWith(
         expect.stringContaining('Failed to load configuration from the following paths:')
       )
@@ -47,10 +47,10 @@ engagement:
 `
       inMemoryFs.forceSet(path.join(testWorkspacePath, '.triagerc.yml'), configContent)
 
-      const result = await loadTriageConfig(testWorkspacePath)
+      const result = await loadConfigFile(testWorkspacePath)
 
-      expect(result).not.toEqual(DEFAULT_ENGAGEMENT_WEIGHTS)
-      expect(result).toEqual({
+      expect(result.engagement.weights).not.toEqual(DEFAULT_ENGAGEMENT_WEIGHTS)
+      expect(result.engagement.weights).toEqual({
         ...DEFAULT_ENGAGEMENT_WEIGHTS,
         comments: 5,
         reactions: 2,
@@ -67,10 +67,10 @@ engagement:
 `
       inMemoryFs.forceSet(path.join(testWorkspacePath, '.github/.triagerc.yml'), configContent)
 
-      const result = await loadTriageConfig(testWorkspacePath)
+      const result = await loadConfigFile(testWorkspacePath)
 
-      expect(result).not.toEqual(DEFAULT_ENGAGEMENT_WEIGHTS)
-      expect(result).toEqual({
+      expect(result.engagement.weights).not.toEqual(DEFAULT_ENGAGEMENT_WEIGHTS)
+      expect(result.engagement.weights).toEqual({
         ...DEFAULT_ENGAGEMENT_WEIGHTS,
         comments: 4,
         linkedPullRequests: 3
@@ -86,10 +86,10 @@ engagement:
 `
       inMemoryFs.forceSet(path.join(testWorkspacePath, '.triagerc.yml'), configContent)
 
-      const result = await loadTriageConfig(testWorkspacePath)
+      const result = await loadConfigFile(testWorkspacePath)
 
-      expect(result).not.toEqual(DEFAULT_ENGAGEMENT_WEIGHTS)
-      expect(result).toEqual({
+      expect(result.engagement.weights).not.toEqual(DEFAULT_ENGAGEMENT_WEIGHTS)
+      expect(result.engagement.weights).toEqual({
         comments: 8,
         reactions: DEFAULT_ENGAGEMENT_WEIGHTS.reactions,
         contributors: DEFAULT_ENGAGEMENT_WEIGHTS.contributors,
@@ -103,9 +103,9 @@ engagement:
       const invalidYaml = 'invalid: yaml: content: ['
       inMemoryFs.forceSet(path.join(testWorkspacePath, '.triagerc.yml'), invalidYaml)
 
-      const result = await loadTriageConfig(testWorkspacePath)
+      const result = await loadConfigFile(testWorkspacePath)
 
-      expect(result).toEqual(DEFAULT_ENGAGEMENT_WEIGHTS)
+      expect(result.engagement.weights).toEqual(DEFAULT_ENGAGEMENT_WEIGHTS)
     })
 
     it('should handle missing engagement section', async () => {
@@ -115,9 +115,9 @@ other:
 `
       inMemoryFs.forceSet(path.join(testWorkspacePath, '.triagerc.yml'), configContent)
 
-      const result = await loadTriageConfig(testWorkspacePath)
+      const result = await loadConfigFile(testWorkspacePath)
 
-      expect(result).toEqual(DEFAULT_ENGAGEMENT_WEIGHTS)
+      expect(result.engagement.weights).toEqual(DEFAULT_ENGAGEMENT_WEIGHTS)
     })
 
     it('should handle missing weights section', async () => {
@@ -127,9 +127,9 @@ engagement:
 `
       inMemoryFs.forceSet(path.join(testWorkspacePath, '.triagerc.yml'), configContent)
 
-      const result = await loadTriageConfig(testWorkspacePath)
+      const result = await loadConfigFile(testWorkspacePath)
 
-      expect(result).toEqual(DEFAULT_ENGAGEMENT_WEIGHTS)
+      expect(result.engagement.weights).toEqual(DEFAULT_ENGAGEMENT_WEIGHTS)
     })
 
     it('should prefer root config over .github config', async () => {
@@ -146,10 +146,10 @@ engagement:
       inMemoryFs.forceSet(path.join(testWorkspacePath, '.triagerc.yml'), rootConfig)
       inMemoryFs.forceSet(path.join(testWorkspacePath, '.github/.triagerc.yml'), githubConfig)
 
-      const result = await loadTriageConfig(testWorkspacePath)
+      const result = await loadConfigFile(testWorkspacePath)
 
-      expect(result).not.toEqual(DEFAULT_ENGAGEMENT_WEIGHTS)
-      expect(result).toEqual({
+      expect(result.engagement.weights).not.toEqual(DEFAULT_ENGAGEMENT_WEIGHTS)
+      expect(result.engagement.weights).toEqual({
         ...DEFAULT_ENGAGEMENT_WEIGHTS,
         comments: 10
       })
@@ -168,9 +168,9 @@ engagement:
 `
       inMemoryFs.forceSet(path.join(testWorkspacePath, '.triagerc.yml'), configContent)
 
-      const result = await loadTriageConfig(testWorkspacePath)
+      const result = await loadConfigFile(testWorkspacePath)
 
-      const expected: EngagementWeights = {
+      const expected: ConfigFileEngagementWeights = {
         comments: 5,
         reactions: 3,
         contributors: 4,
@@ -179,7 +179,7 @@ engagement:
         linkedPullRequests: 6
       }
 
-      expect(result).toEqual(expected)
+      expect(result.engagement.weights).toEqual(expected)
     })
   })
 })

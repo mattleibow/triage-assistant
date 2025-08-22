@@ -13,16 +13,14 @@ jest.unstable_mockModule('../../src/github/issues.js', () => issues)
 jest.unstable_mockModule('../../src/prompts/summary.js', () => summary)
 jest.unstable_mockModule('../../src/triage/merge.js', () => merge)
 jest.unstable_mockModule('../../src/prompts/select-labels.js', () => ({
-  selectMultipleLabels: jest.fn()
+  selectLabels: jest.fn()
 }))
 
 // Import the module being tested
 const { mergeAndApplyTriage, runTriageWorkflow } = await import('../../src/triage/triage.js')
 const selectLabelsModule = await import('../../src/prompts/select-labels.js')
 
-const mockSelectMultipleLabels = selectLabelsModule.selectMultipleLabels as jest.MockedFunction<
-  typeof selectLabelsModule.selectMultipleLabels
->
+const mockSelectLabels = selectLabelsModule.selectLabels as jest.MockedFunction<typeof selectLabelsModule.selectLabels>
 
 describe('mergeAndApplyTriage', () => {
   const testTempDir = '/tmp/test'
@@ -347,7 +345,7 @@ describe('runTriageWorkflow', () => {
     inMemoryFs.setup()
 
     // Setup default mocks
-    mockSelectMultipleLabels.mockResolvedValue(['/tmp/response-overlap.json', '/tmp/response-area.json'])
+    mockSelectLabels.mockResolvedValue('/tmp/response.json')
     merge.mergeResponses.mockResolvedValue({
       remarks: [],
       regression: null,
@@ -363,29 +361,27 @@ describe('runTriageWorkflow', () => {
 
   it('should use batch mode when config has label groups', async () => {
     // Create config with label groups
-    const configWithLabels = {
-      ...mockConfig,
-      labels: {
-        groups: {
-          overlap: { labelPrefix: 'overlap-', template: 'multi-label' },
-          area: { labelPrefix: 'area-', template: 'single-label' }
-        }
+    const labelConfig = {
+      groups: {
+        overlap: { labelPrefix: 'overlap-', template: 'multi-label' },
+        area: { labelPrefix: 'area-', template: 'single-label' }
       }
     }
 
-    const responseFile = await runTriageWorkflow(configWithLabels)
+    const responseFile = await runTriageWorkflow(mockConfig, labelConfig)
 
-    expect(mockSelectMultipleLabels).toHaveBeenCalledWith(configWithLabels, '.')
-    expect(responseFile).toBe('/tmp/response-overlap.json')
-    expect(issues.addEyes).toHaveBeenCalledWith(expect.anything(), configWithLabels)
-    expect(issues.removeEyes).toHaveBeenCalledWith(expect.anything(), configWithLabels)
+    expect(mockSelectLabels).toHaveBeenCalledTimes(2) // Called once for each group
+    expect(responseFile).toBe('/tmp/test/triage-assistant/responses.json')
+    expect(issues.addEyes).toHaveBeenCalledWith(expect.anything(), mockConfig)
+    expect(issues.removeEyes).toHaveBeenCalledWith(expect.anything(), mockConfig)
   })
 
   it('should skip label selection when no config groups', async () => {
-    const responseFile = await runTriageWorkflow(mockConfig)
+    const emptyLabelConfig = { groups: {} }
+    const responseFile = await runTriageWorkflow(mockConfig, emptyLabelConfig)
 
-    expect(mockSelectMultipleLabels).not.toHaveBeenCalled()
-    expect(responseFile).toBe('')
+    expect(mockSelectLabels).not.toHaveBeenCalled()
+    expect(responseFile).toBe('/tmp/test/triage-assistant/responses.json')
     expect(issues.addEyes).toHaveBeenCalledWith(expect.anything(), mockConfig)
     expect(issues.removeEyes).toHaveBeenCalledWith(expect.anything(), mockConfig)
   })
@@ -396,50 +392,47 @@ describe('runTriageWorkflow', () => {
       applyLabels: false,
       applyComment: false
     }
+    const emptyLabelConfig = { groups: {} }
 
-    await runTriageWorkflow(noActionsConfig)
+    await runTriageWorkflow(noActionsConfig, emptyLabelConfig)
 
     expect(issues.addEyes).not.toHaveBeenCalled()
     expect(issues.removeEyes).not.toHaveBeenCalled()
   })
 
   it('should handle errors gracefully', async () => {
-    const configWithLabels = {
-      ...mockConfig,
-      labels: {
-        groups: {
-          overlap: { labelPrefix: 'overlap-', template: 'multi-label' }
-        }
+    const labelConfig = {
+      groups: {
+        overlap: { labelPrefix: 'overlap-', template: 'multi-label' }
       }
     }
 
     const error = new Error('Test error')
-    mockSelectMultipleLabels.mockRejectedValue(error)
+    mockSelectLabels.mockRejectedValue(error)
 
-    await expect(runTriageWorkflow(configWithLabels)).rejects.toThrow('Test error')
-    expect(issues.removeEyes).toHaveBeenCalledWith(expect.anything(), configWithLabels)
+    await expect(runTriageWorkflow(mockConfig, labelConfig)).rejects.toThrow('Test error')
+    expect(issues.removeEyes).toHaveBeenCalledWith(expect.anything(), mockConfig)
   })
 
   it('should log appropriate messages for batch mode', async () => {
-    const batchConfig = { ...mockConfig, template: '' }
+    const labelConfig = {
+      groups: {
+        area: {
+          labelPrefix: 'area-',
+          template: 'single-label'
+        }
+      }
+    }
 
-    const configContent = `
-labels:
-  groups:
-    area:
-      label-prefix: 'area-'
-      template: 'single-label'
-`
-    inMemoryFs.forceSet('./.triagerc.yml', configContent)
-
-    await runTriageWorkflow(batchConfig)
+    await runTriageWorkflow(mockConfig, labelConfig)
 
     // Check that some form of batch mode logging occurred
     expect(core.info).toHaveBeenCalled()
   })
 
   it('should handle config loading errors gracefully', async () => {
-    const result = await runTriageWorkflow(mockConfig)
+    const emptyLabelConfig = { groups: {} }
+    const result = await runTriageWorkflow(mockConfig, emptyLabelConfig)
 
     // Should handle missing config gracefully without throwing
     expect(typeof result).toBe('string')
