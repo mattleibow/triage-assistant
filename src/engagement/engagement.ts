@@ -2,24 +2,39 @@ import * as core from '@actions/core'
 import * as fs from 'fs'
 import { GraphQLClient } from 'graphql-request'
 import { getSdk, Sdk as GraphQLSdk } from '../generated/graphql.js'
-import { EverythingConfig, EngagementConfig } from '../config.js'
+import { ConfigFileEngagement, ConfigFileEngagementWeights } from '../config-file.js'
 import { EngagementResponse, EngagementItem, EngagementClassification } from './engagement-types.js'
 import { getIssueDetails } from '../github/issues.js'
 import { getProjectDetails, updateProjectWithScores } from '../github/projects.js'
 import { calculateScore, calculateHistoricalScore } from '../github/issue-details.js'
 import { IssueDetails } from '../github/types.js'
-import { loadTriageConfig, EngagementWeights } from './engagement-config.js'
+
+/**
+ * Configuration interface specifically for engagement scoring workflow
+ */
+export interface EngagementWorkflowConfig {
+  token: string
+  repoOwner: string
+  repoName: string
+  issueNumber?: number
+  projectNumber?: number
+  projectColumn: string
+  applyScores: boolean
+  tempDir: string
+  dryRun: boolean
+}
 
 /**
  * Run the complete engagement scoring workflow
- * @param config - The triage configuration
+ * @param config - The engagement workflow configuration
+ * @param configFile - The configuration file for engagement
  * @returns Promise<string> - The engagement response file path
  */
-export async function runEngagementWorkflow(config: EverythingConfig): Promise<string> {
+export async function runEngagementWorkflow(
+  config: EngagementWorkflowConfig,
+  configFile: ConfigFileEngagement
+): Promise<string> {
   core.info('Running in engagement scoring mode')
-
-  // Load engagement weights from configuration file
-  const weights = await loadTriageConfig(process.cwd())
 
   const graphql = new GraphQLClient('https://api.github.com/graphql', {
     headers: {
@@ -28,7 +43,7 @@ export async function runEngagementWorkflow(config: EverythingConfig): Promise<s
   })
   const sdk = getSdk(graphql)
 
-  const engagementResponse = await calculateEngagementScores(config, sdk, weights)
+  const engagementResponse = await calculateEngagementScores(config, sdk, configFile.weights)
   core.info(`Calculated engagement scores for ${engagementResponse.totalItems} items`)
 
   // Update project with scores if requested
@@ -51,9 +66,9 @@ export async function runEngagementWorkflow(config: EverythingConfig): Promise<s
  * @returns Promise<EngagementResponse> - The engagement response with scores
  */
 export async function calculateEngagementScores(
-  config: EngagementConfig,
+  config: EngagementWorkflowConfig,
   graphql: GraphQLSdk,
-  weights: EngagementWeights
+  weights: ConfigFileEngagementWeights
 ): Promise<EngagementResponse> {
   if (config.projectNumber && config.projectNumber > 0) {
     return await calculateProjectEngagementScores(config, graphql, weights)
@@ -68,9 +83,9 @@ export async function calculateEngagementScores(
  * Calculate engagement scores for a single issue
  */
 async function calculateIssueEngagementScores(
-  config: EngagementConfig,
+  config: EngagementWorkflowConfig,
   graphql: GraphQLSdk,
-  weights: EngagementWeights
+  weights: ConfigFileEngagementWeights
 ): Promise<EngagementResponse> {
   core.info(`Calculating engagement score for issue #${config.issueNumber}`)
 
@@ -87,9 +102,9 @@ async function calculateIssueEngagementScores(
  * Calculate engagement scores for all issues in a project
  */
 async function calculateProjectEngagementScores(
-  config: EngagementConfig,
+  config: EngagementWorkflowConfig,
   graphql: GraphQLSdk,
-  weights: EngagementWeights
+  weights: ConfigFileEngagementWeights
 ): Promise<EngagementResponse> {
   core.info(`Calculating engagement scores for project #${config.projectNumber}`)
 
@@ -135,7 +150,7 @@ async function calculateProjectEngagementScores(
 export async function createEngagementItem(
   issueDetails: IssueDetails,
   projectItemId: string | undefined,
-  weights: EngagementWeights
+  weights: ConfigFileEngagementWeights
 ): Promise<EngagementItem> {
   const score = calculateScore(issueDetails, weights)
   const previousScore = await calculateHistoricalScore(issueDetails, weights)

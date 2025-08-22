@@ -114,14 +114,15 @@ export function validateRepositoryId(owner: string, repo: string): void {
 }
 
 /**
- * Validates template name against allowed values
- * @param template Template name to validate
+ * Validates the triage mode
+ * @param mode The triage mode to validate
+ * @returns The validated triage mode
  */
-export function validateTemplate(template: string): void {
-  const allowedTemplates = ['multi-label', 'single-label', 'regression', 'missing-info', 'engagement-score', '']
-  if (template && !allowedTemplates.includes(template)) {
-    throw new Error(`Invalid template: ${template}. Allowed values: ${allowedTemplates.filter((t) => t).join(', ')}`)
+export function validateMode(mode: string): TriageMode {
+  if (mode === TriageMode.ApplyLabels || mode === TriageMode.EngagementScore) {
+    return mode as TriageMode
   }
+  throw new Error(`Invalid mode: ${mode}. Allowed values: ${Object.values(TriageMode).join(', ')}`)
 }
 
 /**

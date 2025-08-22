@@ -12,9 +12,17 @@ jest.unstable_mockModule('@actions/core', () => core)
 jest.unstable_mockModule('../../src/github/issues.js', () => issues)
 jest.unstable_mockModule('../../src/prompts/summary.js', () => summary)
 jest.unstable_mockModule('../../src/triage/merge.js', () => merge)
+jest.unstable_mockModule('../../src/prompts/select-labels.js', () => ({
+  selectMultipleLabels: jest.fn()
+}))
 
 // Import the module being tested
-const { mergeAndApplyTriage } = await import('../../src/triage/triage.js')
+const { mergeAndApplyTriage, runTriageWorkflow } = await import('../../src/triage/triage.js')
+const selectLabelsModule = await import('../../src/prompts/select-labels.js')
+
+const mockSelectMultipleLabels = selectLabelsModule.selectMultipleLabels as jest.MockedFunction<
+  typeof selectLabelsModule.selectMultipleLabels
+>
 
 describe('mergeAndApplyTriage', () => {
   const testTempDir = '/tmp/test'
@@ -309,5 +317,131 @@ describe('mergeAndApplyTriage', () => {
       configWithCustomTemp,
       path.join(customTempDir, 'triage-assistant', 'responses.json')
     )
+  })
+})
+
+describe('runTriageWorkflow', () => {
+  const testTempDir = '/tmp/test'
+
+  const mockConfig = {
+    dryRun: false,
+    token: 'test-token',
+    tempDir: testTempDir,
+    issueNumber: 123,
+    repository: 'owner/repo',
+    repoName: 'repo',
+    repoOwner: 'owner',
+    aiEndpoint: 'test-endpoint',
+    aiModel: 'test-model',
+    aiToken: 'test-ai-token',
+    applyComment: true,
+    applyLabels: true,
+    commentFooter: 'Test footer'
+  }
+
+  const inMemoryFs = new FileSystemMock()
+
+  beforeEach(() => {
+    jest.clearAllMocks()
+    jest.resetAllMocks()
+    inMemoryFs.setup()
+
+    // Setup default mocks
+    mockSelectMultipleLabels.mockResolvedValue(['/tmp/response-overlap.json', '/tmp/response-area.json'])
+    merge.mergeResponses.mockResolvedValue({
+      remarks: [],
+      regression: null,
+      labels: []
+    })
+    summary.generateSummary.mockResolvedValue('/tmp/summary.json')
+  })
+
+  afterEach(() => {
+    jest.restoreAllMocks()
+    inMemoryFs.teardown()
+  })
+
+  it('should use batch mode when config has label groups', async () => {
+    // Create config with label groups
+    const configWithLabels = {
+      ...mockConfig,
+      labels: {
+        groups: {
+          overlap: { labelPrefix: 'overlap-', template: 'multi-label' },
+          area: { labelPrefix: 'area-', template: 'single-label' }
+        }
+      }
+    }
+
+    const responseFile = await runTriageWorkflow(configWithLabels)
+
+    expect(mockSelectMultipleLabels).toHaveBeenCalledWith(configWithLabels, '.')
+    expect(responseFile).toBe('/tmp/response-overlap.json')
+    expect(issues.addEyes).toHaveBeenCalledWith(expect.anything(), configWithLabels)
+    expect(issues.removeEyes).toHaveBeenCalledWith(expect.anything(), configWithLabels)
+  })
+
+  it('should skip label selection when no config groups', async () => {
+    const responseFile = await runTriageWorkflow(mockConfig)
+
+    expect(mockSelectMultipleLabels).not.toHaveBeenCalled()
+    expect(responseFile).toBe('')
+    expect(issues.addEyes).toHaveBeenCalledWith(expect.anything(), mockConfig)
+    expect(issues.removeEyes).toHaveBeenCalledWith(expect.anything(), mockConfig)
+  })
+
+  it('should skip reactions when no labels and no summary', async () => {
+    const noActionsConfig = {
+      ...mockConfig,
+      applyLabels: false,
+      applyComment: false
+    }
+
+    await runTriageWorkflow(noActionsConfig)
+
+    expect(issues.addEyes).not.toHaveBeenCalled()
+    expect(issues.removeEyes).not.toHaveBeenCalled()
+  })
+
+  it('should handle errors gracefully', async () => {
+    const configWithLabels = {
+      ...mockConfig,
+      labels: {
+        groups: {
+          overlap: { labelPrefix: 'overlap-', template: 'multi-label' }
+        }
+      }
+    }
+
+    const error = new Error('Test error')
+    mockSelectMultipleLabels.mockRejectedValue(error)
+
+    await expect(runTriageWorkflow(configWithLabels)).rejects.toThrow('Test error')
+    expect(issues.removeEyes).toHaveBeenCalledWith(expect.anything(), configWithLabels)
+  })
+
+  it('should log appropriate messages for batch mode', async () => {
+    const batchConfig = { ...mockConfig, template: '' }
+
+    const configContent = `
+labels:
+  groups:
+    area:
+      label-prefix: 'area-'
+      template: 'single-label'
+`
+    inMemoryFs.forceSet('./.triagerc.yml', configContent)
+
+    await runTriageWorkflow(batchConfig)
+
+    // Check that some form of batch mode logging occurred
+    expect(core.info).toHaveBeenCalled()
+  })
+
+  it('should handle config loading errors gracefully', async () => {
+    const result = await runTriageWorkflow(mockConfig)
+
+    // Should handle missing config gracefully without throwing
+    expect(typeof result).toBe('string')
   })
 })

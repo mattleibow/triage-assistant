@@ -1,10 +1,11 @@
 import * as core from '@actions/core'
 import * as github from '@actions/github'
 import * as os from 'os'
-import { TriageMode, validateNumericInput, validateRepositoryId, validateTemplate } from './utils.js'
+import { TriageMode, validateNumericInput, validateRepositoryId, validateMode } from './utils.js'
 import { runTriageWorkflow } from './triage/triage.js'
 import { runEngagementWorkflow } from './engagement/engagement.js'
 import { EverythingConfig } from './config.js'
+import { loadConfigFile } from './config-file.js'
 
 /**
  * Common workflow execution logic
@@ -17,14 +18,9 @@ async function runWorkflow(triageModeOverride?: TriageMode): Promise<void> {
   let config: EverythingConfig | undefined
 
   try {
-    // Get template and triage mode
-    const template = core.getInput('template', { required: false })
-    const triageMode =
-      triageModeOverride ||
-      (template === TriageMode.EngagementScore ? TriageMode.EngagementScore : TriageMode.ApplyLabels)
-
-    // Make sure templates are the ones we support
-    validateTemplate(template)
+    // Get mode input
+    const modeInput = core.getInput('mode', { required: false }) || 'apply-labels'
+    const triageMode = triageModeOverride || validateMode(modeInput)
 
     // Get project and issue numbers
     const projectInput = core.getInput('project')
@@ -64,15 +60,12 @@ async function runWorkflow(triageModeOverride?: TriageMode): Promise<void> {
       commentFooter: core.getInput('comment-footer'),
       dryRun: core.getInput('dry-run')?.toLowerCase() === 'true',
       issueNumber: validateNumericInput(issueInput || issueContext.toString(), 'issue number'),
-      label: core.getInput('label'),
-      labelPrefix: core.getInput('label-prefix'),
       projectColumn: core.getInput('project-column') || DEFAULT_PROJECT_COLUMN_NAME,
       projectNumber: validateNumericInput(projectInput, 'project number'),
       repoName: github.context.repo.repo,
       repoOwner: github.context.repo.owner,
       repository: `${github.context.repo.owner}/${github.context.repo.repo}`,
       tempDir: process.env.RUNNER_TEMP || os.tmpdir(),
-      template: template,
       token: token
     }
 
@@ -84,18 +77,20 @@ async function runWorkflow(triageModeOverride?: TriageMode): Promise<void> {
       core.info('No GitHub token provided.')
     }
     if (!config.aiToken) {
-      core.info('No specific AI token provided, using GitHub token as fallback.')
+      core.info('No AI token provided.')
     }
 
-    let responseFile = ''
+    // Load full triage config file
+    const configFile = await loadConfigFile()
 
     // Run the appropriate workflow based on the triage mode
+    let responseFile = ''
     if (triageMode === TriageMode.EngagementScore) {
       core.info('Running engagement scoring workflow')
-      responseFile = await runEngagementWorkflow(config)
+      responseFile = await runEngagementWorkflow(config, configFile.engagement)
     } else {
-      core.info('Running apply labels workflow')
-      responseFile = await runTriageWorkflow(config)
+      core.info('Running label triage workflow')
+      responseFile = await runTriageWorkflow(config, configFile.labels)
     }
 
     // Set the response file output

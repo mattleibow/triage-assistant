@@ -1,5 +1,5 @@
 import { IssueDetails } from './types.js'
-import { EngagementWeights } from '../engagement/engagement-config.js'
+import { EngagementWeights } from '../config-file.js'
 
 /**
  * Get historic issue details by filtering activity to 7 days ago
