@@ -183,17 +183,15 @@ Focuses on calculating and applying engagement scores to project issues.
 
 ## Configuration
 
-### Labelling Configuration
-
-The labelling mode uses a `.triagerc.yml` configuration file to define multiple label groups that are processed
-automatically. The system looks for configuration in this order:
+Configuration is done via a file. The system looks for configuration in this order:
 
 1. `.triagerc.yml` in the repository root
 2. `.github/.triagerc.yml` in the .github directory
 
-#### Labelling Example
+### Labelling Configuration
 
-Create a `.triagerc.yml` file in your repository root:
+The labelling mode uses a `.triagerc.yml` configuration file to define multiple label groups that are processed
+automatically:
 
 ```yaml
 # Label groups configuration
