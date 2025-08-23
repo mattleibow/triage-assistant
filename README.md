@@ -269,6 +269,42 @@ engagement:
     issueAge: 1
 ```
 
+## AI Model Configuration
+
+The action uses AI models from GitHub Models by default, but supports custom endpoints and models. You can configure the
+AI model using inputs or environment variables:
+
+### Using Inputs
+
+```yaml
+- name: Triage with custom AI model
+  uses: mattleibow/triage-assistant/*@v1
+  with:
+    ai-model: 'openai/gpt-4o-mini'
+    ai-endpoint: 'https://models.github.ai/inference'
+    ai-token: ${{ secrets.CUSTOM_AI_TOKEN }}
+```
+
+### Using Environment Variables
+
+```yaml
+env:
+  TRIAGE_AI_MODEL: openai/gpt-4o-mini # Use a specific model
+  TRIAGE_AI_ENDPOINT: https://models.github.ai/inference # Custom endpoint
+  TRIAGE_AI_TOKEN: ${{ secrets.CUSTOM_AI_TOKEN }} # Custom token
+```
+
+### Supported Models
+
+The action works with any OpenAI-compatible API. Popular models include:
+
+- `openai/gpt-4o` (default) - Most capable, higher cost
+- `openai/gpt-4o-mini` - Faster and more cost-effective
+- `openai/gpt-3.5-turbo` - Budget-friendly option
+
+**Note:** The action automatically falls back to using your GitHub token for authentication if no specific AI token is
+provided.
+
 ## Engagement Scoring System
 
 The engagement scoring system provides a data-driven approach to prioritizing issues based on community activity and
@@ -365,42 +401,6 @@ scores. This enables:
 - Visual dashboards showing engagement trends
 - Filtering and sorting issues by engagement level
 - Historical tracking of issue engagement over time
-
-## AI Model Configuration
-
-The action uses AI models from GitHub Models by default, but supports custom endpoints and models. You can configure the
-AI model using inputs or environment variables:
-
-### Using Inputs
-
-```yaml
-- name: Triage with custom AI model
-  uses: mattleibow/triage-assistant/*@v1
-  with:
-    ai-model: 'openai/gpt-4o-mini'
-    ai-endpoint: 'https://models.github.ai/inference'
-    ai-token: ${{ secrets.CUSTOM_AI_TOKEN }}
-```
-
-### Using Environment Variables
-
-```yaml
-env:
-  TRIAGE_AI_MODEL: openai/gpt-4o-mini # Use a specific model
-  TRIAGE_AI_ENDPOINT: https://models.github.ai/inference # Custom endpoint
-  TRIAGE_AI_TOKEN: ${{ secrets.CUSTOM_AI_TOKEN }} # Custom token
-```
-
-### Supported Models
-
-The action works with any OpenAI-compatible API. Popular models include:
-
-- `openai/gpt-4o` (default) - Most capable, higher cost
-- `openai/gpt-4o-mini` - Faster and more cost-effective
-- `openai/gpt-3.5-turbo` - Budget-friendly option
-
-**Note:** The action automatically falls back to using your GitHub token for authentication if no specific AI token is
-provided.
 
 ## Permissions
 
