@@ -183,7 +183,11 @@ Focuses on calculating and applying engagement scores to project issues.
 
 ## Configuration
 
-Configuration is done via a file. The system looks for configuration in this order:
+The action automatically discovers available labels in your repository and uses them for triage based on your
+`.triagerc.yml` configuration. Make sure your repository has appropriate labels with descriptive names and descriptions
+for best results.
+
+The system looks for configuration in this order:
 
 1. `.triagerc.yml` in the repository root
 2. `.github/.triagerc.yml` in the .github directory
@@ -426,18 +430,6 @@ permissions:
   repository-projects: write # To update project fields with scores
   models: read # To access GitHub Models (if AI features are used)
 ```
-
-## Customization
-
-The action automatically discovers available labels in your repository and uses them for triage based on your
-`.triagerc.yml` configuration. Make sure your repository has appropriate labels with descriptive names and descriptions
-for best results.
-
-For label groups with prefixes (e.g., `area-api`, `area-docs`, `platform/android`), configure them in your
-`.triagerc.yml` file using the `labelPrefix` property to focus the AI on specific label categories.
-
-The batch configuration approach eliminates the need for multiple workflow steps - all label groups are processed
-automatically in a single action invocation.
 
 ## Troubleshooting
 
