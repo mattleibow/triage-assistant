@@ -1,5 +1,5 @@
 import { IssueDetails } from './types.js'
-import { EngagementWeights } from '../config-file.js'
+import { ConfigFileEngagementWeights } from '../config-file.js'
 
 /**
  * Get historic issue details by filtering activity to 7 days ago
@@ -94,7 +94,7 @@ export function getDaysSinceCreation(issue: IssueDetails): number {
  * @param issue - The issue details to score
  * @param weights - Custom weights for scoring components
  */
-export function calculateScore(issue: IssueDetails, weights: EngagementWeights): number {
+export function calculateScore(issue: IssueDetails, weights: ConfigFileEngagementWeights): number {
   // Components:
   // - Number of Comments       => Indicates discussion and interest
   // - Number of Reactions      => Shows emotional engagement
@@ -130,7 +130,10 @@ export function calculateScore(issue: IssueDetails, weights: EngagementWeights):
  * @param issue - The issue details to score
  * @param weights - Custom weights for scoring components
  */
-export async function calculateHistoricalScore(issue: IssueDetails, weights: EngagementWeights): Promise<number> {
+export async function calculateHistoricalScore(
+  issue: IssueDetails,
+  weights: ConfigFileEngagementWeights
+): Promise<number> {
   const historicIssue = getHistoricalIssueDetails(issue)
   return calculateScore(historicIssue, weights)
 }

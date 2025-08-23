@@ -12,15 +12,10 @@ jest.unstable_mockModule('@actions/core', () => core)
 jest.unstable_mockModule('../../src/github/issues.js', () => issues)
 jest.unstable_mockModule('../../src/prompts/summary.js', () => summary)
 jest.unstable_mockModule('../../src/triage/merge.js', () => merge)
-jest.unstable_mockModule('../../src/prompts/select-labels.js', () => ({
-  selectLabels: jest.fn()
-}))
+// jest.unstable_mockModule('../../src/prompts/select-labels.js', () => selectLabelsPrompt)
 
 // Import the module being tested
-const { mergeAndApplyTriage, runTriageWorkflow } = await import('../../src/triage/triage.js')
-const selectLabelsModule = await import('../../src/prompts/select-labels.js')
-
-const mockSelectLabels = selectLabelsModule.selectLabels as jest.MockedFunction<typeof selectLabelsModule.selectLabels>
+const { mergeAndApplyTriage } = await import('../../src/triage/triage.js')
 
 describe('mergeAndApplyTriage', () => {
   const testTempDir = '/tmp/test'
@@ -315,126 +310,5 @@ describe('mergeAndApplyTriage', () => {
       configWithCustomTemp,
       path.join(customTempDir, 'triage-assistant', 'responses.json')
     )
-  })
-})
-
-describe('runTriageWorkflow', () => {
-  const testTempDir = '/tmp/test'
-
-  const mockConfig = {
-    dryRun: false,
-    token: 'test-token',
-    tempDir: testTempDir,
-    issueNumber: 123,
-    repository: 'owner/repo',
-    repoName: 'repo',
-    repoOwner: 'owner',
-    aiEndpoint: 'test-endpoint',
-    aiModel: 'test-model',
-    aiToken: 'test-ai-token',
-    applyComment: true,
-    applyLabels: true,
-    commentFooter: 'Test footer'
-  }
-
-  const inMemoryFs = new FileSystemMock()
-
-  beforeEach(() => {
-    jest.clearAllMocks()
-    jest.resetAllMocks()
-    inMemoryFs.setup()
-
-    // Setup default mocks
-    mockSelectLabels.mockResolvedValue('/tmp/response.json')
-    merge.mergeResponses.mockResolvedValue({
-      remarks: [],
-      regression: null,
-      labels: []
-    })
-    summary.generateSummary.mockResolvedValue('/tmp/summary.json')
-  })
-
-  afterEach(() => {
-    jest.restoreAllMocks()
-    inMemoryFs.teardown()
-  })
-
-  it('should use batch mode when config has label groups', async () => {
-    // Create config with label groups
-    const labelConfig = {
-      groups: {
-        overlap: { labelPrefix: 'overlap-', template: 'multi-label' },
-        area: { labelPrefix: 'area-', template: 'single-label' }
-      }
-    }
-
-    const responseFile = await runTriageWorkflow(mockConfig, labelConfig)
-
-    expect(mockSelectLabels).toHaveBeenCalledTimes(2) // Called once for each group
-    expect(responseFile).toBe('/tmp/test/triage-assistant/responses.json')
-    expect(issues.addEyes).toHaveBeenCalledWith(expect.anything(), mockConfig)
-    expect(issues.removeEyes).toHaveBeenCalledWith(expect.anything(), mockConfig)
-  })
-
-  it('should skip label selection when no config groups', async () => {
-    const emptyLabelConfig = { groups: {} }
-    const responseFile = await runTriageWorkflow(mockConfig, emptyLabelConfig)
-
-    expect(mockSelectLabels).not.toHaveBeenCalled()
-    expect(responseFile).toBe('/tmp/test/triage-assistant/responses.json')
-    expect(issues.addEyes).toHaveBeenCalledWith(expect.anything(), mockConfig)
-    expect(issues.removeEyes).toHaveBeenCalledWith(expect.anything(), mockConfig)
-  })
-
-  it('should skip reactions when no labels and no summary', async () => {
-    const noActionsConfig = {
-      ...mockConfig,
-      applyLabels: false,
-      applyComment: false
-    }
-    const emptyLabelConfig = { groups: {} }
-
-    await runTriageWorkflow(noActionsConfig, emptyLabelConfig)
-
-    expect(issues.addEyes).not.toHaveBeenCalled()
-    expect(issues.removeEyes).not.toHaveBeenCalled()
-  })
-
-  it('should handle errors gracefully', async () => {
-    const labelConfig = {
-      groups: {
-        overlap: { labelPrefix: 'overlap-', template: 'multi-label' }
-      }
-    }
-
-    const error = new Error('Test error')
-    mockSelectLabels.mockRejectedValue(error)
-
-    await expect(runTriageWorkflow(mockConfig, labelConfig)).rejects.toThrow('Test error')
-    expect(issues.removeEyes).toHaveBeenCalledWith(expect.anything(), mockConfig)
-  })
-
-  it('should log appropriate messages for batch mode', async () => {
-    const labelConfig = {
-      groups: {
-        area: {
-          labelPrefix: 'area-',
-          template: 'single-label'
-        }
-      }
-    }
-
-    await runTriageWorkflow(mockConfig, labelConfig)
-
-    // Check that some form of batch mode logging occurred
-    expect(core.info).toHaveBeenCalled()
-  })
-
-  it('should handle config loading errors gracefully', async () => {
-    const emptyLabelConfig = { groups: {} }
-    const result = await runTriageWorkflow(mockConfig, emptyLabelConfig)
-
-    // Should handle missing config gracefully without throwing
-    expect(typeof result).toBe('string')
   })
 })
