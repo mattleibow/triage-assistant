@@ -12,11 +12,11 @@ engagement scoring for project prioritization.
 
 ## Features
 
-- **Explicit Mode Selection**: Choose between `label-triage` and `engagement-score` modes for clear operation intent
-- **AI-Powered Label Triage**: Automatically analyze issue content and apply appropriate labels using advanced language
-  models
+- **Explicit Mode Selection**: Choose between `apply-labels` and `engagement-score` modes for clear operation intent
+- **AI-Powered Triage & Labelling**: Automatically analyze issue content and apply appropriate labels using advanced
+  language models
 - **Engagement Scoring**: Calculate numerical engagement scores based on community activity and interaction
-- **Batch Configuration**: Label triage processes multiple label groups from `.triagerc.yml` configuration
+- **Batch Configuration**: Labelling and triage processes multiple label groups from `.triagerc.yml` configuration
 - **GitHub Projects Integration**: Automatically update project fields with calculated engagement scores
 - **Sub-Action Architecture**: Clean, focused sub-actions for specific functionality (`apply-labels`,
   `engagement-score`)
@@ -27,12 +27,12 @@ engagement scoring for project prioritization.
 
 The action operates in two distinct modes, selected via the `mode` parameter:
 
-- **`label-triage`** (default): AI-powered label application using batch configuration from `.triagerc.yml`
+- **`apply-labels`** (default): AI-powered label application using batch configuration from `.triagerc.yml`
 - **`engagement-score`**: Calculate and apply engagement scores to GitHub Projects
 
-### Label Triage Mode (Default)
+### Labelling Mode (Default)
 
-The label triage mode processes multiple label groups configured in your `.triagerc.yml` file:
+The labelling mode processes multiple label groups configured in your `.triagerc.yml` file:
 
 ```yaml
 name: 'Triage Issues and Pull Requests'
@@ -59,7 +59,7 @@ jobs:
       - name: Apply labels with AI triage
         uses: mattleibow/triage-assistant@v1
         with:
-          mode: 'label-triage' # default, can be omitted
+          mode: 'apply-labels' # default, can be omitted
           issue: ${{ github.event.number }}
           apply-labels: true
           apply-comment: true
@@ -145,13 +145,13 @@ Focuses on calculating and applying engagement scores to project issues.
 
 | Name             | Description                                        | Default                 | Required |
 | ---------------- | -------------------------------------------------- | ----------------------- | -------- |
-| `mode`           | Operation mode: `label-triage`, `engagement-score` | `label-triage`          | No       |
+| `mode`           | Operation mode: `apply-labels`, `engagement-score` | `apply-labels`          | No       |
 | `issue`          | The issue number to triage                         | Current issue/PR number | No       |
 | `token`          | GitHub token for API access                        | `''`                    | No       |
 | `fallback-token` | Fallback GitHub token for API access               | `${{ github.token }}`   | No       |
 | `dry-run`        | Run in dry-run mode without making changes         | `false`                 | No       |
 
-### Label Triage Mode Inputs
+### Labelling Mode Inputs
 
 | Name             | Description                               | Default            | Required |
 | ---------------- | ----------------------------------------- | ------------------ | -------- |
@@ -185,7 +185,7 @@ Focuses on calculating and applying engagement scores to project issues.
 
 ### Labelling Configuration
 
-The label triage mode uses a `.triagerc.yml` configuration file to define multiple label groups that are processed
+The labelling mode uses a `.triagerc.yml` configuration file to define multiple label groups that are processed
 automatically. The system looks for configuration in this order:
 
 1. `.triagerc.yml` in the repository root
@@ -544,7 +544,7 @@ jobs:
       - name: Apply labels from configuration
         uses: mattleibow/triage-assistant@v1
         with:
-          mode: label-triage
+          mode: apply-labels
           issue: ${{ github.event.issue.number }}
           apply-labels: true
           apply-comment: true

@@ -38,9 +38,9 @@ inputs:
 
   # Mode selection
   mode:
-    description: 'Operation mode: label-triage, engagement-score'
+    description: 'Operation mode: apply-labels, engagement-score'
     required: false
-    default: 'label-triage'
+    default: 'apply-labels'
 
   # Engagement scoring inputs
   project:

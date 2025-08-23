@@ -89,7 +89,7 @@ async function runWorkflow(triageModeOverride?: TriageMode): Promise<void> {
       core.info('Running engagement scoring workflow')
       responseFile = await runEngagementWorkflow(config, configFile.engagement)
     } else {
-      core.info('Running label triage workflow')
+      core.info('Running labelling workflow')
       responseFile = await runTriageWorkflow(config, configFile.labels)
     }
 

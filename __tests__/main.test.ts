@@ -163,7 +163,7 @@ describe('Main Multi-Mode Functionality', () => {
   })
 
   describe('Normal Triage Mode', () => {
-    it('should run normal triage workflow when mode is label-triage or default', async () => {
+    it('should run normal triage workflow when mode is apply-labels or default', async () => {
       config.loadConfigFile.mockImplementation(async () => ({
         engagement: {
           weights: { ...DEFAULT_ENGAGEMENT_WEIGHTS }

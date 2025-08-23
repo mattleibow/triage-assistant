@@ -51323,7 +51323,7 @@ async function runWorkflow(triageModeOverride) {
             responseFile = await runEngagementWorkflow(config, configFile.engagement);
         }
         else {
-            coreExports.info('Running label triage workflow');
+            coreExports.info('Running labelling workflow');
             responseFile = await runTriageWorkflow(config, configFile.labels);
         }
         // Set the response file output
