@@ -585,4 +585,125 @@ describe('runTriageWorkflow', () => {
 
     expect(result).toBe('/tmp/test/triage-assistant/responses.json')
   })
+
+  describe('bulk triage with issue-query', () => {
+    const mockConfigWithQuery: LabelTriageWorkflowConfig = {
+      ...mockConfig,
+      issueQuery: 'is:issue state:open created:>@today-30d'
+    }
+
+    it('should process multiple issues from search query', async () => {
+      // Mock search to return multiple issues
+      const mockIssues = [
+        { id: '1', owner: 'owner', repo: 'repo', number: 101 },
+        { id: '2', owner: 'owner', repo: 'repo', number: 102 }
+      ]
+      issues.searchIssues.mockResolvedValue(mockIssues)
+
+      // Mock individual issue processing
+      selectLabelsFixture.selectLabels.mockResolvedValue('/tmp/test/response.json')
+      const mockMergedResponse = {
+        remarks: [],
+        regression: null,
+        labels: [{ label: 'bug', reason: 'Found issue' }]
+      }
+      merge.mergeResponses.mockResolvedValue(mockMergedResponse)
+      summary.generateSummary.mockResolvedValue('/tmp/test/summary.json')
+
+      // Mock file system for writing final results
+      inMemoryFs.forceSet('/tmp/test/issue-101/triage-assistant/responses.json', JSON.stringify(mockMergedResponse))
+      inMemoryFs.forceSet('/tmp/test/issue-102/triage-assistant/responses.json', JSON.stringify(mockMergedResponse))
+
+      const result = await runTriageWorkflow(mockConfigWithQuery, mockConfigFile)
+
+      // Verify search was called
+      expect(issues.searchIssues).toHaveBeenCalledWith(
+        expect.anything(),
+        'is:issue state:open created:>@today-30d',
+        'owner',
+        'repo'
+      )
+
+      // Verify processing of each issue
+      expect(selectLabelsFixture.selectLabels).toHaveBeenCalledTimes(4) // 2 groups * 2 issues
+      expect(merge.mergeResponses).toHaveBeenCalledTimes(2)
+
+      // Verify result is bulk response file
+      expect(result).toBe('/tmp/test/triage-assistant/bulk-responses.json')
+    })
+
+    it('should handle empty search results', async () => {
+      issues.searchIssues.mockResolvedValue([])
+
+      const result = await runTriageWorkflow(mockConfigWithQuery, mockConfigFile)
+
+      expect(issues.searchIssues).toHaveBeenCalled()
+      expect(selectLabelsFixture.selectLabels).not.toHaveBeenCalled()
+      expect(result).toBe('/tmp/test/triage-assistant/bulk-responses.json')
+    })
+
+    it('should continue processing other issues if one fails', async () => {
+      const mockIssues = [
+        { id: '1', owner: 'owner', repo: 'repo', number: 101 },
+        { id: '2', owner: 'owner', repo: 'repo', number: 102 }
+      ]
+      issues.searchIssues.mockResolvedValue(mockIssues)
+
+      // First issue succeeds (2 groups), second issue fails on first group
+      selectLabelsFixture.selectLabels
+        .mockResolvedValueOnce('/tmp/test/response.json') // issue 101, group 1
+        .mockResolvedValueOnce('/tmp/test/response.json') // issue 101, group 2
+        .mockRejectedValueOnce(new Error('Failed to process issue')) // issue 102, group 1 - fails here
+        .mockResolvedValueOnce('/tmp/test/response.json') // issue 102, group 2 - won't be called
+
+      const mockMergedResponse = {
+        remarks: [],
+        regression: null,
+        labels: [{ label: 'bug', reason: 'Found issue' }]
+      }
+      merge.mergeResponses.mockResolvedValue(mockMergedResponse)
+      summary.generateSummary.mockResolvedValue('/tmp/test/summary.json')
+
+      // Mock file system for first issue only (second will fail)
+      inMemoryFs.forceSet('/tmp/test/issue-101/triage-assistant/responses.json', JSON.stringify(mockMergedResponse))
+
+      const result = await runTriageWorkflow(mockConfigWithQuery, mockConfigFile)
+
+      // Should still return a result
+      expect(result).toBe('/tmp/test/triage-assistant/bulk-responses.json')
+
+      // Should have attempted to process both issues
+      expect(issues.searchIssues).toHaveBeenCalled()
+      expect(core.error).toHaveBeenCalledWith(expect.stringContaining('Failed to process issue #102'))
+    })
+
+    it('should use separate working directories for each issue', async () => {
+      const mockIssues = [
+        { id: '1', owner: 'owner', repo: 'repo', number: 101 },
+        { id: '2', owner: 'owner', repo: 'repo', number: 102 }
+      ]
+      issues.searchIssues.mockResolvedValue(mockIssues)
+
+      selectLabelsFixture.selectLabels.mockResolvedValue('/tmp/test/response.json')
+      const mockMergedResponse = {
+        remarks: [],
+        regression: null,
+        labels: []
+      }
+      merge.mergeResponses.mockResolvedValue(mockMergedResponse)
+      summary.generateSummary.mockResolvedValue('/tmp/test/summary.json')
+
+      await runTriageWorkflow(mockConfigWithQuery, mockConfigFile)
+
+      // Verify selectLabels was called with different working directories
+      const firstIssueCall = selectLabelsFixture.selectLabels.mock.calls[0][1]
+      const secondIssueCall = selectLabelsFixture.selectLabels.mock.calls[2][1] // Skip second group of first issue
+
+      expect(firstIssueCall.tempDir).toBe('/tmp/test/issue-101')
+      expect(firstIssueCall.issueNumber).toBe(101)
+
+      expect(secondIssueCall.tempDir).toBe('/tmp/test/issue-102')
+      expect(secondIssueCall.issueNumber).toBe(102)
+    })
+  })
 })

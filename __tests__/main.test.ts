@@ -576,4 +576,84 @@ describe('Main Multi-Mode Functionality', () => {
       )
     })
   })
+
+  describe('Issue Query Validation', () => {
+    it('should run triage workflow with issue-query when provided', async () => {
+      // Clear any existing issue context
+      github.mockContext.issue = undefined as any
+
+      core.getInput.mockImplementation((name: string) => {
+        switch (name) {
+          case 'mode':
+            return 'apply-labels'
+          case 'issue-query':
+            return 'is:issue state:open created:>@today-30d'
+          case 'token':
+            return 'test-token'
+          case 'apply-labels':
+            return 'true'
+          default:
+            return ''
+        }
+      })
+
+      await run()
+
+      expect(core.setFailed).not.toHaveBeenCalled()
+      expect(triage.runTriageWorkflow).toHaveBeenCalledWith(
+        expect.objectContaining({
+          issueQuery: 'is:issue state:open created:>@today-30d',
+          issueNumber: 0 // Should be 0 when no issue number provided
+        }),
+        expect.objectContaining({
+          groups: {}
+        })
+      )
+    })
+
+    it('should fail when both issue and issue-query are provided', async () => {
+      core.getInput.mockImplementation((name: string) => {
+        switch (name) {
+          case 'mode':
+            return 'apply-labels'
+          case 'issue':
+            return '456'
+          case 'issue-query':
+            return 'is:issue state:open'
+          case 'token':
+            return 'test-token'
+          default:
+            return ''
+        }
+      })
+
+      await run()
+
+      expect(core.setFailed).toHaveBeenCalledWith(
+        'Cannot specify both issue number and issue query - please use only one'
+      )
+      expect(triage.runTriageWorkflow).not.toHaveBeenCalled()
+    })
+
+    it('should fail when neither issue nor issue-query is provided for apply-labels mode', async () => {
+      core.getInput.mockImplementation((name: string) => {
+        switch (name) {
+          case 'mode':
+            return 'apply-labels'
+          case 'token':
+            return 'test-token'
+          default:
+            return ''
+        }
+      })
+
+      // Mock github context to have no issue number
+      github.mockContext.issue = undefined as any
+
+      await run()
+
+      expect(core.setFailed).toHaveBeenCalledWith('Issue number or issue query is required for applying labels')
+      expect(triage.runTriageWorkflow).not.toHaveBeenCalled()
+    })
+  })
 })

@@ -16,7 +16,7 @@ type GetIssueDetailsQueryIssueCommentNodes = NonNullable<
 jest.unstable_mockModule('@actions/core', () => core)
 
 // Import the module being tested
-const { commentOnIssue, applyLabelsToIssue, addEyes, removeEyes, getIssueDetails } = await import(
+const { commentOnIssue, applyLabelsToIssue, addEyes, removeEyes, getIssueDetails, searchIssues } = await import(
   '../../src/github/issues.js'
 )
 
@@ -501,6 +501,147 @@ ${mockFooter}
       expect(result.comments).toHaveLength(100)
       expect(result.comments[0].user.login).toBe('commenter1')
       expect(result.comments[99].user.login).toBe('commenter100')
+    })
+  })
+
+  describe('searchIssues', () => {
+    it('should search for issues using GitHub API', async () => {
+      const mockSearchResponse = {
+        data: {
+          total_count: 2,
+          incomplete_results: false,
+          items: [
+            {
+              id: 1,
+              number: 101,
+              pull_request: null
+            },
+            {
+              id: 2,
+              number: 102,
+              pull_request: null
+            }
+          ]
+        },
+        headers: {},
+        status: 200,
+        url: 'https://api.github.com/search/issues'
+      } as any
+
+      mockOctokit.rest.search.issuesAndPullRequests.mockResolvedValue(mockSearchResponse)
+
+      const result = await searchIssues(octokit, 'is:issue state:open', 'owner', 'repo')
+
+      expect(mockOctokit.rest.search.issuesAndPullRequests).toHaveBeenCalledWith({
+        q: 'is:issue state:open repo:owner/repo',
+        sort: 'created',
+        order: 'desc',
+        per_page: 100
+      })
+
+      expect(result).toEqual([
+        { id: '1', owner: 'owner', repo: 'repo', number: 101 },
+        { id: '2', owner: 'owner', repo: 'repo', number: 102 }
+      ])
+    })
+
+    it('should not add repo scope if already present in query', async () => {
+      const mockSearchResponse = {
+        data: {
+          total_count: 1,
+          incomplete_results: false,
+          items: [
+            {
+              id: 1,
+              number: 101,
+              pull_request: null
+            }
+          ]
+        },
+        headers: {},
+        status: 200,
+        url: 'https://api.github.com/search/issues'
+      } as any
+
+      mockOctokit.rest.search.issuesAndPullRequests.mockResolvedValue(mockSearchResponse)
+
+      await searchIssues(octokit, 'is:issue repo:owner/repo state:open', 'owner', 'repo')
+
+      expect(mockOctokit.rest.search.issuesAndPullRequests).toHaveBeenCalledWith({
+        q: 'is:issue repo:owner/repo state:open',
+        sort: 'created',
+        order: 'desc',
+        per_page: 100
+      })
+    })
+
+    it('should filter out pull requests', async () => {
+      const mockSearchResponse = {
+        data: {
+          total_count: 3,
+          incomplete_results: false,
+          items: [
+            {
+              id: 1,
+              number: 101,
+              pull_request: null // This is an issue
+            },
+            {
+              id: 2,
+              number: 102,
+              pull_request: { url: 'https://api.github.com/repos/owner/repo/pulls/102' } // This is a PR
+            },
+            {
+              id: 3,
+              number: 103,
+              pull_request: null // This is an issue
+            }
+          ]
+        },
+        headers: {},
+        status: 200,
+        url: 'https://api.github.com/search/issues'
+      } as any
+
+      mockOctokit.rest.search.issuesAndPullRequests.mockResolvedValue(mockSearchResponse)
+
+      const result = await searchIssues(octokit, 'is:issue state:open', 'owner', 'repo')
+
+      // Should only return issues, not pull requests
+      expect(result).toEqual([
+        { id: '1', owner: 'owner', repo: 'repo', number: 101 },
+        { id: '3', owner: 'owner', repo: 'repo', number: 103 }
+      ])
+    })
+
+    it('should handle empty search results', async () => {
+      const mockSearchResponse = {
+        data: {
+          total_count: 0,
+          incomplete_results: false,
+          items: []
+        },
+        headers: {},
+        status: 200,
+        url: 'https://api.github.com/search/issues'
+      } as any
+
+      mockOctokit.rest.search.issuesAndPullRequests.mockResolvedValue(mockSearchResponse)
+
+      const result = await searchIssues(octokit, 'is:issue state:open', 'owner', 'repo')
+
+      expect(result).toEqual([])
+    })
+
+    it('should handle search API errors', async () => {
+      const error = new Error('Search API rate limit exceeded')
+      mockOctokit.rest.search.issuesAndPullRequests.mockRejectedValue(error)
+
+      await expect(searchIssues(octokit, 'is:issue state:open', 'owner', 'repo')).rejects.toThrow(
+        'Search API rate limit exceeded'
+      )
+
+      expect(core.error).toHaveBeenCalledWith('Failed to search for issues: Error: Search API rate limit exceeded')
     })
   })
 })

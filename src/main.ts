@@ -25,6 +25,7 @@ async function runWorkflow(triageModeOverride?: TriageMode): Promise<void> {
     // Get project and issue numbers
     const projectInput = core.getInput('project')
     const issueInput = core.getInput('issue')
+    const issueQueryInput = core.getInput('issue-query')
     const issueContext = github.context.issue?.number || 0
 
     // Make sure they are correct for the mode
@@ -33,8 +34,11 @@ async function runWorkflow(triageModeOverride?: TriageMode): Promise<void> {
         throw new Error('Either project or issue must be specified when calculating engagement scores')
       }
     } else if (triageMode === TriageMode.ApplyLabels) {
-      if (!issueInput && !issueContext) {
-        throw new Error('Issue number is required for applying labels')
+      if (!issueInput && !issueQueryInput && !issueContext) {
+        throw new Error('Issue number or issue query is required for applying labels')
+      }
+      if (issueInput && issueQueryInput) {
+        throw new Error('Cannot specify both issue number and issue query - please use only one')
       }
     }
 
@@ -60,6 +64,7 @@ async function runWorkflow(triageModeOverride?: TriageMode): Promise<void> {
       commentFooter: core.getInput('comment-footer'),
       dryRun: core.getInput('dry-run')?.toLowerCase() === 'true',
       issueNumber: validateNumericInput(issueInput || issueContext.toString(), 'issue number'),
+      issueQuery: issueQueryInput || undefined,
       projectColumn: core.getInput('project-column') || DEFAULT_PROJECT_COLUMN_NAME,
       projectNumber: validateNumericInput(projectInput, 'project number'),
       repoName: github.context.repo.repo,

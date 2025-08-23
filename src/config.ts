@@ -59,6 +59,7 @@ export interface GitHubIssueConfig {
   repoOwner: string
   repoName: string
   issueNumber: number
+  issueQuery?: string
 }
 
 export interface ApplyReactionsConfig extends GitHubIssueConfig {
@@ -84,6 +85,7 @@ export interface LabelTriageWorkflowConfig {
   repoName: string
   repository: string
   issueNumber: number
+  issueQuery?: string
   aiEndpoint: string
   aiModel: string
   aiToken: string

@@ -39328,6 +39328,43 @@ function addComments(comments, allComments) {
     }
     return comments.pageInfo.endCursor;
 }
+/**
+ * Search for issues using GitHub's search API
+ *
+ * @param octokit The GitHub API client
+ * @param query The search query (e.g., "is:issue state:open created:>@today-30d")
+ * @param repoOwner Repository owner to scope the search
+ * @param repoName Repository name to scope the search
+ * @returns Array of issue numbers found by the search
+ */
+async function searchIssues(octokit, query, repoOwner, repoName) {
+    try {
+        // Add repository scope to the query if not already present
+        const scopedQuery = query.includes('repo:') ? query : `${query} repo:${repoOwner}/${repoName}`;
+        coreExports.info(`Searching for issues with query: ${scopedQuery}`);
+        const searchResult = await octokit.rest.search.issuesAndPullRequests({
+            q: scopedQuery,
+            sort: 'created',
+            order: 'desc',
+            per_page: 100
+        });
+        // Filter to only include issues (not pull requests)
+        const issues = searchResult.data.items
+            .filter((item) => !item.pull_request) // Exclude pull requests
+            .map((item) => ({
+            id: item.id.toString(),
+            owner: repoOwner,
+            repo: repoName,
+            number: item.number
+        }));
+        coreExports.info(`Found ${issues.length} issues matching the query`);
+        return issues;
+    }
+    catch (error) {
+        coreExports.error(`Failed to search for issues: ${error}`);
+        throw error;
+    }
+}
 
 const systemPrompt = `
 You are an assistant helping to triage GitHub issues. Your
@@ -39479,6 +39516,18 @@ async function generatePromptFile(template, promptPath, config, mergedResponseFi
  */
 async function runTriageWorkflow(config, configFile) {
     const octokit = githubExports.getOctokit(config.token);
+    // Check if we need to process multiple issues from a query
+    if (config.issueQuery) {
+        return await runBulkTriageWorkflow(octokit, config, configFile);
+    }
+    else {
+        return await runSingleIssueTriageWorkflow(octokit, config, configFile);
+    }
+}
+/**
+ * Run triage workflow for a single issue
+ */
+async function runSingleIssueTriageWorkflow(octokit, config, configFile) {
     const shouldAddLabels = Object.keys(configFile.groups).length > 0;
     const shouldAddSummary = config.applyLabels || config.applyComment;
     const shouldAddReactions = shouldAddLabels || shouldAddSummary;
@@ -39512,6 +39561,60 @@ async function runTriageWorkflow(config, configFile) {
             await removeEyes(octokit, config);
         }
     }
+}
+/**
+ * Run triage workflow for multiple issues from a search query
+ */
+async function runBulkTriageWorkflow(octokit, config, configFile) {
+    coreExports.info(`Running bulk triage workflow with query: ${config.issueQuery}`);
+    // Search for issues using the provided query
+    const issues = await searchIssues(octokit, config.issueQuery, config.repoOwner, config.repoName);
+    if (issues.length === 0) {
+        coreExports.info('No issues found matching the search query');
+        // Return an empty results file
+        const finalResponseFile = path.join(config.tempDir, 'triage-assistant', 'bulk-responses.json');
+        await fs.promises.mkdir(path.dirname(finalResponseFile), { recursive: true });
+        await fs.promises.writeFile(finalResponseFile, JSON.stringify({}));
+        return finalResponseFile;
+    }
+    coreExports.info(`Processing ${issues.length} issues`);
+    const issueResults = {};
+    // Process each issue individually
+    for (const issue of issues) {
+        coreExports.info(`Processing issue #${issue.number}`);
+        try {
+            // Create a separate config for this issue with a unique working directory
+            const issueConfig = {
+                ...config,
+                issueNumber: issue.number,
+                tempDir: path.join(config.tempDir, `issue-${issue.number}`)
+            };
+            // Run the single issue workflow for this issue
+            const responseFile = await runSingleIssueTriageWorkflow(octokit, issueConfig, configFile);
+            // If we got a response file, load it and store the result
+            if (responseFile) {
+                try {
+                    const responseContent = await fs.promises.readFile(responseFile, 'utf8');
+                    const response = JSON.parse(responseContent);
+                    issueResults[issue.number] = response;
+                    coreExports.info(`Successfully processed issue #${issue.number}`);
+                }
+                catch (error) {
+                    coreExports.warning(`Failed to read response file for issue #${issue.number}: ${error}`);
+                }
+            }
+        }
+        catch (error) {
+            coreExports.error(`Failed to process issue #${issue.number}: ${error}`);
+            // Continue with other issues even if one fails
+        }
+    }
+    // Create final merged response file
+    const finalResponseFile = path.join(config.tempDir, 'triage-assistant', 'bulk-responses.json');
+    await fs.promises.mkdir(path.dirname(finalResponseFile), { recursive: true });
+    await fs.promises.writeFile(finalResponseFile, JSON.stringify(issueResults, null, 2));
+    coreExports.info(`Bulk triage complete. Processed ${Object.keys(issueResults).length} of ${issues.length} issues successfully`);
+    return finalResponseFile;
 }
 /**
  * Merges response JSON files and applies labels and comments to the issue.
@@ -51268,6 +51371,7 @@ async function runWorkflow(triageModeOverride) {
         // Get project and issue numbers
         const projectInput = coreExports.getInput('project');
         const issueInput = coreExports.getInput('issue');
+        const issueQueryInput = coreExports.getInput('issue-query');
         const issueContext = githubExports.context.issue?.number || 0;
         // Make sure they are correct for the mode
         if (triageMode === TriageMode.EngagementScore) {
@@ -51276,8 +51380,11 @@ async function runWorkflow(triageModeOverride) {
             }
         }
         else if (triageMode === TriageMode.ApplyLabels) {
-            if (!issueInput && !issueContext) {
-                throw new Error('Issue number is required for applying labels');
+            if (!issueInput && !issueQueryInput && !issueContext) {
+                throw new Error('Issue number or issue query is required for applying labels');
+            }
+            if (issueInput && issueQueryInput) {
+                throw new Error('Cannot specify both issue number and issue query - please use only one');
             }
         }
         // Validate repository context
@@ -51299,6 +51406,7 @@ async function runWorkflow(triageModeOverride) {
             commentFooter: coreExports.getInput('comment-footer'),
             dryRun: coreExports.getInput('dry-run')?.toLowerCase() === 'true',
             issueNumber: validateNumericInput(issueInput || issueContext.toString(), 'issue number'),
+            issueQuery: issueQueryInput || undefined,
             projectColumn: coreExports.getInput('project-column') || DEFAULT_PROJECT_COLUMN_NAME,
             projectNumber: validateNumericInput(projectInput, 'project number'),
             repoName: githubExports.context.repo.repo,

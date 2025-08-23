@@ -5,7 +5,7 @@ import * as path from 'path'
 import * as utils from '../utils.js'
 import { GetIssueDetailsQuery, Sdk as GraphQLSdk } from '../generated/graphql.js'
 import { GitHubIssueConfig, TriageConfig } from '../config.js'
-import { IssueDetails, ReactionData, CommentData, UserInfo } from './types.js'
+import { IssueDetails, ReactionData, CommentData, UserInfo, Issue } from './types.js'
 
 type Octokit = ReturnType<typeof github.getOctokit>
 type GetIssueDetailsQueryIssue = NonNullable<NonNullable<GetIssueDetailsQuery['repository']>['issue']>
@@ -336,4 +336,50 @@ function addComments(
   }
 
   return comments.pageInfo.endCursor
+}
+
+/**
+ * Search for issues using GitHub's search API
+ *
+ * @param octokit The GitHub API client
+ * @param query The search query (e.g., "is:issue state:open created:>@today-30d")
+ * @param repoOwner Repository owner to scope the search
+ * @param repoName Repository name to scope the search
+ * @returns Array of issue numbers found by the search
+ */
+export async function searchIssues(
+  octokit: Octokit,
+  query: string,
+  repoOwner: string,
+  repoName: string
+): Promise<Issue[]> {
+  try {
+    // Add repository scope to the query if not already present
+    const scopedQuery = query.includes('repo:') ? query : `${query} repo:${repoOwner}/${repoName}`
+
+    core.info(`Searching for issues with query: ${scopedQuery}`)
+
+    const searchResult = await octokit.rest.search.issuesAndPullRequests({
+      q: scopedQuery,
+      sort: 'created',
+      order: 'desc',
+      per_page: 100
+    })
+
+    // Filter to only include issues (not pull requests)
+    const issues: Issue[] = searchResult.data.items
+      .filter((item) => !item.pull_request) // Exclude pull requests
+      .map((item) => ({
+        id: item.id.toString(),
+        owner: repoOwner,
+        repo: repoName,
+        number: item.number
+      }))
+
+    core.info(`Found ${issues.length} issues matching the query`)
+    return issues
+  } catch (error) {
+    core.error(`Failed to search for issues: ${error}`)
+    throw error
+  }
 }
