@@ -191,7 +191,7 @@ automatically. The system looks for configuration in this order:
 1. `.triagerc.yml` in the repository root
 2. `.github/.triagerc.yml` in the .github directory
 
-#### Example Configuration
+#### Labelling Example
 
 Create a `.triagerc.yml` file in your repository root:
 
@@ -248,7 +248,7 @@ engagement:
 The engagement scoring system provides a data-driven approach to prioritizing issues based on community activity and
 involvement. It calculates numerical scores using a configurable weighted algorithm that considers multiple factors.
 
-### Configuration
+### Engagement Scoring Configuration
 
 The engagement scoring weights can be customized using a YAML configuration file. The system looks for configuration in
 the following order:
@@ -258,7 +258,7 @@ the following order:
 
 If no configuration file is found, the system uses sensible defaults.
 
-#### Example Configuration
+#### Engagement Scoring Example
 
 Create a `.triagerc.yml` file in your repository root:
 
