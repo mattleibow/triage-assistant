@@ -269,6 +269,11 @@ engagement:
     issueAge: 1
 ```
 
+## Engagement Scoring System
+
+The engagement scoring system provides a data-driven approach to prioritizing issues based on community activity and
+involvement. It calculates numerical scores using a configurable weighted algorithm that considers multiple factors.
+
 ### How It Works
 
 The engagement scoring algorithm analyzes the following configurable factors:
