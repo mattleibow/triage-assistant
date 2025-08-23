@@ -31352,14 +31352,15 @@ function validateRepositoryId(owner, repo) {
     }
 }
 /**
- * Validates template name against allowed values
- * @param template Template name to validate
+ * Validates the triage mode
+ * @param mode The triage mode to validate
+ * @returns The validated triage mode
  */
-function validateTemplate(template) {
-    const allowedTemplates = ['multi-label', 'single-label', 'regression', 'missing-info', 'engagement-score', ''];
-    if (template && !allowedTemplates.includes(template)) {
-        throw new Error(`Invalid template: ${template}. Allowed values: ${allowedTemplates.filter((t) => t).join(', ')}`);
+function validateMode(mode) {
+    if (mode === TriageMode.ApplyLabels || mode === TriageMode.EngagementScore) {
+        return mode;
     }
+    throw new Error(`Invalid mode: ${mode}. Allowed values: ${Object.values(TriageMode).join(', ')}`);
 }
 /**
  * Substitutes template variables in a string with their corresponding values from a replacements map.
@@ -38962,7 +38963,7 @@ async function runInference(systemPrompt, userPrompt, responseFile, maxTokens = 
  * @param config The select labels configuration object.
  * @returns Promise that resolves with the path to the response file.
  */
-async function selectLabels(config) {
+async function selectLabels(template, config) {
     const guid = v4();
     const promptDir = path.join(config.tempDir, 'triage-labels', 'prompts', guid);
     const responseDir = path.join(config.tempDir, 'triage-assistant', 'responses');
@@ -38971,7 +38972,7 @@ async function selectLabels(config) {
     await fs.promises.mkdir(responseDir, { recursive: true });
     // Generate system prompt
     const systemPromptPath = path.join(promptDir, 'system-prompt.md');
-    await generatePromptFile$1(config.template, config, systemPromptPath);
+    await generatePromptFile$1(template, config, systemPromptPath);
     // Generate user prompt
     const userPromptPath = path.join(promptDir, 'user-prompt.md');
     await generatePromptFile$1('user', config, userPromptPath);
@@ -39473,25 +39474,32 @@ async function generatePromptFile(template, promptPath, config, mergedResponseFi
 /**
  * Run the normal triage workflow
  */
-async function runTriageWorkflow(config) {
+async function runTriageWorkflow(config, configFile) {
     const octokit = githubExports.getOctokit(config.token);
-    const shouldAddLabels = config.template ? true : false;
+    const shouldAddLabels = Object.keys(configFile.groups).length > 0;
     const shouldAddSummary = config.applyLabels || config.applyComment;
     const shouldAddReactions = shouldAddLabels || shouldAddSummary;
     const shouldRemoveReactions = shouldAddSummary;
     try {
-        let responseFile = '';
         // Step 1: Add eyes reaction at the start
         if (shouldAddReactions) {
             await addEyes(octokit, config);
         }
-        // Step 2: Select labels if template is provided
+        // Step 2: Select labels
         if (shouldAddLabels) {
-            responseFile = await selectLabels(config);
+            for (const [groupName, groupConfig] of Object.entries(configFile.groups)) {
+                coreExports.info(`Selecting labels for group ${groupName} with configuration: ${JSON.stringify(groupConfig)}`);
+                await selectLabels(groupConfig.template, {
+                    ...config,
+                    labelPrefix: groupConfig.labelPrefix,
+                    label: groupConfig.label
+                });
+            }
         }
+        let responseFile = '';
         // Step 3: Apply labels and comment if requested
         if (shouldAddSummary) {
-            await mergeAndApplyTriage(octokit, config);
+            responseFile = await mergeAndApplyTriage(octokit, config);
         }
         return responseFile;
     }
@@ -39528,6 +39536,7 @@ async function mergeAndApplyTriage(octokit, config) {
         // Apply labels to the issue
         await applyLabelsToIssue(octokit, labels, config);
     }
+    return mergedResponseFile;
 }
 
 class ClientError extends Error {
@@ -48240,6 +48249,115 @@ async function calculateHistoricalScore(issue, weights) {
     return calculateScore(historicIssue, weights);
 }
 
+/**
+ * Run the complete engagement scoring workflow
+ * @param config - The engagement workflow configuration
+ * @param configFile - The configuration file for engagement
+ * @returns Promise<string> - The engagement response file path
+ */
+async function runEngagementWorkflow(config, configFile) {
+    coreExports.info('Running in engagement scoring mode');
+    const graphql = new GraphQLClient('https://api.github.com/graphql', {
+        headers: {
+            Authorization: `Bearer ${config.token}`
+        }
+    });
+    const sdk = getSdk(graphql);
+    const engagementResponse = await calculateEngagementScores(config, sdk, configFile.weights);
+    coreExports.info(`Calculated engagement scores for ${engagementResponse.totalItems} items`);
+    // Update project with scores if requested
+    if (config.applyScores) {
+        await updateProjectWithScores(config, sdk, engagementResponse);
+    }
+    // Save engagement response to file
+    const engagementFile = `${config.tempDir}/engagement-response.json`;
+    await fs.promises.writeFile(engagementFile, JSON.stringify(engagementResponse, null, 2));
+    return engagementFile;
+}
+/**
+ * Calculate engagement scores for issues in a project or single issue
+ * @param config - Configuration object containing project and authentication details
+ * @param graphql - GraphQL SDK instance for making API calls
+ * @param weights - Engagement scoring weights configuration
+ * @returns Promise<EngagementResponse> - The engagement response with scores
+ */
+async function calculateEngagementScores(config, graphql, weights) {
+    if (config.projectNumber && config.projectNumber > 0) {
+        return await calculateProjectEngagementScores(config, graphql, weights);
+    }
+    else if (config.issueNumber && config.issueNumber > 0) {
+        return await calculateIssueEngagementScores(config, graphql, weights);
+    }
+    else {
+        throw new Error('Either project number or issue number must be specified');
+    }
+}
+/**
+ * Calculate engagement scores for a single issue
+ */
+async function calculateIssueEngagementScores(config, graphql, weights) {
+    coreExports.info(`Calculating engagement score for issue #${config.issueNumber}`);
+    const issueDetails = await getIssueDetails(graphql, config.repoOwner, config.repoName, config.issueNumber);
+    const item = await createEngagementItem(issueDetails, undefined, weights);
+    return {
+        items: [item],
+        totalItems: 1
+    };
+}
+/**
+ * Calculate engagement scores for all issues in a project
+ */
+async function calculateProjectEngagementScores(config, graphql, weights) {
+    coreExports.info(`Calculating engagement scores for project #${config.projectNumber}`);
+    const projectNumber = config.projectNumber;
+    const project = await getProjectDetails(graphql, config.repoOwner, config.repoName, projectNumber);
+    if (!project || !project.items || project.items.length === 0) {
+        coreExports.warning('No project items found or unable to determine project ID');
+        return {
+            items: [],
+            totalItems: 0
+        };
+    }
+    coreExports.info(`Found ${project.items.length} items in project #${projectNumber}`);
+    const items = [];
+    for (const projectItem of project.items) {
+        const issueDetails = await getIssueDetails(graphql, projectItem.content.owner, projectItem.content.repo, projectItem.content.number);
+        const item = await createEngagementItem(issueDetails, projectItem.id, weights);
+        items.push(item);
+    }
+    return {
+        items,
+        totalItems: items.length,
+        project: {
+            id: project.id,
+            owner: project.owner,
+            number: project.number
+        }
+    };
+}
+/**
+ * Helper function to create engagement item - avoids code duplication
+ */
+async function createEngagementItem(issueDetails, projectItemId, weights) {
+    const score = calculateScore(issueDetails, weights);
+    const previousScore = await calculateHistoricalScore(issueDetails, weights);
+    const item = {
+        ...(projectItemId && { id: projectItemId }),
+        issue: {
+            id: issueDetails.id,
+            owner: issueDetails.owner,
+            repo: issueDetails.repo,
+            number: issueDetails.number
+        },
+        engagement: {
+            score,
+            previousScore,
+            classification: score > previousScore ? EngagementClassification.Hot : undefined
+        }
+    };
+    return item;
+}
+
 /*! js-yaml 4.1.0 https://github.com/nodeca/js-yaml @license MIT */
 function isNothing(subject) {
   return (typeof subject === 'undefined') || (subject === null);
@@ -51053,11 +51171,11 @@ const DEFAULT_ENGAGEMENT_WEIGHTS = {
     linkedPullRequests: 2
 };
 /**
- * Load triage configuration from .triagerc.yml or .github/.triagerc.yml
+ * Load full triage configuration from .triagerc.yml or .github/.triagerc.yml
  * @param workspacePath - The workspace path to search for config files
- * @returns Combined configuration with defaults applied
+ * @returns The full configuration object
  */
-async function loadTriageConfig(workspacePath = '.') {
+async function loadConfigFile(workspacePath = '.') {
     // Validate and normalize workspace path to prevent directory traversal
     const currentDir = process.cwd();
     const normalizedWorkspace = path.resolve(workspacePath);
@@ -51070,152 +51188,66 @@ async function loadTriageConfig(workspacePath = '.') {
         safePath(normalizedWorkspace, '.triagerc.yml'),
         safePath(normalizedWorkspace, '.github/.triagerc.yml')
     ];
-    let config = {};
+    const config = await loadFile(configPaths);
+    // Log final config
+    coreExports.info(`Using complete configuration: ${JSON.stringify(config)}`);
+    return config;
+}
+async function loadFile(configPaths) {
     const failedPaths = new Map();
     for (const configPath of configPaths) {
         try {
             coreExports.info(`Attempting to load triage configuration from ${configPath}`);
             const fileContent = await fs.promises.readFile(configPath, 'utf8');
-            const parsedConfig = load(fileContent);
-            if (parsedConfig && typeof parsedConfig === 'object') {
-                config = parsedConfig;
-                failedPaths.clear();
-                coreExports.info(`Successfully loaded configuration from ${configPath}`);
-                break;
+            const parsedConfig = parseConfigFile(fileContent);
+            if (parsedConfig) {
+                coreExports.info(`Successfully loaded configuration from ${configPath}: ${JSON.stringify(parsedConfig)}`);
+                return parsedConfig;
             }
         }
         catch (error) {
             failedPaths.set(configPath, error instanceof Error ? error.message : 'Unknown error');
         }
     }
+    // Log failed lookup
     if (failedPaths.size > 0) {
         const details = Array.from(failedPaths.entries())
             .map(([configPath, errorMessage]) => ` - ${configPath}: ${errorMessage}`)
             .join('\n');
         coreExports.warning(`Failed to load configuration from the following paths:\n${details}`);
     }
-    // Merge with defaults
-    const weights = config.engagement?.weights || {};
-    const mergedWeights = {
-        comments: weights.comments ?? DEFAULT_ENGAGEMENT_WEIGHTS.comments,
-        reactions: weights.reactions ?? DEFAULT_ENGAGEMENT_WEIGHTS.reactions,
-        contributors: weights.contributors ?? DEFAULT_ENGAGEMENT_WEIGHTS.contributors,
-        lastActivity: weights.lastActivity ?? DEFAULT_ENGAGEMENT_WEIGHTS.lastActivity,
-        issueAge: weights.issueAge ?? DEFAULT_ENGAGEMENT_WEIGHTS.issueAge,
-        linkedPullRequests: weights.linkedPullRequests ?? DEFAULT_ENGAGEMENT_WEIGHTS.linkedPullRequests
-    };
-    coreExports.info(`Using engagement weights: ${JSON.stringify(mergedWeights)}`);
-    return mergedWeights;
-}
-
-/**
- * Run the complete engagement scoring workflow
- * @param config - The triage configuration
- * @returns Promise<string> - The engagement response file path
- */
-async function runEngagementWorkflow(config) {
-    coreExports.info('Running in engagement scoring mode');
-    // Load engagement weights from configuration file
-    const weights = await loadTriageConfig(process.cwd());
-    const graphql = new GraphQLClient('https://api.github.com/graphql', {
-        headers: {
-            Authorization: `Bearer ${config.token}`
-        }
-    });
-    const sdk = getSdk(graphql);
-    const engagementResponse = await calculateEngagementScores(config, sdk, weights);
-    coreExports.info(`Calculated engagement scores for ${engagementResponse.totalItems} items`);
-    // Update project with scores if requested
-    if (config.applyScores) {
-        await updateProjectWithScores(config, sdk, engagementResponse);
-    }
-    // Save engagement response to file
-    const engagementFile = `${config.tempDir}/engagement-response.json`;
-    await fs.promises.writeFile(engagementFile, JSON.stringify(engagementResponse, null, 2));
-    return engagementFile;
-}
-/**
- * Calculate engagement scores for issues in a project or single issue
- * @param config - Configuration object containing project and authentication details
- * @param graphql - GraphQL SDK instance for making API calls
- * @param weights - Engagement scoring weights configuration
- * @returns Promise<EngagementResponse> - The engagement response with scores
- */
-async function calculateEngagementScores(config, graphql, weights) {
-    if (config.projectNumber && config.projectNumber > 0) {
-        return await calculateProjectEngagementScores(config, graphql, weights);
-    }
-    else if (config.issueNumber && config.issueNumber > 0) {
-        return await calculateIssueEngagementScores(config, graphql, weights);
-    }
-    else {
-        throw new Error('Either project number or issue number must be specified');
-    }
-}
-/**
- * Calculate engagement scores for a single issue
- */
-async function calculateIssueEngagementScores(config, graphql, weights) {
-    coreExports.info(`Calculating engagement score for issue #${config.issueNumber}`);
-    const issueDetails = await getIssueDetails(graphql, config.repoOwner, config.repoName, config.issueNumber);
-    const item = await createEngagementItem(issueDetails, undefined, weights);
+    // Nothing was loaded, so we got an empty config file
     return {
-        items: [item],
-        totalItems: 1
-    };
-}
-/**
- * Calculate engagement scores for all issues in a project
- */
-async function calculateProjectEngagementScores(config, graphql, weights) {
-    coreExports.info(`Calculating engagement scores for project #${config.projectNumber}`);
-    const projectNumber = config.projectNumber;
-    const project = await getProjectDetails(graphql, config.repoOwner, config.repoName, projectNumber);
-    if (!project || !project.items || project.items.length === 0) {
-        coreExports.warning('No project items found or unable to determine project ID');
-        return {
-            items: [],
-            totalItems: 0
-        };
-    }
-    coreExports.info(`Found ${project.items.length} items in project #${projectNumber}`);
-    const items = [];
-    for (const projectItem of project.items) {
-        const issueDetails = await getIssueDetails(graphql, projectItem.content.owner, projectItem.content.repo, projectItem.content.number);
-        const item = await createEngagementItem(issueDetails, projectItem.id, weights);
-        items.push(item);
-    }
-    return {
-        items,
-        totalItems: items.length,
-        project: {
-            id: project.id,
-            owner: project.owner,
-            number: project.number
-        }
-    };
-}
-/**
- * Helper function to create engagement item - avoids code duplication
- */
-async function createEngagementItem(issueDetails, projectItemId, weights) {
-    const score = calculateScore(issueDetails, weights);
-    const previousScore = await calculateHistoricalScore(issueDetails, weights);
-    const item = {
-        ...(projectItemId && { id: projectItemId }),
-        issue: {
-            id: issueDetails.id,
-            owner: issueDetails.owner,
-            repo: issueDetails.repo,
-            number: issueDetails.number
-        },
         engagement: {
-            score,
-            previousScore,
-            classification: score > previousScore ? EngagementClassification.Hot : undefined
+            weights: { ...DEFAULT_ENGAGEMENT_WEIGHTS }
+        },
+        labels: {
+            groups: {}
         }
     };
-    return item;
+}
+function parseConfigFile(fileContent) {
+    const parsedConfig = load(fileContent);
+    // We successfully loaded a configuration
+    if (!parsedConfig || typeof parsedConfig !== 'object') {
+        return undefined;
+    }
+    // Make sure the config is normalized
+    const normalized = {
+        ...parsedConfig,
+        engagement: {
+            ...parsedConfig.engagement,
+            weights: {
+                ...DEFAULT_ENGAGEMENT_WEIGHTS,
+                ...(parsedConfig.engagement?.weights ?? {})
+            }
+        },
+        labels: {
+            ...parsedConfig.labels,
+            groups: parsedConfig.labels?.groups ?? {}
+        }
+    };
+    return normalized;
 }
 
 /**
@@ -51227,12 +51259,9 @@ async function runWorkflow(triageModeOverride) {
     const DEFAULT_PROJECT_COLUMN_NAME = 'Engagement Score';
     let config;
     try {
-        // Get template and triage mode
-        const template = coreExports.getInput('template', { required: false });
-        const triageMode = triageModeOverride ||
-            (template === TriageMode.EngagementScore ? TriageMode.EngagementScore : TriageMode.ApplyLabels);
-        // Make sure templates are the ones we support
-        validateTemplate(template);
+        // Get mode input
+        const modeInput = coreExports.getInput('mode', { required: false }) || 'apply-labels';
+        const triageMode = triageModeOverride || validateMode(modeInput);
         // Get project and issue numbers
         const projectInput = coreExports.getInput('project');
         const issueInput = coreExports.getInput('issue');
@@ -51267,15 +51296,12 @@ async function runWorkflow(triageModeOverride) {
             commentFooter: coreExports.getInput('comment-footer'),
             dryRun: coreExports.getInput('dry-run')?.toLowerCase() === 'true',
             issueNumber: validateNumericInput(issueInput || issueContext.toString(), 'issue number'),
-            label: coreExports.getInput('label'),
-            labelPrefix: coreExports.getInput('label-prefix'),
             projectColumn: coreExports.getInput('project-column') || DEFAULT_PROJECT_COLUMN_NAME,
             projectNumber: validateNumericInput(projectInput, 'project number'),
             repoName: githubExports.context.repo.repo,
             repoOwner: githubExports.context.repo.owner,
             repository: `${githubExports.context.repo.owner}/${githubExports.context.repo.repo}`,
             tempDir: process.env.RUNNER_TEMP || require$$0.tmpdir(),
-            template: template,
             token: token
         };
         // Initial validation checks
@@ -51286,17 +51312,19 @@ async function runWorkflow(triageModeOverride) {
             coreExports.info('No GitHub token provided.');
         }
         if (!config.aiToken) {
-            coreExports.info('No specific AI token provided, using GitHub token as fallback.');
+            coreExports.info('No AI token provided.');
         }
-        let responseFile = '';
+        // Load full triage config file
+        const configFile = await loadConfigFile();
         // Run the appropriate workflow based on the triage mode
+        let responseFile = '';
         if (triageMode === TriageMode.EngagementScore) {
             coreExports.info('Running engagement scoring workflow');
-            responseFile = await runEngagementWorkflow(config);
+            responseFile = await runEngagementWorkflow(config, configFile.engagement);
         }
         else {
-            coreExports.info('Running apply labels workflow');
-            responseFile = await runTriageWorkflow(config);
+            coreExports.info('Running labelling workflow');
+            responseFile = await runTriageWorkflow(config, configFile.labels);
         }
         // Set the response file output
         coreExports.setOutput('response-file', responseFile);

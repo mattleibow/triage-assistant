@@ -12,7 +12,10 @@ import { InferenceConfig, SelectLabelsPromptConfig, TriageConfig } from '../conf
  * @param config The select labels configuration object.
  * @returns Promise that resolves with the path to the response file.
  */
-export async function selectLabels(config: SelectLabelsPromptConfig & InferenceConfig & TriageConfig): Promise<string> {
+export async function selectLabels(
+  template: string,
+  config: SelectLabelsPromptConfig & InferenceConfig & TriageConfig
+): Promise<string> {
   const guid = uuidv4()
   const promptDir = path.join(config.tempDir, 'triage-labels', 'prompts', guid)
   const responseDir = path.join(config.tempDir, 'triage-assistant', 'responses')
@@ -23,7 +26,7 @@ export async function selectLabels(config: SelectLabelsPromptConfig & InferenceC
 
   // Generate system prompt
   const systemPromptPath = path.join(promptDir, 'system-prompt.md')
-  await generatePromptFile(config.template, config, systemPromptPath)
+  await generatePromptFile(template, config, systemPromptPath)
 
   // Generate user prompt
   const userPromptPath = path.join(promptDir, 'user-prompt.md')

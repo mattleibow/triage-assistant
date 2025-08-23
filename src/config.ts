@@ -4,7 +4,6 @@ export interface EverythingConfig
   extends TriageConfig,
     InferenceConfig,
     PromptGenerationConfig,
-    SelectLabelsPromptConfig,
     SummaryPromptConfig,
     GitHubIssueConfig,
     ApplyReactionsConfig,
@@ -19,8 +18,10 @@ export interface TriageConfig {
 
 // engagement scoring configs
 
-export interface EngagementConfig extends GitHubIssueConfig {
+export interface EngagementConfig {
   token: string
+  repoOwner: string
+  repoName: string
   projectNumber?: number
   projectColumn: string
   applyScores: boolean
@@ -43,9 +44,8 @@ export interface PromptGenerationConfig {
 export interface SelectLabelsPromptConfig extends PromptGenerationConfig {
   issueNumber: number
   repository: string
-  template: string
-  label: string
-  labelPrefix: string
+  label?: string
+  labelPrefix?: string
 }
 
 export interface SummaryPromptConfig extends PromptGenerationConfig {
@@ -74,4 +74,34 @@ export interface ApplySummaryCommentConfig extends GitHubIssueConfig, SummaryPro
   token: string
   applyComment: boolean
   commentFooter?: string
+}
+
+// Workflow configs
+
+export interface LabelTriageWorkflowConfig {
+  token: string
+  repoOwner: string
+  repoName: string
+  repository: string
+  issueNumber: number
+  aiEndpoint: string
+  aiModel: string
+  aiToken: string
+  applyLabels: boolean
+  applyComment: boolean
+  commentFooter?: string
+  dryRun: boolean
+  tempDir: string
+}
+
+export interface EngagementWorkflowConfig {
+  token: string
+  repoOwner: string
+  repoName: string
+  issueNumber?: number
+  projectNumber?: number
+  projectColumn: string
+  applyScores: boolean
+  tempDir: string
+  dryRun: boolean
 }

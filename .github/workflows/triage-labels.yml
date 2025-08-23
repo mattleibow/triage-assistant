@@ -56,30 +56,6 @@ jobs:
           echo "number=$number" >> $env:GITHUB_OUTPUT
           echo "I will triage issue number #$number"
 
-      - name: Determine OVERLAP label for the issue
-        id: triage-overlap
-        uses: ./apply-labels/
-        with:
-          issue: ${{ steps.get-number.outputs.number }}
-          label-prefix: 'overlap-'
-          template: 'multi-label'
-
-      - name: Determine AREA label for the issue
-        id: triage-area
-        uses: ./apply-labels/
-        with:
-          issue: ${{ steps.get-number.outputs.number }}
-          label-prefix: 'area-'
-          template: 'single-label'
-
-      - name: Determine REGRESSION label for the issue
-        id: triage-regression
-        uses: ./apply-labels/
-        with:
-          issue: ${{ steps.get-number.outputs.number }}
-          label: 'regression'
-          template: 'regression'
-
       - name: Apply Labels and Comment
         uses: ./apply-labels/
         with:

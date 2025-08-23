@@ -5,37 +5,48 @@ import { selectLabels } from '../prompts/select-labels.js'
 import { mergeResponses } from './merge.js'
 import { commentOnIssue, applyLabelsToIssue, addEyes, removeEyes } from '../github/issues.js'
 import { generateSummary } from '../prompts/summary.js'
-import { EverythingConfig, ApplyLabelsConfig, ApplySummaryCommentConfig, TriageConfig } from '../config.js'
+import { ConfigFileLabels } from '../config-file.js'
+import { ApplyLabelsConfig, ApplySummaryCommentConfig, LabelTriageWorkflowConfig, TriageConfig } from '../config.js'
 
 type Octokit = ReturnType<typeof github.getOctokit>
 
 /**
  * Run the normal triage workflow
  */
-export async function runTriageWorkflow(config: EverythingConfig): Promise<string> {
+export async function runTriageWorkflow(
+  config: LabelTriageWorkflowConfig,
+  configFile: ConfigFileLabels
+): Promise<string> {
   const octokit = github.getOctokit(config.token)
 
-  const shouldAddLabels = config.template ? true : false
+  const shouldAddLabels = Object.keys(configFile.groups).length > 0
   const shouldAddSummary = config.applyLabels || config.applyComment
   const shouldAddReactions = shouldAddLabels || shouldAddSummary
   const shouldRemoveReactions = shouldAddSummary
 
   try {
-    let responseFile = ''
-
     // Step 1: Add eyes reaction at the start
     if (shouldAddReactions) {
       await addEyes(octokit, config)
     }
 
-    // Step 2: Select labels if template is provided
+    // Step 2: Select labels
     if (shouldAddLabels) {
-      responseFile = await selectLabels(config)
+      for (const [groupName, groupConfig] of Object.entries(configFile.groups)) {
+        core.info(`Selecting labels for group ${groupName} with configuration: ${JSON.stringify(groupConfig)}`)
+        await selectLabels(groupConfig.template, {
+          ...config,
+          labelPrefix: groupConfig.labelPrefix,
+          label: groupConfig.label
+        })
+      }
     }
+
+    let responseFile = ''
 
     // Step 3: Apply labels and comment if requested
     if (shouldAddSummary) {
-      await mergeAndApplyTriage(octokit, config)
+      responseFile = await mergeAndApplyTriage(octokit, config)
     }
 
     return responseFile
@@ -57,7 +68,7 @@ export async function runTriageWorkflow(config: EverythingConfig): Promise<strin
 export async function mergeAndApplyTriage(
   octokit: Octokit,
   config: ApplyLabelsConfig & ApplySummaryCommentConfig & TriageConfig
-) {
+): Promise<string> {
   // Merge response JSON files
   const mergedResponseFile = path.join(config.tempDir, 'triage-assistant', 'responses.json')
   const responsesDir = path.join(config.tempDir, 'triage-assistant', 'responses')
@@ -81,4 +92,6 @@ export async function mergeAndApplyTriage(
     // Apply labels to the issue
     await applyLabelsToIssue(octokit, labels, config)
   }
+
+  return mergedResponseFile
 }
