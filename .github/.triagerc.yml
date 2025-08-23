@@ -34,10 +34,10 @@ engagement:
 labels:
   groups:
     overlap:
-      label-prefix: 'overlap-'
+      labelPrefix: 'overlap-'
       template: 'multi-label'
     area:
-      label-prefix: 'area-'
+      labelPrefix: 'area-'
       template: 'single-label'
     regression:
       label: 'regression'
