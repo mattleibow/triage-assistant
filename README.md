@@ -241,48 +241,6 @@ engagement:
     linkedPullRequests: 2 # Weight for linked pull requests
 ```
 
-## Engagement Scoring System
-
-The engagement scoring system provides a data-driven approach to prioritizing issues based on community activity and
-involvement. It calculates numerical scores using a configurable weighted algorithm that considers multiple factors.
-
-### Engagement Scoring Configuration
-
-The engagement scoring weights can be customized using a YAML configuration file. The system looks for configuration in
-the following order:
-
-1. `.triagerc.yml` in the repository root
-2. `.github/.triagerc.yml` in the .github directory
-
-If no configuration file is found, the system uses sensible defaults.
-
-#### Engagement Scoring Example
-
-Create a `.triagerc.yml` file in your repository root:
-
-```yaml
-# Triage Assistant Configuration
-engagement:
-  weights:
-    # Weight for number of comments (default: 3)
-    comments: 3
-
-    # Weight for reactions (👍, ❤️, 🎉, etc.) (default: 1)
-    reactions: 1
-
-    # Weight for number of unique contributors (default: 2)
-    contributors: 2
-
-    # Weight for recency of last activity (default: 1)
-    lastActivity: 1
-
-    # Weight for issue age factor (default: 1)
-    issueAge: 1
-
-    # Weight for linked pull requests (default: 2)
-    linkedPullRequests: 2
-```
-
 #### Custom Weight Examples
 
 **Emphasize highly discussed issues:**
