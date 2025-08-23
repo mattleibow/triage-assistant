@@ -6,16 +6,20 @@
 [![CodeQL](https://github.com/mattleibow/triage-assistant/actions/workflows/check-codeql-analysis.yml/badge.svg)](https://github.com/mattleibow/triage-assistant/actions/workflows/check-codeql-analysis.yml)
 [![Coverage](./badges/coverage.svg)](./badges/coverage.svg)
 
-An AI-powered GitHub Action that provides sophisticated issue and pull request triage capabilities with explicit mode-based operation. Features include AI-powered label application using large language models and comprehensive engagement scoring for project prioritization.
+An AI-powered GitHub Action that provides sophisticated issue and pull request triage capabilities with explicit
+mode-based operation. Features include AI-powered label application using large language models and comprehensive
+engagement scoring for project prioritization.
 
 ## Features
 
 - **Explicit Mode Selection**: Choose between `label-triage` and `engagement-score` modes for clear operation intent
-- **AI-Powered Label Triage**: Automatically analyze issue content and apply appropriate labels using advanced language models
+- **AI-Powered Label Triage**: Automatically analyze issue content and apply appropriate labels using advanced language
+  models
 - **Engagement Scoring**: Calculate numerical engagement scores based on community activity and interaction
 - **Batch Configuration**: Label triage processes multiple label groups from `.triagerc.yml` configuration
 - **GitHub Projects Integration**: Automatically update project fields with calculated engagement scores
-- **Sub-Action Architecture**: Clean, focused sub-actions for specific functionality (`apply-labels`, `engagement-score`)
+- **Sub-Action Architecture**: Clean, focused sub-actions for specific functionality (`apply-labels`,
+  `engagement-score`)
 - **Flexible Configuration**: Support for custom AI models, endpoints, and extensive configuration options
 - **Dry-Run Support**: Test configurations safely without making actual changes
 
@@ -51,11 +55,11 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v5
-      
+
       - name: Apply labels with AI triage
         uses: mattleibow/triage-assistant@v1
         with:
-          mode: 'label-triage'  # default, can be omitted
+          mode: 'label-triage' # default, can be omitted
           issue: ${{ github.event.number }}
           apply-labels: true
           apply-comment: true
@@ -70,7 +74,7 @@ name: 'Calculate Engagement Scores'
 
 on:
   schedule:
-    - cron: '0 9 * * 1'  # Weekly on Mondays
+    - cron: '0 9 * * 1' # Weekly on Mondays
   workflow_dispatch:
 
 permissions:
@@ -85,7 +89,7 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v5
-        
+
       - name: Calculate engagement scores
         uses: mattleibow/triage-assistant@v1
         with:
@@ -97,7 +101,8 @@ jobs:
 
 ## Sub-Actions
 
-The triage assistant provides **sub-actions** for focused functionality, similar to GitHub's cache action. Each sub-action has a clean interface with only the inputs relevant to its specific purpose.
+The triage assistant provides **sub-actions** for focused functionality, similar to GitHub's cache action. Each
+sub-action has a clean interface with only the inputs relevant to its specific purpose.
 
 ### Available Sub-Actions
 
@@ -132,7 +137,7 @@ Focuses on calculating and applying engagement scores to project issues.
 ### Sub-Action Benefits
 
 - **Cleaner configuration**: Only the inputs relevant to each specific function
-- **Better discoverability**: Clear separation of concerns  
+- **Better discoverability**: Clear separation of concerns
 - **Easier maintenance**: Focused documentation and examples
 - **Explicit operation**: No ambiguity about what the action will do
 
@@ -140,21 +145,21 @@ Focuses on calculating and applying engagement scores to project issues.
 
 ### General Inputs
 
-| Name             | Description                                      | Default            | Required |
-| ---------------- | ------------------------------------------------ | ------------------ | -------- |
-| `mode`           | Operation mode: `label-triage`, `engagement-score` | `label-triage`     | No       |
-| `issue`          | The issue number to triage                       | Current issue/PR number | No       |
-| `token`          | GitHub token for API access                      | `''`               | No       |
-| `fallback-token` | Fallback GitHub token for API access             | `${{ github.token }}` | No       |
-| `dry-run`        | Run in dry-run mode without making changes       | `false`            | No       |
+| Name             | Description                                        | Default                 | Required |
+| ---------------- | -------------------------------------------------- | ----------------------- | -------- |
+| `mode`           | Operation mode: `label-triage`, `engagement-score` | `label-triage`          | No       |
+| `issue`          | The issue number to triage                         | Current issue/PR number | No       |
+| `token`          | GitHub token for API access                        | `''`                    | No       |
+| `fallback-token` | Fallback GitHub token for API access               | `${{ github.token }}`   | No       |
+| `dry-run`        | Run in dry-run mode without making changes         | `false`                 | No       |
 
 ### Label Triage Mode Inputs
 
-| Name             | Description                          | Default           | Required |
-| ---------------- | ------------------------------------ | ----------------- | -------- |
-| `apply-labels`   | Whether to apply labels to the issue | `false`           | No       |
-| `apply-comment`  | Whether to add a comment with AI analysis | `false`     | No       |
-| `comment-footer` | Footer text for AI comments          | Default disclaimer | No       |
+| Name             | Description                               | Default            | Required |
+| ---------------- | ----------------------------------------- | ------------------ | -------- |
+| `apply-labels`   | Whether to apply labels to the issue      | `false`            | No       |
+| `apply-comment`  | Whether to add a comment with AI analysis | `false`            | No       |
+| `comment-footer` | Footer text for AI comments               | Default disclaimer | No       |
 
 ### Engagement Scoring Mode Inputs
 
@@ -166,11 +171,11 @@ Focuses on calculating and applying engagement scores to project issues.
 
 ### AI Configuration Inputs
 
-| Name          | Description                                | Default                | Required |
-| ------------- | ------------------------------------------ | ---------------------- | -------- |
-| `ai-token`    | Custom AI token for inference              | Uses GitHub token      | No       |
-| `ai-endpoint` | Custom AI endpoint URL                     | GitHub Models endpoint | No       |
-| `ai-model`    | AI model to use for inference              | `openai/gpt-4o`        | No       |
+| Name          | Description                   | Default                | Required |
+| ------------- | ----------------------------- | ---------------------- | -------- |
+| `ai-token`    | Custom AI token for inference | Uses GitHub token      | No       |
+| `ai-endpoint` | Custom AI endpoint URL        | GitHub Models endpoint | No       |
+| `ai-model`    | AI model to use for inference | `openai/gpt-4o`        | No       |
 
 ## Outputs
 
@@ -182,7 +187,8 @@ Focuses on calculating and applying engagement scores to project issues.
 
 ### Batch Label Configuration
 
-The label triage mode uses a `.triagerc.yml` configuration file to define multiple label groups that are processed automatically. The system looks for configuration in this order:
+The label triage mode uses a `.triagerc.yml` configuration file to define multiple label groups that are processed
+automatically. The system looks for configuration in this order:
 
 1. `.triagerc.yml` in the repository root
 2. `.github/.triagerc.yml` in the .github directory
@@ -199,17 +205,17 @@ labels:
     overlap:
       labelPrefix: 'overlap-'
       template: 'multi-label'
-    
+
     # Single-label group - applies one best label
     area:
       labelPrefix: 'area-'
       template: 'single-label'
-    
+
     # Regression detection - checks for specific condition
     regression:
       label: 'regression'
       template: 'regression'
-    
+
     # Missing info detection
     info:
       label: 'needs-info'
@@ -219,7 +225,7 @@ labels:
 #### Available Templates
 
 - **`multi-label`**: Can select multiple relevant labels from a prefix group
-- **`single-label`**: Selects the best single label from a prefix group  
+- **`single-label`**: Selects the best single label from a prefix group
 - **`regression`**: Specifically checks if an issue is a regression
 - **`missing-info`**: Identifies issues that need more information
 
@@ -231,11 +237,11 @@ Customize engagement scoring weights in the same `.triagerc.yml` file:
 # Engagement scoring configuration
 engagement:
   weights:
-    comments: 3          # Weight for number of comments
-    reactions: 1         # Weight for reactions (👍, ❤️, 🎉, etc.)
-    contributors: 2      # Weight for number of unique contributors
-    lastActivity: 1      # Weight for recency of last activity
-    issueAge: 1         # Weight for issue age factor
+    comments: 3 # Weight for number of comments
+    reactions: 1 # Weight for reactions (👍, ❤️, 🎉, etc.)
+    contributors: 2 # Weight for number of unique contributors
+    lastActivity: 1 # Weight for recency of last activity
+    issueAge: 1 # Weight for issue age factor
     linkedPullRequests: 2 # Weight for linked pull requests
 ```
 
@@ -505,7 +511,7 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v5
-        
+
       - name: Calculate engagement scores for project
         uses: mattleibow/triage-assistant@v1
         with:
@@ -548,7 +554,7 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v5
-        
+
       # Step 1: Apply AI-powered labels using batch configuration
       - name: Apply labels from configuration
         uses: mattleibow/triage-assistant@v1
@@ -571,11 +577,15 @@ jobs:
 
 ## Customization
 
-The action automatically discovers available labels in your repository and uses them for triage based on your `.triagerc.yml` configuration. Make sure your repository has appropriate labels with descriptive names and descriptions for best results.
+The action automatically discovers available labels in your repository and uses them for triage based on your
+`.triagerc.yml` configuration. Make sure your repository has appropriate labels with descriptive names and descriptions
+for best results.
 
-For label groups with prefixes (e.g., `area-api`, `area-docs`, `platform/android`), configure them in your `.triagerc.yml` file using the `labelPrefix` property to focus the AI on specific label categories.
+For label groups with prefixes (e.g., `area-api`, `area-docs`, `platform/android`), configure them in your
+`.triagerc.yml` file using the `labelPrefix` property to focus the AI on specific label categories.
 
-The batch configuration approach eliminates the need for multiple workflow steps - all label groups are processed automatically in a single action invocation.
+The batch configuration approach eliminates the need for multiple workflow steps - all label groups are processed
+automatically in a single action invocation.
 
 ## Troubleshooting
 
