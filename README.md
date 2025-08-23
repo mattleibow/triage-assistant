@@ -114,8 +114,6 @@ Focuses on AI-powered label application and issue commenting using batch configu
 - name: Apply labels to issue
   uses: mattleibow/triage-assistant/apply-labels@v1
   with:
-    token: ${{ secrets.GITHUB_TOKEN }}
-    ai-token: ${{ secrets.AI_TOKEN }}
     issue: ${{ github.event.number }}
     apply-labels: true
     apply-comment: true
@@ -185,7 +183,7 @@ Focuses on calculating and applying engagement scores to project issues.
 
 ## Configuration
 
-### Batch Label Configuration
+### Labelling Configuration
 
 The label triage mode uses a `.triagerc.yml` configuration file to define multiple label groups that are processed
 automatically. The system looks for configuration in this order:
@@ -407,18 +405,6 @@ scores. This enables:
 - Filtering and sorting issues by engagement level
 - Historical tracking of issue engagement over time
 
-### Required Permissions
-
-For engagement scoring, ensure your workflow has these permissions:
-
-```yaml
-permissions:
-  contents: read
-  issues: read
-  pull-requests: read
-  repository-projects: write # For updating project fields
-```
-
 ## AI Model Configuration
 
 The action uses AI models from GitHub Models by default, but supports custom endpoints and models. You can configure the
@@ -428,9 +414,8 @@ AI model using inputs or environment variables:
 
 ```yaml
 - name: Triage with custom AI model
-  uses: mattleibow/triage-assistant@v1
+  uses: mattleibow/triage-assistant/*@v1
   with:
-    mode: label-triage
     ai-model: 'openai/gpt-4o-mini'
     ai-endpoint: 'https://models.github.ai/inference'
     ai-token: ${{ secrets.CUSTOM_AI_TOKEN }}
