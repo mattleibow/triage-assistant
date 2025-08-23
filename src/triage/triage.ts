@@ -6,28 +6,9 @@ import { mergeResponses } from './merge.js'
 import { commentOnIssue, applyLabelsToIssue, addEyes, removeEyes } from '../github/issues.js'
 import { generateSummary } from '../prompts/summary.js'
 import { ConfigFileLabels } from '../config-file.js'
-import { ApplyLabelsConfig, ApplySummaryCommentConfig, TriageConfig } from '../config.js'
+import { ApplyLabelsConfig, ApplySummaryCommentConfig, LabelTriageWorkflowConfig, TriageConfig } from '../config.js'
 
 type Octokit = ReturnType<typeof github.getOctokit>
-
-/**
- * Configuration interface specifically for label triage workflow
- */
-export interface LabelTriageWorkflowConfig {
-  token: string
-  repoOwner: string
-  repoName: string
-  repository: string
-  issueNumber: number
-  aiEndpoint: string
-  aiModel: string
-  aiToken: string
-  applyLabels: boolean
-  applyComment: boolean
-  commentFooter?: string
-  dryRun: boolean
-  tempDir: string
-}
 
 /**
  * Run the normal triage workflow
@@ -52,7 +33,7 @@ export async function runTriageWorkflow(
     // Step 2: Select labels
     if (shouldAddLabels) {
       for (const [groupName, groupConfig] of Object.entries(configFile.groups)) {
-        core.info(`Selecting labels for group: ${groupName}`)
+        core.info(`Selecting labels for group ${groupName} with configuration: ${JSON.stringify(groupConfig)}`)
         await selectLabels(groupConfig.template, {
           ...config,
           labelPrefix: groupConfig.labelPrefix,

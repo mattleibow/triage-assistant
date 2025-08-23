@@ -75,3 +75,33 @@ export interface ApplySummaryCommentConfig extends GitHubIssueConfig, SummaryPro
   applyComment: boolean
   commentFooter?: string
 }
+
+// Workflow configs
+
+export interface LabelTriageWorkflowConfig {
+  token: string
+  repoOwner: string
+  repoName: string
+  repository: string
+  issueNumber: number
+  aiEndpoint: string
+  aiModel: string
+  aiToken: string
+  applyLabels: boolean
+  applyComment: boolean
+  commentFooter?: string
+  dryRun: boolean
+  tempDir: string
+}
+
+export interface EngagementWorkflowConfig {
+  token: string
+  repoOwner: string
+  repoName: string
+  issueNumber?: number
+  projectNumber?: number
+  projectColumn: string
+  applyScores: boolean
+  tempDir: string
+  dryRun: boolean
+}

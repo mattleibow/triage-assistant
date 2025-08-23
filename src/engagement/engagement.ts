@@ -8,21 +8,7 @@ import { getIssueDetails } from '../github/issues.js'
 import { getProjectDetails, updateProjectWithScores } from '../github/projects.js'
 import { calculateScore, calculateHistoricalScore } from '../github/issue-details.js'
 import { IssueDetails } from '../github/types.js'
-
-/**
- * Configuration interface specifically for engagement scoring workflow
- */
-export interface EngagementWorkflowConfig {
-  token: string
-  repoOwner: string
-  repoName: string
-  issueNumber?: number
-  projectNumber?: number
-  projectColumn: string
-  applyScores: boolean
-  tempDir: string
-  dryRun: boolean
-}
+import { EngagementWorkflowConfig } from '../config.js'
 
 /**
  * Run the complete engagement scoring workflow

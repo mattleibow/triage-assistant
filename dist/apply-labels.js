@@ -39488,7 +39488,7 @@ async function runTriageWorkflow(config, configFile) {
         // Step 2: Select labels
         if (shouldAddLabels) {
             for (const [groupName, groupConfig] of Object.entries(configFile.groups)) {
-                coreExports.info(`Selecting labels for group: ${groupName}`);
+                coreExports.info(`Selecting labels for group ${groupName} with configuration: ${JSON.stringify(groupConfig)}`);
                 await selectLabels(groupConfig.template, {
                     ...config,
                     labelPrefix: groupConfig.labelPrefix,
