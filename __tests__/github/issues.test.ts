@@ -526,7 +526,7 @@ ${mockFooter}
         headers: {},
         status: 200,
         url: 'https://api.github.com/search/issues'
-      } as any
+      } as unknown as Awaited<ReturnType<typeof mockOctokit.rest.search.issuesAndPullRequests>>
 
       mockOctokit.rest.search.issuesAndPullRequests.mockResolvedValue(mockSearchResponse)
 
@@ -561,7 +561,7 @@ ${mockFooter}
         headers: {},
         status: 200,
         url: 'https://api.github.com/search/issues'
-      } as any
+      } as unknown as Awaited<ReturnType<typeof mockOctokit.rest.search.issuesAndPullRequests>>
 
       mockOctokit.rest.search.issuesAndPullRequests.mockResolvedValue(mockSearchResponse)
 
@@ -601,7 +601,7 @@ ${mockFooter}
         headers: {},
         status: 200,
         url: 'https://api.github.com/search/issues'
-      } as any
+      } as unknown as Awaited<ReturnType<typeof mockOctokit.rest.search.issuesAndPullRequests>>
 
       mockOctokit.rest.search.issuesAndPullRequests.mockResolvedValue(mockSearchResponse)
 
@@ -624,7 +624,7 @@ ${mockFooter}
         headers: {},
         status: 200,
         url: 'https://api.github.com/search/issues'
-      } as any
+      } as unknown as Awaited<ReturnType<typeof mockOctokit.rest.search.issuesAndPullRequests>>
 
       mockOctokit.rest.search.issuesAndPullRequests.mockResolvedValue(mockSearchResponse)
 

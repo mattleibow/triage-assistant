@@ -580,7 +580,7 @@ describe('Main Multi-Mode Functionality', () => {
   describe('Issue Query Validation', () => {
     it('should run triage workflow with issue-query when provided', async () => {
       // Clear any existing issue context
-      github.mockContext.issue = undefined as any
+      github.mockContext.issue = undefined as unknown as typeof github.mockContext.issue
 
       core.getInput.mockImplementation((name: string) => {
         switch (name) {
@@ -648,7 +648,7 @@ describe('Main Multi-Mode Functionality', () => {
       })
 
       // Mock github context to have no issue number
-      github.mockContext.issue = undefined as any
+      github.mockContext.issue = undefined as unknown as typeof github.mockContext.issue
 
       await run()
 
