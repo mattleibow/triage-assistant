@@ -25,16 +25,25 @@ export async function runTriageWorkflow(
   if (config.issueQuery) {
     return await runBulkTriageWorkflow(octokit, config, configFile)
   } else {
-    return await runSingleIssueTriageWorkflow(octokit, config, configFile)
+    // Validate that we have an issue number for single-issue workflow
+    if (!config.issueNumber || config.issueNumber <= 0) {
+      throw new Error('Issue number is required when not using issue query')
+    }
+    return await runSingleIssueTriageWorkflow(octokit, config as SingleIssueWorkflowConfig, configFile)
   }
 }
+
+/**
+ * Helper type for single issue workflow where issueNumber is guaranteed to exist
+ */
+type SingleIssueWorkflowConfig = LabelTriageWorkflowConfig & { issueNumber: number }
 
 /**
  * Run triage workflow for a single issue
  */
 async function runSingleIssueTriageWorkflow(
   octokit: Octokit,
-  config: LabelTriageWorkflowConfig,
+  config: SingleIssueWorkflowConfig,
   configFile: ConfigFileLabels
 ): Promise<string> {
   const shouldAddLabels = Object.keys(configFile.groups).length > 0

@@ -1,8 +1,7 @@
 // global configs
 
 export interface EverythingConfig extends LabelTriageWorkflowConfig, EngagementWorkflowConfig {
-  // Override to make issueNumber required for unified config
-  issueNumber: number
+  // Union of both workflow configs - issueNumber is optional as it depends on the workflow mode
 }
 
 export interface TriageConfig {
@@ -77,7 +76,7 @@ export interface LabelTriageWorkflowConfig {
   repoOwner: string
   repoName: string
   repository: string
-  issueNumber: number
+  issueNumber?: number
   issueQuery?: string
   aiEndpoint: string
   aiModel: string

@@ -1,7 +1,13 @@
 import * as core from '@actions/core'
 import * as github from '@actions/github'
 import * as os from 'os'
-import { TriageMode, validateNumericInput, validateRepositoryId, validateMode } from './utils.js'
+import {
+  TriageMode,
+  validateNumericInput,
+  validateOptionalNumericInput,
+  validateRepositoryId,
+  validateMode
+} from './utils.js'
 import { runTriageWorkflow } from './triage/triage.js'
 import { runEngagementWorkflow } from './engagement/engagement.js'
 import { EverythingConfig } from './config.js'
@@ -63,7 +69,7 @@ async function runWorkflow(triageModeOverride?: TriageMode): Promise<void> {
       applyScores: core.getInput('apply-scores')?.toLowerCase() === 'true',
       commentFooter: core.getInput('comment-footer'),
       dryRun: core.getInput('dry-run')?.toLowerCase() === 'true',
-      issueNumber: validateNumericInput(issueInput || issueContext.toString(), 'issue number'),
+      issueNumber: validateOptionalNumericInput(issueInput || issueContext.toString(), 'issue number'),
       issueQuery: issueQueryInput || undefined,
       projectColumn: core.getInput('project-column') || DEFAULT_PROJECT_COLUMN_NAME,
       projectNumber: validateNumericInput(projectInput, 'project number'),

@@ -102,6 +102,22 @@ export function validateNumericInput(input: string, fieldName: string): number {
 }
 
 /**
+ * Validates and sanitizes optional numeric input
+ * @param input Raw string input
+ * @param fieldName Field name for error messages
+ * @returns Validated number or undefined if invalid or empty
+ */
+export function validateOptionalNumericInput(input: string, fieldName: string): number | undefined {
+  if (!input.trim()) return undefined
+  const num = parseInt(input, 10)
+  if (isNaN(num) || num < 0) {
+    core.warning(`Invalid ${fieldName}: ${input}. Ignoring invalid value.`)
+    return undefined
+  }
+  return num
+}
+
+/**
  * Validates repository identifier format
  * @param owner Repository owner
  * @param repo Repository name

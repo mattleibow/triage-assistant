@@ -31341,6 +31341,22 @@ function validateNumericInput(input, fieldName) {
     return num;
 }
 /**
+ * Validates and sanitizes optional numeric input
+ * @param input Raw string input
+ * @param fieldName Field name for error messages
+ * @returns Validated number or undefined if invalid or empty
+ */
+function validateOptionalNumericInput(input, fieldName) {
+    if (!input.trim())
+        return undefined;
+    const num = parseInt(input, 10);
+    if (isNaN(num) || num < 0) {
+        coreExports.warning(`Invalid ${fieldName}: ${input}. Ignoring invalid value.`);
+        return undefined;
+    }
+    return num;
+}
+/**
  * Validates repository identifier format
  * @param owner Repository owner
  * @param repo Repository name
@@ -39521,6 +39537,10 @@ async function runTriageWorkflow(config, configFile) {
         return await runBulkTriageWorkflow(octokit, config, configFile);
     }
     else {
+        // Validate that we have an issue number for single-issue workflow
+        if (!config.issueNumber || config.issueNumber <= 0) {
+            throw new Error('Issue number is required when not using issue query');
+        }
         return await runSingleIssueTriageWorkflow(octokit, config, configFile);
     }
 }
@@ -51405,7 +51425,7 @@ async function runWorkflow(triageModeOverride) {
             applyScores: coreExports.getInput('apply-scores')?.toLowerCase() === 'true',
             commentFooter: coreExports.getInput('comment-footer'),
             dryRun: coreExports.getInput('dry-run')?.toLowerCase() === 'true',
-            issueNumber: validateNumericInput(issueInput || issueContext.toString(), 'issue number'),
+            issueNumber: validateOptionalNumericInput(issueInput || issueContext.toString(), 'issue number'),
             issueQuery: issueQueryInput || undefined,
             projectColumn: coreExports.getInput('project-column') || DEFAULT_PROJECT_COLUMN_NAME,
             projectNumber: validateNumericInput(projectInput, 'project number'),
