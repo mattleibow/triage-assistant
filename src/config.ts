@@ -1,15 +1,9 @@
 // global configs
 
-export interface EverythingConfig
-  extends TriageConfig,
-    InferenceConfig,
-    PromptGenerationConfig,
-    SummaryPromptConfig,
-    GitHubIssueConfig,
-    ApplyReactionsConfig,
-    ApplyLabelsConfig,
-    ApplySummaryCommentConfig,
-    EngagementConfig {}
+export interface EverythingConfig extends LabelTriageWorkflowConfig, EngagementWorkflowConfig {
+  // Override to make issueNumber required for unified config
+  issueNumber: number
+}
 
 export interface TriageConfig {
   dryRun: boolean
@@ -59,7 +53,6 @@ export interface GitHubIssueConfig {
   repoOwner: string
   repoName: string
   issueNumber: number
-  issueQuery?: string
 }
 
 export interface ApplyReactionsConfig extends GitHubIssueConfig {
