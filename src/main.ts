@@ -32,7 +32,7 @@ async function runWorkflow(triageModeOverride?: TriageMode): Promise<void> {
     const projectInput = core.getInput('project')
     const issueInput = core.getInput('issue')
     const issueQueryInput = core.getInput('issue-query')
-    const issueContext = github.context.issue?.number || 0
+    const issueContext: number | undefined = github.context.issue?.number
 
     // Make sure they are correct for the mode
     if (triageMode === TriageMode.EngagementScore) {
@@ -69,7 +69,7 @@ async function runWorkflow(triageModeOverride?: TriageMode): Promise<void> {
       applyScores: core.getInput('apply-scores')?.toLowerCase() === 'true',
       commentFooter: core.getInput('comment-footer'),
       dryRun: core.getInput('dry-run')?.toLowerCase() === 'true',
-      issueNumber: validateOptionalNumericInput(issueInput || issueContext.toString(), 'issue number'),
+      issueNumber: validateOptionalNumericInput(issueInput || issueContext?.toString(), 'issue number'),
       issueQuery: issueQueryInput || undefined,
       projectColumn: core.getInput('project-column') || DEFAULT_PROJECT_COLUMN_NAME,
       projectNumber: validateNumericInput(projectInput, 'project number'),

@@ -31331,7 +31331,7 @@ function sanitizeMarkdownContent(content) {
  * @returns Validated number or 0 if invalid
  */
 function validateNumericInput(input, fieldName) {
-    if (!input.trim())
+    if (!input?.trim())
         return 0;
     const num = parseInt(input, 10);
     if (isNaN(num) || num < 0) {
@@ -31347,7 +31347,7 @@ function validateNumericInput(input, fieldName) {
  * @returns Validated number or undefined if invalid or empty
  */
 function validateOptionalNumericInput(input, fieldName) {
-    if (!input.trim())
+    if (!input?.trim())
         return undefined;
     const num = parseInt(input, 10);
     if (isNaN(num) || num < 0) {
@@ -31393,60 +31393,57 @@ function substituteTemplateVariables(line, replacements) {
     return line;
 }
 
-const byteToHex = [];
-for (let i = 0; i < 256; ++i) {
-    byteToHex.push((i + 0x100).toString(16).slice(1));
+/**
+ * Convert array of 16 byte values to UUID string format of the form:
+ * XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX
+ */
+var byteToHex = [];
+for (var i$1 = 0; i$1 < 256; ++i$1) {
+  byteToHex.push((i$1 + 0x100).toString(16).slice(1));
 }
 function unsafeStringify(arr, offset = 0) {
-    return (byteToHex[arr[offset + 0]] +
-        byteToHex[arr[offset + 1]] +
-        byteToHex[arr[offset + 2]] +
-        byteToHex[arr[offset + 3]] +
-        '-' +
-        byteToHex[arr[offset + 4]] +
-        byteToHex[arr[offset + 5]] +
-        '-' +
-        byteToHex[arr[offset + 6]] +
-        byteToHex[arr[offset + 7]] +
-        '-' +
-        byteToHex[arr[offset + 8]] +
-        byteToHex[arr[offset + 9]] +
-        '-' +
-        byteToHex[arr[offset + 10]] +
-        byteToHex[arr[offset + 11]] +
-        byteToHex[arr[offset + 12]] +
-        byteToHex[arr[offset + 13]] +
-        byteToHex[arr[offset + 14]] +
-        byteToHex[arr[offset + 15]]).toLowerCase();
+  // Note: Be careful editing this code!  It's been tuned for performance
+  // and works in ways you may not expect. See https://github.com/uuidjs/uuid/pull/434
+  //
+  // Note to future-self: No, you can't remove the `toLowerCase()` call.
+  // REF: https://github.com/uuidjs/uuid/pull/677#issuecomment-1757351351
+  return (byteToHex[arr[offset + 0]] + byteToHex[arr[offset + 1]] + byteToHex[arr[offset + 2]] + byteToHex[arr[offset + 3]] + '-' + byteToHex[arr[offset + 4]] + byteToHex[arr[offset + 5]] + '-' + byteToHex[arr[offset + 6]] + byteToHex[arr[offset + 7]] + '-' + byteToHex[arr[offset + 8]] + byteToHex[arr[offset + 9]] + '-' + byteToHex[arr[offset + 10]] + byteToHex[arr[offset + 11]] + byteToHex[arr[offset + 12]] + byteToHex[arr[offset + 13]] + byteToHex[arr[offset + 14]] + byteToHex[arr[offset + 15]]).toLowerCase();
 }
 
-let getRandomValues;
-const rnds8 = new Uint8Array(16);
+// Unique ID creation requires a high quality random # generator. In the browser we therefore
+// require the crypto API and do not support built-in fallback to lower quality random number
+// generators (like Math.random()).
+
+var getRandomValues;
+var rnds8 = new Uint8Array(16);
 function rng() {
+  // lazy load so that environments that need to polyfill have a chance to do so
+  if (!getRandomValues) {
+    // getRandomValues needs to be invoked in a context where "this" is a Crypto implementation.
+    getRandomValues = typeof crypto !== 'undefined' && crypto.getRandomValues && crypto.getRandomValues.bind(crypto);
     if (!getRandomValues) {
-        if (typeof crypto === 'undefined' || !crypto.getRandomValues) {
-            throw new Error('crypto.getRandomValues() not supported. See https://github.com/uuidjs/uuid#getrandomvalues-not-supported');
-        }
-        getRandomValues = crypto.getRandomValues.bind(crypto);
+      throw new Error('crypto.getRandomValues() not supported. See https://github.com/uuidjs/uuid#getrandomvalues-not-supported');
     }
-    return getRandomValues(rnds8);
+  }
+  return getRandomValues(rnds8);
 }
 
-const randomUUID$1 = typeof crypto !== 'undefined' && crypto.randomUUID && crypto.randomUUID.bind(crypto);
-var native = { randomUUID: randomUUID$1 };
+var randomUUID$1 = typeof crypto !== 'undefined' && crypto.randomUUID && crypto.randomUUID.bind(crypto);
+var native = {
+  randomUUID: randomUUID$1
+};
 
 function v4(options, buf, offset) {
-    if (native.randomUUID && true && !options) {
-        return native.randomUUID();
-    }
-    options = options || {};
-    const rnds = options.random ?? options.rng?.() ?? rng();
-    if (rnds.length < 16) {
-        throw new Error('Random bytes length must be >= 16');
-    }
-    rnds[6] = (rnds[6] & 0x0f) | 0x40;
-    rnds[8] = (rnds[8] & 0x3f) | 0x80;
-    return unsafeStringify(rnds);
+  if (native.randomUUID && true && !options) {
+    return native.randomUUID();
+  }
+  options = options || {};
+  var rnds = options.random || (options.rng || rng)();
+
+  // Per 4.4, set bits for version and `clock_seq_hi_and_reserved`
+  rnds[6] = rnds[6] & 0x0f | 0x40;
+  rnds[8] = rnds[8] & 0x3f | 0x80;
+  return unsafeStringify(rnds);
 }
 
 const systemPromptSingleLabel = `
@@ -39345,19 +39342,19 @@ function addComments(comments, allComments) {
     return comments.pageInfo.endCursor;
 }
 /**
- * Search for issues using GitHub's search API
+ * Search for issues and pull requests using GitHub's search API
  *
  * @param octokit The GitHub API client
- * @param query The search query (e.g., "is:issue state:open created:>@today-30d")
+ * @param query The search query (e.g., "is:issue state:open created:>@today-30d", "is:pr state:open")
  * @param repoOwner Repository owner to scope the search
  * @param repoName Repository name to scope the search
- * @returns Array of issue numbers found by the search
+ * @returns Array of issues and pull requests found by the search
  */
 async function searchIssues(octokit, query, repoOwner, repoName) {
     try {
         // Add repository scope to the query if not already present
         const scopedQuery = query.includes('repo:') ? query : `${query} repo:${repoOwner}/${repoName}`;
-        coreExports.info(`Searching for issues with query: ${scopedQuery}`);
+        coreExports.info(`Searching for issues and pull requests with query: ${scopedQuery}`);
         const searchResult = await octokit.rest.search.issuesAndPullRequests({
             q: scopedQuery,
             sort: 'created',
@@ -39365,10 +39362,8 @@ async function searchIssues(octokit, query, repoOwner, repoName) {
             per_page: 100,
             advanced_search: true
         });
-        // Filter to only include issues (not pull requests)
-        const issues = searchResult.data.items
-            .filter((item) => !item.pull_request) // Exclude pull requests
-            .map((item) => ({
+        // Include both issues and pull requests
+        const items = searchResult.data.items.map((item) => ({
             id: item.id.toString(),
             owner: repoOwner,
             repo: repoName,
@@ -39388,8 +39383,8 @@ async function searchIssues(octokit, query, repoOwner, repoName) {
                 type: item.user?.type || ''
             }
         }));
-        coreExports.info(`Found ${issues.length} issues matching the query`);
-        return issues;
+        coreExports.info(`Found ${items.length} items (issues and pull requests) matching the query`);
+        return items;
     }
     catch (error) {
         coreExports.error(`Failed to search for issues: ${error}`);
@@ -39547,16 +39542,16 @@ async function generatePromptFile(template, promptPath, config, mergedResponseFi
  */
 async function runTriageWorkflow(config, configFile) {
     const octokit = githubExports.getOctokit(config.token);
-    // Check if we need to process multiple issues from a query
     if (config.issueQuery) {
+        // Process all issues based on the query
         return await runBulkTriageWorkflow(octokit, config, configFile);
     }
-    else {
-        // Validate that we have an issue number for single-issue workflow
-        if (!config.issueNumber || config.issueNumber <= 0) {
-            throw new Error('Issue number is required when not using issue query');
-        }
+    else if (config.issueNumber && config.issueNumber > 0) {
+        // Process a single issue based on the number
         return await runSingleIssueTriageWorkflow(octokit, config, configFile);
+    }
+    else {
+        throw new Error('Either issue number or issue query must be provided for triage workflow');
     }
 }
 /**
@@ -39602,53 +39597,53 @@ async function runSingleIssueTriageWorkflow(octokit, config, configFile) {
  */
 async function runBulkTriageWorkflow(octokit, config, configFile) {
     coreExports.info(`Running bulk triage workflow with query: ${config.issueQuery}`);
-    // Search for issues using the provided query
-    const issues = await searchIssues(octokit, config.issueQuery, config.repoOwner, config.repoName);
-    if (issues.length === 0) {
-        coreExports.info('No issues found matching the search query');
+    // Search for issues and pull requests using the provided query
+    const items = await searchIssues(octokit, config.issueQuery, config.repoOwner, config.repoName);
+    if (items.length === 0) {
+        coreExports.info('No items found matching the search query');
         // Return an empty results file
         const finalResponseFile = path.join(config.tempDir, 'triage-assistant', 'bulk-responses.json');
         await fs.promises.mkdir(path.dirname(finalResponseFile), { recursive: true });
         await fs.promises.writeFile(finalResponseFile, JSON.stringify({}));
         return finalResponseFile;
     }
-    coreExports.info(`Processing ${issues.length} issues`);
-    const issueResults = {};
-    // Process each issue individually
-    for (const issue of issues) {
-        coreExports.info(`Processing issue #${issue.number}`);
+    coreExports.info(`Processing ${items.length} items (issues and pull requests)`);
+    const itemResults = {};
+    // Process each item individually
+    for (const item of items) {
+        coreExports.info(`Processing item #${item.number}`);
         try {
-            // Create a separate config for this issue with a unique working directory
-            const issueConfig = {
+            // Create a separate config for this item with a unique working directory
+            const itemConfig = {
                 ...config,
-                issueNumber: issue.number,
-                tempDir: path.join(config.tempDir, `issue-${issue.number}`)
+                issueNumber: item.number,
+                tempDir: path.join(config.tempDir, `item-${item.number}`)
             };
-            // Run the single issue workflow for this issue
-            const responseFile = await runSingleIssueTriageWorkflow(octokit, issueConfig, configFile);
+            // Run the single issue workflow for this item (works for both issues and PRs)
+            const responseFile = await runSingleIssueTriageWorkflow(octokit, itemConfig, configFile);
             // If we got a response file, load it and store the result
             if (responseFile) {
                 try {
                     const responseContent = await fs.promises.readFile(responseFile, 'utf8');
                     const response = JSON.parse(responseContent);
-                    issueResults[issue.number] = response;
-                    coreExports.info(`Successfully processed issue #${issue.number}`);
+                    itemResults[item.number] = response;
+                    coreExports.info(`Successfully processed item #${item.number}`);
                 }
                 catch (error) {
-                    coreExports.warning(`Failed to read response file for issue #${issue.number}: ${error}`);
+                    coreExports.warning(`Failed to read response file for item #${item.number}: ${error}`);
                 }
             }
         }
         catch (error) {
-            coreExports.error(`Failed to process issue #${issue.number}: ${error}`);
-            // Continue with other issues even if one fails
+            coreExports.error(`Failed to process item #${item.number}: ${error}`);
+            // Continue with other items even if one fails
         }
     }
     // Create final merged response file
     const finalResponseFile = path.join(config.tempDir, 'triage-assistant', 'bulk-responses.json');
     await fs.promises.mkdir(path.dirname(finalResponseFile), { recursive: true });
-    await fs.promises.writeFile(finalResponseFile, JSON.stringify(issueResults, null, 2));
-    coreExports.info(`Bulk triage complete. Processed ${Object.keys(issueResults).length} of ${issues.length} issues successfully`);
+    await fs.promises.writeFile(finalResponseFile, JSON.stringify(itemResults, null, 2));
+    coreExports.info(`Bulk triage complete. Processed ${Object.keys(itemResults).length} of ${items.length} items successfully`);
     return finalResponseFile;
 }
 /**
@@ -51407,7 +51402,7 @@ async function runWorkflow(triageModeOverride) {
         const projectInput = coreExports.getInput('project');
         const issueInput = coreExports.getInput('issue');
         const issueQueryInput = coreExports.getInput('issue-query');
-        const issueContext = githubExports.context.issue?.number || 0;
+        const issueContext = githubExports.context.issue?.number;
         // Make sure they are correct for the mode
         if (triageMode === TriageMode.EngagementScore) {
             if (!projectInput && !issueInput) {
@@ -51440,7 +51435,7 @@ async function runWorkflow(triageModeOverride) {
             applyScores: coreExports.getInput('apply-scores')?.toLowerCase() === 'true',
             commentFooter: coreExports.getInput('comment-footer'),
             dryRun: coreExports.getInput('dry-run')?.toLowerCase() === 'true',
-            issueNumber: validateOptionalNumericInput(issueInput || issueContext.toString(), 'issue number'),
+            issueNumber: validateOptionalNumericInput(issueInput || issueContext?.toString(), 'issue number'),
             issueQuery: issueQueryInput || undefined,
             projectColumn: coreExports.getInput('project-column') || DEFAULT_PROJECT_COLUMN_NAME,
             projectNumber: validateNumericInput(projectInput, 'project number'),

@@ -91,8 +91,8 @@ export function sanitizeMarkdownContent(content: string): string {
  * @param fieldName Field name for error messages
  * @returns Validated number or 0 if invalid
  */
-export function validateNumericInput(input: string, fieldName: string): number {
-  if (!input.trim()) return 0
+export function validateNumericInput(input: string | undefined, fieldName: string): number {
+  if (!input?.trim()) return 0
   const num = parseInt(input, 10)
   if (isNaN(num) || num < 0) {
     core.warning(`Invalid ${fieldName}: ${input}. Using 0 as fallback.`)
@@ -107,8 +107,8 @@ export function validateNumericInput(input: string, fieldName: string): number {
  * @param fieldName Field name for error messages
  * @returns Validated number or undefined if invalid or empty
  */
-export function validateOptionalNumericInput(input: string, fieldName: string): number | undefined {
-  if (!input.trim()) return undefined
+export function validateOptionalNumericInput(input: string | undefined, fieldName: string): number | undefined {
+  if (!input?.trim()) return undefined
   const num = parseInt(input, 10)
   if (isNaN(num) || num < 0) {
     core.warning(`Invalid ${fieldName}: ${input}. Ignoring invalid value.`)

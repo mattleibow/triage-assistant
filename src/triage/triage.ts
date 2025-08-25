@@ -6,7 +6,14 @@ import { mergeResponses } from './merge.js'
 import { commentOnIssue, applyLabelsToIssue, addEyes, removeEyes, searchIssues } from '../github/issues.js'
 import { generateSummary } from '../prompts/summary.js'
 import { ConfigFileLabels } from '../config-file.js'
-import { ApplyLabelsConfig, ApplySummaryCommentConfig, LabelTriageWorkflowConfig, TriageConfig } from '../config.js'
+import {
+  ApplyLabelsConfig,
+  ApplySummaryCommentConfig,
+  LabelTriageWorkflowConfig,
+  BulkLabelTriageWorkflowConfig,
+  SingleLabelTriageWorkflowConfig,
+  TriageConfig
+} from '../config.js'
 import { TriageResponse } from './triage-response.js'
 import * as fs from 'fs'
 
@@ -21,29 +28,23 @@ export async function runTriageWorkflow(
 ): Promise<string> {
   const octokit = github.getOctokit(config.token)
 
-  // Check if we need to process multiple issues from a query
   if (config.issueQuery) {
-    return await runBulkTriageWorkflow(octokit, config, configFile)
+    // Process all issues based on the query
+    return await runBulkTriageWorkflow(octokit, config as BulkLabelTriageWorkflowConfig, configFile)
+  } else if (config.issueNumber && config.issueNumber > 0) {
+    // Process a single issue based on the number
+    return await runSingleIssueTriageWorkflow(octokit, config as SingleLabelTriageWorkflowConfig, configFile)
   } else {
-    // Validate that we have an issue number for single-issue workflow
-    if (!config.issueNumber || config.issueNumber <= 0) {
-      throw new Error('Issue number is required when not using issue query')
-    }
-    return await runSingleIssueTriageWorkflow(octokit, config as SingleIssueWorkflowConfig, configFile)
+    throw new Error('Either issue number or issue query must be provided for triage workflow')
   }
 }
-
-/**
- * Helper type for single issue workflow where issueNumber is guaranteed to exist
- */
-type SingleIssueWorkflowConfig = LabelTriageWorkflowConfig & { issueNumber: number }
 
 /**
  * Run triage workflow for a single issue
  */
 async function runSingleIssueTriageWorkflow(
   octokit: Octokit,
-  config: SingleIssueWorkflowConfig,
+  config: SingleLabelTriageWorkflowConfig,
   configFile: ConfigFileLabels
 ): Promise<string> {
   const shouldAddLabels = Object.keys(configFile.groups).length > 0
@@ -90,16 +91,17 @@ async function runSingleIssueTriageWorkflow(
  */
 async function runBulkTriageWorkflow(
   octokit: Octokit,
-  config: LabelTriageWorkflowConfig,
+  config: BulkLabelTriageWorkflowConfig,
   configFile: ConfigFileLabels
 ): Promise<string> {
   core.info(`Running bulk triage workflow with query: ${config.issueQuery}`)
 
   // Search for issues and pull requests using the provided query
-  const items = await searchIssues(octokit, config.issueQuery!, config.repoOwner, config.repoName)
+  const items = await searchIssues(octokit, config.issueQuery, config.repoOwner, config.repoName)
 
   if (items.length === 0) {
     core.info('No items found matching the search query')
+
     // Return an empty results file
     const finalResponseFile = path.join(config.tempDir, 'triage-assistant', 'bulk-responses.json')
     await fs.promises.mkdir(path.dirname(finalResponseFile), { recursive: true })
@@ -132,6 +134,7 @@ async function runBulkTriageWorkflow(
           const responseContent = await fs.promises.readFile(responseFile, 'utf8')
           const response = JSON.parse(responseContent) as TriageResponse
           itemResults[item.number] = response
+
           core.info(`Successfully processed item #${item.number}`)
         } catch (error) {
           core.warning(`Failed to read response file for item #${item.number}: ${error}`)
@@ -149,6 +152,7 @@ async function runBulkTriageWorkflow(
   await fs.promises.writeFile(finalResponseFile, JSON.stringify(itemResults, null, 2))
 
   core.info(`Bulk triage complete. Processed ${Object.keys(itemResults).length} of ${items.length} items successfully`)
+
   return finalResponseFile
 }
 

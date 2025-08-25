@@ -391,6 +391,7 @@ export async function searchIssues(
     }))
 
     core.info(`Found ${items.length} items (issues and pull requests) matching the query`)
+
     return items
   } catch (error) {
     core.error(`Failed to search for issues: ${error}`)

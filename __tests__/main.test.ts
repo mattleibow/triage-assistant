@@ -603,7 +603,7 @@ describe('Main Multi-Mode Functionality', () => {
       expect(triage.runTriageWorkflow).toHaveBeenCalledWith(
         expect.objectContaining({
           issueQuery: 'is:issue state:open created:>@today-30d',
-          issueNumber: 0 // Should be 0 when no issue number provided
+          issueNumber: undefined // Should be 0 when no issue number provided
         }),
         expect.objectContaining({
           groups: {}

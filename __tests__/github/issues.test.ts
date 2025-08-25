@@ -554,6 +554,8 @@ ${mockFooter}
 
       const result = await searchIssues(octokit, 'is:issue state:open', 'owner', 'repo')
 
+      expect(core.setFailed).not.toHaveBeenCalled()
+
       expect(mockOctokit.rest.search.issuesAndPullRequests).toHaveBeenCalledWith({
         q: 'is:issue state:open repo:owner/repo',
         sort: 'created',
@@ -633,6 +635,8 @@ ${mockFooter}
 
       await searchIssues(octokit, 'is:issue repo:owner/repo state:open', 'owner', 'repo')
 
+      expect(core.setFailed).not.toHaveBeenCalled()
+
       expect(mockOctokit.rest.search.issuesAndPullRequests).toHaveBeenCalledWith({
         q: 'is:issue repo:owner/repo state:open',
         sort: 'created',
@@ -707,6 +711,8 @@ ${mockFooter}
 
       const result = await searchIssues(octokit, 'state:open', 'owner', 'repo')
 
+      expect(core.setFailed).not.toHaveBeenCalled()
+
       // Should return both issues and pull requests
       expect(result).toEqual([
         {
@@ -778,6 +784,8 @@ ${mockFooter}
       mockOctokit.rest.search.issuesAndPullRequests.mockResolvedValue(mockSearchResponse)
 
       const result = await searchIssues(octokit, 'is:issue state:open', 'owner', 'repo')
+
+      expect(core.setFailed).not.toHaveBeenCalled()
 
       expect(result).toEqual([])
     })
