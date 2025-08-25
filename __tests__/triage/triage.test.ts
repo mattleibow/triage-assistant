@@ -595,8 +595,34 @@ describe('runTriageWorkflow', () => {
     it('should process multiple issues from search query', async () => {
       // Mock search to return multiple issues
       const mockIssues = [
-        { id: '1', owner: 'owner', repo: 'repo', number: 101 },
-        { id: '2', owner: 'owner', repo: 'repo', number: 102 }
+        {
+          id: '1',
+          owner: 'owner',
+          repo: 'repo',
+          number: 101,
+          title: 'First Issue',
+          body: 'First issue body',
+          state: 'open',
+          createdAt: new Date('2023-01-01'),
+          updatedAt: new Date('2023-01-01'),
+          closedAt: null,
+          user: { login: 'user1', type: 'User' },
+          assignees: []
+        },
+        {
+          id: '2',
+          owner: 'owner',
+          repo: 'repo',
+          number: 102,
+          title: 'Second Issue',
+          body: 'Second issue body',
+          state: 'open',
+          createdAt: new Date('2023-01-02'),
+          updatedAt: new Date('2023-01-02'),
+          closedAt: null,
+          user: { login: 'user2', type: 'User' },
+          assignees: []
+        }
       ]
       issues.searchIssues.mockResolvedValue(mockIssues)
 
@@ -644,8 +670,34 @@ describe('runTriageWorkflow', () => {
 
     it('should continue processing other issues if one fails', async () => {
       const mockIssues = [
-        { id: '1', owner: 'owner', repo: 'repo', number: 101 },
-        { id: '2', owner: 'owner', repo: 'repo', number: 102 }
+        {
+          id: '1',
+          owner: 'owner',
+          repo: 'repo',
+          number: 101,
+          title: 'First Issue',
+          body: 'First issue body',
+          state: 'open',
+          createdAt: new Date('2023-01-01'),
+          updatedAt: new Date('2023-01-01'),
+          closedAt: null,
+          user: { login: 'user1', type: 'User' },
+          assignees: []
+        },
+        {
+          id: '2',
+          owner: 'owner',
+          repo: 'repo',
+          number: 102,
+          title: 'Second Issue',
+          body: 'Second issue body',
+          state: 'open',
+          createdAt: new Date('2023-01-02'),
+          updatedAt: new Date('2023-01-02'),
+          closedAt: null,
+          user: { login: 'user2', type: 'User' },
+          assignees: []
+        }
       ]
       issues.searchIssues.mockResolvedValue(mockIssues)
 
@@ -674,13 +726,39 @@ describe('runTriageWorkflow', () => {
 
       // Should have attempted to process both issues
       expect(issues.searchIssues).toHaveBeenCalled()
-      expect(core.error).toHaveBeenCalledWith(expect.stringContaining('Failed to process issue #102'))
+      expect(core.error).toHaveBeenCalledWith(expect.stringContaining('Failed to process item #102'))
     })
 
     it('should use separate working directories for each issue', async () => {
       const mockIssues = [
-        { id: '1', owner: 'owner', repo: 'repo', number: 101 },
-        { id: '2', owner: 'owner', repo: 'repo', number: 102 }
+        {
+          id: '1',
+          owner: 'owner',
+          repo: 'repo',
+          number: 101,
+          title: 'First Issue',
+          body: 'First issue body',
+          state: 'open',
+          createdAt: new Date('2023-01-01'),
+          updatedAt: new Date('2023-01-01'),
+          closedAt: null,
+          user: { login: 'user1', type: 'User' },
+          assignees: []
+        },
+        {
+          id: '2',
+          owner: 'owner',
+          repo: 'repo',
+          number: 102,
+          title: 'Second Issue',
+          body: 'Second issue body',
+          state: 'open',
+          createdAt: new Date('2023-01-02'),
+          updatedAt: new Date('2023-01-02'),
+          closedAt: null,
+          user: { login: 'user2', type: 'User' },
+          assignees: []
+        }
       ]
       issues.searchIssues.mockResolvedValue(mockIssues)
 
@@ -699,10 +777,10 @@ describe('runTriageWorkflow', () => {
       const firstIssueCall = selectLabelsFixture.selectLabels.mock.calls[0][1]
       const secondIssueCall = selectLabelsFixture.selectLabels.mock.calls[2][1] // Skip second group of first issue
 
-      expect(firstIssueCall.tempDir).toBe('/tmp/test/issue-101')
+      expect(firstIssueCall.tempDir).toBe('/tmp/test/item-101')
       expect(firstIssueCall.issueNumber).toBe(101)
 
-      expect(secondIssueCall.tempDir).toBe('/tmp/test/issue-102')
+      expect(secondIssueCall.tempDir).toBe('/tmp/test/item-102')
       expect(secondIssueCall.issueNumber).toBe(102)
     })
   })

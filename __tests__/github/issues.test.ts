@@ -505,7 +505,7 @@ ${mockFooter}
   })
 
   describe('searchIssues', () => {
-    it('should search for issues using GitHub API', async () => {
+    it('should search for issues and pull requests using GitHub API', async () => {
       const mockSearchResponse = {
         data: {
           total_count: 2,
@@ -642,7 +642,7 @@ ${mockFooter}
       })
     })
 
-    it('should filter out pull requests', async () => {
+    it('should include both issues and pull requests', async () => {
       const mockSearchResponse = {
         data: {
           total_count: 3,
@@ -705,9 +705,9 @@ ${mockFooter}
 
       mockOctokit.rest.search.issuesAndPullRequests.mockResolvedValue(mockSearchResponse)
 
-      const result = await searchIssues(octokit, 'is:issue state:open', 'owner', 'repo')
+      const result = await searchIssues(octokit, 'state:open', 'owner', 'repo')
 
-      // Should only return issues, not pull requests
+      // Should return both issues and pull requests
       expect(result).toEqual([
         {
           id: '1',
@@ -722,6 +722,23 @@ ${mockFooter}
           closedAt: null,
           user: {
             login: 'author1',
+            type: 'User'
+          },
+          assignees: []
+        },
+        {
+          id: '2',
+          owner: 'owner',
+          repo: 'repo',
+          number: 102,
+          title: 'Some PR',
+          body: 'PR body content',
+          state: 'open',
+          createdAt: new Date('2023-01-02T00:00:00Z'),
+          updatedAt: new Date('2023-01-02T00:00:00Z'),
+          closedAt: null,
+          user: {
+            login: 'author2',
             type: 'User'
           },
           assignees: []

@@ -92,21 +92,24 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v5
 
-      - name: Bulk apply labels to recent issues
+      - name: Bulk apply labels to recent issues and PRs
         uses: mattleibow/triage-assistant@v1
         with:
           mode: 'apply-labels'
-          issue-query: 'is:issue state:open created:>@today-30d'
+          issue-query: 'state:open created:>@today-30d'
           apply-labels: true
           apply-comment: true
 ```
 
 **Search Query Examples:**
 
-- `is:issue state:open created:>@today-30d` - Open issues from last 30 days
-- `is:issue state:open created:2025-08-01..2025-08-14` - Issues from specific date range
+- `state:open created:>@today-30d` - Open issues and PRs from last 30 days
+- `is:issue state:open created:>@today-30d` - Open issues only from last 30 days
+- `is:pr state:open created:>@today-30d` - Open pull requests only from last 30 days
+- `state:open created:2025-08-01..2025-08-14` - Issues and PRs from specific date range
 - `is:issue state:open label:bug -label:triaged` - Open bugs not yet triaged
-- `is:issue state:open no:assignee` - Unassigned open issues
+- `is:pr state:open no:assignee` - Unassigned open pull requests
+- `state:open no:assignee` - Unassigned open issues and PRs
 
 **Output:** Creates a `bulk-responses.json` file containing a dictionary mapping issue numbers to their triage
 responses.
@@ -189,14 +192,14 @@ Focuses on calculating and applying engagement scores to project issues.
 
 ### General Inputs
 
-| Name             | Description                                        | Default                 | Required |
-| ---------------- | -------------------------------------------------- | ----------------------- | -------- |
-| `mode`           | Operation mode: `apply-labels`, `engagement-score` | `apply-labels`          | No       |
-| `issue`          | The issue number to triage                         | Current issue/PR number | No       |
-| `issue-query`    | GitHub search query to find issues to triage       | `''`                    | No       |
-| `token`          | GitHub token for API access                        | `''`                    | No       |
-| `fallback-token` | Fallback GitHub token for API access               | `${{ github.token }}`   | No       |
-| `dry-run`        | Run in dry-run mode without making changes         | `false`                 | No       |
+| Name             | Description                                          | Default                 | Required |
+| ---------------- | ---------------------------------------------------- | ----------------------- | -------- |
+| `mode`           | Operation mode: `apply-labels`, `engagement-score`   | `apply-labels`          | No       |
+| `issue`          | The issue number to triage                           | Current issue/PR number | No       |
+| `issue-query`    | GitHub search query to find issues and PRs to triage | `''`                    | No       |
+| `token`          | GitHub token for API access                          | `''`                    | No       |
+| `fallback-token` | Fallback GitHub token for API access                 | `${{ github.token }}`   | No       |
+| `dry-run`        | Run in dry-run mode without making changes           | `false`                 | No       |
 
 ### Labelling Mode Inputs
 

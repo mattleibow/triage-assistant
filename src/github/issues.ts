@@ -339,13 +339,13 @@ function addComments(
 }
 
 /**
- * Search for issues using GitHub's search API
+ * Search for issues and pull requests using GitHub's search API
  *
  * @param octokit The GitHub API client
- * @param query The search query (e.g., "is:issue state:open created:>@today-30d")
+ * @param query The search query (e.g., "is:issue state:open created:>@today-30d", "is:pr state:open")
  * @param repoOwner Repository owner to scope the search
  * @param repoName Repository name to scope the search
- * @returns Array of issue numbers found by the search
+ * @returns Array of issues and pull requests found by the search
  */
 export async function searchIssues(
   octokit: Octokit,
@@ -357,7 +357,7 @@ export async function searchIssues(
     // Add repository scope to the query if not already present
     const scopedQuery = query.includes('repo:') ? query : `${query} repo:${repoOwner}/${repoName}`
 
-    core.info(`Searching for issues with query: ${scopedQuery}`)
+    core.info(`Searching for issues and pull requests with query: ${scopedQuery}`)
 
     const searchResult = await octokit.rest.search.issuesAndPullRequests({
       q: scopedQuery,
@@ -367,33 +367,31 @@ export async function searchIssues(
       advanced_search: true
     })
 
-    // Filter to only include issues (not pull requests)
-    const issues: IssueBody[] = searchResult.data.items
-      .filter((item) => !item.pull_request) // Exclude pull requests
-      .map((item) => ({
-        id: item.id.toString(),
-        owner: repoOwner,
-        repo: repoName,
-        number: item.number,
-        assignees:
-          item.assignees?.map((assignee) => ({
-            login: assignee.login || '',
-            type: assignee.type || ''
-          })) || [],
-        body: item.body || '',
-        closedAt: item.closed_at ? new Date(item.closed_at) : null,
-        createdAt: new Date(item.created_at),
-        updatedAt: new Date(item.updated_at),
-        state: item.state,
-        title: item.title,
-        user: {
-          login: item.user?.login || '',
-          type: item.user?.type || ''
-        }
-      }))
+    // Include both issues and pull requests
+    const items: IssueBody[] = searchResult.data.items.map((item) => ({
+      id: item.id.toString(),
+      owner: repoOwner,
+      repo: repoName,
+      number: item.number,
+      assignees:
+        item.assignees?.map((assignee) => ({
+          login: assignee.login || '',
+          type: assignee.type || ''
+        })) || [],
+      body: item.body || '',
+      closedAt: item.closed_at ? new Date(item.closed_at) : null,
+      createdAt: new Date(item.created_at),
+      updatedAt: new Date(item.updated_at),
+      state: item.state,
+      title: item.title,
+      user: {
+        login: item.user?.login || '',
+        type: item.user?.type || ''
+      }
+    }))
 
-    core.info(`Found ${issues.length} issues matching the query`)
-    return issues
+    core.info(`Found ${items.length} items (issues and pull requests) matching the query`)
+    return items
   } catch (error) {
     core.error(`Failed to search for issues: ${error}`)
     throw error
