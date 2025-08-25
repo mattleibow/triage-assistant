@@ -6,6 +6,8 @@
 [![CodeQL](https://github.com/mattleibow/triage-assistant/actions/workflows/check-codeql-analysis.yml/badge.svg)](https://github.com/mattleibow/triage-assistant/actions/workflows/check-codeql-analysis.yml)
 [![Coverage](./badges/coverage.svg)](./badges/coverage.svg)
 
+> 📖 **[View Complete Documentation](https://mattleibow.github.io/triage-assistant/)** - Comprehensive guides, examples, and API reference
+
 An AI-powered GitHub Action that provides sophisticated issue and pull request triage capabilities with explicit
 mode-based operation. Features include AI-powered label application using large language models and comprehensive
 engagement scoring for project prioritization.
