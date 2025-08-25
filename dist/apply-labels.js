@@ -31393,57 +31393,60 @@ function substituteTemplateVariables(line, replacements) {
     return line;
 }
 
-/**
- * Convert array of 16 byte values to UUID string format of the form:
- * XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX
- */
-var byteToHex = [];
-for (var i$1 = 0; i$1 < 256; ++i$1) {
-  byteToHex.push((i$1 + 0x100).toString(16).slice(1));
+const byteToHex = [];
+for (let i = 0; i < 256; ++i) {
+    byteToHex.push((i + 0x100).toString(16).slice(1));
 }
 function unsafeStringify(arr, offset = 0) {
-  // Note: Be careful editing this code!  It's been tuned for performance
-  // and works in ways you may not expect. See https://github.com/uuidjs/uuid/pull/434
-  //
-  // Note to future-self: No, you can't remove the `toLowerCase()` call.
-  // REF: https://github.com/uuidjs/uuid/pull/677#issuecomment-1757351351
-  return (byteToHex[arr[offset + 0]] + byteToHex[arr[offset + 1]] + byteToHex[arr[offset + 2]] + byteToHex[arr[offset + 3]] + '-' + byteToHex[arr[offset + 4]] + byteToHex[arr[offset + 5]] + '-' + byteToHex[arr[offset + 6]] + byteToHex[arr[offset + 7]] + '-' + byteToHex[arr[offset + 8]] + byteToHex[arr[offset + 9]] + '-' + byteToHex[arr[offset + 10]] + byteToHex[arr[offset + 11]] + byteToHex[arr[offset + 12]] + byteToHex[arr[offset + 13]] + byteToHex[arr[offset + 14]] + byteToHex[arr[offset + 15]]).toLowerCase();
+    return (byteToHex[arr[offset + 0]] +
+        byteToHex[arr[offset + 1]] +
+        byteToHex[arr[offset + 2]] +
+        byteToHex[arr[offset + 3]] +
+        '-' +
+        byteToHex[arr[offset + 4]] +
+        byteToHex[arr[offset + 5]] +
+        '-' +
+        byteToHex[arr[offset + 6]] +
+        byteToHex[arr[offset + 7]] +
+        '-' +
+        byteToHex[arr[offset + 8]] +
+        byteToHex[arr[offset + 9]] +
+        '-' +
+        byteToHex[arr[offset + 10]] +
+        byteToHex[arr[offset + 11]] +
+        byteToHex[arr[offset + 12]] +
+        byteToHex[arr[offset + 13]] +
+        byteToHex[arr[offset + 14]] +
+        byteToHex[arr[offset + 15]]).toLowerCase();
 }
 
-// Unique ID creation requires a high quality random # generator. In the browser we therefore
-// require the crypto API and do not support built-in fallback to lower quality random number
-// generators (like Math.random()).
-
-var getRandomValues;
-var rnds8 = new Uint8Array(16);
+let getRandomValues;
+const rnds8 = new Uint8Array(16);
 function rng() {
-  // lazy load so that environments that need to polyfill have a chance to do so
-  if (!getRandomValues) {
-    // getRandomValues needs to be invoked in a context where "this" is a Crypto implementation.
-    getRandomValues = typeof crypto !== 'undefined' && crypto.getRandomValues && crypto.getRandomValues.bind(crypto);
     if (!getRandomValues) {
-      throw new Error('crypto.getRandomValues() not supported. See https://github.com/uuidjs/uuid#getrandomvalues-not-supported');
+        if (typeof crypto === 'undefined' || !crypto.getRandomValues) {
+            throw new Error('crypto.getRandomValues() not supported. See https://github.com/uuidjs/uuid#getrandomvalues-not-supported');
+        }
+        getRandomValues = crypto.getRandomValues.bind(crypto);
     }
-  }
-  return getRandomValues(rnds8);
+    return getRandomValues(rnds8);
 }
 
-var randomUUID$1 = typeof crypto !== 'undefined' && crypto.randomUUID && crypto.randomUUID.bind(crypto);
-var native = {
-  randomUUID: randomUUID$1
-};
+const randomUUID$1 = typeof crypto !== 'undefined' && crypto.randomUUID && crypto.randomUUID.bind(crypto);
+var native = { randomUUID: randomUUID$1 };
 
 function v4(options, buf, offset) {
-  if (native.randomUUID && true && !options) {
-    return native.randomUUID();
-  }
-  options = options || {};
-  var rnds = options.random || (options.rng || rng)();
-
-  // Per 4.4, set bits for version and `clock_seq_hi_and_reserved`
-  rnds[6] = rnds[6] & 0x0f | 0x40;
-  rnds[8] = rnds[8] & 0x3f | 0x80;
-  return unsafeStringify(rnds);
+    if (native.randomUUID && true && !options) {
+        return native.randomUUID();
+    }
+    options = options || {};
+    const rnds = options.random ?? options.rng?.() ?? rng();
+    if (rnds.length < 16) {
+        throw new Error('Random bytes length must be >= 16');
+    }
+    rnds[6] = (rnds[6] & 0x0f) | 0x40;
+    rnds[8] = (rnds[8] & 0x3f) | 0x80;
+    return unsafeStringify(rnds);
 }
 
 const systemPromptSingleLabel = `
@@ -39359,7 +39362,8 @@ async function searchIssues(octokit, query, repoOwner, repoName) {
             q: scopedQuery,
             sort: 'created',
             order: 'desc',
-            per_page: 100
+            per_page: 100,
+            advanced_search: true
         });
         // Filter to only include issues (not pull requests)
         const issues = searchResult.data.items
@@ -39368,7 +39372,21 @@ async function searchIssues(octokit, query, repoOwner, repoName) {
             id: item.id.toString(),
             owner: repoOwner,
             repo: repoName,
-            number: item.number
+            number: item.number,
+            assignees: item.assignees?.map((assignee) => ({
+                login: assignee.login || '',
+                type: assignee.type || ''
+            })) || [],
+            body: item.body || '',
+            closedAt: item.closed_at ? new Date(item.closed_at) : null,
+            createdAt: new Date(item.created_at),
+            updatedAt: new Date(item.updated_at),
+            state: item.state,
+            title: item.title,
+            user: {
+                login: item.user?.login || '',
+                type: item.user?.type || ''
+            }
         }));
         coreExports.info(`Found ${issues.length} issues matching the query`);
         return issues;

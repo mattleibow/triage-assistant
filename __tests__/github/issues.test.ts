@@ -514,12 +514,34 @@ ${mockFooter}
             {
               id: 1,
               number: 101,
-              pull_request: null
+              pull_request: null,
+              title: 'First Issue',
+              body: 'Issue body content',
+              state: 'open',
+              created_at: '2023-01-01T00:00:00Z',
+              updated_at: '2023-01-01T00:00:00Z',
+              closed_at: null,
+              user: {
+                login: 'author1',
+                type: 'User'
+              },
+              assignees: []
             },
             {
               id: 2,
               number: 102,
-              pull_request: null
+              pull_request: null,
+              title: 'Second Issue',
+              body: 'Another issue body',
+              state: 'open',
+              created_at: '2023-01-02T00:00:00Z',
+              updated_at: '2023-01-02T00:00:00Z',
+              closed_at: null,
+              user: {
+                login: 'author2',
+                type: 'User'
+              },
+              assignees: []
             }
           ]
         },
@@ -541,8 +563,40 @@ ${mockFooter}
       })
 
       expect(result).toEqual([
-        { id: '1', owner: 'owner', repo: 'repo', number: 101 },
-        { id: '2', owner: 'owner', repo: 'repo', number: 102 }
+        {
+          id: '1',
+          owner: 'owner',
+          repo: 'repo',
+          number: 101,
+          title: 'First Issue',
+          body: 'Issue body content',
+          state: 'open',
+          createdAt: new Date('2023-01-01T00:00:00Z'),
+          updatedAt: new Date('2023-01-01T00:00:00Z'),
+          closedAt: null,
+          user: {
+            login: 'author1',
+            type: 'User'
+          },
+          assignees: []
+        },
+        {
+          id: '2',
+          owner: 'owner',
+          repo: 'repo',
+          number: 102,
+          title: 'Second Issue',
+          body: 'Another issue body',
+          state: 'open',
+          createdAt: new Date('2023-01-02T00:00:00Z'),
+          updatedAt: new Date('2023-01-02T00:00:00Z'),
+          closedAt: null,
+          user: {
+            login: 'author2',
+            type: 'User'
+          },
+          assignees: []
+        }
       ])
     })
 
@@ -555,7 +609,18 @@ ${mockFooter}
             {
               id: 1,
               number: 101,
-              pull_request: null
+              pull_request: null,
+              title: 'Test Issue',
+              body: 'Test body content',
+              state: 'open',
+              created_at: '2023-01-01T00:00:00Z',
+              updated_at: '2023-01-01T00:00:00Z',
+              closed_at: null,
+              user: {
+                login: 'author1',
+                type: 'User'
+              },
+              assignees: []
             }
           ]
         },
@@ -586,17 +651,50 @@ ${mockFooter}
             {
               id: 1,
               number: 101,
-              pull_request: null // This is an issue
+              pull_request: null, // This is an issue
+              title: 'First Issue',
+              body: 'Issue body content',
+              state: 'open',
+              created_at: '2023-01-01T00:00:00Z',
+              updated_at: '2023-01-01T00:00:00Z',
+              closed_at: null,
+              user: {
+                login: 'author1',
+                type: 'User'
+              },
+              assignees: []
             },
             {
               id: 2,
               number: 102,
-              pull_request: { url: 'https://api.github.com/repos/owner/repo/pulls/102' } // This is a PR
+              pull_request: { url: 'https://api.github.com/repos/owner/repo/pulls/102' }, // This is a PR
+              title: 'Some PR',
+              body: 'PR body content',
+              state: 'open',
+              created_at: '2023-01-02T00:00:00Z',
+              updated_at: '2023-01-02T00:00:00Z',
+              closed_at: null,
+              user: {
+                login: 'author2',
+                type: 'User'
+              },
+              assignees: []
             },
             {
               id: 3,
               number: 103,
-              pull_request: null // This is an issue
+              pull_request: null, // This is an issue
+              title: 'Third Issue',
+              body: 'Another issue body',
+              state: 'open',
+              created_at: '2023-01-03T00:00:00Z',
+              updated_at: '2023-01-03T00:00:00Z',
+              closed_at: null,
+              user: {
+                login: 'author3',
+                type: 'User'
+              },
+              assignees: []
             }
           ]
         },
@@ -611,8 +709,40 @@ ${mockFooter}
 
       // Should only return issues, not pull requests
       expect(result).toEqual([
-        { id: '1', owner: 'owner', repo: 'repo', number: 101 },
-        { id: '3', owner: 'owner', repo: 'repo', number: 103 }
+        {
+          id: '1',
+          owner: 'owner',
+          repo: 'repo',
+          number: 101,
+          title: 'First Issue',
+          body: 'Issue body content',
+          state: 'open',
+          createdAt: new Date('2023-01-01T00:00:00Z'),
+          updatedAt: new Date('2023-01-01T00:00:00Z'),
+          closedAt: null,
+          user: {
+            login: 'author1',
+            type: 'User'
+          },
+          assignees: []
+        },
+        {
+          id: '3',
+          owner: 'owner',
+          repo: 'repo',
+          number: 103,
+          title: 'Third Issue',
+          body: 'Another issue body',
+          state: 'open',
+          createdAt: new Date('2023-01-03T00:00:00Z'),
+          updatedAt: new Date('2023-01-03T00:00:00Z'),
+          closedAt: null,
+          user: {
+            login: 'author3',
+            type: 'User'
+          },
+          assignees: []
+        }
       ])
     })
 
