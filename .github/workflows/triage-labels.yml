@@ -15,8 +15,14 @@ on:
     inputs:
       issue_number:
         description: 'Issue number to triage'
-        required: true
+        required: false
         type: number
+        default: ''
+      issue_query:
+        description: 'GitHub search query to find issues to triage (e.g., "is:issue state:open created:>@today-7d")'
+        required: false
+        type: string
+        default: ''
       dry_run:
         description: 'Dry Run (no writes)'
         required: false
@@ -59,7 +65,8 @@ jobs:
       - name: Apply Labels and Comment
         uses: ./apply-labels/
         with:
-          issue: ${{ steps.get-number.outputs.number }}
+          issue: ${{ steps.get-number.outputs.number || '' }}
+          issue-query: ${{ inputs.issue_query || '' }}
           apply-labels: true
           apply-comment: true
           dry-run: ${{ inputs.dry_run || false }}

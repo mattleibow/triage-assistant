@@ -16,7 +16,7 @@ type GetIssueDetailsQueryIssueCommentNodes = NonNullable<
 jest.unstable_mockModule('@actions/core', () => core)
 
 // Import the module being tested
-const { commentOnIssue, applyLabelsToIssue, addEyes, removeEyes, getIssueDetails } = await import(
+const { commentOnIssue, applyLabelsToIssue, addEyes, removeEyes, getIssueDetails, searchIssues } = await import(
   '../../src/github/issues.js'
 )
 
@@ -501,6 +501,304 @@ ${mockFooter}
       expect(result.comments).toHaveLength(100)
       expect(result.comments[0].user.login).toBe('commenter1')
       expect(result.comments[99].user.login).toBe('commenter100')
+    })
+  })
+
+  describe('searchIssues', () => {
+    it('should search for issues and pull requests using GitHub API', async () => {
+      const mockSearchResponse = {
+        data: {
+          total_count: 2,
+          incomplete_results: false,
+          items: [
+            {
+              id: 1,
+              number: 101,
+              pull_request: null,
+              title: 'First Issue',
+              body: 'Issue body content',
+              state: 'open',
+              created_at: '2023-01-01T00:00:00Z',
+              updated_at: '2023-01-01T00:00:00Z',
+              closed_at: null,
+              user: {
+                login: 'author1',
+                type: 'User'
+              },
+              assignees: []
+            },
+            {
+              id: 2,
+              number: 102,
+              pull_request: null,
+              title: 'Second Issue',
+              body: 'Another issue body',
+              state: 'open',
+              created_at: '2023-01-02T00:00:00Z',
+              updated_at: '2023-01-02T00:00:00Z',
+              closed_at: null,
+              user: {
+                login: 'author2',
+                type: 'User'
+              },
+              assignees: []
+            }
+          ]
+        },
+        headers: {},
+        status: 200,
+        url: 'https://api.github.com/search/issues'
+      } as unknown as Awaited<ReturnType<typeof mockOctokit.rest.search.issuesAndPullRequests>>
+
+      mockOctokit.rest.search.issuesAndPullRequests.mockResolvedValue(mockSearchResponse)
+
+      const result = await searchIssues(octokit, 'is:issue state:open', 'owner', 'repo')
+
+      expect(core.setFailed).not.toHaveBeenCalled()
+
+      expect(mockOctokit.rest.search.issuesAndPullRequests).toHaveBeenCalledWith({
+        q: 'is:issue state:open repo:owner/repo',
+        sort: 'created',
+        order: 'desc',
+        per_page: 100,
+        advanced_search: true
+      })
+
+      expect(result).toEqual([
+        {
+          id: '1',
+          owner: 'owner',
+          repo: 'repo',
+          number: 101,
+          title: 'First Issue',
+          body: 'Issue body content',
+          state: 'open',
+          createdAt: new Date('2023-01-01T00:00:00Z'),
+          updatedAt: new Date('2023-01-01T00:00:00Z'),
+          closedAt: null,
+          user: {
+            login: 'author1',
+            type: 'User'
+          },
+          assignees: []
+        },
+        {
+          id: '2',
+          owner: 'owner',
+          repo: 'repo',
+          number: 102,
+          title: 'Second Issue',
+          body: 'Another issue body',
+          state: 'open',
+          createdAt: new Date('2023-01-02T00:00:00Z'),
+          updatedAt: new Date('2023-01-02T00:00:00Z'),
+          closedAt: null,
+          user: {
+            login: 'author2',
+            type: 'User'
+          },
+          assignees: []
+        }
+      ])
+    })
+
+    it('should not add repo scope if already present in query', async () => {
+      const mockSearchResponse = {
+        data: {
+          total_count: 1,
+          incomplete_results: false,
+          items: [
+            {
+              id: 1,
+              number: 101,
+              pull_request: null,
+              title: 'Test Issue',
+              body: 'Test body content',
+              state: 'open',
+              created_at: '2023-01-01T00:00:00Z',
+              updated_at: '2023-01-01T00:00:00Z',
+              closed_at: null,
+              user: {
+                login: 'author1',
+                type: 'User'
+              },
+              assignees: []
+            }
+          ]
+        },
+        headers: {},
+        status: 200,
+        url: 'https://api.github.com/search/issues'
+      } as unknown as Awaited<ReturnType<typeof mockOctokit.rest.search.issuesAndPullRequests>>
+
+      mockOctokit.rest.search.issuesAndPullRequests.mockResolvedValue(mockSearchResponse)
+
+      await searchIssues(octokit, 'is:issue repo:owner/repo state:open', 'owner', 'repo')
+
+      expect(core.setFailed).not.toHaveBeenCalled()
+
+      expect(mockOctokit.rest.search.issuesAndPullRequests).toHaveBeenCalledWith({
+        q: 'is:issue repo:owner/repo state:open',
+        sort: 'created',
+        order: 'desc',
+        per_page: 100,
+        advanced_search: true
+      })
+    })
+
+    it('should include both issues and pull requests', async () => {
+      const mockSearchResponse = {
+        data: {
+          total_count: 3,
+          incomplete_results: false,
+          items: [
+            {
+              id: 1,
+              number: 101,
+              pull_request: null, // This is an issue
+              title: 'First Issue',
+              body: 'Issue body content',
+              state: 'open',
+              created_at: '2023-01-01T00:00:00Z',
+              updated_at: '2023-01-01T00:00:00Z',
+              closed_at: null,
+              user: {
+                login: 'author1',
+                type: 'User'
+              },
+              assignees: []
+            },
+            {
+              id: 2,
+              number: 102,
+              pull_request: { url: 'https://api.github.com/repos/owner/repo/pulls/102' }, // This is a PR
+              title: 'Some PR',
+              body: 'PR body content',
+              state: 'open',
+              created_at: '2023-01-02T00:00:00Z',
+              updated_at: '2023-01-02T00:00:00Z',
+              closed_at: null,
+              user: {
+                login: 'author2',
+                type: 'User'
+              },
+              assignees: []
+            },
+            {
+              id: 3,
+              number: 103,
+              pull_request: null, // This is an issue
+              title: 'Third Issue',
+              body: 'Another issue body',
+              state: 'open',
+              created_at: '2023-01-03T00:00:00Z',
+              updated_at: '2023-01-03T00:00:00Z',
+              closed_at: null,
+              user: {
+                login: 'author3',
+                type: 'User'
+              },
+              assignees: []
+            }
+          ]
+        },
+        headers: {},
+        status: 200,
+        url: 'https://api.github.com/search/issues'
+      } as unknown as Awaited<ReturnType<typeof mockOctokit.rest.search.issuesAndPullRequests>>
+
+      mockOctokit.rest.search.issuesAndPullRequests.mockResolvedValue(mockSearchResponse)
+
+      const result = await searchIssues(octokit, 'state:open', 'owner', 'repo')
+
+      expect(core.setFailed).not.toHaveBeenCalled()
+
+      // Should return both issues and pull requests
+      expect(result).toEqual([
+        {
+          id: '1',
+          owner: 'owner',
+          repo: 'repo',
+          number: 101,
+          title: 'First Issue',
+          body: 'Issue body content',
+          state: 'open',
+          createdAt: new Date('2023-01-01T00:00:00Z'),
+          updatedAt: new Date('2023-01-01T00:00:00Z'),
+          closedAt: null,
+          user: {
+            login: 'author1',
+            type: 'User'
+          },
+          assignees: []
+        },
+        {
+          id: '2',
+          owner: 'owner',
+          repo: 'repo',
+          number: 102,
+          title: 'Some PR',
+          body: 'PR body content',
+          state: 'open',
+          createdAt: new Date('2023-01-02T00:00:00Z'),
+          updatedAt: new Date('2023-01-02T00:00:00Z'),
+          closedAt: null,
+          user: {
+            login: 'author2',
+            type: 'User'
+          },
+          assignees: []
+        },
+        {
+          id: '3',
+          owner: 'owner',
+          repo: 'repo',
+          number: 103,
+          title: 'Third Issue',
+          body: 'Another issue body',
+          state: 'open',
+          createdAt: new Date('2023-01-03T00:00:00Z'),
+          updatedAt: new Date('2023-01-03T00:00:00Z'),
+          closedAt: null,
+          user: {
+            login: 'author3',
+            type: 'User'
+          },
+          assignees: []
+        }
+      ])
+    })
+
+    it('should handle empty search results', async () => {
+      const mockSearchResponse = {
+        data: {
+          total_count: 0,
+          incomplete_results: false,
+          items: []
+        },
+        headers: {},
+        status: 200,
+        url: 'https://api.github.com/search/issues'
+      } as unknown as Awaited<ReturnType<typeof mockOctokit.rest.search.issuesAndPullRequests>>
+
+      mockOctokit.rest.search.issuesAndPullRequests.mockResolvedValue(mockSearchResponse)
+
+      const result = await searchIssues(octokit, 'is:issue state:open', 'owner', 'repo')
+
+      expect(core.setFailed).not.toHaveBeenCalled()
+
+      expect(result).toEqual([])
+    })
+
+    it('should handle search API errors', async () => {
+      const error = new Error('Search API rate limit exceeded')
+      mockOctokit.rest.search.issuesAndPullRequests.mockRejectedValue(error)
+
+      await expect(searchIssues(octokit, 'is:issue state:open', 'owner', 'repo')).rejects.toThrow(
+        'Search API rate limit exceeded'
+      )
+
+      expect(core.error).toHaveBeenCalledWith('Failed to search for issues: Error: Search API rate limit exceeded')
     })
   })
 })

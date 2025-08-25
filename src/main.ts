@@ -1,7 +1,13 @@
 import * as core from '@actions/core'
 import * as github from '@actions/github'
 import * as os from 'os'
-import { TriageMode, validateNumericInput, validateRepositoryId, validateMode } from './utils.js'
+import {
+  TriageMode,
+  validateNumericInput,
+  validateOptionalNumericInput,
+  validateRepositoryId,
+  validateMode
+} from './utils.js'
 import { runTriageWorkflow } from './triage/triage.js'
 import { runEngagementWorkflow } from './engagement/engagement.js'
 import { EverythingConfig } from './config.js'
@@ -25,7 +31,8 @@ async function runWorkflow(triageModeOverride?: TriageMode): Promise<void> {
     // Get project and issue numbers
     const projectInput = core.getInput('project')
     const issueInput = core.getInput('issue')
-    const issueContext = github.context.issue?.number || 0
+    const issueQueryInput = core.getInput('issue-query')
+    const issueContext: number | undefined = github.context.issue?.number
 
     // Make sure they are correct for the mode
     if (triageMode === TriageMode.EngagementScore) {
@@ -33,8 +40,11 @@ async function runWorkflow(triageModeOverride?: TriageMode): Promise<void> {
         throw new Error('Either project or issue must be specified when calculating engagement scores')
       }
     } else if (triageMode === TriageMode.ApplyLabels) {
-      if (!issueInput && !issueContext) {
-        throw new Error('Issue number is required for applying labels')
+      if (!issueInput && !issueQueryInput && !issueContext) {
+        throw new Error('Issue number or issue query is required for applying labels')
+      }
+      if (issueInput && issueQueryInput) {
+        throw new Error('Cannot specify both issue number and issue query - please use only one')
       }
     }
 
@@ -59,7 +69,8 @@ async function runWorkflow(triageModeOverride?: TriageMode): Promise<void> {
       applyScores: core.getInput('apply-scores')?.toLowerCase() === 'true',
       commentFooter: core.getInput('comment-footer'),
       dryRun: core.getInput('dry-run')?.toLowerCase() === 'true',
-      issueNumber: validateNumericInput(issueInput || issueContext.toString(), 'issue number'),
+      issueNumber: validateOptionalNumericInput(issueInput || issueContext?.toString(), 'issue number'),
+      issueQuery: issueQueryInput || undefined,
       projectColumn: core.getInput('project-column') || DEFAULT_PROJECT_COLUMN_NAME,
       projectNumber: validateNumericInput(projectInput, 'project number'),
       repoName: github.context.repo.repo,

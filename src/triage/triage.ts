@@ -3,10 +3,19 @@ import * as path from 'path'
 import * as github from '@actions/github'
 import { selectLabels } from '../prompts/select-labels.js'
 import { mergeResponses } from './merge.js'
-import { commentOnIssue, applyLabelsToIssue, addEyes, removeEyes } from '../github/issues.js'
+import { commentOnIssue, applyLabelsToIssue, addEyes, removeEyes, searchIssues } from '../github/issues.js'
 import { generateSummary } from '../prompts/summary.js'
 import { ConfigFileLabels } from '../config-file.js'
-import { ApplyLabelsConfig, ApplySummaryCommentConfig, LabelTriageWorkflowConfig, TriageConfig } from '../config.js'
+import {
+  ApplyLabelsConfig,
+  ApplySummaryCommentConfig,
+  LabelTriageWorkflowConfig,
+  BulkLabelTriageWorkflowConfig,
+  SingleLabelTriageWorkflowConfig,
+  TriageConfig
+} from '../config.js'
+import { TriageResponse } from './triage-response.js'
+import * as fs from 'fs'
 
 type Octokit = ReturnType<typeof github.getOctokit>
 
@@ -19,6 +28,25 @@ export async function runTriageWorkflow(
 ): Promise<string> {
   const octokit = github.getOctokit(config.token)
 
+  if (config.issueQuery) {
+    // Process all issues based on the query
+    return await runBulkTriageWorkflow(octokit, config as BulkLabelTriageWorkflowConfig, configFile)
+  } else if (config.issueNumber && config.issueNumber > 0) {
+    // Process a single issue based on the number
+    return await runSingleIssueTriageWorkflow(octokit, config as SingleLabelTriageWorkflowConfig, configFile)
+  } else {
+    throw new Error('Either issue number or issue query must be provided for triage workflow')
+  }
+}
+
+/**
+ * Run triage workflow for a single issue
+ */
+async function runSingleIssueTriageWorkflow(
+  octokit: Octokit,
+  config: SingleLabelTriageWorkflowConfig,
+  configFile: ConfigFileLabels
+): Promise<string> {
   const shouldAddLabels = Object.keys(configFile.groups).length > 0
   const shouldAddSummary = config.applyLabels || config.applyComment
   const shouldAddReactions = shouldAddLabels || shouldAddSummary
@@ -56,6 +84,76 @@ export async function runTriageWorkflow(
       await removeEyes(octokit, config)
     }
   }
+}
+
+/**
+ * Run triage workflow for multiple issues from a search query
+ */
+async function runBulkTriageWorkflow(
+  octokit: Octokit,
+  config: BulkLabelTriageWorkflowConfig,
+  configFile: ConfigFileLabels
+): Promise<string> {
+  core.info(`Running bulk triage workflow with query: ${config.issueQuery}`)
+
+  // Search for issues and pull requests using the provided query
+  const items = await searchIssues(octokit, config.issueQuery, config.repoOwner, config.repoName)
+
+  if (items.length === 0) {
+    core.info('No items found matching the search query')
+
+    // Return an empty results file
+    const finalResponseFile = path.join(config.tempDir, 'triage-assistant', 'bulk-responses.json')
+    await fs.promises.mkdir(path.dirname(finalResponseFile), { recursive: true })
+    await fs.promises.writeFile(finalResponseFile, JSON.stringify({}))
+    return finalResponseFile
+  }
+
+  core.info(`Processing ${items.length} items (issues and pull requests)`)
+
+  const itemResults: Record<number, TriageResponse> = {}
+
+  // Process each item individually
+  for (const item of items) {
+    core.info(`Processing item #${item.number}`)
+
+    try {
+      // Create a separate config for this item with a unique working directory
+      const itemConfig = {
+        ...config,
+        issueNumber: item.number,
+        tempDir: path.join(config.tempDir, `item-${item.number}`)
+      }
+
+      // Run the single issue workflow for this item (works for both issues and PRs)
+      const responseFile = await runSingleIssueTriageWorkflow(octokit, itemConfig, configFile)
+
+      // If we got a response file, load it and store the result
+      if (responseFile) {
+        try {
+          const responseContent = await fs.promises.readFile(responseFile, 'utf8')
+          const response = JSON.parse(responseContent) as TriageResponse
+          itemResults[item.number] = response
+
+          core.info(`Successfully processed item #${item.number}`)
+        } catch (error) {
+          core.warning(`Failed to read response file for item #${item.number}: ${error}`)
+        }
+      }
+    } catch (error) {
+      core.error(`Failed to process item #${item.number}: ${error}`)
+      // Continue with other items even if one fails
+    }
+  }
+
+  // Create final merged response file
+  const finalResponseFile = path.join(config.tempDir, 'triage-assistant', 'bulk-responses.json')
+  await fs.promises.mkdir(path.dirname(finalResponseFile), { recursive: true })
+  await fs.promises.writeFile(finalResponseFile, JSON.stringify(itemResults, null, 2))
+
+  core.info(`Bulk triage complete. Processed ${Object.keys(itemResults).length} of ${items.length} items successfully`)
+
+  return finalResponseFile
 }
 
 /**

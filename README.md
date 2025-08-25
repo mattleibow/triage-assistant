@@ -15,6 +15,8 @@ engagement scoring for project prioritization.
 - **Explicit Mode Selection**: Choose between `apply-labels` and `engagement-score` modes for clear operation intent
 - **AI-Powered Triage & Labelling**: Automatically analyze issue content and apply appropriate labels using advanced
   language models
+- **Bulk Issue Processing**: Apply labels to multiple issues using GitHub search queries (e.g.,
+  `is:issue state:open created:>@today-30d`)
 - **Engagement Scoring**: Calculate numerical engagement scores based on community activity and interaction
 - **Batch Configuration**: Labelling and triage processes multiple label groups from `.triagerc.yml` configuration
 - **GitHub Projects Integration**: Automatically update project fields with calculated engagement scores
@@ -64,6 +66,53 @@ jobs:
           apply-labels: true
           apply-comment: true
 ```
+
+### Bulk Labeling with GitHub Search
+
+Apply labels to multiple issues found by a GitHub search query:
+
+```yaml
+name: 'Bulk Triage Recent Issues'
+
+on:
+  schedule:
+    - cron: '0 9 * * 1' # Weekly on Mondays
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+  pull-requests: write
+  models: read
+
+jobs:
+  bulk-triage:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Bulk apply labels to recent issues and PRs
+        uses: mattleibow/triage-assistant@v1
+        with:
+          mode: 'apply-labels'
+          issue-query: 'state:open created:>@today-30d'
+          apply-labels: true
+          apply-comment: true
+```
+
+**Search Query Examples:**
+
+- `state:open created:>@today-30d` - Open issues and PRs from last 30 days
+- `is:issue state:open created:>@today-30d` - Open issues only from last 30 days
+- `is:pr state:open created:>@today-30d` - Open pull requests only from last 30 days
+- `state:open created:2025-08-01..2025-08-14` - Issues and PRs from specific date range
+- `is:issue state:open label:bug -label:triaged` - Open bugs not yet triaged
+- `is:pr state:open no:assignee` - Unassigned open pull requests
+- `state:open no:assignee` - Unassigned open issues and PRs
+
+**Output:** Creates a `bulk-responses.json` file containing a dictionary mapping issue numbers to their triage
+responses.
 
 ### Engagement Score Mode
 
@@ -143,13 +192,14 @@ Focuses on calculating and applying engagement scores to project issues.
 
 ### General Inputs
 
-| Name             | Description                                        | Default                 | Required |
-| ---------------- | -------------------------------------------------- | ----------------------- | -------- |
-| `mode`           | Operation mode: `apply-labels`, `engagement-score` | `apply-labels`          | No       |
-| `issue`          | The issue number to triage                         | Current issue/PR number | No       |
-| `token`          | GitHub token for API access                        | `''`                    | No       |
-| `fallback-token` | Fallback GitHub token for API access               | `${{ github.token }}`   | No       |
-| `dry-run`        | Run in dry-run mode without making changes         | `false`                 | No       |
+| Name             | Description                                          | Default                 | Required |
+| ---------------- | ---------------------------------------------------- | ----------------------- | -------- |
+| `mode`           | Operation mode: `apply-labels`, `engagement-score`   | `apply-labels`          | No       |
+| `issue`          | The issue number to triage                           | Current issue/PR number | No       |
+| `issue-query`    | GitHub search query to find issues and PRs to triage | `''`                    | No       |
+| `token`          | GitHub token for API access                          | `''`                    | No       |
+| `fallback-token` | Fallback GitHub token for API access                 | `${{ github.token }}`   | No       |
+| `dry-run`        | Run in dry-run mode without making changes           | `false`                 | No       |
 
 ### Labelling Mode Inputs
 

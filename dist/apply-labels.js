@@ -31331,12 +31331,28 @@ function sanitizeMarkdownContent(content) {
  * @returns Validated number or 0 if invalid
  */
 function validateNumericInput(input, fieldName) {
-    if (!input.trim())
+    if (!input?.trim())
         return 0;
     const num = parseInt(input, 10);
     if (isNaN(num) || num < 0) {
         coreExports.warning(`Invalid ${fieldName}: ${input}. Using 0 as fallback.`);
         return 0;
+    }
+    return num;
+}
+/**
+ * Validates and sanitizes optional numeric input
+ * @param input Raw string input
+ * @param fieldName Field name for error messages
+ * @returns Validated number or undefined if invalid or empty
+ */
+function validateOptionalNumericInput(input, fieldName) {
+    if (!input?.trim())
+        return undefined;
+    const num = parseInt(input, 10);
+    if (isNaN(num) || num < 0) {
+        coreExports.warning(`Invalid ${fieldName}: ${input}. Ignoring invalid value.`);
+        return undefined;
     }
     return num;
 }
@@ -39328,6 +39344,56 @@ function addComments(comments, allComments) {
     }
     return comments.pageInfo.endCursor;
 }
+/**
+ * Search for issues and pull requests using GitHub's search API
+ *
+ * @param octokit The GitHub API client
+ * @param query The search query (e.g., "is:issue state:open created:>@today-30d", "is:pr state:open")
+ * @param repoOwner Repository owner to scope the search
+ * @param repoName Repository name to scope the search
+ * @returns Array of issues and pull requests found by the search
+ */
+async function searchIssues(octokit, query, repoOwner, repoName) {
+    try {
+        // Add repository scope to the query if not already present
+        const scopedQuery = query.includes('repo:') ? query : `${query} repo:${repoOwner}/${repoName}`;
+        coreExports.info(`Searching for issues and pull requests with query: ${scopedQuery}`);
+        const searchResult = await octokit.rest.search.issuesAndPullRequests({
+            q: scopedQuery,
+            sort: 'created',
+            order: 'desc',
+            per_page: 100,
+            advanced_search: true
+        });
+        // Include both issues and pull requests
+        const items = searchResult.data.items.map((item) => ({
+            id: item.id.toString(),
+            owner: repoOwner,
+            repo: repoName,
+            number: item.number,
+            assignees: item.assignees?.map((assignee) => ({
+                login: assignee.login || '',
+                type: assignee.type || ''
+            })) || [],
+            body: item.body || '',
+            closedAt: item.closed_at ? new Date(item.closed_at) : null,
+            createdAt: new Date(item.created_at),
+            updatedAt: new Date(item.updated_at),
+            state: item.state,
+            title: item.title,
+            user: {
+                login: item.user?.login || '',
+                type: item.user?.type || ''
+            }
+        }));
+        coreExports.info(`Found ${items.length} items (issues and pull requests) matching the query`);
+        return items;
+    }
+    catch (error) {
+        coreExports.error(`Failed to search for issues: ${error}`);
+        throw error;
+    }
+}
 
 const systemPrompt = `
 You are an assistant helping to triage GitHub issues. Your
@@ -39479,6 +39545,22 @@ async function generatePromptFile(template, promptPath, config, mergedResponseFi
  */
 async function runTriageWorkflow(config, configFile) {
     const octokit = githubExports.getOctokit(config.token);
+    if (config.issueQuery) {
+        // Process all issues based on the query
+        return await runBulkTriageWorkflow(octokit, config, configFile);
+    }
+    else if (config.issueNumber && config.issueNumber > 0) {
+        // Process a single issue based on the number
+        return await runSingleIssueTriageWorkflow(octokit, config, configFile);
+    }
+    else {
+        throw new Error('Either issue number or issue query must be provided for triage workflow');
+    }
+}
+/**
+ * Run triage workflow for a single issue
+ */
+async function runSingleIssueTriageWorkflow(octokit, config, configFile) {
     const shouldAddLabels = Object.keys(configFile.groups).length > 0;
     const shouldAddSummary = config.applyLabels || config.applyComment;
     const shouldAddReactions = shouldAddLabels || shouldAddSummary;
@@ -39512,6 +39594,60 @@ async function runTriageWorkflow(config, configFile) {
             await removeEyes(octokit, config);
         }
     }
+}
+/**
+ * Run triage workflow for multiple issues from a search query
+ */
+async function runBulkTriageWorkflow(octokit, config, configFile) {
+    coreExports.info(`Running bulk triage workflow with query: ${config.issueQuery}`);
+    // Search for issues and pull requests using the provided query
+    const items = await searchIssues(octokit, config.issueQuery, config.repoOwner, config.repoName);
+    if (items.length === 0) {
+        coreExports.info('No items found matching the search query');
+        // Return an empty results file
+        const finalResponseFile = path.join(config.tempDir, 'triage-assistant', 'bulk-responses.json');
+        await fs.promises.mkdir(path.dirname(finalResponseFile), { recursive: true });
+        await fs.promises.writeFile(finalResponseFile, JSON.stringify({}));
+        return finalResponseFile;
+    }
+    coreExports.info(`Processing ${items.length} items (issues and pull requests)`);
+    const itemResults = {};
+    // Process each item individually
+    for (const item of items) {
+        coreExports.info(`Processing item #${item.number}`);
+        try {
+            // Create a separate config for this item with a unique working directory
+            const itemConfig = {
+                ...config,
+                issueNumber: item.number,
+                tempDir: path.join(config.tempDir, `item-${item.number}`)
+            };
+            // Run the single issue workflow for this item (works for both issues and PRs)
+            const responseFile = await runSingleIssueTriageWorkflow(octokit, itemConfig, configFile);
+            // If we got a response file, load it and store the result
+            if (responseFile) {
+                try {
+                    const responseContent = await fs.promises.readFile(responseFile, 'utf8');
+                    const response = JSON.parse(responseContent);
+                    itemResults[item.number] = response;
+                    coreExports.info(`Successfully processed item #${item.number}`);
+                }
+                catch (error) {
+                    coreExports.warning(`Failed to read response file for item #${item.number}: ${error}`);
+                }
+            }
+        }
+        catch (error) {
+            coreExports.error(`Failed to process item #${item.number}: ${error}`);
+            // Continue with other items even if one fails
+        }
+    }
+    // Create final merged response file
+    const finalResponseFile = path.join(config.tempDir, 'triage-assistant', 'bulk-responses.json');
+    await fs.promises.mkdir(path.dirname(finalResponseFile), { recursive: true });
+    await fs.promises.writeFile(finalResponseFile, JSON.stringify(itemResults, null, 2));
+    coreExports.info(`Bulk triage complete. Processed ${Object.keys(itemResults).length} of ${items.length} items successfully`);
+    return finalResponseFile;
 }
 /**
  * Merges response JSON files and applies labels and comments to the issue.
@@ -51268,7 +51404,8 @@ async function runWorkflow(triageModeOverride) {
         // Get project and issue numbers
         const projectInput = coreExports.getInput('project');
         const issueInput = coreExports.getInput('issue');
-        const issueContext = githubExports.context.issue?.number || 0;
+        const issueQueryInput = coreExports.getInput('issue-query');
+        const issueContext = githubExports.context.issue?.number;
         // Make sure they are correct for the mode
         if (triageMode === TriageMode.EngagementScore) {
             if (!projectInput && !issueInput) {
@@ -51276,8 +51413,11 @@ async function runWorkflow(triageModeOverride) {
             }
         }
         else if (triageMode === TriageMode.ApplyLabels) {
-            if (!issueInput && !issueContext) {
-                throw new Error('Issue number is required for applying labels');
+            if (!issueInput && !issueQueryInput && !issueContext) {
+                throw new Error('Issue number or issue query is required for applying labels');
+            }
+            if (issueInput && issueQueryInput) {
+                throw new Error('Cannot specify both issue number and issue query - please use only one');
             }
         }
         // Validate repository context
@@ -51298,7 +51438,8 @@ async function runWorkflow(triageModeOverride) {
             applyScores: coreExports.getInput('apply-scores')?.toLowerCase() === 'true',
             commentFooter: coreExports.getInput('comment-footer'),
             dryRun: coreExports.getInput('dry-run')?.toLowerCase() === 'true',
-            issueNumber: validateNumericInput(issueInput || issueContext.toString(), 'issue number'),
+            issueNumber: validateOptionalNumericInput(issueInput || issueContext?.toString(), 'issue number'),
+            issueQuery: issueQueryInput || undefined,
             projectColumn: coreExports.getInput('project-column') || DEFAULT_PROJECT_COLUMN_NAME,
             projectNumber: validateNumericInput(projectInput, 'project number'),
             repoName: githubExports.context.repo.repo,

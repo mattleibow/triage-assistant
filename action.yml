@@ -35,6 +35,10 @@ inputs:
     description: 'The issue number of the issue to triage'
     required: false
     default: ''
+  issue-query:
+    description: 'GitHub search query to find issues to triage (e.g., "is:issue state:open created:>@today-30d")'
+    required: false
+    default: ''
 
   # Mode selection
   mode:
