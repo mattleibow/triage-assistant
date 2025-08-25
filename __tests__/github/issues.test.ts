@@ -536,7 +536,8 @@ ${mockFooter}
         q: 'is:issue state:open repo:owner/repo',
         sort: 'created',
         order: 'desc',
-        per_page: 100
+        per_page: 100,
+        advanced_search: true
       })
 
       expect(result).toEqual([
@@ -571,7 +572,8 @@ ${mockFooter}
         q: 'is:issue repo:owner/repo state:open',
         sort: 'created',
         order: 'desc',
-        per_page: 100
+        per_page: 100,
+        advanced_search: true
       })
     })
 

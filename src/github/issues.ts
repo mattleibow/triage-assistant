@@ -5,7 +5,7 @@ import * as path from 'path'
 import * as utils from '../utils.js'
 import { GetIssueDetailsQuery, Sdk as GraphQLSdk } from '../generated/graphql.js'
 import { GitHubIssueConfig, TriageConfig } from '../config.js'
-import { IssueDetails, ReactionData, CommentData, UserInfo, Issue } from './types.js'
+import { IssueDetails, ReactionData, CommentData, UserInfo, IssueBody } from './types.js'
 
 type Octokit = ReturnType<typeof github.getOctokit>
 type GetIssueDetailsQueryIssue = NonNullable<NonNullable<GetIssueDetailsQuery['repository']>['issue']>
@@ -352,7 +352,7 @@ export async function searchIssues(
   query: string,
   repoOwner: string,
   repoName: string
-): Promise<Issue[]> {
+): Promise<IssueBody[]> {
   try {
     // Add repository scope to the query if not already present
     const scopedQuery = query.includes('repo:') ? query : `${query} repo:${repoOwner}/${repoName}`
@@ -363,17 +363,33 @@ export async function searchIssues(
       q: scopedQuery,
       sort: 'created',
       order: 'desc',
-      per_page: 100
+      per_page: 100,
+      advanced_search: true
     })
 
     // Filter to only include issues (not pull requests)
-    const issues: Issue[] = searchResult.data.items
+    const issues: IssueBody[] = searchResult.data.items
       .filter((item) => !item.pull_request) // Exclude pull requests
       .map((item) => ({
         id: item.id.toString(),
         owner: repoOwner,
         repo: repoName,
-        number: item.number
+        number: item.number,
+        assignees:
+          item.assignees?.map((assignee) => ({
+            login: assignee.login || '',
+            type: assignee.type || ''
+          })) || [],
+        body: item.body || '',
+        closedAt: item.closed_at ? new Date(item.closed_at) : null,
+        createdAt: new Date(item.created_at),
+        updatedAt: new Date(item.updated_at),
+        state: item.state,
+        title: item.title,
+        user: {
+          login: item.user?.login || '',
+          type: item.user?.type || ''
+        }
       }))
 
     core.info(`Found ${issues.length} issues matching the query`)
