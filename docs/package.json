@@ -1,0 +1,25 @@
+{
+  "name": "triage-assistant-docs",
+  "version": "1.0.0",
+  "description": "Documentation for AI Triage Assistant GitHub Action",
+  "type": "module",
+  "scripts": {
+    "dev": "astro dev",
+    "start": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview",
+    "astro": "astro"
+  },
+  "keywords": [
+    "documentation",
+    "github-action",
+    "ai",
+    "triage"
+  ],
+  "author": "Matthew Leibowitz",
+  "license": "MIT",
+  "dependencies": {
+    "@astrojs/starlight": "^0.35.2",
+    "astro": "^5.13.3"
+  }
+}

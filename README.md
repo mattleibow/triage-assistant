@@ -5,10 +5,40 @@
 [![Check dist/](https://github.com/mattleibow/triage-assistant/actions/workflows/check-dist.yml/badge.svg)](https://github.com/mattleibow/triage-assistant/actions/workflows/check-dist.yml)
 [![CodeQL](https://github.com/mattleibow/triage-assistant/actions/workflows/check-codeql-analysis.yml/badge.svg)](https://github.com/mattleibow/triage-assistant/actions/workflows/check-codeql-analysis.yml)
 [![Coverage](./badges/coverage.svg)](./badges/coverage.svg)
+[![Documentation](https://img.shields.io/badge/docs-available-blue)](https://mattleibow.github.io/triage-assistant/)
 
 An AI-powered GitHub Action that provides sophisticated issue and pull request triage capabilities with explicit
 mode-based operation. Features include AI-powered label application using large language models and comprehensive
 engagement scoring for project prioritization.
+
+## 📖 Documentation
+
+**[View the complete documentation →](https://mattleibow.github.io/triage-assistant/)**
+
+The documentation includes:
+- [Getting Started Guide](https://mattleibow.github.io/triage-assistant/guides/getting-started/)
+- [Configuration Reference](https://mattleibow.github.io/triage-assistant/guides/configuration/)
+- [Usage Examples](https://mattleibow.github.io/triage-assistant/guides/examples/)
+- [API Reference](https://mattleibow.github.io/triage-assistant/reference/engagement-scoring/)
+
+## Quick Start
+
+```yaml
+name: 'AI Triage'
+on:
+  issues:
+    types: [opened]
+
+jobs:
+  triage:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: mattleibow/triage-assistant@v1
+        with:
+          mode: 'apply-labels'
+          apply-labels: true
+          ai-token: ${{ secrets.AI_TOKEN }}
+```
 
 ## Features
 

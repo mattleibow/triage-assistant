@@ -28,6 +28,7 @@
     "node": ">=20"
   },
   "scripts": {
+    "build": "npm run package",
     "bundle": "npm run format:write && npm run package",
     "ci-test": "cross-env NODE_OPTIONS=--experimental-vm-modules NODE_NO_WARNINGS=1 npx jest",
     "codegen": "graphql-codegen",

@@ -1,0 +1,41 @@
+---
+title: Welcome to Triage Assistant
+description: AI-powered GitHub Action for sophisticated issue and pull request triage
+---
+
+# AI Triage Assistant
+
+An AI-powered GitHub Action that provides sophisticated issue and pull request triage capabilities with explicit mode-based operation. Features include AI-powered label application using large language models and comprehensive engagement scoring for project prioritization.
+
+## Features
+
+- **AI-Powered Labeling**: Intelligent label application using large language models
+- **Engagement Scoring**: Mathematical scoring system for issue prioritization
+- **Multi-Mode Operation**: Different modes for different triage workflows
+- **GitHub Projects Integration**: Seamless integration with GitHub Projects v2
+- **Bulk Operations**: Process multiple issues with search queries
+
+## Quick Start
+
+```yaml
+name: 'Triage Issues'
+on:
+  issues:
+    types: [opened]
+
+jobs:
+  triage:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: mattleibow/triage-assistant@v1
+        with:
+          mode: 'apply-labels'
+          apply-labels: true
+          ai-token: ${{ secrets.AI_TOKEN }}
+```
+
+## Navigation
+
+- [Getting Started](/guides/getting-started/) - Set up the action in your repository
+- [Configuration](/guides/configuration/) - Learn about all configuration options
+- [Usage Examples](/guides/examples/) - See real-world usage patterns

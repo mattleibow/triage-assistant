@@ -1,0 +1,33 @@
+# Exclude documentation from npm package
+docs/
+
+# Exclude development and build files
+__tests__/
+__fixtures__/
+.env.example
+.github/
+.vscode/
+.devcontainer/
+*.test.ts
+*.test.js
+coverage/
+.nyc_output/
+
+# Build and config files not needed in package
+rollup.config.ts
+jest.config.js
+eslint.config.mjs
+tsconfig.*.json
+.prettierrc.json
+.prettierignore
+.markdown-lint.yml
+.yaml-lint.yml
+.gitleaksignore
+.checkov.yaml
+.licensed.yml
+.licenses/
+schemas/
+script/
+
+# Badges and other repo-specific files
+badges/
