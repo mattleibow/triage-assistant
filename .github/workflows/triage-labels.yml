@@ -19,7 +19,7 @@ on:
         type: number
         default: ''
       issue_query:
-        description: 'GitHub search query to find issues to triage (e.g., "is:issue state:open created:>@today-30d")'
+        description: 'GitHub search query to find issues to triage (e.g., "is:issue state:open created:>@today-7d")'
         required: false
         type: string
         default: ''
