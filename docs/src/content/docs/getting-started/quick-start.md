@@ -54,18 +54,18 @@ Create `.triagerc.yml` in your repository root to configure label groups:
 labels:
   groups:
     type:
-      description: "Issue type classification"
+      description: 'Issue type classification'
       labels:
-        - "bug"
-        - "feature"
-        - "documentation"
-        - "question"
+        - 'bug'
+        - 'feature'
+        - 'documentation'
+        - 'question'
     priority:
-      description: "Priority level"
+      description: 'Priority level'
       labels:
-        - "priority-high"
-        - "priority-medium" 
-        - "priority-low"
+        - 'priority-high'
+        - 'priority-medium'
+        - 'priority-low'
 ```
 
 ### 3. Test the Setup
@@ -106,10 +106,12 @@ For focused functionality, you can use specific sub-actions:
 
 ### Common Issues
 
-**Workflow doesn't trigger**: Check that the workflow file is in `.github/workflows/` and uses the correct event triggers.
+**Workflow doesn't trigger**: Check that the workflow file is in `.github/workflows/` and uses the correct event
+triggers.
 
 **Permission errors**: Ensure your workflow has the necessary permissions listed in the `permissions` section.
 
 **AI model access issues**: Verify that GitHub Models is available in your repository or configure Azure AI credentials.
 
-For more help, check the [Reference documentation](../../reference/) or [open an issue](https://github.com/mattleibow/triage-assistant/issues) on GitHub.
+For more help, check the [Reference documentation](../../reference/) or
+[open an issue](https://github.com/mattleibow/triage-assistant/issues) on GitHub.

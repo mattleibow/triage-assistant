@@ -11,42 +11,42 @@ AI Triage Assistant provides extensive configuration options through workflow in
 
 ### Mode Selection
 
-| Input | Description | Default | Options |
-|-------|-------------|---------|---------|
+| Input  | Description    | Default        | Options                            |
+| ------ | -------------- | -------------- | ---------------------------------- |
 | `mode` | Operation mode | `apply-labels` | `apply-labels`, `engagement-score` |
 
 ### General Inputs
 
-| Input | Description | Default | Required |
-|-------|-------------|---------|----------|
-| `token` | GitHub token | `${{ github.token }}` | No |
-| `dry-run` | Run without making changes | `false` | No |
+| Input     | Description                | Default               | Required |
+| --------- | -------------------------- | --------------------- | -------- |
+| `token`   | GitHub token               | `${{ github.token }}` | No       |
+| `dry-run` | Run without making changes | `false`               | No       |
 
 ### AI Configuration
 
-| Input | Description | Default | Required |
-|-------|-------------|---------|----------|
-| `ai-token` | AI service token | `${{ github.token }}` | No |
-| `ai-endpoint` | AI service endpoint | GitHub Models | No |
-| `ai-model` | AI model to use | `openai/gpt-4o` | No |
+| Input         | Description         | Default               | Required |
+| ------------- | ------------------- | --------------------- | -------- |
+| `ai-token`    | AI service token    | `${{ github.token }}` | No       |
+| `ai-endpoint` | AI service endpoint | GitHub Models         | No       |
+| `ai-model`    | AI model to use     | `openai/gpt-4o`       | No       |
 
 ### Labeling Mode Inputs
 
-| Input | Description | Default | Required |
-|-------|-------------|---------|----------|
-| `apply-labels` | Apply AI-suggested labels | `false` | No |
-| `apply-comment` | Add AI analysis comment | `false` | No |
-| `comment-footer` | Footer text for comments | Default disclaimer | No |
-| `issue` | Specific issue number | Current issue | No |
-| `issue-query` | GitHub search query for bulk processing | - | No |
+| Input            | Description                             | Default            | Required |
+| ---------------- | --------------------------------------- | ------------------ | -------- |
+| `apply-labels`   | Apply AI-suggested labels               | `false`            | No       |
+| `apply-comment`  | Add AI analysis comment                 | `false`            | No       |
+| `comment-footer` | Footer text for comments                | Default disclaimer | No       |
+| `issue`          | Specific issue number                   | Current issue      | No       |
+| `issue-query`    | GitHub search query for bulk processing | -                  | No       |
 
 ### Engagement Scoring Inputs
 
-| Input | Description | Default | Required |
-|-------|-------------|---------|----------|
-| `project` | GitHub Project number | - | For project scoring |
-| `project-column` | Project field name for scores | `Engagement Score` | No |
-| `apply-scores` | Update project with scores | `false` | No |
+| Input            | Description                   | Default            | Required            |
+| ---------------- | ----------------------------- | ------------------ | ------------------- |
+| `project`        | GitHub Project number         | -                  | For project scoring |
+| `project-column` | Project field name for scores | `Engagement Score` | No                  |
+| `apply-scores`   | Update project with scores    | `false`            | No                  |
 
 ## Configuration Files
 
@@ -59,33 +59,33 @@ Create `.triagerc.yml` in your repository root or `.github/` directory:
 labels:
   groups:
     type:
-      description: "Issue type classification"
-      template: "multi-label"  # single-label, multi-label, regression, missing-info
+      description: 'Issue type classification'
+      template: 'multi-label' # single-label, multi-label, regression, missing-info
       labels:
-        - "bug"
-        - "feature"
-        - "documentation"
-        - "question"
-        - "enhancement"
-    
+        - 'bug'
+        - 'feature'
+        - 'documentation'
+        - 'question'
+        - 'enhancement'
+
     priority:
-      description: "Priority classification"
-      template: "single-label"
+      description: 'Priority classification'
+      template: 'single-label'
       labels:
-        - "priority-critical"
-        - "priority-high"
-        - "priority-medium"
-        - "priority-low"
+        - 'priority-critical'
+        - 'priority-high'
+        - 'priority-medium'
+        - 'priority-low'
 
 # Engagement scoring configuration
 engagement:
   weights:
-    comments: 3              # Discussion volume weight
-    reactions: 1             # Community reactions weight
-    contributors: 2          # Unique contributors weight
-    lastActivity: 1          # Recent activity weight
-    issueAge: 1              # Issue age factor weight
-    linkedPullRequests: 2    # Associated PRs weight
+    comments: 3 # Discussion volume weight
+    reactions: 1 # Community reactions weight
+    contributors: 2 # Unique contributors weight
+    lastActivity: 1 # Recent activity weight
+    issueAge: 1 # Issue age factor weight
+    linkedPullRequests: 2 # Associated PRs weight
 ```
 
 ### Label Templates

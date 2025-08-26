@@ -5,7 +5,8 @@ description: Focused functionality with clean interfaces using specialized sub-a
 
 # Sub-Actions
 
-AI Triage Assistant provides focused sub-actions for specific functionality, similar to GitHub's cache action. Each sub-action has a clean interface with only the inputs relevant to its specific purpose.
+AI Triage Assistant provides focused sub-actions for specific functionality, similar to GitHub's cache action. Each
+sub-action has a clean interface with only the inputs relevant to its specific purpose.
 
 ## Available Sub-Actions
 
@@ -21,6 +22,7 @@ Focused AI-powered label application:
 ```
 
 **Inputs:**
+
 - `apply-labels`: Whether to apply AI-suggested labels
 - `apply-comment`: Whether to add AI analysis comments
 - `comment-footer`: Custom footer for AI comments
@@ -40,6 +42,7 @@ Dedicated engagement scoring:
 ```
 
 **Inputs:**
+
 - `project`: GitHub Project number
 - `issue`: Specific issue number (optional)
 - `project-column`: Project field name for scores
@@ -92,7 +95,7 @@ No mode switching or conditional logic:
 # ✅ Explicit functionality
 - uses: mattleibow/triage-assistant/apply-labels@v1
 
-# ❌ Requires understanding mode system  
+# ❌ Requires understanding mode system
 - uses: mattleibow/triage-assistant@v1
   with:
     mode: 'apply-labels'
@@ -118,6 +121,7 @@ No mode switching or conditional logic:
 ### From Main Action to Sub-Actions
 
 **Before (Main Action):**
+
 ```yaml
 - uses: mattleibow/triage-assistant@v1
   with:
@@ -127,6 +131,7 @@ No mode switching or conditional logic:
 ```
 
 **After (Sub-Action):**
+
 ```yaml
 - uses: mattleibow/triage-assistant/apply-labels@v1
   with:
@@ -136,9 +141,9 @@ No mode switching or conditional logic:
 
 ### Configuration Mapping
 
-| Main Action | Sub-Action |
-|-------------|------------|
-| `mode: apply-labels` | `mattleibow/triage-assistant/apply-labels@v1` |
+| Main Action              | Sub-Action                                        |
+| ------------------------ | ------------------------------------------------- |
+| `mode: apply-labels`     | `mattleibow/triage-assistant/apply-labels@v1`     |
 | `mode: engagement-score` | `mattleibow/triage-assistant/engagement-score@v1` |
 
 All other inputs remain the same, but only relevant ones are available.

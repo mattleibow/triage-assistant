@@ -5,7 +5,8 @@ description: Calculate and track issue engagement for intelligent prioritization
 
 # Engagement Scoring
 
-The engagement scoring system provides mathematical analysis of community engagement to help prioritize issues based on actual activity and interest levels.
+The engagement scoring system provides mathematical analysis of community engagement to help prioritize issues based on
+actual activity and interest levels.
 
 ## How Engagement Scoring Works
 
@@ -20,7 +21,7 @@ Score = (Comments × comments_weight) + (Reactions × reactions_weight) +
 ### Scoring Components
 
 - **Comments**: Discussion volume indicates high interest and complexity
-- **Reactions**: Emotional engagement and community sentiment  
+- **Reactions**: Emotional engagement and community sentiment
 - **Contributors**: Diversity of input reflects broad community interest
 - **Time Factors**: Recent activity and issue age for relevance
 - **Pull Requests**: Active development work on the issue
@@ -32,12 +33,12 @@ Score = (Comments × comments_weight) + (Reactions × reactions_weight) +
 ```yaml
 engagement:
   weights:
-    comments: 3              # Discussion volume
-    reactions: 1             # Community reactions
-    contributors: 2          # Unique contributors
-    lastActivity: 1          # Recent activity
-    issueAge: 1              # Issue age factor
-    linkedPullRequests: 2    # Associated PRs
+    comments: 3 # Discussion volume
+    reactions: 1 # Community reactions
+    contributors: 2 # Unique contributors
+    lastActivity: 1 # Recent activity
+    issueAge: 1 # Issue age factor
+    linkedPullRequests: 2 # Associated PRs
 ```
 
 ### Custom Weight Configuration
@@ -47,12 +48,12 @@ Create `.triagerc.yml` to customize scoring:
 ```yaml
 engagement:
   weights:
-    comments: 4              # Emphasize discussion
-    reactions: 2             # Increase reaction weight
-    contributors: 3          # Prioritize diverse input
-    lastActivity: 1          # Standard recency weight
-    issueAge: 1              # Standard age weight
-    linkedPullRequests: 5    # Heavily prioritize active development
+    comments: 4 # Emphasize discussion
+    reactions: 2 # Increase reaction weight
+    contributors: 3 # Prioritize diverse input
+    lastActivity: 1 # Standard recency weight
+    issueAge: 1 # Standard age weight
+    linkedPullRequests: 5 # Heavily prioritize active development
 ```
 
 ## Usage Modes
@@ -66,7 +67,7 @@ name: 'Weekly Engagement Scoring'
 
 on:
   schedule:
-    - cron: '0 9 * * 1'  # Weekly on Mondays
+    - cron: '0 9 * * 1' # Weekly on Mondays
   workflow_dispatch:
 
 permissions:
@@ -82,7 +83,7 @@ jobs:
       - uses: mattleibow/triage-assistant@v1
         with:
           mode: 'engagement-score'
-          project: 1                    # Your project number
+          project: 1 # Your project number
           apply-scores: true
           project-column: 'Engagement Score'
 ```
@@ -95,8 +96,8 @@ Calculate engagement score for a specific issue:
 - uses: mattleibow/triage-assistant@v1
   with:
     mode: 'engagement-score'
-    issue: 123                         # Specific issue number
-    apply-scores: false                # Just calculate, don't update
+    issue: 123 # Specific issue number
+    apply-scores: false # Just calculate, don't update
 ```
 
 ### Sub-Action Usage
@@ -129,7 +130,7 @@ with:
   project-column: 'Engagement Score'    # Default field name
   # OR
   project-column: 'Community Interest'  # Custom field name
-  # OR  
+  # OR
   project-column: 'Priority Score'      # Alternative naming
 ```
 
@@ -142,7 +143,7 @@ permissions:
   contents: read
   issues: read
   pull-requests: read
-  repository-projects: write            # Required for updating project fields
+  repository-projects: write # Required for updating project fields
 ```
 
 ## Historic Analysis
@@ -160,7 +161,7 @@ The system calculates trend analysis by comparing current scores with previous w
 Issues are classified based on engagement trends:
 
 - **🔥 Hot**: Significantly increasing engagement
-- **📈 Rising**: Moderate increase in engagement  
+- **📈 Rising**: Moderate increase in engagement
 - **📉 Declining**: Decreasing engagement
 - **➡️ Stable**: Consistent engagement levels
 
@@ -264,11 +265,11 @@ Test with specific issues first:
 ```yaml
 with:
   issue: 123
-  apply-scores: false  # Test without making changes
+  apply-scores: false # Test without making changes
 ```
 
 ## Next Steps
 
 - Learn about [AI-Powered Labeling](../ai-labeling/) for complete triage
-- Explore [Sub-Actions](../sub-actions/) for focused workflows  
+- Explore [Sub-Actions](../sub-actions/) for focused workflows
 - Check the [Configuration guide](../../getting-started/configuration/) for advanced setup
