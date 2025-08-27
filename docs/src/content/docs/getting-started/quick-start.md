@@ -85,9 +85,9 @@ labels:
 3. Check the Actions tab to see the workflow run
 4. The issue should receive appropriate labels and an AI-generated comment
 
-## Alternative: Sub-Actions
+## Alternative: Focused Actions
 
-For focused functionality, you can use specific sub-actions:
+For focused functionality, you can use specific actions:
 
 ### Apply Labels Only
 

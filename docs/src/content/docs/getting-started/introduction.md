@@ -16,7 +16,7 @@ requests by:
 
 - **Automatically applying labels** based on issue content using AI analysis
 - **Calculating engagement scores** to identify high-priority issues based on community activity
-- **Providing focused sub-actions** with clean interfaces for specific functionality
+- **Providing focused actions** with clean interfaces for specific functionality
 - **Integrating with GitHub Projects v2** for automated workflow management
 
 ## Key Capabilities

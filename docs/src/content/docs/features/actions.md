@@ -1,14 +1,14 @@
 ---
-title: Sub-Actions
-description: Focused functionality with clean interfaces using specialized sub-actions
+title: Actions
+description: Focused functionality with clean interfaces using specialized actions
 ---
 
-# Sub-Actions
+# Actions
 
-AI Triage Assistant provides focused sub-actions for specific functionality, similar to GitHub's cache action. Each
-sub-action has a clean interface with only the inputs relevant to its specific purpose.
+AI Triage Assistant provides focused actions for specific functionality. Each action has a clean interface with only the
+inputs relevant to its specific purpose.
 
-## Available Sub-Actions
+## Available Actions
 
 ### apply-labels
 
@@ -48,11 +48,11 @@ Dedicated engagement scoring:
 - `project-column`: Project field name for scores
 - `apply-scores`: Whether to update project fields
 
-## Benefits of Sub-Actions
+## Benefits of Focused Actions
 
 ### Cleaner Configuration
 
-Each sub-action only exposes relevant inputs:
+Each action only exposes relevant inputs:
 
 ```yaml
 # ✅ Clean - only engagement scoring inputs
@@ -60,19 +60,11 @@ Each sub-action only exposes relevant inputs:
   with:
     project: 8
     apply-scores: true
-
-# ❌ Cluttered - all inputs available even if unused
-- uses: mattleibow/triage-assistant@v1
-  with:
-    mode: 'engagement-score'
-    project: 8
-    apply-scores: true
-    # Many other unused inputs available...
 ```
 
 ### Better Discoverability
 
-Sub-actions make it clear what functionality is being used:
+Actions make it clear what functionality is being used:
 
 - `apply-labels` - Obviously for AI labeling
 - `engagement-score` - Obviously for engagement analysis
@@ -89,64 +81,21 @@ Focused interfaces mean:
 
 ### Explicit Operation
 
-No mode switching or conditional logic:
+Clear, focused functionality:
 
 ```yaml
 # ✅ Explicit functionality
 - uses: mattleibow/triage-assistant/apply-labels@v1
-
-# ❌ Requires understanding mode system
-- uses: mattleibow/triage-assistant@v1
-  with:
-    mode: 'apply-labels'
 ```
 
-## When to Use Sub-Actions
+## When to Use Actions
 
-### Use Sub-Actions When:
+### Use Focused Actions When:
 
 - You need only one specific feature
 - You want the cleanest possible configuration
 - You're building reusable workflow templates
 - You prefer explicit over implicit behavior
-
-### Use Main Action When:
-
-- You want to switch between modes dynamically
-- You're migrating from older versions
-- You need mode-specific logic in one place
-
-## Migration from Main Action
-
-### From Main Action to Sub-Actions
-
-**Before (Main Action):**
-
-```yaml
-- uses: mattleibow/triage-assistant@v1
-  with:
-    mode: 'apply-labels'
-    apply-labels: true
-    apply-comment: true
-```
-
-**After (Sub-Action):**
-
-```yaml
-- uses: mattleibow/triage-assistant/apply-labels@v1
-  with:
-    apply-labels: true
-    apply-comment: true
-```
-
-### Configuration Mapping
-
-| Main Action              | Sub-Action                                        |
-| ------------------------ | ------------------------------------------------- |
-| `mode: apply-labels`     | `mattleibow/triage-assistant/apply-labels@v1`     |
-| `mode: engagement-score` | `mattleibow/triage-assistant/engagement-score@v1` |
-
-All other inputs remain the same, but only relevant ones are available.
 
 ## Example Workflows
 
@@ -184,7 +133,7 @@ jobs:
           apply-scores: true
 ```
 
-### Conditional Sub-Action Usage
+### Conditional Action Usage
 
 ```yaml
 - name: Label urgent issues
@@ -225,7 +174,7 @@ jobs:
 
 ## Next Steps
 
-- Try the [Quick Start guide](../../getting-started/quick-start/) with sub-actions
+- Try the [Quick Start guide](../../getting-started/quick-start/) with actions
 - Learn about [AI-Powered Labeling](../ai-labeling/) features
 - Explore [Engagement Scoring](../engagement-scoring/) capabilities
 - Check the [Configuration guide](../../getting-started/configuration/) for advanced options

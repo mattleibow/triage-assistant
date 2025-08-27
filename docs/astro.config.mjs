@@ -23,7 +23,7 @@ export default defineConfig({
           items: [
             { label: 'AI-Powered Labeling', slug: 'features/ai-labeling' },
             { label: 'Engagement Scoring', slug: 'features/engagement-scoring' },
-            { label: 'Sub-Actions', slug: 'features/sub-actions' }
+            { label: 'Actions', slug: 'features/actions' }
           ]
         },
         {

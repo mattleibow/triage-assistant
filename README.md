@@ -9,13 +9,12 @@
 > 📖 **[View Complete Documentation](https://mattleibow.github.io/triage-assistant/)** - Comprehensive guides, examples,
 > and API reference
 
-An AI-powered GitHub Action that provides sophisticated issue and pull request triage capabilities with explicit
-mode-based operation. Features include AI-powered label application using large language models and comprehensive
-engagement scoring for project prioritization.
+An AI-powered GitHub Action that provides sophisticated issue and pull request triage capabilities. Features include
+AI-powered label application using large language models and comprehensive engagement scoring for project
+prioritization.
 
 ## Features
 
-- **Explicit Mode Selection**: Choose between `apply-labels` and `engagement-score` modes for clear operation intent
 - **AI-Powered Triage & Labelling**: Automatically analyze issue content and apply appropriate labels using advanced
   language models
 - **Bulk Issue Processing**: Apply labels to multiple issues using GitHub search queries (e.g.,
@@ -23,57 +22,20 @@ engagement scoring for project prioritization.
 - **Engagement Scoring**: Calculate numerical engagement scores based on community activity and interaction
 - **Batch Configuration**: Labelling and triage processes multiple label groups from `.triagerc.yml` configuration
 - **GitHub Projects Integration**: Automatically update project fields with calculated engagement scores
-- **Sub-Action Architecture**: Clean, focused sub-actions for specific functionality (`apply-labels`,
-  `engagement-score`)
+- **Focused Actions**: Clean, focused actions for specific functionality (`apply-labels`, `engagement-score`)
 - **Flexible Configuration**: Support for custom AI models, endpoints, and extensive configuration options
 - **Dry-Run Support**: Test configurations safely without making actual changes
 
 ## Usage
 
-The action operates in two distinct modes, selected via the `mode` parameter:
+The action provides two main functionalities through focused actions:
 
-- **`apply-labels`** (default): AI-powered label application using batch configuration from `.triagerc.yml`
+- **`apply-labels`**: AI-powered label application using batch configuration from `.triagerc.yml`
 - **`engagement-score`**: Calculate and apply engagement scores to GitHub Projects
 
-### Labelling Mode (Default)
+### AI-Powered Labelling
 
-The labelling mode processes multiple label groups configured in your `.triagerc.yml` file. You can use either the main
-action with mode selection or the dedicated sub-action:
-
-#### Using the Main Action
-
-```yaml
-name: 'Triage Issues and Pull Requests'
-
-on:
-  issues:
-    types: [opened]
-  pull_request:
-    types: [opened]
-
-permissions:
-  contents: read
-  issues: write
-  pull-requests: write
-  models: read
-
-jobs:
-  triage:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v5
-
-      - name: Apply labels with AI triage
-        uses: mattleibow/triage-assistant@v1
-        with:
-          mode: 'apply-labels' # default, can be omitted
-          issue: ${{ github.event.number }}
-          apply-labels: true
-          apply-comment: true
-```
-
-#### Using the Sub-Action (Recommended)
+The labelling action processes multiple label groups configured in your `.triagerc.yml` file:
 
 ```yaml
 name: 'Triage Issues and Pull Requests'
@@ -114,40 +76,6 @@ jobs:
 ### Bulk Labeling with GitHub Search
 
 Apply labels to multiple issues found by a GitHub search query:
-
-#### Using the Main Action
-
-```yaml
-name: 'Bulk Triage Recent Issues'
-
-on:
-  schedule:
-    - cron: '0 9 * * 1' # Weekly on Mondays
-  workflow_dispatch:
-
-permissions:
-  contents: read
-  issues: write
-  pull-requests: write
-  models: read
-
-jobs:
-  bulk-triage:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v5
-
-      - name: Bulk apply labels to recent issues and PRs
-        uses: mattleibow/triage-assistant@v1
-        with:
-          mode: 'apply-labels'
-          issue-query: 'state:open created:>@today-30d'
-          apply-labels: true
-          apply-comment: true
-```
-
-#### Using the Sub-Action (Recommended)
 
 ```yaml
 name: 'Bulk Triage Recent Issues'
@@ -191,43 +119,9 @@ jobs:
 **Output:** Creates a `bulk-responses.json` file containing a dictionary mapping issue numbers to their triage
 responses.
 
-### Engagement Score Mode
+### Engagement Scoring
 
 Calculate and apply engagement scores to GitHub Projects:
-
-#### Using the Main Action
-
-```yaml
-name: 'Calculate Engagement Scores'
-
-on:
-  schedule:
-    - cron: '0 */6 * * *' # Every 6 hours
-  workflow_dispatch:
-
-permissions:
-  contents: read
-  issues: read
-  pull-requests: read
-  repository-projects: write
-
-jobs:
-  engagement:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v5
-
-      - name: Calculate engagement scores
-        uses: mattleibow/triage-assistant@v1
-        with:
-          mode: 'engagement-score'
-          project: 8 # Your project number
-          apply-scores: true
-          project-column: 'Engagement Score'
-```
-
-#### Using the Sub-Action (Recommended)
 
 ```yaml
 name: 'Calculate Engagement Scores'
@@ -259,16 +153,16 @@ jobs:
           project-column: 'Engagement Score'
 ```
 
-## Sub-Actions
+## Actions
 
-The triage assistant provides **sub-actions** for focused functionality, similar to GitHub's cache action. Each
-sub-action has a clean interface with only the inputs relevant to its specific purpose.
+The triage assistant provides **focused actions** for specific functionality. Each action has a clean interface with
+only the inputs relevant to its specific purpose.
 
-### Available Sub-Actions
+### Available Actions
 
 #### `mattleibow/triage-assistant/apply-labels`
 
-Focuses on AI-powered label application and issue commenting using batch configuration from `.triagerc.yml`.
+AI-powered label application and issue commenting using batch configuration from `.triagerc.yml`.
 
 ```yaml
 - name: Apply labels to issue
@@ -281,7 +175,7 @@ Focuses on AI-powered label application and issue commenting using batch configu
 
 #### `mattleibow/triage-assistant/engagement-score`
 
-Focuses on calculating and applying engagement scores to project issues.
+Calculate and apply engagement scores to project issues.
 
 ```yaml
 - name: Calculate engagement scores
@@ -292,7 +186,7 @@ Focuses on calculating and applying engagement scores to project issues.
     apply-scores: true
 ```
 
-### Sub-Action Benefits
+### Action Benefits
 
 - **Cleaner configuration**: Only the inputs relevant to each specific function
 - **Better discoverability**: Clear separation of concerns
@@ -305,14 +199,13 @@ Focuses on calculating and applying engagement scores to project issues.
 
 | Name             | Description                                          | Default                 | Required |
 | ---------------- | ---------------------------------------------------- | ----------------------- | -------- |
-| `mode`           | Operation mode: `apply-labels`, `engagement-score`   | `apply-labels`          | No       |
 | `issue`          | The issue number to triage                           | Current issue/PR number | No       |
 | `issue-query`    | GitHub search query to find issues and PRs to triage | `''`                    | No       |
 | `token`          | GitHub token for API access                          | `''`                    | No       |
 | `fallback-token` | Fallback GitHub token for API access                 | `${{ github.token }}`   | No       |
 | `dry-run`        | Run in dry-run mode without making changes           | `false`                 | No       |
 
-### Labelling Mode Inputs
+### Apply Labels Action Inputs
 
 | Name             | Description                               | Default            | Required |
 | ---------------- | ----------------------------------------- | ------------------ | -------- |
@@ -320,7 +213,7 @@ Focuses on calculating and applying engagement scores to project issues.
 | `apply-comment`  | Whether to add a comment with AI analysis | `false`            | No       |
 | `comment-footer` | Footer text for AI comments               | Default disclaimer | No       |
 
-### Engagement Scoring Mode Inputs
+### Engagement Score Action Inputs
 
 | Name             | Description                                         | Default            | Required |
 | ---------------- | --------------------------------------------------- | ------------------ | -------- |

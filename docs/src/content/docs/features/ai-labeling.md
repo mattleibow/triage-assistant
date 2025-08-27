@@ -150,9 +150,9 @@ Process multiple issues with search queries:
     apply-labels: true
 ```
 
-### Sub-Action Usage
+### Action Usage
 
-Use the focused apply-labels sub-action:
+Use the focused apply-labels action:
 
 ```yaml
 - uses: mattleibow/triage-assistant/apply-labels@v1
@@ -229,5 +229,5 @@ with:
 ## Next Steps
 
 - Learn about [Engagement Scoring](../engagement-scoring/) for issue prioritization
-- Explore [Sub-Actions](../sub-actions/) for focused functionality
+- Explore [Actions](../actions/) for focused functionality
 - Check the [Configuration guide](../../getting-started/configuration/) for advanced options

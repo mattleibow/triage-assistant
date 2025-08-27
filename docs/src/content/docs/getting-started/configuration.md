@@ -9,12 +9,6 @@ AI Triage Assistant provides extensive configuration options through workflow in
 
 ## Workflow Inputs
 
-### Mode Selection
-
-| Input  | Description    | Default        | Options                            |
-| ------ | -------------- | -------------- | ---------------------------------- |
-| `mode` | Operation mode | `apply-labels` | `apply-labels`, `engagement-score` |
-
 ### General Inputs
 
 | Input     | Description                | Default               | Required |
@@ -30,7 +24,7 @@ AI Triage Assistant provides extensive configuration options through workflow in
 | `ai-endpoint` | AI service endpoint | GitHub Models         | No       |
 | `ai-model`    | AI model to use     | `openai/gpt-4o`       | No       |
 
-### Labeling Mode Inputs
+### Apply Labels Action Inputs
 
 | Input            | Description                             | Default            | Required |
 | ---------------- | --------------------------------------- | ------------------ | -------- |
@@ -40,7 +34,7 @@ AI Triage Assistant provides extensive configuration options through workflow in
 | `issue`          | Specific issue number                   | Current issue      | No       |
 | `issue-query`    | GitHub search query for bulk processing | -                  | No       |
 
-### Engagement Scoring Inputs
+### Engagement Score Action Inputs
 
 | Input            | Description                   | Default            | Required            |
 | ---------------- | ----------------------------- | ------------------ | ------------------- |
@@ -119,7 +113,7 @@ TRIAGE_AI_MODEL=gpt-4o
 Configure Azure AI or other AI services:
 
 ```yaml
-- uses: mattleibow/triage-assistant@v1
+- uses: mattleibow/triage-assistant/apply-labels@v1
   with:
     ai-endpoint: 'https://your-azure-ai.cognitiveservices.azure.com'
     ai-model: 'gpt-4o'
@@ -131,9 +125,8 @@ Configure Azure AI or other AI services:
 Process multiple issues with search queries:
 
 ```yaml
-- uses: mattleibow/triage-assistant@v1
+- uses: mattleibow/triage-assistant/apply-labels@v1
   with:
-    mode: 'apply-labels'
     issue-query: 'is:issue is:open label:needs-triage'
     apply-labels: true
 ```
@@ -143,9 +136,8 @@ Process multiple issues with search queries:
 Set up engagement scoring for GitHub Projects:
 
 ```yaml
-- uses: mattleibow/triage-assistant@v1
+- uses: mattleibow/triage-assistant/engagement-score@v1
   with:
-    mode: 'engagement-score'
     project: 1
     project-column: 'Community Engagement'
     apply-scores: true

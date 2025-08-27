@@ -100,9 +100,9 @@ Calculate engagement score for a specific issue:
     apply-scores: false # Just calculate, don't update
 ```
 
-### Sub-Action Usage
+### Action Usage
 
-Use the focused engagement-score sub-action:
+Use the focused engagement-score action:
 
 ```yaml
 - uses: mattleibow/triage-assistant/engagement-score@v1
@@ -271,5 +271,5 @@ with:
 ## Next Steps
 
 - Learn about [AI-Powered Labeling](../ai-labeling/) for complete triage
-- Explore [Sub-Actions](../sub-actions/) for focused workflows
+- Explore [Actions](../actions/) for focused workflows
 - Check the [Configuration guide](../../getting-started/configuration/) for advanced setup
