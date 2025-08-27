@@ -46,7 +46,7 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v5
-      
+
       - name: AI Triage
         uses: mattleibow/triage-assistant/apply-labels@v1
         with:
@@ -64,15 +64,15 @@ labels:
     type:
       labelPrefix: 'type-'
       template: 'single-label'
-    
+
     priority:
       labelPrefix: 'priority-'
       template: 'single-label'
-    
+
     area:
       labelPrefix: 'area-'
       template: 'multi-label'
-    
+
     regression:
       label: 'regression'
       template: 'regression'

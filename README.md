@@ -37,7 +37,8 @@ The action operates in two distinct modes, selected via the `mode` parameter:
 
 ### Labelling Mode (Default)
 
-The labelling mode processes multiple label groups configured in your `.triagerc.yml` file. You can use either the main action with mode selection or the dedicated sub-action:
+The labelling mode processes multiple label groups configured in your `.triagerc.yml` file. You can use either the main
+action with mode selection or the dedicated sub-action:
 
 #### Using the Main Action
 

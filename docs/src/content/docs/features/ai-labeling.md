@@ -33,7 +33,8 @@ labels:
       template: 'multi-label'
 ```
 
-**Use case**: When issues can have multiple categories or attributes. The AI will search for all labels starting with the prefix and can apply multiple matching labels.
+**Use case**: When issues can have multiple categories or attributes. The AI will search for all labels starting with
+the prefix and can apply multiple matching labels.
 
 ### Single-Label Template
 
@@ -47,7 +48,8 @@ labels:
       template: 'single-label'
 ```
 
-**Use case**: For mutually exclusive classifications like priority levels. The AI will select the single best matching label from the prefix group.
+**Use case**: For mutually exclusive classifications like priority levels. The AI will select the single best matching
+label from the prefix group.
 
 ### Regression Template
 
@@ -61,7 +63,8 @@ labels:
       template: 'regression'
 ```
 
-**Use case**: Identifying if reported bugs are regressions from previous versions. Uses a specific label rather than a prefix group.
+**Use case**: Identifying if reported bugs are regressions from previous versions. Uses a specific label rather than a
+prefix group.
 
 ### Missing Info Template
 
