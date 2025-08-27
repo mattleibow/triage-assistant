@@ -42,7 +42,9 @@ import { Card, CardGrid } from '@astrojs/starlight/components'
 name: 'AI Triage'
 on:
   issues:
-    types: [opened, edited]
+    types: [opened]
+  pull_request:
+    types: [opened]
 
 jobs:
   triage:
@@ -50,11 +52,12 @@ jobs:
     permissions:
       contents: read
       issues: write
+      pull-requests: write
       models: read
     steps:
-      - uses: mattleibow/triage-assistant@v1
+      - uses: actions/checkout@v5
+      - uses: mattleibow/triage-assistant/apply-labels@v1
         with:
-          mode: 'apply-labels'
           apply-labels: true
           apply-comment: true
 ```

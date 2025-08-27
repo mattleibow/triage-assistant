@@ -37,7 +37,9 @@ The action operates in two distinct modes, selected via the `mode` parameter:
 
 ### Labelling Mode (Default)
 
-The labelling mode processes multiple label groups configured in your `.triagerc.yml` file:
+The labelling mode processes multiple label groups configured in your `.triagerc.yml` file. You can use either the main action with mode selection or the dedicated sub-action:
+
+#### Using the Main Action
 
 ```yaml
 name: 'Triage Issues and Pull Requests'
@@ -70,9 +72,49 @@ jobs:
           apply-comment: true
 ```
 
+#### Using the Sub-Action (Recommended)
+
+```yaml
+name: 'Triage Issues and Pull Requests'
+
+on:
+  issues:
+    types: [opened]
+  pull_request:
+    types: [opened]
+  issue_comment:
+    types: [created]
+
+permissions:
+  contents: read
+  issues: write
+  pull-requests: write
+  models: read
+
+jobs:
+  triage:
+    runs-on: ubuntu-latest
+    if: |
+      github.event_name == 'issues' ||
+      github.event_name == 'pull_request' ||
+      (github.event_name == 'issue_comment' && startsWith(github.event.comment.body, '/triage'))
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Apply Labels and Comment
+        uses: mattleibow/triage-assistant/apply-labels@v1
+        with:
+          issue: ${{ github.event.number }}
+          apply-labels: true
+          apply-comment: true
+```
+
 ### Bulk Labeling with GitHub Search
 
 Apply labels to multiple issues found by a GitHub search query:
+
+#### Using the Main Action
 
 ```yaml
 name: 'Bulk Triage Recent Issues'
@@ -104,6 +146,37 @@ jobs:
           apply-comment: true
 ```
 
+#### Using the Sub-Action (Recommended)
+
+```yaml
+name: 'Bulk Triage Recent Issues'
+
+on:
+  schedule:
+    - cron: '0 9 * * 1' # Weekly on Mondays
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+  pull-requests: write
+  models: read
+
+jobs:
+  bulk-triage:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Bulk apply labels to recent issues and PRs
+        uses: mattleibow/triage-assistant/apply-labels@v1
+        with:
+          issue-query: 'state:open created:>@today-30d'
+          apply-labels: true
+          apply-comment: true
+```
+
 **Search Query Examples:**
 
 - `state:open created:>@today-30d` - Open issues and PRs from last 30 days
@@ -121,12 +194,14 @@ responses.
 
 Calculate and apply engagement scores to GitHub Projects:
 
+#### Using the Main Action
+
 ```yaml
 name: 'Calculate Engagement Scores'
 
 on:
   schedule:
-    - cron: '0 9 * * 1' # Weekly on Mondays
+    - cron: '0 */6 * * *' # Every 6 hours
   workflow_dispatch:
 
 permissions:
@@ -146,7 +221,39 @@ jobs:
         uses: mattleibow/triage-assistant@v1
         with:
           mode: 'engagement-score'
-          project: 123
+          project: 8 # Your project number
+          apply-scores: true
+          project-column: 'Engagement Score'
+```
+
+#### Using the Sub-Action (Recommended)
+
+```yaml
+name: 'Calculate Engagement Scores'
+
+on:
+  schedule:
+    - cron: '0 */6 * * *' # Every 6 hours
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: read
+  pull-requests: read
+  repository-projects: write
+
+jobs:
+  engagement:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Calculate engagement scores
+        uses: mattleibow/triage-assistant/engagement-score@v1
+        with:
+          token: ${{ secrets.ENGAGEMENT_GITHUB_TOKEN }}
+          project: 8 # Your project number
           apply-scores: true
           project-column: 'Engagement Score'
 ```
@@ -179,8 +286,8 @@ Focuses on calculating and applying engagement scores to project issues.
 - name: Calculate engagement scores
   uses: mattleibow/triage-assistant/engagement-score@v1
   with:
-    token: ${{ secrets.GITHUB_TOKEN }}
-    project: 123
+    token: ${{ secrets.ENGAGEMENT_GITHUB_TOKEN }}
+    project: 8
     apply-scores: true
 ```
 
@@ -335,7 +442,7 @@ AI model using inputs or environment variables:
 
 ```yaml
 - name: Triage with custom AI model
-  uses: mattleibow/triage-assistant/*@v1
+  uses: mattleibow/triage-assistant@v1
   with:
     ai-model: 'openai/gpt-4o-mini'
     ai-endpoint: 'https://models.github.ai/inference'
@@ -395,7 +502,7 @@ Calculate engagement scores for all issues in a GitHub Project:
   uses: mattleibow/triage-assistant@v1
   with:
     mode: engagement-score
-    project: 1 # Your project number
+    project: 8 # Your project number
     apply-scores: true
     project-column: 'Engagement Score'
 ```

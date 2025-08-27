@@ -36,7 +36,7 @@ Dedicated engagement scoring:
 ```yaml
 - uses: mattleibow/triage-assistant/engagement-score@v1
   with:
-    project: 1
+    project: 8
     apply-scores: true
     project-column: 'Engagement Score'
 ```
@@ -58,14 +58,14 @@ Each sub-action only exposes relevant inputs:
 # ✅ Clean - only engagement scoring inputs
 - uses: mattleibow/triage-assistant/engagement-score@v1
   with:
-    project: 1
+    project: 8
     apply-scores: true
 
 # ❌ Cluttered - all inputs available even if unused
 - uses: mattleibow/triage-assistant@v1
   with:
     mode: 'engagement-score'
-    project: 1
+    project: 8
     apply-scores: true
     # Many other unused inputs available...
 ```

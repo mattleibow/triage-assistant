@@ -24,9 +24,11 @@ name: 'AI Triage'
 
 on:
   issues:
-    types: [opened, edited]
+    types: [opened]
   pull_request:
-    types: [opened, edited]
+    types: [opened]
+  issue_comment:
+    types: [created]
 
 permissions:
   contents: read
@@ -37,11 +39,17 @@ permissions:
 jobs:
   triage:
     runs-on: ubuntu-latest
+    if: |
+      github.event_name == 'issues' ||
+      github.event_name == 'pull_request' ||
+      (github.event_name == 'issue_comment' && startsWith(github.event.comment.body, '/triage'))
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+      
       - name: AI Triage
-        uses: mattleibow/triage-assistant@v1
+        uses: mattleibow/triage-assistant/apply-labels@v1
         with:
-          mode: 'apply-labels'
           apply-labels: true
           apply-comment: true
 ```
@@ -54,18 +62,20 @@ Create `.triagerc.yml` in your repository root to configure label groups:
 labels:
   groups:
     type:
-      description: 'Issue type classification'
-      labels:
-        - 'bug'
-        - 'feature'
-        - 'documentation'
-        - 'question'
+      labelPrefix: 'type-'
+      template: 'single-label'
+    
     priority:
-      description: 'Priority level'
-      labels:
-        - 'priority-high'
-        - 'priority-medium'
-        - 'priority-low'
+      labelPrefix: 'priority-'
+      template: 'single-label'
+    
+    area:
+      labelPrefix: 'area-'
+      template: 'multi-label'
+    
+    regression:
+      label: 'regression'
+      template: 'regression'
 ```
 
 ### 3. Test the Setup
@@ -92,7 +102,7 @@ For focused functionality, you can use specific sub-actions:
 ```yaml
 - uses: mattleibow/triage-assistant/engagement-score@v1
   with:
-    project: 1 # Your project number
+    project: 8 # Your project number
     apply-scores: true
 ```
 

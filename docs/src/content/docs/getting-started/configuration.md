@@ -59,23 +59,24 @@ Create `.triagerc.yml` in your repository root or `.github/` directory:
 labels:
   groups:
     type:
-      description: 'Issue type classification'
-      template: 'multi-label' # single-label, multi-label, regression, missing-info
-      labels:
-        - 'bug'
-        - 'feature'
-        - 'documentation'
-        - 'question'
-        - 'enhancement'
+      labelPrefix: 'type-'
+      template: 'single-label'
+
+    area:
+      labelPrefix: 'area-'
+      template: 'multi-label'
 
     priority:
-      description: 'Priority classification'
+      labelPrefix: 'priority-'
       template: 'single-label'
-      labels:
-        - 'priority-critical'
-        - 'priority-high'
-        - 'priority-medium'
-        - 'priority-low'
+
+    regression:
+      label: 'regression'
+      template: 'regression'
+
+    info:
+      label: 'needs-info'
+      template: 'missing-info'
 
 # Engagement scoring configuration
 engagement:

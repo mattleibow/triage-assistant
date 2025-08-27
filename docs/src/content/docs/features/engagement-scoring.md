@@ -63,11 +63,11 @@ engagement:
 Calculate engagement scores for all issues in a GitHub Project:
 
 ```yaml
-name: 'Weekly Engagement Scoring'
+name: 'Engagement Scoring'
 
 on:
   schedule:
-    - cron: '0 9 * * 1' # Weekly on Mondays
+    - cron: '0 */6 * * *' # Every 6 hours
   workflow_dispatch:
 
 permissions:
@@ -80,10 +80,11 @@ jobs:
   engagement:
     runs-on: ubuntu-latest
     steps:
-      - uses: mattleibow/triage-assistant@v1
+      - uses: actions/checkout@v5
+      - uses: mattleibow/triage-assistant/engagement-score@v1
         with:
-          mode: 'engagement-score'
-          project: 1 # Your project number
+          token: ${{ secrets.ENGAGEMENT_GITHUB_TOKEN }}
+          project: 8 # Your project number
           apply-scores: true
           project-column: 'Engagement Score'
 ```
@@ -93,9 +94,8 @@ jobs:
 Calculate engagement score for a specific issue:
 
 ```yaml
-- uses: mattleibow/triage-assistant@v1
+- uses: mattleibow/triage-assistant/engagement-score@v1
   with:
-    mode: 'engagement-score'
     issue: 123 # Specific issue number
     apply-scores: false # Just calculate, don't update
 ```
@@ -107,7 +107,7 @@ Use the focused engagement-score sub-action:
 ```yaml
 - uses: mattleibow/triage-assistant/engagement-score@v1
   with:
-    project: 1
+    project: 8
     apply-scores: true
     project-column: 'Community Engagement'
 ```
