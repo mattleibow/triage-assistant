@@ -3,8 +3,6 @@ title: Configuration
 description: Comprehensive configuration guide for AI Triage Assistant
 ---
 
-# Configuration
-
 AI Triage Assistant provides extensive configuration options through workflow inputs and configuration files.
 
 ## Workflow Inputs
@@ -52,12 +50,12 @@ Create `.triagerc.yml` in your repository root or `.github/` directory:
 # Label configuration
 labels:
   groups:
-    type:
-      labelPrefix: 'type-'
-      template: 'single-label'
-
     area:
       labelPrefix: 'area-'
+      template: 'single-label'
+
+    tenet:
+      labelPrefix: 'tenet-'
       template: 'multi-label'
 
     priority:
@@ -65,7 +63,7 @@ labels:
       template: 'single-label'
 
     regression:
-      label: 'regression'
+      label: 'potential-regression'
       template: 'regression'
 
     info:

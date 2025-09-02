@@ -3,8 +3,6 @@ title: Introduction
 description: Learn about AI Triage Assistant and its capabilities
 ---
 
-# AI Triage Assistant
-
 AI Triage Assistant is a sophisticated GitHub Action that provides intelligent issue and pull request triage
 capabilities with explicit mode-based operation. It combines AI-powered label application using large language models
 with comprehensive engagement scoring for project prioritization.

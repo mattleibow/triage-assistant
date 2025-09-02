@@ -3,8 +3,6 @@ title: Quick Start
 description: Get up and running with AI Triage Assistant in minutes
 ---
 
-# Quick Start
-
 This guide will help you set up AI Triage Assistant in your repository quickly.
 
 ## Prerequisites
@@ -74,7 +72,7 @@ labels:
       template: 'multi-label'
 
     regression:
-      label: 'regression'
+      label: 'potential-regression'
       template: 'regression'
 ```
 

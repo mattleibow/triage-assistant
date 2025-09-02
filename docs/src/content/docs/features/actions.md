@@ -3,8 +3,6 @@ title: Actions
 description: Focused functionality with clean interfaces using specialized actions
 ---
 
-# Actions
-
 AI Triage Assistant provides focused actions for specific functionality. Each action has a clean interface with only the
 inputs relevant to its specific purpose.
 

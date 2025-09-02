@@ -3,8 +3,6 @@ title: AI-Powered Labeling
 description: Intelligent label application using advanced language models
 ---
 
-# AI-Powered Labeling
-
 AI Triage Assistant uses advanced language models to automatically analyze issue and pull request content and apply
 appropriate labels based on your configuration.
 
@@ -28,8 +26,8 @@ Apply multiple relevant labels from a group:
 ```yaml
 labels:
   groups:
-    category:
-      labelPrefix: 'type-'
+    tenet:
+      labelPrefix: 'tenet-'
       template: 'multi-label'
 ```
 
@@ -43,13 +41,13 @@ Apply exactly one label from a group:
 ```yaml
 labels:
   groups:
-    priority:
-      labelPrefix: 'priority-'
+    area:
+      labelPrefix: 'area-'
       template: 'single-label'
 ```
 
-**Use case**: For mutually exclusive classifications like priority levels. The AI will select the single best matching
-label from the prefix group.
+**Use case**: For mutually exclusive classifications like areas. The AI will select the single best matching label from
+the prefix group.
 
 ### Regression Template
 
@@ -59,7 +57,7 @@ Specialized for detecting regression issues:
 labels:
   groups:
     regression:
-      label: 'regression'
+      label: 'potential-regression'
       template: 'regression'
 ```
 
@@ -170,12 +168,12 @@ Structure your labels hierarchically:
 ```yaml
 labels:
   groups:
-    type:
-      labelPrefix: 'type-'
-      template: 'single-label'
-
     area:
       labelPrefix: 'area-'
+      template: 'single-label'
+
+    tenet:
+      labelPrefix: 'tenet-'
       template: 'multi-label'
 
     difficulty:
@@ -183,7 +181,7 @@ labels:
       template: 'single-label'
 
     regression:
-      label: 'regression'
+      label: 'potential-regression'
       template: 'regression'
 
     info:

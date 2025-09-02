@@ -3,8 +3,6 @@ title: Engagement Scoring
 description: Calculate and track issue engagement for intelligent prioritization
 ---
 
-# Engagement Scoring
-
 The engagement scoring system provides mathematical analysis of community engagement to help prioritize issues based on
 actual activity and interest levels.
 
