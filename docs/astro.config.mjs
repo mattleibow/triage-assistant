@@ -25,10 +25,6 @@ export default defineConfig({
             { label: 'Engagement Scoring', slug: 'features/engagement-scoring' },
             { label: 'Actions', slug: 'features/actions' }
           ]
-        },
-        {
-          label: 'Reference',
-          autogenerate: { directory: 'reference' }
         }
       ]
     })
