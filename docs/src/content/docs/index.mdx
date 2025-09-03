@@ -1,0 +1,66 @@
+---
+title: AI Triage Assistant
+description: An AI-powered GitHub Action for sophisticated issue and pull request triage capabilities.
+template: splash
+hero:
+  tagline: Intelligent triage for your GitHub repositories with AI-powered labeling and engagement scoring
+  image:
+    file: ../../assets/houston.webp
+  actions:
+    - text: Get Started
+      link: /getting-started/introduction/
+      icon: right-arrow
+      variant: primary
+    - text: View on GitHub
+      link: https://github.com/mattleibow/triage-assistant
+      icon: external
+---
+
+import { Card, CardGrid } from '@astrojs/starlight/components'
+
+## Key Features
+
+<CardGrid stagger>
+  <Card title="AI-Powered Labeling" icon="star">
+    Automatically apply accurate labels to issues and pull requests using advanced language models.
+  </Card>
+  <Card title="Engagement Scoring" icon="rocket">
+    Calculate engagement scores based on community activity to prioritize high-impact issues.
+  </Card>
+  <Card title="Focused Actions" icon="setting">
+    Choose between focused actions for labeling or engagement scoring with clean interfaces.
+  </Card>
+  <Card title="GitHub Projects Integration" icon="puzzle">
+    Seamlessly update GitHub Projects v2 with calculated engagement scores and metadata.
+  </Card>
+</CardGrid>
+
+## Quick Example
+
+```yaml
+name: 'AI Triage'
+on:
+  issues:
+    types: [opened]
+  pull_request:
+    types: [opened]
+
+jobs:
+  triage:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: write
+      pull-requests: write
+      models: read
+    steps:
+      - uses: actions/checkout@v5
+      - uses: mattleibow/triage-assistant/apply-labels@v1
+        with:
+          apply-labels: true
+          apply-comment: true
+```
+
+## Ready to get started?
+
+Check out the [Quick Start guide](/getting-started/quick-start/) to begin using AI Triage Assistant in your repository.

@@ -1,7 +1,8 @@
+---
 name: 'AI Triage Assistant - Engagement Score'
-description: 'Calculate and apply engagement scores to GitHub project issues based on community activity.'
+description: >-
+  Calculate and apply engagement scores to GitHub project issues based on community activity.
 author: 'mattleibow'
-
 branding:
   icon: 'trending-up'
   color: 'blue'
@@ -19,13 +20,15 @@ inputs:
 
   # Issue targeting
   issue:
-    description: 'The issue number of the issue to analyze (for single-issue analysis)'
+    description: >-
+      The issue number of the issue to analyze (for single-issue analysis)
     required: false
     default: ''
 
   # Project targeting
   project:
-    description: 'Project number for engagement scoring (required for project-wide scoring)'
+    description: >-
+      Project number for engagement scoring (required for project-wide scoring)
     required: false
     default: ''
   project-column:
