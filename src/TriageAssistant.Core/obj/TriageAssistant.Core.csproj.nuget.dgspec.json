@@ -1,0 +1,79 @@
+{
+  "format": 1,
+  "restore": {
+    "/home/runner/work/triage-assistant/triage-assistant/src/TriageAssistant.Core/TriageAssistant.Core.csproj": {}
+  },
+  "projects": {
+    "/home/runner/work/triage-assistant/triage-assistant/src/TriageAssistant.Core/TriageAssistant.Core.csproj": {
+      "version": "1.0.0",
+      "restore": {
+        "projectUniqueName": "/home/runner/work/triage-assistant/triage-assistant/src/TriageAssistant.Core/TriageAssistant.Core.csproj",
+        "projectName": "TriageAssistant.Core",
+        "projectPath": "/home/runner/work/triage-assistant/triage-assistant/src/TriageAssistant.Core/TriageAssistant.Core.csproj",
+        "packagesPath": "/home/runner/.nuget/packages/",
+        "outputPath": "/home/runner/work/triage-assistant/triage-assistant/src/TriageAssistant.Core/obj/",
+        "projectStyle": "PackageReference",
+        "configFilePaths": [
+          "/home/runner/.nuget/NuGet/NuGet.Config"
+        ],
+        "originalTargetFrameworks": [
+          "net8.0"
+        ],
+        "sources": {
+          "https://api.nuget.org/v3/index.json": {}
+        },
+        "frameworks": {
+          "net8.0": {
+            "targetAlias": "net8.0",
+            "projectReferences": {}
+          }
+        },
+        "warningProperties": {
+          "warnAsError": [
+            "NU1605"
+          ]
+        }
+      },
+      "frameworks": {
+        "net8.0": {
+          "targetAlias": "net8.0",
+          "dependencies": {
+            "Azure.AI.Inference": {
+              "target": "Package",
+              "version": "[1.0.0-beta.5, )"
+            },
+            "GraphQL.Client": {
+              "target": "Package",
+              "version": "[6.1.0, )"
+            },
+            "Octokit": {
+              "target": "Package",
+              "version": "[14.0.0, )"
+            },
+            "YamlDotNet": {
+              "target": "Package",
+              "version": "[16.3.0, )"
+            }
+          },
+          "imports": [
+            "net461",
+            "net462",
+            "net47",
+            "net471",
+            "net472",
+            "net48",
+            "net481"
+          ],
+          "assetTargetFallback": true,
+          "warn": true,
+          "frameworkReferences": {
+            "Microsoft.NETCore.App": {
+              "privateAssets": "all"
+            }
+          },
+          "runtimeIdentifierGraphPath": "/usr/lib/dotnet/sdk/8.0.119/PortableRuntimeIdentifierGraph.json"
+        }
+      }
+    }
+  }
+}
