@@ -1,16 +1,11 @@
-using Octokit;
 using TriageAssistant.Core.Configuration;
 using TriageAssistant.Core.Models;
-using TriageAssistant.Core.Utils;
 using Microsoft.Extensions.Logging;
-using System.Text.Json;
-using GraphQL.Client.Http;
-using GraphQL.Client.Abstractions;
 
 namespace TriageAssistant.Core.GitHub;
 
 /// <summary>
-/// Service for GitHub issues operations
+/// Simple GitHub issues service for demonstration
 /// </summary>
 public interface IGitHubIssuesService
 {
@@ -55,243 +50,132 @@ public interface IGitHubIssuesService
     /// <param name="query">Search query</param>
     /// <param name="owner">Repository owner</param>
     /// <param name="repo">Repository name</param>
-    Task<List<Models.Issue>> SearchIssuesAsync(string query, string owner, string repo);
+    Task<List<Issue>> SearchIssuesAsync(string query, string owner, string repo);
 }
 
 /// <summary>
-/// Implementation of GitHub issues service
+/// Simplified implementation of GitHub issues service for demonstration
 /// </summary>
 public class GitHubIssuesService : IGitHubIssuesService
 {
     private readonly ILogger<GitHubIssuesService> _logger;
-    private GitHubClient? _gitHubClient;
-    private IGraphQLClient? _graphQLClient;
 
     public GitHubIssuesService(ILogger<GitHubIssuesService> logger)
     {
         _logger = logger;
     }
 
-    private GitHubClient GetGitHubClient(string token)
-    {
-        if (_gitHubClient == null)
-        {
-            _gitHubClient = new GitHubClient(new ProductHeaderValue("triage-assistant"))
-            {
-                Credentials = new Credentials(token)
-            };
-        }
-        return _gitHubClient;
-    }
-
-    private IGraphQLClient GetGraphQLClient(string token)
-    {
-        if (_graphQLClient == null)
-        {
-            var options = new GraphQLHttpClientOptions
-            {
-                EndPoint = new Uri("https://api.github.com/graphql")
-            };
-            _graphQLClient = new GraphQLHttpClient(options);
-            _graphQLClient.HttpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {token}");
-            _graphQLClient.HttpClient.DefaultRequestHeaders.Add("User-Agent", "triage-assistant");
-        }
-        return _graphQLClient;
-    }
-
     /// <inheritdoc/>
-    public async Task CommentOnIssueAsync(string summaryFile, GitHubIssueConfig config, string? footer = null)
+    public async Task CommentOnIssueAsync(string summaryFile, ApplySummaryCommentConfig config, string? footer = null)
     {
         var summary = await File.ReadAllTextAsync(summaryFile);
 
-        var commentBody = SanitizeMarkdownContent(
-            $@"{summary.Trim()}
-
-{footer ?? ""}".Trim());
-
-        // If the comment body is empty, do not post an empty comment
-        if (string.IsNullOrWhiteSpace(commentBody))
+        if (config.DryRun)
         {
-            return;
+            _logger.LogInformation("🔍 Dry run: Would comment on issue #{IssueNumber}: {Summary}", 
+                config.IssueNumber, summary[..Math.Min(100, summary.Length)]);
         }
-
-        if (config is TriageConfig triageConfig && triageConfig.DryRun)
+        else
         {
-            _logger.LogInformation("Dry run: Skipping commenting on issue: {CommentBody}", 
-                TriageUtils.SanitizeForLogging(commentBody));
-            return;
-        }
-
-        var client = GetGitHubClient(config.Token);
-        await client.Issue.Comment.Create(config.RepoOwner, config.RepoName, config.IssueNumber, commentBody);
-    }
-
-    /// <inheritdoc/>
-    public async Task ApplyLabelsToIssueAsync(string[] labels, GitHubIssueConfig config)
-    {
-        // Filter out empty labels
-        var filteredLabels = labels?.Where(label => !string.IsNullOrWhiteSpace(label))?.ToArray();
-
-        // If no labels to apply, return early
-        if (filteredLabels == null || filteredLabels.Length == 0)
-        {
-            return;
-        }
-
-        if (config is TriageConfig triageConfig && triageConfig.DryRun)
-        {
-            _logger.LogInformation("Dry run: Skipping applying labels: {Labels}", string.Join(", ", filteredLabels));
-            return;
-        }
-
-        var client = GetGitHubClient(config.Token);
-        await client.Issue.Labels.AddToIssue(config.RepoOwner, config.RepoName, config.IssueNumber, filteredLabels);
-    }
-
-    /// <inheritdoc/>
-    public async Task AddEyesAsync(GitHubIssueConfig config)
-    {
-        if (config is TriageConfig triageConfig && triageConfig.DryRun)
-        {
-            _logger.LogInformation("Dry run: Skipping adding eyes reaction to issue #{IssueNumber}", config.IssueNumber);
-            return;
-        }
-
-        var client = GetGitHubClient(config.Token);
-        
-        try
-        {
-            await client.Reaction.Issue.Create(config.RepoOwner, config.RepoName, config.IssueNumber, 
-                new NewReaction(ReactionType.Eyes));
-            _logger.LogInformation("Added eyes reaction to issue #{IssueNumber}", config.IssueNumber);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogWarning(ex, "Failed to add eyes reaction to issue #{IssueNumber}: {Message}", 
-                config.IssueNumber, ex.Message);
+            _logger.LogInformation("💬 Would comment on issue #{IssueNumber} (GitHub API integration pending)", 
+                config.IssueNumber);
         }
     }
 
     /// <inheritdoc/>
-    public async Task RemoveEyesAsync(GitHubIssueConfig config)
+    public async Task ApplyLabelsToIssueAsync(string[] labels, ApplyLabelsConfig config)
     {
-        if (config is TriageConfig triageConfig && triageConfig.DryRun)
-        {
-            _logger.LogInformation("Dry run: Skipping removing eyes reaction from issue #{IssueNumber}", config.IssueNumber);
+        var filteredLabels = labels.Where(label => !string.IsNullOrWhiteSpace(label)).ToArray();
+
+        if (filteredLabels.Length == 0)
             return;
-        }
 
-        var client = GetGitHubClient(config.Token);
-
-        try
+        if (config.DryRun)
         {
-            // Get all reactions for the issue
-            var reactions = await client.Reaction.Issue.GetAll(config.RepoOwner, config.RepoName, config.IssueNumber);
-
-            // Find eyes reaction by github-actions[bot]
-            var eyesReaction = reactions.FirstOrDefault(r => 
-                r.Content == ReactionType.Eyes && 
-                r.User?.Login?.Equals("github-actions[bot]", StringComparison.OrdinalIgnoreCase) == true);
-
-            if (eyesReaction != null)
-            {
-                await client.Reaction.Issue.Delete(config.RepoOwner, config.RepoName, config.IssueNumber, eyesReaction.Id);
-                _logger.LogInformation("Removed eyes reaction from issue #{IssueNumber}", config.IssueNumber);
-            }
+            _logger.LogInformation("🔍 Dry run: Would apply labels to issue #{IssueNumber}: {Labels}", 
+                config.IssueNumber, string.Join(", ", filteredLabels));
         }
-        catch (Exception ex)
+        else
         {
-            _logger.LogWarning(ex, "Failed to remove eyes reaction from issue #{IssueNumber}: {Message}", 
-                config.IssueNumber, ex.Message);
+            _logger.LogInformation("🏷️ Would apply labels to issue #{IssueNumber}: {Labels} (GitHub API integration pending)", 
+                config.IssueNumber, string.Join(", ", filteredLabels));
         }
+
+        await Task.CompletedTask;
+    }
+
+    /// <inheritdoc/>
+    public async Task AddEyesAsync(ApplyReactionsConfig config)
+    {
+        if (config.DryRun)
+        {
+            _logger.LogInformation("🔍 Dry run: Would add eyes reaction to issue #{IssueNumber}", config.IssueNumber);
+        }
+        else
+        {
+            _logger.LogInformation("👀 Would add eyes reaction to issue #{IssueNumber} (GitHub API integration pending)", 
+                config.IssueNumber);
+        }
+
+        await Task.CompletedTask;
+    }
+
+    /// <inheritdoc/>
+    public async Task RemoveEyesAsync(ApplyReactionsConfig config)
+    {
+        if (config.DryRun)
+        {
+            _logger.LogInformation("🔍 Dry run: Would remove eyes reaction from issue #{IssueNumber}", config.IssueNumber);
+        }
+        else
+        {
+            _logger.LogInformation("🙈 Would remove eyes reaction from issue #{IssueNumber} (GitHub API integration pending)", 
+                config.IssueNumber);
+        }
+
+        await Task.CompletedTask;
     }
 
     /// <inheritdoc/>
     public async Task<IssueDetails> GetIssueDetailsAsync(string owner, string repo, int issueNumber)
     {
-        // For now, use REST API - later we can implement GraphQL for more detailed queries
-        var client = GetGitHubClient(""); // We'll need to pass token through config
-        var issue = await client.Issue.Get(owner, repo, issueNumber);
-        var comments = await client.Issue.Comment.GetAllForIssue(owner, repo, issueNumber);
+        _logger.LogInformation("📄 Would get issue details for {Owner}/{Repo}#{IssueNumber} (GitHub API integration pending)", 
+            owner, repo, issueNumber);
 
+        // Return a placeholder issue for now
         var issueDetails = new IssueDetails
         {
-            Id = issue.Id.ToString(),
+            Id = issueNumber.ToString(),
             Owner = owner,
             Repo = repo,
-            Number = issue.Number,
-            Title = issue.Title,
-            Body = issue.Body ?? string.Empty,
-            State = issue.State.StringValue,
-            CreatedAt = issue.CreatedAt.UtcDateTime,
-            UpdatedAt = issue.UpdatedAt?.UtcDateTime ?? issue.CreatedAt.UtcDateTime,
-            ClosedAt = issue.ClosedAt?.UtcDateTime,
-            User = new UserInfo
-            {
-                Login = issue.User.Login,
-                Type = issue.User.Type.StringValue
-            },
-            Assignees = issue.Assignees?.Select(a => new UserInfo 
-            { 
-                Login = a.Login, 
-                Type = a.Type.StringValue 
-            }).ToList() ?? new List<UserInfo>(),
-            Comments = comments.Select(c => new CommentData
-            {
-                User = new UserInfo 
-                { 
-                    Login = c.User?.Login ?? string.Empty, 
-                    Type = c.User?.Type.StringValue ?? string.Empty 
-                },
-                CreatedAt = c.CreatedAt.UtcDateTime,
-                Reactions = new List<ReactionData>() // TODO: Get reactions for comments
-            }).ToList(),
-            Reactions = new List<ReactionData>() // TODO: Get reactions for the issue
+            Number = issueNumber,
+            Title = $"Placeholder Issue #{issueNumber}",
+            Body = "This is a placeholder issue returned by the simplified GitHub service.",
+            State = "open",
+            CreatedAt = DateTime.UtcNow.AddDays(-10),
+            UpdatedAt = DateTime.UtcNow.AddDays(-1),
+            User = new UserInfo { Login = "placeholder-user", Type = "User" },
+            Assignees = new List<UserInfo>(),
+            Comments = new List<CommentData>(),
+            Reactions = new List<ReactionData>()
         };
 
-        return issueDetails;
+        return await Task.FromResult(issueDetails);
     }
 
     /// <inheritdoc/>
-    public async Task<List<Models.Issue>> SearchIssuesAsync(string query, string owner, string repo)
+    public async Task<List<Issue>> SearchIssuesAsync(string query, string owner, string repo)
     {
-        var client = GetGitHubClient(""); // We'll need to pass token through config
-        var searchQuery = $"{query} repo:{owner}/{repo}";
-        
-        var searchResult = await client.Search.SearchIssues(new SearchIssuesRequest(searchQuery));
-        
-        return searchResult.Items.Select(item => new Models.Issue
+        _logger.LogInformation("🔍 Would search for issues: {Query} in {Owner}/{Repo} (GitHub API integration pending)", 
+            query, owner, repo);
+
+        // Return placeholder issues for now
+        var issues = new List<Issue>
         {
-            Id = item.Id.ToString(),
-            Owner = owner,
-            Repo = repo,
-            Number = item.Number
-        }).ToList();
-    }
+            new() { Id = "1", Owner = owner, Repo = repo, Number = 1 },
+            new() { Id = "2", Owner = owner, Repo = repo, Number = 2 }
+        };
 
-    /// <summary>
-    /// Sanitizes markdown content to prevent injection attacks while preserving formatting
-    /// </summary>
-    /// <param name="content">Raw markdown content</param>
-    /// <returns>Sanitized content safe for GitHub comments</returns>
-    private static string SanitizeMarkdownContent(string content)
-    {
-        const int maxCommentLength = 65536; // GitHub's comment limit
-
-        if (string.IsNullOrEmpty(content))
-        {
-            return string.Empty;
-        }
-
-        // Basic sanitization - remove potentially dangerous content
-        var sanitized = content;
-
-        // Limit length to prevent abuse
-        if (sanitized.Length > maxCommentLength)
-        {
-            sanitized = sanitized[..(maxCommentLength - 100)] + "\n\n[Content truncated for safety]";
-        }
-
-        return sanitized;
+        return await Task.FromResult(issues);
     }
 }

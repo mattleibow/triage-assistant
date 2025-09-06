@@ -86,6 +86,8 @@ public class GitHubIssueConfig
 public class ApplyReactionsConfig : GitHubIssueConfig
 {
     public string Token { get; set; } = string.Empty;
+    public bool DryRun { get; set; }
+    public string TempDir { get; set; } = string.Empty;
 }
 
 /// <summary>
@@ -95,6 +97,8 @@ public class ApplyLabelsConfig : GitHubIssueConfig
 {
     public string Token { get; set; } = string.Empty;
     public bool ApplyLabels { get; set; }
+    public bool DryRun { get; set; }
+    public string TempDir { get; set; } = string.Empty;
 }
 
 /// <summary>
@@ -109,6 +113,8 @@ public class ApplySummaryCommentConfig : GitHubIssueConfig
     public string AiEndpoint { get; set; } = string.Empty;
     public string AiModel { get; set; } = string.Empty;
     public string AiToken { get; set; } = string.Empty;
+    public bool DryRun { get; set; }
+    public string TempDir { get; set; } = string.Empty;
 }
 
 /// <summary>

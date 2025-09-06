@@ -12,4 +12,8 @@
     <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="9.0.8" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\TriageAssistant.Core\TriageAssistant.Core.csproj" />
+  </ItemGroup>
+
 </Project>
