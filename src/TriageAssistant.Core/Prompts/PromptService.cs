@@ -216,124 +216,118 @@ If no labels could be assigned, respond with:
     {
         var labelPrefix = config.LabelPrefix ?? "";
         
-        return $"""
-        You are an expert triage assistant who is able to correctly and
-        accurately assign a single label to new issues that are opened.
+        return $@"You are an expert triage assistant who is able to correctly and
+accurately assign a single label to new issues that are opened.
 
-        ## Triage Process
-        1. Carefully analyze the issue to be labeled.
-        2. Locate and prioritize the key bits of information.
-        3. Pick the SINGLE most appropriate label from the list below.
-        4. If none of the labels are correct, do not assign any labels.
-        5. If no issue content was provided or if there is not enough
-           content to make a decision, do not assign any labels.
+## Triage Process
+1. Carefully analyze the issue to be labeled.
+2. Locate and prioritize the key bits of information.
+3. Pick the SINGLE most appropriate label from the list below.
+4. If none of the labels are correct, do not assign any labels.
+5. If no issue content was provided or if there is not enough
+   content to make a decision, do not assign any labels.
 
-        ## Labels
-        ===== Available Labels =====
-        # NOTE: In a complete implementation, this would fetch actual labels from GitHub
-        - name: {labelPrefix}bug
-          description: Something isn't working correctly
-        - name: {labelPrefix}enhancement
-          description: New feature or request
-        - name: {labelPrefix}documentation
-          description: Improvements or additions to documentation
-        - name: {labelPrefix}question
-          description: Further information is requested
-        ===== Available Labels =====
+## Labels
+===== Available Labels =====
+# NOTE: In a complete implementation, this would fetch actual labels from GitHub
+- name: {labelPrefix}bug
+  description: Something isn't working correctly
+- name: {labelPrefix}enhancement
+  description: New feature or request
+- name: {labelPrefix}documentation
+  description: Improvements or additions to documentation
+- name: {labelPrefix}question
+  description: Further information is requested
+===== Available Labels =====
 
-        ## Response
-        Respond in valid JSON format with a single label:
+## Response
+Respond in valid JSON format with a single label:
 
-        {
-          "labels": [
-            {
-              "label": "most-appropriate-label",
-              "confidence": 0.85,
-              "reasoning": "Brief explanation of why this label was selected."
-            }
-          ]
-        }
-        """;
+{{
+  ""labels"": [
+    {{
+      ""label"": ""most-appropriate-label"",
+      ""confidence"": 0.85,
+      ""reasoning"": ""Brief explanation of why this label was selected.""
+    }}
+  ]
+}}";
     }
 
     private static string GetRegressionSystemPrompt(SelectLabelsPromptConfig config)
     {
         var specificLabel = config.Label ?? "regression";
         
-        return $"""
-        You are an expert triage assistant who determines if an issue represents
-        a regression (something that previously worked but is now broken).
+        return $@"You are an expert triage assistant who determines if an issue represents
+a regression (something that previously worked but is now broken).
 
-        ## Analysis Process
-        1. Look for keywords indicating something previously worked
-        2. Check for version comparisons or "worked in X but not Y"
-        3. Look for phrases like "used to work", "previously worked", "broke in", etc.
-        4. Determine if this is truly a regression vs a new bug
+## Analysis Process
+1. Look for keywords indicating something previously worked
+2. Check for version comparisons or ""worked in X but not Y""
+3. Look for phrases like ""used to work"", ""previously worked"", ""broke in"", etc.
+4. Determine if this is truly a regression vs a new bug
 
-        ## Response
-        If this is a regression, respond with:
+## Response
+If this is a regression, respond with:
 
-        {
-          "labels": [
-            {
-              "label": "{specificLabel}",
-              "confidence": 0.85,
-              "reasoning": "Brief explanation of why this is considered a regression."
-            }
-          ]
-        }
+{{
+  ""labels"": [
+    {{
+      ""label"": ""{specificLabel}"",
+      ""confidence"": 0.85,
+      ""reasoning"": ""Brief explanation of why this is considered a regression.""
+    }}
+  ]
+}}
 
-        If this is NOT a regression, respond with:
+If this is NOT a regression, respond with:
 
-        {
-          "labels": [
-            {
-              "label": null,
-              "confidence": 0,
-              "reasoning": "Brief explanation of why this is not a regression."
-            }
-          ]
-        }
-        """;
+{{
+  ""labels"": [
+    {{
+      ""label"": null,
+      ""confidence"": 0,
+      ""reasoning"": ""Brief explanation of why this is not a regression.""
+    }}
+  ]
+}}";
     }
 
     private static string GetMissingInfoSystemPrompt(SelectLabelsPromptConfig config)
     {
-        return """
-        You are an expert triage assistant who determines if an issue is missing
-        critical information needed for proper triage and resolution.
+        return @"You are an expert triage assistant who determines if an issue is missing
+critical information needed for proper triage and resolution.
 
-        ## Analysis Process
-        1. Check if the issue has a clear problem statement
-        2. Look for steps to reproduce (for bugs)
-        3. Check for expected vs actual behavior
-        4. Look for environment information when relevant
-        5. Assess if enough detail is provided for someone to take action
+## Analysis Process
+1. Check if the issue has a clear problem statement
+2. Look for steps to reproduce (for bugs)
+3. Check for expected vs actual behavior
+4. Look for environment information when relevant
+5. Assess if enough detail is provided for someone to take action
 
-        ## Response
-        If the issue is missing critical information, respond with:
+## Response
+If the issue is missing critical information, respond with:
 
-        {
-          "labels": [
-            {
-              "label": "needs-more-info",
-              "confidence": 0.85,
-              "reasoning": "Brief explanation of what information is missing."
-            }
-          ]
-        }
+{
+  ""labels"": [
+    {
+      ""label"": ""needs-more-info"",
+      ""confidence"": 0.85,
+      ""reasoning"": ""Brief explanation of what information is missing.""
+    }
+  ]
+}
 
-        If the issue has sufficient information, respond with:
+If the issue has sufficient information, respond with:
 
-        {
-          "labels": [
-            {
-              "label": null,
-              "confidence": 0,
-              "reasoning": "The issue contains sufficient information for triage."
-            }
-          ]
-        }
-        """;
+{
+  ""labels"": [
+    {
+      ""label"": null,
+      ""confidence"": 0,
+      ""reasoning"": ""The issue contains sufficient information for triage.""
+    }
+  ]
+}";
     }
 }
