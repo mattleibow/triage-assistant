@@ -3,6 +3,9 @@ using Microsoft.Extensions.Logging;
 using TriageAssistant.Core.Configuration;
 using TriageAssistant.Core.Utils;
 using TriageAssistant.Core.GitHub;
+using TriageAssistant.Core.AI;
+using TriageAssistant.Core.Prompts;
+using TriageAssistant.Core.Workflows;
 using TriageAssistant.Core.Models;
 
 namespace TriageAssistant.Action;
@@ -17,7 +20,37 @@ public class Program
         // Set up dependency injection and logging
         var services = new ServiceCollection();
         services.AddLogging(builder => builder.AddConsole());
-        services.AddTransient<IIssueDetailsService, IssueDetailsService>();
+        
+        // Register services
+        services.AddSingleton<IConfigFileService, ConfigFileService>();
+        services.AddSingleton<IIssueDetailsService, IssueDetailsService>();
+        services.AddSingleton<IPromptService, PromptService>();
+        services.AddHttpClient();
+        
+        // Register GitHub services - these require tokens so will be created per request
+        services.AddTransient<IGitHubIssuesService>(provider =>
+        {
+            var logger = provider.GetRequiredService<ILogger<GitHubIssuesService>>();
+            var token = GetEnvironmentVariable("INPUT_TOKEN", GetEnvironmentVariable("GITHUB_TOKEN", ""));
+            return new GitHubIssuesService(token, logger);
+        });
+        
+        services.AddTransient<IGitHubProjectsService>(provider =>
+        {
+            var logger = provider.GetRequiredService<ILogger<GitHubProjectsService>>();
+            var token = GetEnvironmentVariable("INPUT_TOKEN", GetEnvironmentVariable("GITHUB_TOKEN", ""));
+            return new GitHubProjectsService(token, logger);
+        });
+
+        services.AddTransient<IAiInferenceService>(provider =>
+        {
+            var httpClient = provider.GetRequiredService<HttpClient>();
+            var logger = provider.GetRequiredService<ILogger<AiInferenceService>>();
+            return new AiInferenceService(httpClient, logger);
+        });
+        
+        services.AddTransient<ILabelTriageWorkflowService, LabelTriageWorkflowService>();
+        services.AddTransient<IEngagementWorkflowService, EngagementWorkflowService>();
         
         var serviceProvider = services.BuildServiceProvider();
         var logger = serviceProvider.GetRequiredService<ILogger<Program>>();
@@ -34,20 +67,32 @@ public class Program
 
             // Create basic configuration from environment
             var config = CreateConfigurationFromEnvironment();
+            
+            // Load configuration file
+            var configFileService = serviceProvider.GetRequiredService<IConfigFileService>();
+            var configFile = await configFileService.LoadConfigFileAsync();
 
             // Route to appropriate workflow based on mode
+            string responseFile = "";
             switch (triageMode)
             {
                 case TriageMode.ApplyLabels:
-                    await RunLabelTriageWorkflow(config, serviceProvider, logger);
+                    responseFile = await RunLabelTriageWorkflowAsync(config, configFile, serviceProvider, logger);
                     break;
                     
                 case TriageMode.EngagementScore:
-                    await RunEngagementScoringWorkflow(config, serviceProvider, logger);
+                    responseFile = await RunEngagementScoringWorkflowAsync(config, configFile, serviceProvider, logger);
                     break;
                     
                 default:
                     throw new NotSupportedException($"Unsupported triage mode: {triageMode}");
+            }
+
+            // Set the response file output for GitHub Actions
+            if (!string.IsNullOrEmpty(responseFile))
+            {
+                Environment.SetEnvironmentVariable("GITHUB_OUTPUT", $"response-file={responseFile}");
+                logger.LogInformation("📄 Response file output set: {ResponseFile}", responseFile);
             }
 
             logger.LogInformation("✅ Triage Assistant completed successfully");
@@ -60,58 +105,107 @@ public class Program
         }
     }
 
-    private static async Task RunLabelTriageWorkflow(EverythingConfig config, ServiceProvider serviceProvider, ILogger logger)
+    private static async Task<string> RunLabelTriageWorkflowAsync(
+        EverythingConfig config, 
+        ConfigFile configFile, 
+        ServiceProvider serviceProvider, 
+        ILogger logger)
     {
-        logger.LogInformation("🏷️  Running label triage workflow");
+        logger.LogInformation("🏷️ Running label triage workflow");
         
-        // TODO: Implement label triage workflow
-        if (config.DryRun)
+        var workflowService = serviceProvider.GetRequiredService<ILabelTriageWorkflowService>();
+        
+        try
         {
-            logger.LogInformation("🔍 Dry run: Would process issue #{IssueNumber} in {Repository}", 
-                config.IssueNumber, config.Repository);
-        }
-        else
-        {
-            logger.LogInformation("📝 Processing issue #{IssueNumber} in {Repository}", 
-                config.IssueNumber, config.Repository);
-        }
-        
-        await Task.CompletedTask;
-    }
-
-    private static async Task RunEngagementScoringWorkflow(EverythingConfig config, ServiceProvider serviceProvider, ILogger logger)
-    {
-        logger.LogInformation("📊 Running engagement scoring workflow");
-        
-        var issueDetailsService = serviceProvider.GetRequiredService<IIssueDetailsService>();
-        
-        // Demo the engagement scoring system
-        if (config.IssueNumber.HasValue)
-        {
-            logger.LogInformation("📈 Calculating engagement score for issue #{IssueNumber}", config.IssueNumber);
-            
-            // Create a sample issue for demonstration
-            var sampleIssue = CreateSampleIssue(config.IssueNumber.Value);
-            var weights = new EngagementWeights();
-            
-            var score = issueDetailsService.CalculateScore(sampleIssue, weights);
-            var historicalScore = issueDetailsService.CalculateHistoricalScore(sampleIssue, weights);
-            
-            logger.LogInformation("📊 Current engagement score: {Score}", score);
-            logger.LogInformation("📉 Historical engagement score: {HistoricalScore}", historicalScore);
-            
-            if (config.DryRun)
+            // Determine if this is single issue or bulk processing
+            if (!string.IsNullOrEmpty(config.IssueQuery))
             {
-                logger.LogInformation("🔍 Dry run: Would update project with engagement score");
+                // Bulk processing
+                var bulkConfig = new BulkLabelTriageWorkflowConfig
+                {
+                    Token = config.Token,
+                    RepoOwner = config.RepoOwner,
+                    RepoName = config.RepoName,
+                    Repository = config.Repository,
+                    IssueQuery = config.IssueQuery,
+                    AiEndpoint = config.AiEndpoint,
+                    AiModel = config.AiModel,
+                    AiToken = config.AiToken,
+                    ApplyLabels = config.ApplyLabels,
+                    ApplyComment = config.ApplyComment,
+                    CommentFooter = config.CommentFooter,
+                    DryRun = config.DryRun,
+                    TempDir = config.TempDir
+                };
+                
+                return await workflowService.RunBulkTriageAsync(bulkConfig, configFile.Labels);
+            }
+            else if (config.IssueNumber.HasValue)
+            {
+                // Single issue processing
+                var singleConfig = new LabelTriageWorkflowConfig
+                {
+                    Token = config.Token,
+                    RepoOwner = config.RepoOwner,
+                    RepoName = config.RepoName,
+                    Repository = config.Repository,
+                    IssueNumber = config.IssueNumber,
+                    AiEndpoint = config.AiEndpoint,
+                    AiModel = config.AiModel,
+                    AiToken = config.AiToken,
+                    ApplyLabels = config.ApplyLabels,
+                    ApplyComment = config.ApplyComment,
+                    CommentFooter = config.CommentFooter,
+                    DryRun = config.DryRun,
+                    TempDir = config.TempDir
+                };
+                
+                return await workflowService.RunSingleIssueTriageAsync(singleConfig, configFile.Labels);
             }
             else
             {
-                logger.LogInformation("💾 Would update project column '{Column}' with score {Score}", 
-                    config.ProjectColumn, score);
+                throw new ArgumentException("Either issue number or issue query must be provided for label triage");
             }
         }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "❌ Label triage workflow failed: {Message}", ex.Message);
+            throw;
+        }
+    }
+
+    private static async Task<string> RunEngagementScoringWorkflowAsync(
+        EverythingConfig config, 
+        ConfigFile configFile, 
+        ServiceProvider serviceProvider, 
+        ILogger logger)
+    {
+        logger.LogInformation("📊 Running engagement scoring workflow");
         
-        await Task.CompletedTask;
+        var workflowService = serviceProvider.GetRequiredService<IEngagementWorkflowService>();
+        
+        try
+        {
+            var engagementConfig = new EngagementWorkflowConfig
+            {
+                Token = config.Token,
+                RepoOwner = config.RepoOwner,
+                RepoName = config.RepoName,
+                IssueNumber = config.IssueNumber,
+                ProjectNumber = config.ProjectNumber,
+                ProjectColumn = config.ProjectColumn,
+                ApplyScores = config.ApplyScores,
+                DryRun = config.DryRun,
+                TempDir = config.TempDir
+            };
+
+            return await workflowService.RunEngagementWorkflowAsync(engagementConfig, configFile.Engagement);
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "❌ Engagement scoring workflow failed: {Message}", ex.Message);
+            throw;
+        }
     }
 
     private static EverythingConfig CreateConfigurationFromEnvironment()
@@ -129,6 +223,7 @@ public class Program
             
             // Issue information
             IssueNumber = ParseOptionalInt(GetEnvironmentVariable("INPUT_ISSUE", "")),
+            IssueQuery = GetEnvironmentVariable("INPUT_ISSUE_QUERY", ""),
             
             // Project information
             ProjectNumber = ParseOptionalInt(GetEnvironmentVariable("INPUT_PROJECT", "")),
@@ -163,51 +258,5 @@ public class Program
             return null;
             
         return int.TryParse(value, out var result) ? result : null;
-    }
-
-    private static IssueDetails CreateSampleIssue(int issueNumber)
-    {
-        // Create a sample issue for demonstration
-        return new IssueDetails
-        {
-            Id = issueNumber.ToString(),
-            Owner = "example",
-            Repo = "repo", 
-            Number = issueNumber,
-            Title = $"Sample Issue #{issueNumber}",
-            Body = "This is a sample issue for testing engagement scoring.",
-            State = "open",
-            CreatedAt = DateTime.UtcNow.AddDays(-30),
-            UpdatedAt = DateTime.UtcNow.AddDays(-1),
-            User = new UserInfo { Login = "user1", Type = "User" },
-            Assignees = new List<UserInfo> 
-            { 
-                new() { Login = "assignee1", Type = "User" } 
-            },
-            Comments = new List<CommentData>
-            {
-                new() 
-                { 
-                    User = new UserInfo { Login = "commenter1", Type = "User" },
-                    CreatedAt = DateTime.UtcNow.AddDays(-5),
-                    Reactions = new List<ReactionData>()
-                },
-                new() 
-                { 
-                    User = new UserInfo { Login = "commenter2", Type = "User" },
-                    CreatedAt = DateTime.UtcNow.AddDays(-2),
-                    Reactions = new List<ReactionData>()
-                }
-            },
-            Reactions = new List<ReactionData>
-            {
-                new() 
-                { 
-                    User = new UserInfo { Login = "reactor1", Type = "User" },
-                    Reaction = "👍",
-                    CreatedAt = DateTime.UtcNow.AddDays(-3)
-                }
-            }
-        };
     }
 }

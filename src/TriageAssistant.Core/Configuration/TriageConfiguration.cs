@@ -59,6 +59,9 @@ public class SelectLabelsPromptConfig : PromptGenerationConfig
     public string Repository { get; set; } = string.Empty;
     public string? Label { get; set; }
     public string? LabelPrefix { get; set; }
+    public string AiEndpoint { get; set; } = string.Empty;
+    public string AiModel { get; set; } = string.Empty;
+    public string AiToken { get; set; } = string.Empty;
 }
 
 /// <summary>
