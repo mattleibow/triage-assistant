@@ -24,4 +24,8 @@
     </PackageReference>
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\TriageAssistant.Core\TriageAssistant.Core.csproj" />
+  </ItemGroup>
+
 </Project>
