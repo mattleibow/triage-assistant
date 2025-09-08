@@ -35,20 +35,16 @@ inputs:
     description: 'The issue number of the issue to triage'
     required: false
     default: ''
+  issue-query:
+    description: 'GitHub search query to find issues to triage (e.g., "is:issue state:open created:>@today-30d")'
+    required: false
+    default: ''
 
-  # Label selection inputs
-  template:
-    description: 'Triage template to use: multi-label, single-label, regression, missing-info, engagement-score'
+  # Mode selection
+  mode:
+    description: 'Operation mode: apply-labels, engagement-score'
     required: false
-    default: ''
-  label:
-    description: 'The specific label to use'
-    required: false
-    default: ''
-  label-prefix:
-    description: 'Prefix for label search (e.g., platform/, area-, etc.)'
-    required: false
-    default: ''
+    default: 'apply-labels'
 
   # Engagement scoring inputs
   project:

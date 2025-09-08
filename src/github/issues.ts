@@ -5,7 +5,7 @@ import * as path from 'path'
 import * as utils from '../utils.js'
 import { GetIssueDetailsQuery, Sdk as GraphQLSdk } from '../generated/graphql.js'
 import { GitHubIssueConfig, TriageConfig } from '../config.js'
-import { IssueDetails, ReactionData, CommentData, UserInfo } from './types.js'
+import { IssueDetails, ReactionData, CommentData, UserInfo, IssueBody } from './types.js'
 import { MissingInfoPayload } from '../triage/triage-response.js'
 
 type Octokit = ReturnType<typeof github.getOctokit>
@@ -569,5 +569,66 @@ export async function syncNeedsInfoLabels(
       name: labelToRemove
     })
     core.info(`Removed label: ${labelToRemove}`)
+  }
+}
+
+/**
+ * Search for issues and pull requests using GitHub's search API
+ *
+ * @param octokit The GitHub API client
+ * @param query The search query (e.g., "is:issue state:open created:>@today-30d", "is:pr state:open")
+ * @param repoOwner Repository owner to scope the search
+ * @param repoName Repository name to scope the search
+ * @returns Array of issues and pull requests found by the search
+ */
+export async function searchIssues(
+  octokit: Octokit,
+  query: string,
+  repoOwner: string,
+  repoName: string
+): Promise<IssueBody[]> {
+  try {
+    // Add repository scope to the query if not already present
+    const scopedQuery = query.includes('repo:') ? query : `${query} repo:${repoOwner}/${repoName}`
+
+    core.info(`Searching for issues and pull requests with query: ${scopedQuery}`)
+
+    const searchResult = await octokit.rest.search.issuesAndPullRequests({
+      q: scopedQuery,
+      sort: 'created',
+      order: 'desc',
+      per_page: 100,
+      advanced_search: true
+    })
+
+    // Include both issues and pull requests
+    const items: IssueBody[] = searchResult.data.items.map((item) => ({
+      id: item.id.toString(),
+      owner: repoOwner,
+      repo: repoName,
+      number: item.number,
+      assignees:
+        item.assignees?.map((assignee) => ({
+          login: assignee.login || '',
+          type: assignee.type || ''
+        })) || [],
+      body: item.body || '',
+      closedAt: item.closed_at ? new Date(item.closed_at) : null,
+      createdAt: new Date(item.created_at),
+      updatedAt: new Date(item.updated_at),
+      state: item.state,
+      title: item.title,
+      user: {
+        login: item.user?.login || '',
+        type: item.user?.type || ''
+      }
+    }))
+
+    core.info(`Found ${items.length} items (issues and pull requests) matching the query`)
+
+    return items
+  } catch (error) {
+    core.error(`Failed to search for issues: ${error}`)
+    throw error
   }
 }

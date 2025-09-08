@@ -35,8 +35,7 @@ describe('selectLabels', () => {
     issueNumber: 123,
     repository: 'owner/repo',
     labelPrefix: 'type/',
-    label: 'bug',
-    template: 'single-label'
+    label: 'bug'
   }
 
   const inMemoryFs = new FileSystemMock()
@@ -68,7 +67,7 @@ describe('selectLabels', () => {
 
   describe('template loading and prompt generation', () => {
     it('should load the correct template and call generatePrompt with correct parameters', async () => {
-      await selectLabels(mockConfig)
+      await selectLabels('single-label', mockConfig)
 
       // Verify generatePrompt was called twice (system and user prompts)
       expect(prompts.generatePrompt).toHaveBeenCalledTimes(2)
@@ -118,9 +117,7 @@ describe('selectLabels', () => {
 
       templates.forEach((template) => {
         it(`should handle ${template} template correctly`, async () => {
-          const config = { ...mockConfig, template }
-
-          await selectLabels(config)
+          await selectLabels(template, mockConfig)
 
           // Verify the correct template was loaded
           expect(prompts.generatePrompt).toHaveBeenCalledWith(
@@ -132,7 +129,7 @@ describe('selectLabels', () => {
               LABEL_PREFIX: 'type/',
               LABEL: 'bug'
             },
-            config
+            mockConfig
           )
         })
       })
@@ -144,11 +141,10 @@ describe('selectLabels', () => {
         issueNumber: 456,
         repository: 'myorg/myrepo',
         labelPrefix: 'priority/',
-        label: 'high',
-        template: 'multi-label'
+        label: 'high'
       }
 
-      await selectLabels(customConfig)
+      await selectLabels('multi-label', customConfig)
 
       // Check both system and user prompt calls get the same replacements
       const calls = prompts.generatePrompt.mock.calls
@@ -168,7 +164,7 @@ describe('selectLabels', () => {
     it('should create the correct directory structure', async () => {
       const mkdirSpy = jest.spyOn(fs.promises, 'mkdir')
 
-      await selectLabels(mockConfig)
+      await selectLabels('single-label', mockConfig)
 
       expect(mkdirSpy).toHaveBeenCalledWith(path.join('/tmp/test/triage-labels/prompts/test-guid-123'), {
         recursive: true
@@ -188,8 +184,8 @@ describe('selectLabels', () => {
       const mkdirSpy = jest.spyOn(fs.promises, 'mkdir')
       mkdirSpy.mockClear()
 
-      await selectLabels(mockConfig)
-      await selectLabels(mockConfig)
+      await selectLabels('single-label', mockConfig)
+      await selectLabels('single-label', mockConfig)
 
       // Verify different directories were created
       expect(mkdirSpy).toHaveBeenCalledWith(path.join('/tmp/test/triage-labels/prompts/guid-1'), { recursive: true })
@@ -201,7 +197,7 @@ describe('selectLabels', () => {
     it('should call runInference with correct parameters', async () => {
       const responsePath = path.join('/tmp/test/triage-assistant/responses/response-test-guid-123.json')
 
-      const result = await selectLabels(mockConfig)
+      const result = await selectLabels('single-label', mockConfig)
 
       expect(ai.runInference).toHaveBeenCalledTimes(1)
       expect(ai.runInference).toHaveBeenCalledWith(
@@ -217,7 +213,7 @@ describe('selectLabels', () => {
     })
 
     it('should pass the full config object to runInference', async () => {
-      await selectLabels(mockConfig)
+      await selectLabels('single-label', mockConfig)
 
       const inferenceCall = ai.runInference.mock.calls[0]
       expect(inferenceCall[4]).toBe(mockConfig) // Full config object should be passed
@@ -226,7 +222,7 @@ describe('selectLabels', () => {
     it('should handle file reading errors gracefully', async () => {
       jest.spyOn(fs.promises, 'readFile').mockRejectedValue(new Error('File not found'))
 
-      await expect(selectLabels(mockConfig)).rejects.toThrow('File not found')
+      await expect(selectLabels('single-label', mockConfig)).rejects.toThrow('File not found')
     })
   })
 
@@ -234,19 +230,19 @@ describe('selectLabels', () => {
     it('should propagate directory creation errors', async () => {
       jest.spyOn(fs.promises, 'mkdir').mockRejectedValue(new Error('Permission denied'))
 
-      await expect(selectLabels(mockConfig)).rejects.toThrow('Permission denied')
+      await expect(selectLabels('single-label', mockConfig)).rejects.toThrow('Permission denied')
     })
 
     it('should propagate generatePrompt errors', async () => {
       prompts.generatePrompt.mockRejectedValueOnce(new Error('Template processing failed'))
 
-      await expect(selectLabels(mockConfig)).rejects.toThrow('Template processing failed')
+      await expect(selectLabels('single-label', mockConfig)).rejects.toThrow('Template processing failed')
     })
 
     it('should propagate runInference errors', async () => {
       ai.runInference.mockRejectedValue(new Error('AI inference failed'))
 
-      await expect(selectLabels(mockConfig)).rejects.toThrow('AI inference failed')
+      await expect(selectLabels('single-label', mockConfig)).rejects.toThrow('AI inference failed')
     })
   })
 
@@ -258,7 +254,7 @@ describe('selectLabels', () => {
         const config = { ...mockConfig, template }
 
         // Should not throw for valid templates
-        await expect(selectLabels(config)).resolves.toBeDefined()
+        await expect(selectLabels('single-label', config)).resolves.toBeDefined()
 
         jest.clearAllMocks()
 

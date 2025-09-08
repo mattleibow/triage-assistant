@@ -6,15 +6,21 @@ import { octokit } from '../../__fixtures__/actions/github.js'
 import * as issues from '../../__fixtures__/github/issues.js'
 import * as summary from '../../__fixtures__/prompts/summary.js'
 import * as merge from '../../__fixtures__/triage/merge.js'
+import * as selectLabelsFixture from '../../__fixtures__/prompts/select-labels.js'
+import { ConfigFileLabels } from '../../src/config-file.js'
+import { LabelTriageWorkflowConfig } from '../../src/config.js'
+import * as realSearchResults from '../query-data/issue-search.js'
+import { TriageResponse } from '../../src/triage/triage-response.js'
 
 // Mock dependencies using fixtures
 jest.unstable_mockModule('@actions/core', () => core)
 jest.unstable_mockModule('../../src/github/issues.js', () => issues)
 jest.unstable_mockModule('../../src/prompts/summary.js', () => summary)
 jest.unstable_mockModule('../../src/triage/merge.js', () => merge)
+jest.unstable_mockModule('../../src/prompts/select-labels.js', () => selectLabelsFixture)
 
 // Import the module being tested
-const { mergeAndApplyTriage } = await import('../../src/triage/triage.js')
+const { mergeAndApplyTriage, runTriageWorkflow } = await import('../../src/triage/triage.js')
 
 describe('mergeAndApplyTriage', () => {
   const testTempDir = '/tmp/test'
@@ -422,5 +428,379 @@ describe('mergeAndApplyTriage', () => {
     expect(octokit.rest.issues.listLabelsOnIssue).not.toHaveBeenCalled()
     expect(issues.removeLabelsFromIssue).not.toHaveBeenCalled()
     expect(issues.applyLabelsToIssue).not.toHaveBeenCalled()
+  })
+})
+
+describe('runTriageWorkflow', () => {
+  const testTempDir = '/tmp/test'
+
+  const mockConfig: LabelTriageWorkflowConfig = {
+    dryRun: false,
+    token: 'test-token',
+    tempDir: testTempDir,
+    repository: 'owner/repo',
+    repoName: 'repo',
+    repoOwner: 'owner',
+    aiEndpoint: 'test-endpoint',
+    aiModel: 'test-model',
+    aiToken: 'test-ai-token',
+    applyLabels: true,
+    applyComment: true,
+    commentFooter: 'Test footer'
+  }
+
+  const mockConfigFile: ConfigFileLabels = {
+    groups: {
+      regressions: {
+        template: 'regression',
+        label: 'regression'
+      },
+      areas: {
+        template: 'single-label',
+        labelPrefix: 'area/'
+      }
+    }
+  }
+
+  const mockConfigFileEmpty: ConfigFileLabels = {
+    groups: {}
+  }
+
+  const mockEmptyMergedResponse: TriageResponse = {
+    remarks: [],
+    regression: null,
+    labels: []
+  }
+
+  const inMemoryFs = new FileSystemMock()
+
+  beforeEach(() => {
+    jest.clearAllMocks()
+    jest.resetAllMocks()
+    inMemoryFs.setup()
+  })
+
+  afterEach(() => {
+    jest.restoreAllMocks()
+    inMemoryFs.teardown()
+  })
+
+  describe('single issue triage with issue number', () => {
+    const mockConfigWithIssueNumber: LabelTriageWorkflowConfig = {
+      ...mockConfig,
+      issueNumber: 123
+    }
+
+    it('should call selectLabels for each group with correct configuration', async () => {
+      // Mock selectLabels to resolve successfully
+      selectLabelsFixture.selectLabels.mockResolvedValue('/tmp/test/response.json')
+
+      // Mock merge functions
+      merge.mergeResponses.mockResolvedValue(mockEmptyMergedResponse)
+      summary.generateSummary.mockResolvedValue('/tmp/test/summary.json')
+
+      const result = await runTriageWorkflow(mockConfigWithIssueNumber, mockConfigFile)
+
+      // Verify no failures occurred
+      expect(core.setFailed).not.toHaveBeenCalled()
+
+      // Verify selectLabels was called for each group
+      expect(selectLabelsFixture.selectLabels).toHaveBeenCalledTimes(2)
+
+      // Verify first group (regression) call
+      expect(selectLabelsFixture.selectLabels).toHaveBeenNthCalledWith(1, 'regression', {
+        ...mockConfigWithIssueNumber,
+        labelPrefix: undefined,
+        label: 'regression'
+      })
+
+      // Verify second group (area) call
+      expect(selectLabelsFixture.selectLabels).toHaveBeenNthCalledWith(2, 'single-label', {
+        ...mockConfigWithIssueNumber,
+        labelPrefix: 'area/',
+        label: undefined
+      })
+
+      // Verify result is the merged response file path
+      expect(result).toBe('/tmp/test/triage-assistant/responses.json')
+    })
+
+    it('should add and remove eyes reactions when applying labels and summary', async () => {
+      selectLabelsFixture.selectLabels.mockResolvedValue('/tmp/test/response.json')
+
+      merge.mergeResponses.mockResolvedValue(mockEmptyMergedResponse)
+      summary.generateSummary.mockResolvedValue('/tmp/test/summary.json')
+
+      await runTriageWorkflow(mockConfigWithIssueNumber, mockConfigFile)
+
+      // Verify no failures occurred
+      expect(core.setFailed).not.toHaveBeenCalled()
+
+      // Verify addEyes was called at the start
+      expect(issues.addEyes).toHaveBeenCalledWith(expect.anything(), mockConfigWithIssueNumber)
+
+      // Verify removeEyes was called at the end
+      expect(issues.removeEyes).toHaveBeenCalledWith(expect.anything(), mockConfigWithIssueNumber)
+
+      // Verify correct order: addEyes -> selectLabels -> mergeAndApply -> removeEyes
+      const addEyesCall = issues.addEyes.mock.invocationCallOrder[0]
+      const removeEyesCall = issues.removeEyes.mock.invocationCallOrder[0]
+      const selectLabelsCall = selectLabelsFixture.selectLabels.mock.invocationCallOrder[0]
+
+      expect(addEyesCall).toBeLessThan(selectLabelsCall)
+      expect(selectLabelsCall).toBeLessThan(removeEyesCall)
+    })
+
+    it('should not call selectLabels when no groups are configured', async () => {
+      merge.mergeResponses.mockResolvedValue(mockEmptyMergedResponse)
+      summary.generateSummary.mockResolvedValue('/tmp/test/summary.json')
+
+      await runTriageWorkflow(mockConfigWithIssueNumber, mockConfigFileEmpty)
+
+      // Verify no failures occurred
+      expect(core.setFailed).not.toHaveBeenCalled()
+
+      // Verify selectLabels was not called
+      expect(selectLabelsFixture.selectLabels).not.toHaveBeenCalled()
+
+      // Verify core.info was not called for group configurations
+      expect(core.info).not.toHaveBeenCalledWith(expect.stringContaining('Selecting labels for group'))
+
+      // Should still call eyes reactions and merge/apply
+      expect(issues.addEyes).toHaveBeenCalled()
+      expect(issues.removeEyes).toHaveBeenCalled()
+    })
+
+    it('should not add or remove eyes reactions when not applying labels or comments', async () => {
+      const configNoApply = {
+        ...mockConfigWithIssueNumber,
+        applyLabels: false,
+        applyComment: false
+      }
+
+      await runTriageWorkflow(configNoApply, mockConfigFileEmpty)
+
+      // Verify no failures occurred
+      expect(core.setFailed).not.toHaveBeenCalled()
+
+      // Verify no eyes reactions
+      expect(issues.addEyes).not.toHaveBeenCalled()
+      expect(issues.removeEyes).not.toHaveBeenCalled()
+
+      // Verify no selectLabels
+      expect(selectLabelsFixture.selectLabels).not.toHaveBeenCalled()
+
+      // Verify no merge/apply operations
+      expect(merge.mergeResponses).not.toHaveBeenCalled()
+    })
+
+    it('should handle selectLabels failures and still remove eyes reactions', async () => {
+      const selectLabelsError = new Error('Failed to select labels')
+      selectLabelsFixture.selectLabels.mockRejectedValue(selectLabelsError)
+
+      await expect(runTriageWorkflow(mockConfigWithIssueNumber, mockConfigFile)).rejects.toThrow(
+        'Failed to select labels'
+      )
+
+      // Verify addEyes was called
+      expect(issues.addEyes).toHaveBeenCalledWith(expect.anything(), mockConfigWithIssueNumber)
+
+      // Verify removeEyes was still called in finally block
+      expect(issues.removeEyes).toHaveBeenCalledWith(expect.anything(), mockConfigWithIssueNumber)
+    })
+
+    it('should handle merge/apply failures and still remove eyes reactions', async () => {
+      selectLabelsFixture.selectLabels.mockResolvedValue('/tmp/test/response.json')
+
+      const mergeError = new Error('Failed to merge responses')
+      merge.mergeResponses.mockRejectedValue(mergeError)
+
+      await expect(runTriageWorkflow(mockConfigWithIssueNumber, mockConfigFile)).rejects.toThrow(
+        'Failed to merge responses'
+      )
+
+      // Verify addEyes was called
+      expect(issues.addEyes).toHaveBeenCalledWith(expect.anything(), mockConfigWithIssueNumber)
+
+      // Verify selectLabels was called
+      expect(selectLabelsFixture.selectLabels).toHaveBeenCalled()
+
+      // Verify removeEyes was still called in finally block
+      expect(issues.removeEyes).toHaveBeenCalledWith(expect.anything(), mockConfigWithIssueNumber)
+    })
+
+    it('should preserve original config values when calling selectLabels', async () => {
+      const originalConfig = {
+        ...mockConfigWithIssueNumber,
+        labelPrefix: 'original-prefix/',
+        label: 'original-label'
+      }
+
+      selectLabelsFixture.selectLabels.mockResolvedValue('/tmp/test/response.json')
+
+      merge.mergeResponses.mockResolvedValue(mockEmptyMergedResponse)
+      summary.generateSummary.mockResolvedValue('/tmp/test/summary.json')
+
+      await runTriageWorkflow(originalConfig, mockConfigFile)
+
+      // Verify no failures occurred
+      expect(core.setFailed).not.toHaveBeenCalled()
+
+      // Verify first group (regression) call
+      expect(selectLabelsFixture.selectLabels).toHaveBeenNthCalledWith(1, 'regression', {
+        ...originalConfig,
+        labelPrefix: undefined,
+        label: 'regression'
+      })
+
+      // Verify second group (area) call
+      expect(selectLabelsFixture.selectLabels).toHaveBeenNthCalledWith(2, 'single-label', {
+        ...originalConfig,
+        labelPrefix: 'area/',
+        label: undefined
+      })
+    })
+
+    it('should return empty string when no summary needed', async () => {
+      const configNoApply = {
+        ...mockConfigWithIssueNumber,
+        applyLabels: false,
+        applyComment: false
+      }
+
+      const result = await runTriageWorkflow(configNoApply, mockConfigFileEmpty)
+
+      // Verify no failures occurred
+      expect(core.setFailed).not.toHaveBeenCalled()
+
+      expect(result).toBe('')
+      expect(merge.mergeResponses).not.toHaveBeenCalled()
+    })
+
+    it('should return merged response file path when summary is applied', async () => {
+      selectLabelsFixture.selectLabels.mockResolvedValue('/tmp/test/response.json')
+
+      merge.mergeResponses.mockResolvedValue(mockEmptyMergedResponse)
+      summary.generateSummary.mockResolvedValue('/tmp/test/summary.json')
+
+      const result = await runTriageWorkflow(mockConfigWithIssueNumber, mockConfigFile)
+
+      // Verify no failures occurred
+      expect(core.setFailed).not.toHaveBeenCalled()
+
+      expect(result).toBe('/tmp/test/triage-assistant/responses.json')
+    })
+  })
+
+  describe('bulk issue triage with issue query', () => {
+    const mockConfigWithQuery: LabelTriageWorkflowConfig = {
+      ...mockConfig,
+      issueQuery: 'is:issue created:2025-07-25..2025-07-26'
+    }
+
+    it('should process multiple issues from search query', async () => {
+      // Mock search to return multiple issues
+      const mockIssues = realSearchResults.searchIssuesResults()
+      issues.searchIssues.mockResolvedValue(mockIssues)
+
+      // Mock individual issue processing
+      selectLabelsFixture.selectLabels.mockResolvedValue('/tmp/test/response.json')
+      merge.mergeResponses.mockResolvedValue(mockEmptyMergedResponse)
+      summary.generateSummary.mockResolvedValue('/tmp/test/summary.json')
+
+      // Mock file system for writing final results
+      inMemoryFs.forceSet('/tmp/test/item-101/triage-assistant/responses.json', JSON.stringify(mockEmptyMergedResponse))
+      inMemoryFs.forceSet('/tmp/test/item-102/triage-assistant/responses.json', JSON.stringify(mockEmptyMergedResponse))
+
+      const result = await runTriageWorkflow(mockConfigWithQuery, mockConfigFile)
+
+      expect(core.setFailed).not.toHaveBeenCalled()
+
+      // Verify search was called
+      expect(issues.searchIssues).toHaveBeenCalledWith(
+        expect.anything(),
+        'is:issue created:2025-07-25..2025-07-26',
+        'owner',
+        'repo'
+      )
+
+      // Verify processing of each issue
+      expect(selectLabelsFixture.selectLabels).toHaveBeenCalledTimes(6) // 2 groups * 3 issues
+      expect(merge.mergeResponses).toHaveBeenCalledTimes(3)
+
+      // Verify result is bulk response file
+      expect(result).toBe('/tmp/test/triage-assistant/bulk-responses.json')
+    })
+
+    it('should handle empty search results', async () => {
+      issues.searchIssues.mockResolvedValue([])
+
+      const result = await runTriageWorkflow(mockConfigWithQuery, mockConfigFile)
+
+      expect(core.setFailed).not.toHaveBeenCalled()
+
+      expect(issues.searchIssues).toHaveBeenCalled()
+      expect(selectLabelsFixture.selectLabels).not.toHaveBeenCalled()
+      expect(result).toBe('/tmp/test/triage-assistant/bulk-responses.json')
+    })
+
+    it('should continue processing other issues if one fails', async () => {
+      const mockIssues = realSearchResults.searchIssuesResults()
+      issues.searchIssues.mockResolvedValue(mockIssues)
+
+      // First issue succeeds (2 groups), second issue fails on first group
+      selectLabelsFixture.selectLabels
+        .mockResolvedValueOnce('/tmp/test/response.json') // issue 101, group 1
+        .mockResolvedValueOnce('/tmp/test/response.json') // issue 101, group 2
+        .mockRejectedValueOnce(new Error('Failed to process issue')) // issue 102, group 1 - fails here
+        .mockResolvedValueOnce('/tmp/test/response.json') // issue 102, group 2 - won't be called
+
+      merge.mergeResponses.mockResolvedValue(mockEmptyMergedResponse)
+      summary.generateSummary.mockResolvedValue('/tmp/test/summary.json')
+
+      // Mock file system for first issue only (second will fail)
+      inMemoryFs.forceSet('/tmp/test/item-101/triage-assistant/responses.json', JSON.stringify(mockEmptyMergedResponse))
+
+      const result = await runTriageWorkflow(mockConfigWithQuery, mockConfigFile)
+
+      expect(core.setFailed).not.toHaveBeenCalled()
+
+      // Should still return a result
+      expect(result).toBe('/tmp/test/triage-assistant/bulk-responses.json')
+
+      // Should have attempted to process both issues
+      expect(issues.searchIssues).toHaveBeenCalled()
+      expect(core.error).toHaveBeenCalledWith(expect.stringContaining('Failed to process item #32'))
+    })
+
+    it('should use separate working directories for each issue', async () => {
+      const mockIssues = realSearchResults.searchIssuesResults()
+      issues.searchIssues.mockResolvedValue(mockIssues)
+
+      selectLabelsFixture.selectLabels.mockResolvedValue('/tmp/test/response.json')
+      merge.mergeResponses.mockResolvedValue(mockEmptyMergedResponse)
+      summary.generateSummary.mockResolvedValue('/tmp/test/summary.json')
+
+      await runTriageWorkflow(mockConfigWithQuery, mockConfigFile)
+
+      expect(core.setFailed).not.toHaveBeenCalled()
+
+      // Verify selectLabels was called with different working directories
+      // Skip every second label call as it is the same temp dir
+      const firstIssueCall = selectLabelsFixture.selectLabels.mock.calls[0][1]
+      const secondIssueCall = selectLabelsFixture.selectLabels.mock.calls[2][1]
+      const thirdIssueCall = selectLabelsFixture.selectLabels.mock.calls[4][1]
+
+      expect(selectLabelsFixture.selectLabels).toHaveBeenCalledTimes(6) // 2 groups * 3 issues
+
+      expect(firstIssueCall.tempDir).toBe('/tmp/test/item-33')
+      expect(firstIssueCall.issueNumber).toBe(33)
+
+      expect(secondIssueCall.tempDir).toBe('/tmp/test/item-32')
+      expect(secondIssueCall.issueNumber).toBe(32)
+
+      expect(thirdIssueCall.tempDir).toBe('/tmp/test/item-31')
+      expect(thirdIssueCall.issueNumber).toBe(31)
+    })
   })
 })

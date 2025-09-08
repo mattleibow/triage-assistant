@@ -12,6 +12,7 @@ const mockListForIssue = jest.fn<typeof octokit.rest.reactions.listForIssue>()
 const mockDeleteForIssue = jest.fn<typeof octokit.rest.reactions.deleteForIssue>()
 const mockGetIssue = jest.fn<typeof octokit.rest.issues.get>()
 const mockListComments = jest.fn<typeof octokit.rest.issues.listComments>()
+const mockSearchIssuesAndPullRequests = jest.fn<typeof octokit.rest.search.issuesAndPullRequests>()
 
 export const mockOctokit = {
   rest: {
@@ -28,6 +29,9 @@ export const mockOctokit = {
       createForIssue: mockCreateForIssue,
       listForIssue: mockListForIssue,
       deleteForIssue: mockDeleteForIssue
+    },
+    search: {
+      issuesAndPullRequests: mockSearchIssuesAndPullRequests
     }
   }
 }

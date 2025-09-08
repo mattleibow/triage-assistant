@@ -22,17 +22,20 @@ export interface Issue {
   number: number
 }
 
-export interface IssueDetails extends Issue {
+export interface IssueBody extends Issue {
   title: string
   body: string
   state: string
   createdAt: Date
   updatedAt: Date
   closedAt: Date | null
-  reactions: ReactionData[]
-  comments: CommentData[]
   user: UserInfo
   assignees: UserInfo[]
+}
+
+export interface IssueDetails extends IssueBody {
+  comments: CommentData[]
+  reactions: ReactionData[]
 }
 
 export interface CommentData {

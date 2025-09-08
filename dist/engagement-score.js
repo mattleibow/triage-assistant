@@ -31331,12 +31331,28 @@ function sanitizeMarkdownContent(content) {
  * @returns Validated number or 0 if invalid
  */
 function validateNumericInput(input, fieldName) {
-    if (!input.trim())
+    if (!input?.trim())
         return 0;
     const num = parseInt(input, 10);
     if (isNaN(num) || num < 0) {
         coreExports.warning(`Invalid ${fieldName}: ${input}. Using 0 as fallback.`);
         return 0;
+    }
+    return num;
+}
+/**
+ * Validates and sanitizes optional numeric input
+ * @param input Raw string input
+ * @param fieldName Field name for error messages
+ * @returns Validated number or undefined if invalid or empty
+ */
+function validateOptionalNumericInput(input, fieldName) {
+    if (!input?.trim())
+        return undefined;
+    const num = parseInt(input, 10);
+    if (isNaN(num) || num < 0) {
+        coreExports.warning(`Invalid ${fieldName}: ${input}. Ignoring invalid value.`);
+        return undefined;
     }
     return num;
 }
@@ -31352,14 +31368,15 @@ function validateRepositoryId(owner, repo) {
     }
 }
 /**
- * Validates template name against allowed values
- * @param template Template name to validate
+ * Validates the triage mode
+ * @param mode The triage mode to validate
+ * @returns The validated triage mode
  */
-function validateTemplate(template) {
-    const allowedTemplates = ['multi-label', 'single-label', 'regression', 'missing-info', 'engagement-score', ''];
-    if (template && !allowedTemplates.includes(template)) {
-        throw new Error(`Invalid template: ${template}. Allowed values: ${allowedTemplates.filter((t) => t).join(', ')}`);
+function validateMode(mode) {
+    if (mode === TriageMode.ApplyLabels || mode === TriageMode.EngagementScore) {
+        return mode;
     }
+    throw new Error(`Invalid mode: ${mode}. Allowed values: ${Object.values(TriageMode).join(', ')}`);
 }
 /**
  * Substitutes template variables in a string with their corresponding values from a replacements map.
@@ -31376,57 +31393,60 @@ function substituteTemplateVariables(line, replacements) {
     return line;
 }
 
-/**
- * Convert array of 16 byte values to UUID string format of the form:
- * XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX
- */
-var byteToHex = [];
-for (var i$1 = 0; i$1 < 256; ++i$1) {
-  byteToHex.push((i$1 + 0x100).toString(16).slice(1));
+const byteToHex = [];
+for (let i = 0; i < 256; ++i) {
+    byteToHex.push((i + 0x100).toString(16).slice(1));
 }
 function unsafeStringify(arr, offset = 0) {
-  // Note: Be careful editing this code!  It's been tuned for performance
-  // and works in ways you may not expect. See https://github.com/uuidjs/uuid/pull/434
-  //
-  // Note to future-self: No, you can't remove the `toLowerCase()` call.
-  // REF: https://github.com/uuidjs/uuid/pull/677#issuecomment-1757351351
-  return (byteToHex[arr[offset + 0]] + byteToHex[arr[offset + 1]] + byteToHex[arr[offset + 2]] + byteToHex[arr[offset + 3]] + '-' + byteToHex[arr[offset + 4]] + byteToHex[arr[offset + 5]] + '-' + byteToHex[arr[offset + 6]] + byteToHex[arr[offset + 7]] + '-' + byteToHex[arr[offset + 8]] + byteToHex[arr[offset + 9]] + '-' + byteToHex[arr[offset + 10]] + byteToHex[arr[offset + 11]] + byteToHex[arr[offset + 12]] + byteToHex[arr[offset + 13]] + byteToHex[arr[offset + 14]] + byteToHex[arr[offset + 15]]).toLowerCase();
+    return (byteToHex[arr[offset + 0]] +
+        byteToHex[arr[offset + 1]] +
+        byteToHex[arr[offset + 2]] +
+        byteToHex[arr[offset + 3]] +
+        '-' +
+        byteToHex[arr[offset + 4]] +
+        byteToHex[arr[offset + 5]] +
+        '-' +
+        byteToHex[arr[offset + 6]] +
+        byteToHex[arr[offset + 7]] +
+        '-' +
+        byteToHex[arr[offset + 8]] +
+        byteToHex[arr[offset + 9]] +
+        '-' +
+        byteToHex[arr[offset + 10]] +
+        byteToHex[arr[offset + 11]] +
+        byteToHex[arr[offset + 12]] +
+        byteToHex[arr[offset + 13]] +
+        byteToHex[arr[offset + 14]] +
+        byteToHex[arr[offset + 15]]).toLowerCase();
 }
 
-// Unique ID creation requires a high quality random # generator. In the browser we therefore
-// require the crypto API and do not support built-in fallback to lower quality random number
-// generators (like Math.random()).
-
-var getRandomValues;
-var rnds8 = new Uint8Array(16);
+let getRandomValues;
+const rnds8 = new Uint8Array(16);
 function rng() {
-  // lazy load so that environments that need to polyfill have a chance to do so
-  if (!getRandomValues) {
-    // getRandomValues needs to be invoked in a context where "this" is a Crypto implementation.
-    getRandomValues = typeof crypto !== 'undefined' && crypto.getRandomValues && crypto.getRandomValues.bind(crypto);
     if (!getRandomValues) {
-      throw new Error('crypto.getRandomValues() not supported. See https://github.com/uuidjs/uuid#getrandomvalues-not-supported');
+        if (typeof crypto === 'undefined' || !crypto.getRandomValues) {
+            throw new Error('crypto.getRandomValues() not supported. See https://github.com/uuidjs/uuid#getrandomvalues-not-supported');
+        }
+        getRandomValues = crypto.getRandomValues.bind(crypto);
     }
-  }
-  return getRandomValues(rnds8);
+    return getRandomValues(rnds8);
 }
 
-var randomUUID$1 = typeof crypto !== 'undefined' && crypto.randomUUID && crypto.randomUUID.bind(crypto);
-var native = {
-  randomUUID: randomUUID$1
-};
+const randomUUID$1 = typeof crypto !== 'undefined' && crypto.randomUUID && crypto.randomUUID.bind(crypto);
+var native = { randomUUID: randomUUID$1 };
 
 function v4(options, buf, offset) {
-  if (native.randomUUID && true && !options) {
-    return native.randomUUID();
-  }
-  options = options || {};
-  var rnds = options.random || (options.rng || rng)();
-
-  // Per 4.4, set bits for version and `clock_seq_hi_and_reserved`
-  rnds[6] = rnds[6] & 0x0f | 0x40;
-  rnds[8] = rnds[8] & 0x3f | 0x80;
-  return unsafeStringify(rnds);
+    if (native.randomUUID && true && !options) {
+        return native.randomUUID();
+    }
+    options = options || {};
+    const rnds = options.random ?? options.rng?.() ?? rng();
+    if (rnds.length < 16) {
+        throw new Error('Random bytes length must be >= 16');
+    }
+    rnds[6] = (rnds[6] & 0x0f) | 0x40;
+    rnds[8] = (rnds[8] & 0x3f) | 0x80;
+    return unsafeStringify(rnds);
 }
 
 const systemPromptSingleLabel = `
@@ -31666,7 +31686,7 @@ diagnose reported problems.
 ## Evaluation Guidelines
 
 1. Verify **steps to reproduce** are clear, specific, and complete
-2. Confirm **code samples/projects** are provided and accessible
+2. Confirm **code samples/projects** are provided and accessible 
 3. Check if **environment details** are sufficient
 4. Identify any **missing critical information**
 5. Determine if the problem can be **reliably reproduced**
@@ -31676,7 +31696,6 @@ diagnose reported problems.
 - Apply "s/needs-info" when:
   - Steps to reproduce are missing or vague
   - Expected/actual behavior is unclear
-  - Essential information is missing
 
 - Apply "s/needs-repro" when:
   - No code snippets, repository links, or sample projects are provided
@@ -31689,62 +31708,43 @@ diagnose reported problems.
 ## Response Format
 
 * Respond in valid and properly formatted JSON with the
-  following structure.
+  following structure and only in this structure.
 * Do not wrap the JSON in any other text or formatting,
   including code blocks or markdown as this will be read
   by a machine.
+* Always include all relevant links in the response.
 
-### If issue has all necessary information:
+If issue has all necessary information:
 
 {
   "repro": {
-    "has_clear_description": true,
-    "has_steps": true,
-    "has_code": true,
-    "links": ["link1", "link2"]
-  },
-  "missing": [],
-  "questions": [],
-  "labels": []
+    "links": [
+      "Link1",
+      "Link2"
+    ]
+  }
 }
 
-### If issue is missing information:
+If issue is missing information:
 
 {
   "repro": {
-    "has_clear_description": true|false,
-    "has_steps": true|false,
-    "has_code": true|false,
-    "links": ["link1", "link2"]
+    "links": [
+      "Link1",
+      "Link2"
+    ]
   },
-  "missing": ["steps", "code", "description"],
-  "questions": [
-    "Question 1 asking for specific missing information",
-    "Question 2 asking for specific missing information",
-    "Question 3 asking for specific missing information",
-    "Question 4 asking for specific missing information",
-    "Question 5 asking for specific missing information"
-  ],
   "labels": [
     {
-      "label": "s/needs-info",
-      "reason": "Specific reason for needing more information"
+      "label": "NEEDS_INFO_LABEL",
+      "reason": "REASON_FOR_NEEDING_MORE_INFO"
     },
     {
-      "label": "s/needs-repro",
-      "reason": "Specific reason for needing reproduction code"
+      "label": "NEEDS_REPRO_CODE_LABEL",
+      "reason": "REASON_FOR_NEEDING_REPRO_CODE"
     }
   ]
 }
-
-## Guidelines for Questions
-
-- Ask up to 5 specific, actionable questions
-- Focus on the minimal set of missing items needed to reproduce the issue
-- Be friendly and helpful in tone
-- Don't ask for information that's already provided in the issue
-- Prioritize reproduction steps and code samples over environment details
-- Include security reminder if requesting logs or sensitive information
 `;
 
 const userPrompt$1 = `
@@ -38982,7 +38982,7 @@ async function runInference(systemPrompt, userPrompt, responseFile, maxTokens = 
  * @param config The select labels configuration object.
  * @returns Promise that resolves with the path to the response file.
  */
-async function selectLabels(config) {
+async function selectLabels(template, config) {
     const guid = v4();
     const promptDir = path.join(config.tempDir, 'triage-labels', 'prompts', guid);
     const responseDir = path.join(config.tempDir, 'triage-assistant', 'responses');
@@ -38991,7 +38991,7 @@ async function selectLabels(config) {
     await fs.promises.mkdir(responseDir, { recursive: true });
     // Generate system prompt
     const systemPromptPath = path.join(promptDir, 'system-prompt.md');
-    await generatePromptFile$1(config.template, config, systemPromptPath);
+    await generatePromptFile$1(template, config, systemPromptPath);
     // Generate user prompt
     const userPromptPath = path.join(promptDir, 'user-prompt.md');
     await generatePromptFile$1('user', config, userPromptPath);
@@ -39154,46 +39154,6 @@ async function applyLabelsToIssue(octokit, labels, config) {
         issue_number: config.issueNumber,
         labels
     });
-}
-/**
- * Removes labels from an issue.
- *
- * @param octokit The GitHub API client.
- * @param labelsToRemove Array of label names to remove from the issue.
- * @param config The triage configuration object.
- */
-async function removeLabelsFromIssue(octokit, labelsToRemove, config) {
-    // Filter out empty labels
-    labelsToRemove = labelsToRemove?.filter((label) => label.trim().length > 0);
-    // If no labels to remove, return early
-    if (!labelsToRemove || labelsToRemove.length === 0) {
-        return;
-    }
-    if (config.dryRun) {
-        coreExports.info(`Dry run: Skipping removing labels: ${labelsToRemove.join(', ')}`);
-        return;
-    }
-    // Remove each label individually
-    for (const labelToRemove of labelsToRemove) {
-        try {
-            await octokit.rest.issues.removeLabel({
-                owner: config.repoOwner,
-                repo: config.repoName,
-                issue_number: config.issueNumber,
-                name: labelToRemove
-            });
-            coreExports.info(`Removed label: ${labelToRemove}`);
-        }
-        catch (error) {
-            // Label might not exist on the issue, which is fine
-            if (error && typeof error === 'object' && 'status' in error && error.status === 404) {
-                coreExports.info(`Label ${labelToRemove} was not found on issue (already removed or never existed)`);
-            }
-            else {
-                coreExports.warning(`Failed to remove label ${labelToRemove}: ${error}`);
-            }
-        }
-    }
 }
 /**
  * Adds an 'eyes' reaction to the specified issue using the provided Octokit instance and config.
@@ -39385,96 +39345,53 @@ function addComments(comments, allComments) {
     return comments.pageInfo.endCursor;
 }
 /**
- * Builds a user-friendly comment requesting missing information with a hidden marker for upserts.
- *
- * @param data The missing info payload containing structured data about what's missing
- * @returns The formatted comment body with hidden HTML marker
- */
-function buildNeedsInfoComment(data) {
-    const parts = [];
-    // Add friendly greeting
-    parts.push(`Thank you for reporting this issue! To help us investigate and resolve it effectively, we need some additional information.`);
-    // Add missing information section if there are specific missing fields
-    if (data.missing && data.missing.length > 0) {
-        parts.push(`\n## Missing Information`);
-        const missingItems = data.missing.map((item) => {
-            switch (item.toLowerCase()) {
-                case 'steps':
-                    return 'Clear steps to reproduce the issue';
-                case 'code':
-                    return 'Code samples, repository link, or minimal reproducer';
-                case 'description':
-                    return 'Detailed description of the expected vs actual behavior';
-                default:
-                    return item;
-            }
-        });
-        parts.push(`We're missing the following information:\n${missingItems.map((item) => `- ${item}`).join('\n')}`);
-    }
-    // Add questions section if there are specific questions
-    if (data.questions && data.questions.length > 0) {
-        parts.push(`\n## Questions`);
-        parts.push(`Please help us by answering these questions:\n${data.questions.map((q, i) => `${i + 1}. ${q}`).join('\n')}`);
-    }
-    // Add helpful links section if available
-    if (data.repro && data.repro.links && data.repro.links.length > 0) {
-        parts.push(`\n## Helpful Links`);
-        parts.push(`${data.repro.links.map((link) => `- ${link}`).join('\n')}`);
-    }
-    // Add security reminder if logs might be requested
-    const hasLogRequest = data.questions?.some((q) => q.toLowerCase().includes('log') || q.toLowerCase().includes('error') || q.toLowerCase().includes('stack trace'));
-    if (hasLogRequest) {
-        parts.push(`\n> **Note**: When sharing logs or error messages, please review them first to ensure no sensitive information (API keys, passwords, personal data) is included.`);
-    }
-    // Add closing note
-    parts.push(`\nOnce you provide this information, we'll be able to investigate your issue more effectively. Thank you for your patience!`);
-    // Combine all parts with the hidden HTML marker for identification
-    const commentBody = parts.join('\n');
-    const hiddenMarker = `<!-- triage-assistant:needs-info-comment -->`;
-    return `${hiddenMarker}\n${commentBody}`;
-}
-/**
- * Upserts a needs-info comment on an issue. If a comment with the hidden marker exists,
- * it updates that comment. Otherwise, creates a new comment.
+ * Search for issues and pull requests using GitHub's search API
  *
  * @param octokit The GitHub API client
- * @param data The missing info payload
- * @param config The triage configuration
+ * @param query The search query (e.g., "is:issue state:open created:>@today-30d", "is:pr state:open")
+ * @param repoOwner Repository owner to scope the search
+ * @param repoName Repository name to scope the search
+ * @returns Array of issues and pull requests found by the search
  */
-async function upsertNeedsInfoComment(octokit, data, config) {
-    if (config.dryRun) {
-        const commentBody = buildNeedsInfoComment(data);
-        coreExports.info(`Dry run: Would upsert needs-info comment:\n${commentBody}`);
-        return;
-    }
-    const commentBody = buildNeedsInfoComment(data);
-    const hiddenMarker = '<!-- triage-assistant:needs-info-comment -->';
-    // Try to find existing needs-info comment
-    const comments = await octokit.rest.issues.listComments({
-        owner: config.repoOwner,
-        repo: config.repoName,
-        issue_number: config.issueNumber
-    });
-    const existingComment = comments.data.find((comment) => comment.body?.includes(hiddenMarker));
-    if (existingComment) {
-        // Update existing comment
-        await octokit.rest.issues.updateComment({
-            owner: config.repoOwner,
-            repo: config.repoName,
-            comment_id: existingComment.id,
-            body: commentBody
+async function searchIssues(octokit, query, repoOwner, repoName) {
+    try {
+        // Add repository scope to the query if not already present
+        const scopedQuery = query.includes('repo:') ? query : `${query} repo:${repoOwner}/${repoName}`;
+        coreExports.info(`Searching for issues and pull requests with query: ${scopedQuery}`);
+        const searchResult = await octokit.rest.search.issuesAndPullRequests({
+            q: scopedQuery,
+            sort: 'created',
+            order: 'desc',
+            per_page: 100,
+            advanced_search: true
         });
-        coreExports.info(`Updated existing needs-info comment (ID: ${existingComment.id})`);
+        // Include both issues and pull requests
+        const items = searchResult.data.items.map((item) => ({
+            id: item.id.toString(),
+            owner: repoOwner,
+            repo: repoName,
+            number: item.number,
+            assignees: item.assignees?.map((assignee) => ({
+                login: assignee.login || '',
+                type: assignee.type || ''
+            })) || [],
+            body: item.body || '',
+            closedAt: item.closed_at ? new Date(item.closed_at) : null,
+            createdAt: new Date(item.created_at),
+            updatedAt: new Date(item.updated_at),
+            state: item.state,
+            title: item.title,
+            user: {
+                login: item.user?.login || '',
+                type: item.user?.type || ''
+            }
+        }));
+        coreExports.info(`Found ${items.length} items (issues and pull requests) matching the query`);
+        return items;
     }
-    else {
-        // Create new comment
-        await octokit.rest.issues.createComment({
-            owner: config.repoOwner,
-            repo: config.repoName,
-            issue_number: config.issueNumber,
-            body: commentBody
-        });
-        coreExports.info('Created new needs-info comment');
+    catch (error) {
+        coreExports.error(`Failed to search for issues: ${error}`);
+        throw error;
     }
 }
 
@@ -39626,25 +39543,48 @@ async function generatePromptFile(template, promptPath, config, mergedResponseFi
 /**
  * Run the normal triage workflow
  */
-async function runTriageWorkflow(config) {
+async function runTriageWorkflow(config, configFile) {
     const octokit = githubExports.getOctokit(config.token);
-    const shouldAddLabels = config.template ? true : false;
+    if (config.issueQuery) {
+        // Process all issues based on the query
+        return await runBulkTriageWorkflow(octokit, config, configFile);
+    }
+    else if (config.issueNumber && config.issueNumber > 0) {
+        // Process a single issue based on the number
+        return await runSingleIssueTriageWorkflow(octokit, config, configFile);
+    }
+    else {
+        throw new Error('Either issue number or issue query must be provided for triage workflow');
+    }
+}
+/**
+ * Run triage workflow for a single issue
+ */
+async function runSingleIssueTriageWorkflow(octokit, config, configFile) {
+    const shouldAddLabels = Object.keys(configFile.groups).length > 0;
     const shouldAddSummary = config.applyLabels || config.applyComment;
     const shouldAddReactions = shouldAddLabels || shouldAddSummary;
     const shouldRemoveReactions = shouldAddSummary;
     try {
-        let responseFile = '';
         // Step 1: Add eyes reaction at the start
         if (shouldAddReactions) {
             await addEyes(octokit, config);
         }
-        // Step 2: Select labels if template is provided
+        // Step 2: Select labels
         if (shouldAddLabels) {
-            responseFile = await selectLabels(config);
+            for (const [groupName, groupConfig] of Object.entries(configFile.groups)) {
+                coreExports.info(`Selecting labels for group ${groupName} with configuration: ${JSON.stringify(groupConfig)}`);
+                await selectLabels(groupConfig.template, {
+                    ...config,
+                    labelPrefix: groupConfig.labelPrefix,
+                    label: groupConfig.label
+                });
+            }
         }
+        let responseFile = '';
         // Step 3: Apply labels and comment if requested
         if (shouldAddSummary) {
-            await mergeAndApplyTriage(octokit, config);
+            responseFile = await mergeAndApplyTriage(octokit, config);
         }
         return responseFile;
     }
@@ -39654,6 +39594,60 @@ async function runTriageWorkflow(config) {
             await removeEyes(octokit, config);
         }
     }
+}
+/**
+ * Run triage workflow for multiple issues from a search query
+ */
+async function runBulkTriageWorkflow(octokit, config, configFile) {
+    coreExports.info(`Running bulk triage workflow with query: ${config.issueQuery}`);
+    // Search for issues and pull requests using the provided query
+    const items = await searchIssues(octokit, config.issueQuery, config.repoOwner, config.repoName);
+    if (items.length === 0) {
+        coreExports.info('No items found matching the search query');
+        // Return an empty results file
+        const finalResponseFile = path.join(config.tempDir, 'triage-assistant', 'bulk-responses.json');
+        await fs.promises.mkdir(path.dirname(finalResponseFile), { recursive: true });
+        await fs.promises.writeFile(finalResponseFile, JSON.stringify({}));
+        return finalResponseFile;
+    }
+    coreExports.info(`Processing ${items.length} items (issues and pull requests)`);
+    const itemResults = {};
+    // Process each item individually
+    for (const item of items) {
+        coreExports.info(`Processing item #${item.number}`);
+        try {
+            // Create a separate config for this item with a unique working directory
+            const itemConfig = {
+                ...config,
+                issueNumber: item.number,
+                tempDir: path.join(config.tempDir, `item-${item.number}`)
+            };
+            // Run the single issue workflow for this item (works for both issues and PRs)
+            const responseFile = await runSingleIssueTriageWorkflow(octokit, itemConfig, configFile);
+            // If we got a response file, load it and store the result
+            if (responseFile) {
+                try {
+                    const responseContent = await fs.promises.readFile(responseFile, 'utf8');
+                    const response = JSON.parse(responseContent);
+                    itemResults[item.number] = response;
+                    coreExports.info(`Successfully processed item #${item.number}`);
+                }
+                catch (error) {
+                    coreExports.warning(`Failed to read response file for item #${item.number}: ${error}`);
+                }
+            }
+        }
+        catch (error) {
+            coreExports.error(`Failed to process item #${item.number}: ${error}`);
+            // Continue with other items even if one fails
+        }
+    }
+    // Create final merged response file
+    const finalResponseFile = path.join(config.tempDir, 'triage-assistant', 'bulk-responses.json');
+    await fs.promises.mkdir(path.dirname(finalResponseFile), { recursive: true });
+    await fs.promises.writeFile(finalResponseFile, JSON.stringify(itemResults, null, 2));
+    coreExports.info(`Bulk triage complete. Processed ${Object.keys(itemResults).length} of ${items.length} items successfully`);
+    return finalResponseFile;
 }
 /**
  * Merges response JSON files and applies labels and comments to the issue.
@@ -39669,77 +39663,19 @@ async function mergeAndApplyTriage(octokit, config) {
     const mergedResponse = await mergeResponses('', responsesDir, mergedResponseFile);
     // Log the merged response for debugging
     coreExports.info(`Merged response: ${JSON.stringify(mergedResponse, null, 2)}`);
-    // Check if this is a missing-info response (has structured missing info fields)
-    const isMissingInfoResponse = hasMissingInfoStructure(mergedResponse);
-    // For missing-info responses, determine which labels should be removed (only if we're applying labels)
-    if (isMissingInfoResponse && config.applyLabels) {
-        const labelsToRemove = await determineMissingInfoLabelsToRemove(octokit, mergedResponse, config);
-        if (labelsToRemove.length > 0) {
-            // Add labelsToRemove to the merged response
-            mergedResponse.labelsToRemove = labelsToRemove;
-        }
-    }
-    // Handle comments (either missing-info comment or regular summary comment)
     if (config.applyComment) {
-        if (isMissingInfoResponse) {
-            // Upsert missing-info comment
-            await upsertNeedsInfoComment(octokit, mergedResponse, config);
-        }
-        else {
-            // Generate summary response using AI and comment on the issue
-            const summaryResponseFile = await generateSummary(config, mergedResponseFile);
-            await commentOnIssue(octokit, summaryResponseFile, config, config.commentFooter);
-        }
+        // Generate summary response using AI
+        const summaryResponseFile = await generateSummary(config, mergedResponseFile);
+        // Comment on the issue
+        await commentOnIssue(octokit, summaryResponseFile, config, config.commentFooter);
     }
-    // Handle label removal (if any labels need to be removed)
-    if (config.applyLabels && mergedResponse.labelsToRemove) {
-        await removeLabelsFromIssue(octokit, mergedResponse.labelsToRemove, config);
-    }
-    // Handle labels (collect from both regular triage and missing-info responses)
     if (config.applyLabels) {
         // Collect all the labels from the merged response
         const labels = mergedResponse.labels?.map((l) => l.label)?.filter(Boolean) || [];
-        // Apply labels to the issue (this will handle both regular and missing-info labels)
+        // Apply labels to the issue
         await applyLabelsToIssue(octokit, labels, config);
     }
-}
-/**
- * Determines which missing-info labels should be removed based on the current response.
- *
- * @param octokit The GitHub API client.
- * @param data The missing info payload.
- * @param config The triage configuration object.
- * @returns Array of label names that should be removed.
- */
-async function determineMissingInfoLabelsToRemove(octokit, data, config) {
-    const labelsToRemove = [];
-    // Get current labels on the issue
-    const currentLabels = await octokit.rest.issues.listLabelsOnIssue({
-        owner: config.repoOwner,
-        repo: config.repoName,
-        issue_number: config.issueNumber
-    });
-    const currentLabelNames = currentLabels.data.map((label) => label.name);
-    const newLabelNames = new Set(data.labels?.map((l) => l.label) || []);
-    // Define the needs-info related labels that we manage
-    const needsInfoLabels = ['s/needs-info', 's/needs-repro'];
-    // Remove needs-info related labels that are currently on the issue but not in the new response
-    for (const needsInfoLabel of needsInfoLabels) {
-        if (currentLabelNames.includes(needsInfoLabel) && !newLabelNames.has(needsInfoLabel)) {
-            labelsToRemove.push(needsInfoLabel);
-        }
-    }
-    return labelsToRemove;
-}
-/**
- * Checks if a response has the structure of a missing-info response.
- */
-function hasMissingInfoStructure(response) {
-    return (typeof response === 'object' &&
-        response !== null &&
-        'repro' in response &&
-        'missing' in response &&
-        'questions' in response);
+    return mergedResponseFile;
 }
 
 class ClientError extends Error {
@@ -48452,6 +48388,115 @@ async function calculateHistoricalScore(issue, weights) {
     return calculateScore(historicIssue, weights);
 }
 
+/**
+ * Run the complete engagement scoring workflow
+ * @param config - The engagement workflow configuration
+ * @param configFile - The configuration file for engagement
+ * @returns Promise<string> - The engagement response file path
+ */
+async function runEngagementWorkflow(config, configFile) {
+    coreExports.info('Running in engagement scoring mode');
+    const graphql = new GraphQLClient('https://api.github.com/graphql', {
+        headers: {
+            Authorization: `Bearer ${config.token}`
+        }
+    });
+    const sdk = getSdk(graphql);
+    const engagementResponse = await calculateEngagementScores(config, sdk, configFile.weights);
+    coreExports.info(`Calculated engagement scores for ${engagementResponse.totalItems} items`);
+    // Update project with scores if requested
+    if (config.applyScores) {
+        await updateProjectWithScores(config, sdk, engagementResponse);
+    }
+    // Save engagement response to file
+    const engagementFile = `${config.tempDir}/engagement-response.json`;
+    await fs.promises.writeFile(engagementFile, JSON.stringify(engagementResponse, null, 2));
+    return engagementFile;
+}
+/**
+ * Calculate engagement scores for issues in a project or single issue
+ * @param config - Configuration object containing project and authentication details
+ * @param graphql - GraphQL SDK instance for making API calls
+ * @param weights - Engagement scoring weights configuration
+ * @returns Promise<EngagementResponse> - The engagement response with scores
+ */
+async function calculateEngagementScores(config, graphql, weights) {
+    if (config.projectNumber && config.projectNumber > 0) {
+        return await calculateProjectEngagementScores(config, graphql, weights);
+    }
+    else if (config.issueNumber && config.issueNumber > 0) {
+        return await calculateIssueEngagementScores(config, graphql, weights);
+    }
+    else {
+        throw new Error('Either project number or issue number must be specified');
+    }
+}
+/**
+ * Calculate engagement scores for a single issue
+ */
+async function calculateIssueEngagementScores(config, graphql, weights) {
+    coreExports.info(`Calculating engagement score for issue #${config.issueNumber}`);
+    const issueDetails = await getIssueDetails(graphql, config.repoOwner, config.repoName, config.issueNumber);
+    const item = await createEngagementItem(issueDetails, undefined, weights);
+    return {
+        items: [item],
+        totalItems: 1
+    };
+}
+/**
+ * Calculate engagement scores for all issues in a project
+ */
+async function calculateProjectEngagementScores(config, graphql, weights) {
+    coreExports.info(`Calculating engagement scores for project #${config.projectNumber}`);
+    const projectNumber = config.projectNumber;
+    const project = await getProjectDetails(graphql, config.repoOwner, config.repoName, projectNumber);
+    if (!project || !project.items || project.items.length === 0) {
+        coreExports.warning('No project items found or unable to determine project ID');
+        return {
+            items: [],
+            totalItems: 0
+        };
+    }
+    coreExports.info(`Found ${project.items.length} items in project #${projectNumber}`);
+    const items = [];
+    for (const projectItem of project.items) {
+        const issueDetails = await getIssueDetails(graphql, projectItem.content.owner, projectItem.content.repo, projectItem.content.number);
+        const item = await createEngagementItem(issueDetails, projectItem.id, weights);
+        items.push(item);
+    }
+    return {
+        items,
+        totalItems: items.length,
+        project: {
+            id: project.id,
+            owner: project.owner,
+            number: project.number
+        }
+    };
+}
+/**
+ * Helper function to create engagement item - avoids code duplication
+ */
+async function createEngagementItem(issueDetails, projectItemId, weights) {
+    const score = calculateScore(issueDetails, weights);
+    const previousScore = await calculateHistoricalScore(issueDetails, weights);
+    const item = {
+        ...(projectItemId && { id: projectItemId }),
+        issue: {
+            id: issueDetails.id,
+            owner: issueDetails.owner,
+            repo: issueDetails.repo,
+            number: issueDetails.number
+        },
+        engagement: {
+            score,
+            previousScore,
+            classification: score > previousScore ? EngagementClassification.Hot : undefined
+        }
+    };
+    return item;
+}
+
 /*! js-yaml 4.1.0 https://github.com/nodeca/js-yaml @license MIT */
 function isNothing(subject) {
   return (typeof subject === 'undefined') || (subject === null);
@@ -51265,11 +51310,11 @@ const DEFAULT_ENGAGEMENT_WEIGHTS = {
     linkedPullRequests: 2
 };
 /**
- * Load triage configuration from .triagerc.yml or .github/.triagerc.yml
+ * Load full triage configuration from .triagerc.yml or .github/.triagerc.yml
  * @param workspacePath - The workspace path to search for config files
- * @returns Combined configuration with defaults applied
+ * @returns The full configuration object
  */
-async function loadTriageConfig(workspacePath = '.') {
+async function loadConfigFile(workspacePath = '.') {
     // Validate and normalize workspace path to prevent directory traversal
     const currentDir = process.cwd();
     const normalizedWorkspace = path.resolve(workspacePath);
@@ -51282,152 +51327,66 @@ async function loadTriageConfig(workspacePath = '.') {
         safePath(normalizedWorkspace, '.triagerc.yml'),
         safePath(normalizedWorkspace, '.github/.triagerc.yml')
     ];
-    let config = {};
+    const config = await loadFile(configPaths);
+    // Log final config
+    coreExports.info(`Using complete configuration: ${JSON.stringify(config)}`);
+    return config;
+}
+async function loadFile(configPaths) {
     const failedPaths = new Map();
     for (const configPath of configPaths) {
         try {
             coreExports.info(`Attempting to load triage configuration from ${configPath}`);
             const fileContent = await fs.promises.readFile(configPath, 'utf8');
-            const parsedConfig = load(fileContent);
-            if (parsedConfig && typeof parsedConfig === 'object') {
-                config = parsedConfig;
-                failedPaths.clear();
-                coreExports.info(`Successfully loaded configuration from ${configPath}`);
-                break;
+            const parsedConfig = parseConfigFile(fileContent);
+            if (parsedConfig) {
+                coreExports.info(`Successfully loaded configuration from ${configPath}: ${JSON.stringify(parsedConfig)}`);
+                return parsedConfig;
             }
         }
         catch (error) {
             failedPaths.set(configPath, error instanceof Error ? error.message : 'Unknown error');
         }
     }
+    // Log failed lookup
     if (failedPaths.size > 0) {
         const details = Array.from(failedPaths.entries())
             .map(([configPath, errorMessage]) => ` - ${configPath}: ${errorMessage}`)
             .join('\n');
         coreExports.warning(`Failed to load configuration from the following paths:\n${details}`);
     }
-    // Merge with defaults
-    const weights = config.engagement?.weights || {};
-    const mergedWeights = {
-        comments: weights.comments ?? DEFAULT_ENGAGEMENT_WEIGHTS.comments,
-        reactions: weights.reactions ?? DEFAULT_ENGAGEMENT_WEIGHTS.reactions,
-        contributors: weights.contributors ?? DEFAULT_ENGAGEMENT_WEIGHTS.contributors,
-        lastActivity: weights.lastActivity ?? DEFAULT_ENGAGEMENT_WEIGHTS.lastActivity,
-        issueAge: weights.issueAge ?? DEFAULT_ENGAGEMENT_WEIGHTS.issueAge,
-        linkedPullRequests: weights.linkedPullRequests ?? DEFAULT_ENGAGEMENT_WEIGHTS.linkedPullRequests
-    };
-    coreExports.info(`Using engagement weights: ${JSON.stringify(mergedWeights)}`);
-    return mergedWeights;
-}
-
-/**
- * Run the complete engagement scoring workflow
- * @param config - The triage configuration
- * @returns Promise<string> - The engagement response file path
- */
-async function runEngagementWorkflow(config) {
-    coreExports.info('Running in engagement scoring mode');
-    // Load engagement weights from configuration file
-    const weights = await loadTriageConfig(process.cwd());
-    const graphql = new GraphQLClient('https://api.github.com/graphql', {
-        headers: {
-            Authorization: `Bearer ${config.token}`
-        }
-    });
-    const sdk = getSdk(graphql);
-    const engagementResponse = await calculateEngagementScores(config, sdk, weights);
-    coreExports.info(`Calculated engagement scores for ${engagementResponse.totalItems} items`);
-    // Update project with scores if requested
-    if (config.applyScores) {
-        await updateProjectWithScores(config, sdk, engagementResponse);
-    }
-    // Save engagement response to file
-    const engagementFile = `${config.tempDir}/engagement-response.json`;
-    await fs.promises.writeFile(engagementFile, JSON.stringify(engagementResponse, null, 2));
-    return engagementFile;
-}
-/**
- * Calculate engagement scores for issues in a project or single issue
- * @param config - Configuration object containing project and authentication details
- * @param graphql - GraphQL SDK instance for making API calls
- * @param weights - Engagement scoring weights configuration
- * @returns Promise<EngagementResponse> - The engagement response with scores
- */
-async function calculateEngagementScores(config, graphql, weights) {
-    if (config.projectNumber && config.projectNumber > 0) {
-        return await calculateProjectEngagementScores(config, graphql, weights);
-    }
-    else if (config.issueNumber && config.issueNumber > 0) {
-        return await calculateIssueEngagementScores(config, graphql, weights);
-    }
-    else {
-        throw new Error('Either project number or issue number must be specified');
-    }
-}
-/**
- * Calculate engagement scores for a single issue
- */
-async function calculateIssueEngagementScores(config, graphql, weights) {
-    coreExports.info(`Calculating engagement score for issue #${config.issueNumber}`);
-    const issueDetails = await getIssueDetails(graphql, config.repoOwner, config.repoName, config.issueNumber);
-    const item = await createEngagementItem(issueDetails, undefined, weights);
+    // Nothing was loaded, so we got an empty config file
     return {
-        items: [item],
-        totalItems: 1
-    };
-}
-/**
- * Calculate engagement scores for all issues in a project
- */
-async function calculateProjectEngagementScores(config, graphql, weights) {
-    coreExports.info(`Calculating engagement scores for project #${config.projectNumber}`);
-    const projectNumber = config.projectNumber;
-    const project = await getProjectDetails(graphql, config.repoOwner, config.repoName, projectNumber);
-    if (!project || !project.items || project.items.length === 0) {
-        coreExports.warning('No project items found or unable to determine project ID');
-        return {
-            items: [],
-            totalItems: 0
-        };
-    }
-    coreExports.info(`Found ${project.items.length} items in project #${projectNumber}`);
-    const items = [];
-    for (const projectItem of project.items) {
-        const issueDetails = await getIssueDetails(graphql, projectItem.content.owner, projectItem.content.repo, projectItem.content.number);
-        const item = await createEngagementItem(issueDetails, projectItem.id, weights);
-        items.push(item);
-    }
-    return {
-        items,
-        totalItems: items.length,
-        project: {
-            id: project.id,
-            owner: project.owner,
-            number: project.number
-        }
-    };
-}
-/**
- * Helper function to create engagement item - avoids code duplication
- */
-async function createEngagementItem(issueDetails, projectItemId, weights) {
-    const score = calculateScore(issueDetails, weights);
-    const previousScore = await calculateHistoricalScore(issueDetails, weights);
-    const item = {
-        ...(projectItemId && { id: projectItemId }),
-        issue: {
-            id: issueDetails.id,
-            owner: issueDetails.owner,
-            repo: issueDetails.repo,
-            number: issueDetails.number
-        },
         engagement: {
-            score,
-            previousScore,
-            classification: score > previousScore ? EngagementClassification.Hot : undefined
+            weights: { ...DEFAULT_ENGAGEMENT_WEIGHTS }
+        },
+        labels: {
+            groups: {}
         }
     };
-    return item;
+}
+function parseConfigFile(fileContent) {
+    const parsedConfig = load(fileContent);
+    // We successfully loaded a configuration
+    if (!parsedConfig || typeof parsedConfig !== 'object') {
+        return undefined;
+    }
+    // Make sure the config is normalized
+    const normalized = {
+        ...parsedConfig,
+        engagement: {
+            ...parsedConfig.engagement,
+            weights: {
+                ...DEFAULT_ENGAGEMENT_WEIGHTS,
+                ...(parsedConfig.engagement?.weights ?? {})
+            }
+        },
+        labels: {
+            ...parsedConfig.labels,
+            groups: parsedConfig.labels?.groups ?? {}
+        }
+    };
+    return normalized;
 }
 
 /**
@@ -51439,16 +51398,14 @@ async function runWorkflow(triageModeOverride) {
     const DEFAULT_PROJECT_COLUMN_NAME = 'Engagement Score';
     let config;
     try {
-        // Get template and triage mode
-        const template = coreExports.getInput('template', { required: false });
-        const triageMode = triageModeOverride ||
-            (template === TriageMode.EngagementScore ? TriageMode.EngagementScore : TriageMode.ApplyLabels);
-        // Make sure templates are the ones we support
-        validateTemplate(template);
+        // Get mode input
+        const modeInput = coreExports.getInput('mode', { required: false }) || 'apply-labels';
+        const triageMode = triageModeOverride || validateMode(modeInput);
         // Get project and issue numbers
         const projectInput = coreExports.getInput('project');
         const issueInput = coreExports.getInput('issue');
-        const issueContext = githubExports.context.issue?.number || 0;
+        const issueQueryInput = coreExports.getInput('issue-query');
+        const issueContext = githubExports.context.issue?.number;
         // Make sure they are correct for the mode
         if (triageMode === TriageMode.EngagementScore) {
             if (!projectInput && !issueInput) {
@@ -51456,8 +51413,11 @@ async function runWorkflow(triageModeOverride) {
             }
         }
         else if (triageMode === TriageMode.ApplyLabels) {
-            if (!issueInput && !issueContext) {
-                throw new Error('Issue number is required for applying labels');
+            if (!issueInput && !issueQueryInput && !issueContext) {
+                throw new Error('Issue number or issue query is required for applying labels');
+            }
+            if (issueInput && issueQueryInput) {
+                throw new Error('Cannot specify both issue number and issue query - please use only one');
             }
         }
         // Validate repository context
@@ -51478,16 +51438,14 @@ async function runWorkflow(triageModeOverride) {
             applyScores: coreExports.getInput('apply-scores')?.toLowerCase() === 'true',
             commentFooter: coreExports.getInput('comment-footer'),
             dryRun: coreExports.getInput('dry-run')?.toLowerCase() === 'true',
-            issueNumber: validateNumericInput(issueInput || issueContext.toString(), 'issue number'),
-            label: coreExports.getInput('label'),
-            labelPrefix: coreExports.getInput('label-prefix'),
+            issueNumber: validateOptionalNumericInput(issueInput || issueContext?.toString(), 'issue number'),
+            issueQuery: issueQueryInput || undefined,
             projectColumn: coreExports.getInput('project-column') || DEFAULT_PROJECT_COLUMN_NAME,
             projectNumber: validateNumericInput(projectInput, 'project number'),
             repoName: githubExports.context.repo.repo,
             repoOwner: githubExports.context.repo.owner,
             repository: `${githubExports.context.repo.owner}/${githubExports.context.repo.repo}`,
             tempDir: process.env.RUNNER_TEMP || require$$0.tmpdir(),
-            template: template,
             token: token
         };
         // Initial validation checks
@@ -51498,17 +51456,19 @@ async function runWorkflow(triageModeOverride) {
             coreExports.info('No GitHub token provided.');
         }
         if (!config.aiToken) {
-            coreExports.info('No specific AI token provided, using GitHub token as fallback.');
+            coreExports.info('No AI token provided.');
         }
-        let responseFile = '';
+        // Load full triage config file
+        const configFile = await loadConfigFile();
         // Run the appropriate workflow based on the triage mode
+        let responseFile = '';
         if (triageMode === TriageMode.EngagementScore) {
             coreExports.info('Running engagement scoring workflow');
-            responseFile = await runEngagementWorkflow(config);
+            responseFile = await runEngagementWorkflow(config, configFile.engagement);
         }
         else {
-            coreExports.info('Running apply labels workflow');
-            responseFile = await runTriageWorkflow(config);
+            coreExports.info('Running labelling workflow');
+            responseFile = await runTriageWorkflow(config, configFile.labels);
         }
         // Set the response file output
         coreExports.setOutput('response-file', responseFile);

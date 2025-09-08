@@ -1,38 +1,6 @@
 # Triage Assistant Configuration
 # This file configures the behavior of the AI Triage Assistant
-#
-# Example custom configurations:
-#
-# Emphasize highly discussed issues:
-# engagement:
-#   weights:
-#     comments: 5
-#     contributors: 3
-#     reactions: 1
-#     lastActivity: 1
-#     issueAge: 1
-#     linkedPullRequests: 2
-#
-# Focus on active development:
-# engagement:
-#   weights:
-#     linkedPullRequests: 5
-#     lastActivity: 3
-#     comments: 2
-#     contributors: 2
-#     reactions: 1
-#     issueAge: 1
-#
-# Balance community engagement:
-# engagement:
-#   weights:
-#     comments: 2
-#     contributors: 3
-#     reactions: 2
-#     lastActivity: 2
-#     issueAge: 1
-#     linkedPullRequests: 3
-#
+
 # Engagement scoring configuration
 engagement:
   # Weights for different scoring factors
@@ -61,3 +29,16 @@ engagement:
     # Weight for linked pull requests (default: 2)
     # Higher values emphasize issues with active development
     linkedPullRequests: 2
+
+# Labeling configuration
+labels:
+  groups:
+    overlap:
+      labelPrefix: 'overlap-'
+      template: 'multi-label'
+    area:
+      labelPrefix: 'area-'
+      template: 'single-label'
+    regression:
+      label: 'regression'
+      template: 'regression'
