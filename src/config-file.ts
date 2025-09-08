@@ -33,6 +33,8 @@ export interface ConfigFileLabelGroup {
   template: string
   /** Specific label to use (for regression type) */
   label?: string
+  /** Multiple specific labels to choose from (e.g., for missing-info type) */
+  labels?: string[]
 }
 
 /**

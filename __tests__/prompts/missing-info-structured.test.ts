@@ -79,10 +79,12 @@ describe('Missing Info Structured Extraction', () => {
 
     it('should specify deterministic label assignment rules', () => {
       expect(systemPromptMissingInfo).toContain('Label Assignment Rules')
+      expect(systemPromptMissingInfo).toContain('Apply labels ONLY when information is missing')
+      expect(systemPromptMissingInfo).toContain('Choose from the available labels: {{LABELS}}')
+      // Should include fallback defaults
       expect(systemPromptMissingInfo).toContain('"needs repro"')
       expect(systemPromptMissingInfo).toContain('"needs repo"')
       expect(systemPromptMissingInfo).toContain('"needs info"')
-      expect(systemPromptMissingInfo).toContain('Apply labels ONLY when information is missing')
     })
 
     it('should provide structured JSON response examples', () => {
@@ -146,13 +148,14 @@ describe('Missing Info Structured Extraction', () => {
       expect(systemPrompt).toContain('environment')
     })
 
-    it('should pass correct configuration parameters', async () => {
+    it('should pass correct configuration parameters including labels array', async () => {
       const customConfig = {
         ...mockConfig,
         issueNumber: 456,
         repository: 'test/missing-info-repo',
         labelPrefix: 'status/',
-        label: 'needs-triage'
+        label: 'needs-triage',
+        labels: ['s/needs-info', 's/needs-repro', 's/needs-manager-approval']
       }
 
       await selectLabels('missing-info', customConfig)
@@ -164,9 +167,37 @@ describe('Missing Info Structured Extraction', () => {
           ISSUE_NUMBER: 456,
           ISSUE_REPO: 'test/missing-info-repo',
           LABEL_PREFIX: 'status/',
-          LABEL: 'needs-triage'
+          LABEL: 'needs-triage',
+          LABELS: ['s/needs-info', 's/needs-repro', 's/needs-manager-approval']
         })
       })
+    })
+  })
+
+  describe('dynamic labels support', () => {
+    it('should support dynamic label placeholders', () => {
+      expect(systemPromptMissingInfo).toContain('{{LABELS}}')
+      expect(systemPromptMissingInfo).toContain('Choose from the available labels:')
+    })
+
+    it('should provide fallback behavior when no specific labels are provided', () => {
+      expect(systemPromptMissingInfo).toContain('If no specific labels are provided, use these defaults:')
+      expect(systemPromptMissingInfo).toContain('**"needs repro"** when reproduction steps are missing')
+      expect(systemPromptMissingInfo).toContain('**"needs repo"** when no code links/repositories are provided')
+      expect(systemPromptMissingInfo).toContain('**"needs info"** when version OR environment information is missing')
+    })
+
+    it('should pass labels array to prompt generation when available', async () => {
+      const configWithLabels = {
+        ...mockConfig,
+        labels: ['s/needs-info', 's/needs-repro', 's/needs-manager-approval']
+      }
+
+      await selectLabels('missing-info', configWithLabels)
+
+      const systemPromptCall = prompts.generatePrompt.mock.calls[0]
+      expect(systemPromptCall[2]).toHaveProperty('LABELS')
+      expect(systemPromptCall[2].LABELS).toEqual(['s/needs-info', 's/needs-repro', 's/needs-manager-approval'])
     })
   })
 
@@ -212,8 +243,8 @@ describe('Missing Info Structured Extraction', () => {
     })
 
     it('should include expected label types in examples', () => {
-      expect(systemPromptMissingInfo).toContain('"needs repro"')
-      expect(systemPromptMissingInfo).toContain('"needs info"')
+      expect(systemPromptMissingInfo).toContain('"s/needs-repro"')
+      expect(systemPromptMissingInfo).toContain('"s/needs-info"')
       expect(systemPromptMissingInfo).toContain('No reproduction steps provided')
       expect(systemPromptMissingInfo).toContain('Version information missing')
     })

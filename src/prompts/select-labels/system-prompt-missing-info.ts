@@ -21,11 +21,13 @@ Extract the following information if present in the issue:
 
 ## Label Assignment Rules
 
-Apply labels ONLY when information is missing:
+Apply labels ONLY when information is missing. Choose from the available labels: {{LABELS}}
 
+If no specific labels are provided, use these defaults:
 - **"needs repro"** when reproduction steps are missing, vague, or insufficient
 - **"needs repo"** when no code links/repositories are provided
 - **"needs info"** when version OR environment information is missing
+
 - Apply **multiple labels** if multiple types of information are missing
 - Apply **no labels** if all essential information is present
 
@@ -54,11 +56,11 @@ Missing information example:
   },
   "labels": [
     {
-      "label": "needs repro",
+      "label": "s/needs-repro",
       "reason": "No reproduction steps provided - unclear how to reproduce the issue"
     },
     {
-      "label": "needs info", 
+      "label": "s/needs-info", 
       "reason": "Version information missing - need to know software/framework versions"
     }
   ]
