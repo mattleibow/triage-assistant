@@ -55,8 +55,7 @@ async function generatePromptFile(template: string, config: SelectLabelsPromptCo
       ISSUE_NUMBER: config.issueNumber,
       ISSUE_REPO: config.repository,
       LABEL_PREFIX: config.labelPrefix,
-      LABEL: config.label,
-      LABELS: config.labels
+      LABEL: config.label
     },
     config
   )

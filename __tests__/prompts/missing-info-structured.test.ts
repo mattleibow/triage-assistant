@@ -80,11 +80,10 @@ describe('Missing Info Structured Extraction', () => {
     it('should specify deterministic label assignment rules', () => {
       expect(systemPromptMissingInfo).toContain('Label Assignment Rules')
       expect(systemPromptMissingInfo).toContain('Apply labels ONLY when information is missing')
-      expect(systemPromptMissingInfo).toContain('Choose from the available labels: {{LABELS}}')
-      // Should include fallback defaults
-      expect(systemPromptMissingInfo).toContain('"needs repro"')
-      expect(systemPromptMissingInfo).toContain('"needs repo"')
-      expect(systemPromptMissingInfo).toContain('"needs info"')
+      expect(systemPromptMissingInfo).toContain('Choose from the available labels:')
+      expect(systemPromptMissingInfo).toContain('{{LABEL_PREFIX}}')
+      expect(systemPromptMissingInfo).toContain('===== Available Labels =====')
+      expect(systemPromptMissingInfo).toContain('gh label list')
     })
 
     it('should provide structured JSON response examples', () => {
@@ -148,14 +147,13 @@ describe('Missing Info Structured Extraction', () => {
       expect(systemPrompt).toContain('environment')
     })
 
-    it('should pass correct configuration parameters including labels array', async () => {
+    it('should pass correct configuration parameters', async () => {
       const customConfig = {
         ...mockConfig,
         issueNumber: 456,
         repository: 'test/missing-info-repo',
         labelPrefix: 'status/',
-        label: 'needs-triage',
-        labels: ['s/needs-info', 's/needs-repro', 's/needs-manager-approval']
+        label: 'needs-triage'
       }
 
       await selectLabels('missing-info', customConfig)
@@ -167,37 +165,36 @@ describe('Missing Info Structured Extraction', () => {
           ISSUE_NUMBER: 456,
           ISSUE_REPO: 'test/missing-info-repo',
           LABEL_PREFIX: 'status/',
-          LABEL: 'needs-triage',
-          LABELS: ['s/needs-info', 's/needs-repro', 's/needs-manager-approval']
+          LABEL: 'needs-triage'
         })
       })
     })
   })
 
   describe('dynamic labels support', () => {
-    it('should support dynamic label placeholders', () => {
-      expect(systemPromptMissingInfo).toContain('{{LABELS}}')
+    it('should support dynamic label prefix placeholders', () => {
+      expect(systemPromptMissingInfo).toContain('{{LABEL_PREFIX}}')
       expect(systemPromptMissingInfo).toContain('Choose from the available labels:')
+      expect(systemPromptMissingInfo).toContain('gh label list')
     })
 
-    it('should provide fallback behavior when no specific labels are provided', () => {
-      expect(systemPromptMissingInfo).toContain('If no specific labels are provided, use these defaults:')
-      expect(systemPromptMissingInfo).toContain('**"needs repro"** when reproduction steps are missing')
-      expect(systemPromptMissingInfo).toContain('**"needs repo"** when no code links/repositories are provided')
-      expect(systemPromptMissingInfo).toContain('**"needs info"** when version OR environment information is missing')
+    it('should use gh command to dynamically list available labels', () => {
+      expect(systemPromptMissingInfo).toContain('gh label list --limit 1000 --json name,description')
+      expect(systemPromptMissingInfo).toContain('--search "{{LABEL_PREFIX}}"')
+      expect(systemPromptMissingInfo).toContain('select(.name | startswith("{{LABEL_PREFIX}}"))')
     })
 
-    it('should pass labels array to prompt generation when available', async () => {
-      const configWithLabels = {
+    it('should pass label prefix to prompt generation when available', async () => {
+      const configWithLabelPrefix = {
         ...mockConfig,
-        labels: ['s/needs-info', 's/needs-repro', 's/needs-manager-approval']
+        labelPrefix: 'needs-'
       }
 
-      await selectLabels('missing-info', configWithLabels)
+      await selectLabels('missing-info', configWithLabelPrefix)
 
       const systemPromptCall = prompts.generatePrompt.mock.calls[0]
-      expect(systemPromptCall[2]).toHaveProperty('LABELS')
-      expect(systemPromptCall[2].LABELS).toEqual(['s/needs-info', 's/needs-repro', 's/needs-manager-approval'])
+      expect(systemPromptCall[2]).toHaveProperty('LABEL_PREFIX')
+      expect(systemPromptCall[2].LABEL_PREFIX).toEqual('needs-')
     })
   })
 
@@ -271,16 +268,8 @@ describe('Missing Info Structured Extraction', () => {
   })
 
   describe('label assignment logic validation', () => {
-    it('should specify when to apply "needs repro" label', () => {
-      expect(systemPromptMissingInfo).toContain('reproduction steps are missing, vague, or insufficient')
-    })
-
-    it('should specify when to apply "needs repo" label', () => {
-      expect(systemPromptMissingInfo).toContain('no code links/repositories are provided')
-    })
-
-    it('should specify when to apply "needs info" label', () => {
-      expect(systemPromptMissingInfo).toContain('version OR environment information is missing')
+    it('should specify that labels should only be applied when information is missing', () => {
+      expect(systemPromptMissingInfo).toContain('Apply labels ONLY when information is missing')
     })
 
     it('should allow multiple labels when multiple types of info are missing', () => {

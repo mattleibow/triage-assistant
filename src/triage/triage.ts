@@ -65,8 +65,7 @@ async function runSingleIssueTriageWorkflow(
         await selectLabels(groupConfig.template, {
           ...config,
           labelPrefix: groupConfig.labelPrefix,
-          label: groupConfig.label,
-          labels: groupConfig.labels
+          label: groupConfig.label
         })
       }
     }

@@ -43,7 +43,5 @@ labels:
       label: 'regression'
       template: 'regression'
     missing-info:
+      labelPrefix: 'needs-'
       template: 'missing-info'
-      labels:
-        - s/needs-info
-        - s/needs-repro

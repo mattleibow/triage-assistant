@@ -21,12 +21,11 @@ Extract the following information if present in the issue:
 
 ## Label Assignment Rules
 
-Apply labels ONLY when information is missing. Choose from the available labels: {{LABELS}}
+Apply labels ONLY when information is missing. Choose from the available labels:
 
-If no specific labels are provided, use these defaults:
-- **"needs repro"** when reproduction steps are missing, vague, or insufficient
-- **"needs repo"** when no code links/repositories are provided
-- **"needs info"** when version OR environment information is missing
+===== Available Labels =====
+EXEC: gh label list --limit 1000 --json name,description --search "{{LABEL_PREFIX}}" --jq 'sort_by(.name)[] | select(.name | startswith("{{LABEL_PREFIX}}")) | "- name: \\(.name)\\n  description: \\(.description)"'
+===== Available Labels =====
 
 - Apply **multiple labels** if multiple types of information are missing
 - Apply **no labels** if all essential information is present

@@ -37,7 +37,6 @@ export interface SelectLabelsPromptConfig extends PromptGenerationConfig {
   repository: string
   label?: string
   labelPrefix?: string
-  labels?: string[]
 }
 
 export interface SummaryPromptConfig extends PromptGenerationConfig {
