@@ -35,36 +35,36 @@ describe('GitHub Integration Tests', () => {
         tempDir: '/tmp'
       }
 
-      // it('with single-label returns correct response', async () => {
-      //   const result = await selectLabels('single-label', {
-      //     ...mockConfig,
-      //     labelPrefix: 'area-',
-      //     issueNumber: 32
-      //   })
+      it('with single-label returns correct response', async () => {
+        const result = await selectLabels('single-label', {
+          ...mockConfig,
+          labelPrefix: 'area-',
+          issueNumber: 32
+        })
 
-      //   const resultContents = await fs.promises.readFile(result, 'utf-8')
-      //   const response = JSON.parse(resultContents) as TriageResponse
+        const resultContents = await fs.promises.readFile(result, 'utf-8')
+        const response = JSON.parse(resultContents) as TriageResponse
 
-      //   expect(response.remarks).toBe(undefined)
-      //   expect(response.labels).toEqual([{ label: 'area-testing', reason: expect.any(String) }])
-      // })
+        expect(response.remarks).toBe(undefined)
+        expect(response.labels).toEqual([{ label: 'area-testing', reason: expect.any(String) }])
+      })
 
-      // it('with multi-label returns correct response', async () => {
-      //   const result = await selectLabels('multi-label', {
-      //     ...mockConfig,
-      //     labelPrefix: 'overlap-',
-      //     issueNumber: 33
-      //   })
+      it('with multi-label returns correct response', async () => {
+        const result = await selectLabels('multi-label', {
+          ...mockConfig,
+          labelPrefix: 'overlap-',
+          issueNumber: 33
+        })
 
-      //   const resultContents = await fs.promises.readFile(result, 'utf-8')
-      //   const response = JSON.parse(resultContents) as TriageResponse
+        const resultContents = await fs.promises.readFile(result, 'utf-8')
+        const response = JSON.parse(resultContents) as TriageResponse
 
-      //   expect(response.remarks).toBe(undefined)
-      //   expect(response.labels).toStrictEqual([
-      //     { label: 'overlap-ai', reason: expect.any(String) },
-      //     { label: 'overlap-prompts', reason: expect.any(String) }
-      //   ])
-      // })
+        expect(response.remarks).toBe(undefined)
+        expect(response.labels).toStrictEqual([
+          { label: 'overlap-ai', reason: expect.any(String) },
+          { label: 'overlap-prompts', reason: expect.any(String) }
+        ])
+      })
 
       describe('with missing-info returns correct response', () => {
         it('for issue with missing info', async () => {
