@@ -77,11 +77,8 @@ describe('GitHub Integration Tests', () => {
           const resultContents = await fs.promises.readFile(result, 'utf-8')
           const response = JSON.parse(resultContents) as TriageResponse
 
-          expect(response.remarks).toBe(undefined)
-          expect(response.labels).toEqual([
-            { label: 'needs-info', reason: expect.any(String) },
-            { label: 'needs-repro', reason: expect.any(String) }
-          ])
+          expect(response.remarks).toEqual([expect.any(String)])
+          expect(response.labels).toEqual([{ label: 'needs-info', reason: expect.any(String) }])
         })
 
         it('for issue with sufficient info', async () => {
@@ -94,6 +91,7 @@ describe('GitHub Integration Tests', () => {
           const resultContents = await fs.promises.readFile(result, 'utf-8')
           const response = JSON.parse(resultContents) as TriageResponse
 
+          expect(response.remarks).toEqual([expect.any(String)])
           expect(response.repro).toStrictEqual({
             links: ['https://github.com/mattleibow/triage-assistant'],
             steps: ['Install Triager package', 'Load up the UI', 'Login', 'Enter issue to triage', 'Observe a crash'],

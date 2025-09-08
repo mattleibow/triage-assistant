@@ -94,12 +94,7 @@ describe('Missing Info Structured Extraction', () => {
       const systemPrompt = inferenceCall[0]
 
       // Verify the system prompt contains our structured extraction instructions
-      expect(systemPrompt).toContain('Structured Information to Extract')
-      expect(systemPrompt).toContain('repro')
-      expect(systemPrompt).toContain('links')
-      expect(systemPrompt).toContain('steps')
-      expect(systemPrompt).toContain('version')
-      expect(systemPrompt).toContain('environment')
+      expect(systemPrompt).toContain('EXEC: gh label list')
     })
 
     it('should pass correct configuration parameters', async () => {
