@@ -8,6 +8,11 @@
  * @property labels - An array of label objects, each containing:
  *   - `label`: The name of the label.
  *   - `reason`: The reason why the label was applied.
+ * @property repro - Optional reproduction information, including:
+ *   - `links`: An array of links related to the reproduction.
+ *   - `steps`: An array of steps to reproduce the issue.
+ *   - `version`: The version of the software where the issue occurs.
+ *   - `environment`: The environment details where the issue occurs.
  * @property remarks - An array of remarks or comments related to the triage.
  */
 export interface TriageResponse {
@@ -23,6 +28,13 @@ export interface TriageResponse {
     label: string
     reason: string
   }>
+
+  repro: {
+    links: Array<string>
+    steps: Array<string>
+    version: string
+    environment: string
+  } | null
 
   // Index signature to allow dynamic property access
   [key: string]: unknown

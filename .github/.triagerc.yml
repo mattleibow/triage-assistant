@@ -42,3 +42,6 @@ labels:
     regression:
       label: 'regression'
       template: 'regression'
+    missing-info:
+      labelPrefix: 'needs-'
+      template: 'missing-info'

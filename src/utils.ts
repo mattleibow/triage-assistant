@@ -31,7 +31,7 @@ export function sanitizeForLogging(content: string, maxLength: number = 200): st
   })
 
   // Truncate for logging
-  if (sanitized.length > maxLength) {
+  if (sanitized.length > maxLength && maxLength > 0) {
     sanitized = sanitized.substring(0, maxLength) + '...[truncated]'
   }
 

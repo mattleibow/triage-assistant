@@ -48,7 +48,8 @@ export async function mergeResponses(
   const merged: TriageResponse = {
     remarks: [],
     regression: null,
-    labels: []
+    labels: [],
+    repro: null
   }
   for (const file of allFiles) {
     try {

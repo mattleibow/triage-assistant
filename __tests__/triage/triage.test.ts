@@ -356,7 +356,8 @@ describe('runTriageWorkflow', () => {
   const mockEmptyMergedResponse: TriageResponse = {
     remarks: [],
     regression: null,
-    labels: []
+    labels: [],
+    repro: null
   }
 
   const inMemoryFs = new FileSystemMock()
