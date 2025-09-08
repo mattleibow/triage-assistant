@@ -319,7 +319,8 @@ describe('summary', () => {
         expect(result).toStrictEqual({
           remarks: [],
           regression: null,
-          labels: []
+          labels: [],
+          repro: null
         })
       })
     })
@@ -331,7 +332,8 @@ describe('summary', () => {
         const mockData = {
           remarks: [],
           regression: null,
-          labels: [{ label: 'test', reason: 'test reason' }]
+          labels: [{ label: 'test', reason: 'test reason' }],
+          repro: null
         }
 
         inMemoryFs.forceSet(path.join(testResponsesDir, 'test.json'), JSON.stringify(mockData))

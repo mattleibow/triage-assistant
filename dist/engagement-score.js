@@ -31279,7 +31279,7 @@ function sanitizeForLogging(content, maxLength = 200) {
         sanitized = sanitized.replace(pattern, '[REDACTED]');
     });
     // Truncate for logging
-    if (sanitized.length > maxLength) {
+    if (sanitized.length > maxLength && maxLength > 0) {
         sanitized = sanitized.substring(0, maxLength) + '...[truncated]';
     }
     return sanitized;
@@ -31687,11 +31687,12 @@ Extract the following information if present in the issue:
 
 ## Label Assignment Rules
 
-Apply labels ONLY when information is missing:
+Apply labels ONLY when information is missing. Choose from the available labels:
 
-- **"needs repro"** when reproduction steps are missing, vague, or insufficient
-- **"needs repo"** when no code links/repositories are provided
-- **"needs info"** when version OR environment information is missing
+===== Available Labels =====
+EXEC: gh label list --limit 1000 --json name,description --search "{{LABEL_PREFIX}}" --jq 'sort_by(.name)[] | select(.name | startswith("{{LABEL_PREFIX}}")) | "- name: \\(.name)\\n  description: \\(.description)"'
+===== Available Labels =====
+
 - Apply **multiple labels** if multiple types of information are missing
 - Apply **no labels** if all essential information is present
 
@@ -31720,11 +31721,11 @@ Missing information example:
   },
   "labels": [
     {
-      "label": "needs repro",
+      "label": "s/needs-repro",
       "reason": "No reproduction steps provided - unclear how to reproduce the issue"
     },
     {
-      "label": "needs info", 
+      "label": "s/needs-info", 
       "reason": "Version information missing - need to know software/framework versions"
     }
   ]
@@ -38952,7 +38953,7 @@ async function runInference(systemPrompt, userPrompt, responseFile, maxTokens = 
         // Write the response to the specified file
         await fs.promises.writeFile(responseFile, modelResponse, 'utf-8');
         coreExports.info(`AI inference completed. Response written to: ${responseFile}`);
-        coreExports.info(`Response content: ${sanitizeForLogging(modelResponse)}`);
+        coreExports.info(`Response content: ${sanitizeForLogging(modelResponse, 0)}`);
     }
     catch (error) {
         coreExports.error(`AI inference failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
@@ -39031,7 +39032,8 @@ async function mergeResponses(inputFiles, responsesDir, outputPath) {
     const merged = {
         remarks: [],
         regression: null,
-        labels: []
+        labels: [],
+        repro: null
     };
     for (const file of allFiles) {
         try {

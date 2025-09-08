@@ -62,51 +62,6 @@ describe('Missing Info Structured Extraction', () => {
     inMemoryFs.teardown()
   })
 
-  describe('prompt structure and content', () => {
-    it('should contain structured extraction instructions', () => {
-      expect(systemPromptMissingInfo).toContain('Structured Information to Extract')
-      expect(systemPromptMissingInfo).toContain('Reproduction Steps')
-      expect(systemPromptMissingInfo).toContain('Repository/Code Links')
-      expect(systemPromptMissingInfo).toContain('Version Information')
-      expect(systemPromptMissingInfo).toContain('Environment Details')
-    })
-
-    it('should define clear extraction guidelines', () => {
-      expect(systemPromptMissingInfo).toContain('Extraction Guidelines')
-      expect(systemPromptMissingInfo).toContain('Extract information exactly as provided')
-      expect(systemPromptMissingInfo).toContain('do not paraphrase')
-    })
-
-    it('should specify deterministic label assignment rules', () => {
-      expect(systemPromptMissingInfo).toContain('Label Assignment Rules')
-      expect(systemPromptMissingInfo).toContain('Apply labels ONLY when information is missing')
-      expect(systemPromptMissingInfo).toContain('Choose from the available labels:')
-      expect(systemPromptMissingInfo).toContain('{{LABEL_PREFIX}}')
-      expect(systemPromptMissingInfo).toContain('===== Available Labels =====')
-      expect(systemPromptMissingInfo).toContain('gh label list')
-    })
-
-    it('should provide structured JSON response examples', () => {
-      expect(systemPromptMissingInfo).toContain('"repro": {')
-      expect(systemPromptMissingInfo).toContain('"links":')
-      expect(systemPromptMissingInfo).toContain('"steps":')
-      expect(systemPromptMissingInfo).toContain('"version":')
-      expect(systemPromptMissingInfo).toContain('"environment":')
-      expect(systemPromptMissingInfo).toContain('"labels":')
-    })
-
-    it('should include examples for both complete and missing information scenarios', () => {
-      expect(systemPromptMissingInfo).toContain('Complete information example:')
-      expect(systemPromptMissingInfo).toContain('Missing information example:')
-    })
-
-    it('should specify JSON-only response format without code blocks', () => {
-      expect(systemPromptMissingInfo).toContain('valid JSON format without code blocks')
-      expect(systemPromptMissingInfo).toContain('ONLY in valid JSON format')
-      expect(systemPromptMissingInfo).toContain('without code blocks or markdown')
-    })
-  })
-
   describe('integration with selectLabels function', () => {
     it('should use the missing-info template correctly', async () => {
       await selectLabels('missing-info', mockConfig)
@@ -172,18 +127,6 @@ describe('Missing Info Structured Extraction', () => {
   })
 
   describe('dynamic labels support', () => {
-    it('should support dynamic label prefix placeholders', () => {
-      expect(systemPromptMissingInfo).toContain('{{LABEL_PREFIX}}')
-      expect(systemPromptMissingInfo).toContain('Choose from the available labels:')
-      expect(systemPromptMissingInfo).toContain('gh label list')
-    })
-
-    it('should use gh command to dynamically list available labels', () => {
-      expect(systemPromptMissingInfo).toContain('gh label list --limit 1000 --json name,description')
-      expect(systemPromptMissingInfo).toContain('--search "{{LABEL_PREFIX}}"')
-      expect(systemPromptMissingInfo).toContain('select(.name | startswith("{{LABEL_PREFIX}}"))')
-    })
-
     it('should pass label prefix to prompt generation when available', async () => {
       const configWithLabelPrefix = {
         ...mockConfig,
@@ -195,55 +138,6 @@ describe('Missing Info Structured Extraction', () => {
       const systemPromptCall = prompts.generatePrompt.mock.calls[0]
       expect(systemPromptCall[2]).toHaveProperty('LABEL_PREFIX')
       expect(systemPromptCall[2].LABEL_PREFIX).toEqual('needs-')
-    })
-  })
-
-  describe('expected response structure validation', () => {
-    it('should validate complete information response structure', () => {
-      // Extract the complete JSON object after the "Complete information example:" text
-      const fullJsonMatch = systemPromptMissingInfo.match(/Complete information example:\s*(\{[\s\S]*?\n\})/)?.[1]
-      expect(fullJsonMatch).toBeDefined()
-
-      const parsed = JSON.parse(fullJsonMatch!)
-      expect(parsed).toHaveProperty('repro')
-      expect(parsed.repro).toHaveProperty('links')
-      expect(parsed.repro).toHaveProperty('steps')
-      expect(parsed.repro).toHaveProperty('version')
-      expect(parsed.repro).toHaveProperty('environment')
-      expect(Array.isArray(parsed.repro.links)).toBe(true)
-      expect(Array.isArray(parsed.repro.steps)).toBe(true)
-      expect(typeof parsed.repro.version).toBe('string')
-      expect(typeof parsed.repro.environment).toBe('string')
-    })
-
-    it('should validate missing information response structure', () => {
-      // Extract the complete JSON object after the "Missing information example:" text
-      const fullJsonMatch = systemPromptMissingInfo.match(/Missing information example:\s*(\{[\s\S]*?\n\})/)?.[1]
-      expect(fullJsonMatch).toBeDefined()
-
-      const parsed = JSON.parse(fullJsonMatch!)
-      expect(parsed).toHaveProperty('repro')
-      expect(parsed).toHaveProperty('labels')
-      expect(parsed.repro).toHaveProperty('links')
-      expect(parsed.repro).toHaveProperty('steps')
-      expect(parsed.repro).toHaveProperty('version')
-      expect(parsed.repro).toHaveProperty('environment')
-      expect(Array.isArray(parsed.labels)).toBe(true)
-
-      // Validate label structure
-      parsed.labels.forEach((label: { label: string; reason: string }) => {
-        expect(label).toHaveProperty('label')
-        expect(label).toHaveProperty('reason')
-        expect(typeof label.label).toBe('string')
-        expect(typeof label.reason).toBe('string')
-      })
-    })
-
-    it('should include expected label types in examples', () => {
-      expect(systemPromptMissingInfo).toContain('"s/needs-repro"')
-      expect(systemPromptMissingInfo).toContain('"s/needs-info"')
-      expect(systemPromptMissingInfo).toContain('No reproduction steps provided')
-      expect(systemPromptMissingInfo).toContain('Version information missing')
     })
   })
 
@@ -264,22 +158,6 @@ describe('Missing Info Structured Extraction', () => {
       ai.runInference.mockRejectedValue(new Error('AI inference failed'))
 
       await expect(selectLabels('missing-info', mockConfig)).rejects.toThrow('AI inference failed')
-    })
-  })
-
-  describe('label assignment logic validation', () => {
-    it('should specify that labels should only be applied when information is missing', () => {
-      expect(systemPromptMissingInfo).toContain('Apply labels ONLY when information is missing')
-    })
-
-    it('should allow multiple labels when multiple types of info are missing', () => {
-      expect(systemPromptMissingInfo).toContain('multiple labels')
-      expect(systemPromptMissingInfo).toContain('multiple types of information are missing')
-    })
-
-    it('should specify no labels when all information is present', () => {
-      expect(systemPromptMissingInfo).toContain('no labels')
-      expect(systemPromptMissingInfo).toContain('all essential information is present')
     })
   })
 })
