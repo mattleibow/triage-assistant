@@ -102,7 +102,7 @@ TriageAssistant/
 - **JSON**: System.Text.Json
 - **YAML**: YamlDotNet
 - **HTTP**: HttpClient with Polly for resilience
-- **GraphQL**: Octokit.NET GraphQL support (preferred) or GraphQL.Client
+- **GraphQL**: Octokit.GraphQL.NET
 - **AI**: Azure.AI.Inference
 
 #### 1.3 Docker Configuration
@@ -231,7 +231,8 @@ public class GitHubIssueService
 // Services/GitHubProjectsService.cs
 public class GitHubProjectsService
 {
-    private readonly GitHubClient _client; // Using Octokit.NET GraphQL capabilities (preferred)
+    private readonly GitHubClient _restClient; // Using Octokit.NET for REST API operations
+    private readonly Connection _graphQLConnection; // Using Octokit.GraphQL.NET for GraphQL operations
     
     public async Task<List<ProjectItem>> GetProjectItemsAsync(int projectNumber)
     public async Task UpdateProjectFieldAsync(ProjectItem item, string fieldName, double score)
@@ -242,26 +243,86 @@ public class GitHubProjectsService
 #### 3.3 GraphQL Operations
 **Target**: Migrate src/generated/graphql.ts and src/github/queries/
 
-**Preferred Approach**: Use Octokit.NET's built-in GraphQL capabilities for GitHub API operations, which provides a unified client experience and better integration with GitHub's authentication and rate limiting.
+**Approach**: Use Octokit.GraphQL.NET as the dedicated GraphQL client for GitHub API operations, providing type-safe GraphQL operations with C# LINQ expressions and excellent GitHub integration.
 
 ```csharp
 // GraphQL/GitHubGraphQLClient.cs
 public class GitHubGraphQLClient
 {
-    private readonly GitHubClient _client; // Using Octokit.NET GraphQL capabilities (preferred)
+    private readonly Connection _connection; // Using Octokit.GraphQL.NET
     
-    public async Task<GetIssueDetailsQuery> GetIssueDetailsAsync(GetIssueDetailsQueryVariables variables)
-    public async Task<GetProjectItemsQuery> GetProjectItemsAsync(GetProjectItemsQueryVariables variables)
-    // Other GraphQL operations...
+    public async Task<IssueDetails> GetIssueDetailsAsync(string owner, string repo, int number)
+    {
+        var query = new Query()
+            .Repository(owner, repo)
+            .Issue(number)
+            .Select(issue => new IssueDetails
+            {
+                Id = issue.Id,
+                Title = issue.Title,
+                Body = issue.Body,
+                Comments = issue.Comments(null, null, null, null).AllPages()
+                    .Select(comment => new IssueComment
+                    {
+                        Body = comment.Body,
+                        CreatedAt = comment.CreatedAt,
+                        Author = comment.Author.Login,
+                        Reactions = comment.Reactions(null, null, null, null).AllPages()
+                            .Select(reaction => new Reaction
+                            {
+                                Content = reaction.Content,
+                                User = reaction.User.Login,
+                                CreatedAt = reaction.CreatedAt
+                            }).ToList()
+                    }).ToList(),
+                // Additional fields...
+            });
+            
+        return await _connection.Run(query);
+    }
+    
+    public async Task<List<ProjectItem>> GetProjectItemsAsync(int projectNumber)
+    {
+        var query = new Query()
+            .Node(projectId)
+            .Cast<ProjectV2>()
+            .Items(null, null, null, null)
+            .AllPages()
+            .Select(item => new ProjectItem
+            {
+                Id = item.Id,
+                Content = item.Content.Select(content => new ProjectItemContent
+                {
+                    // Map content based on type
+                }).Single(),
+                FieldValues = item.FieldValues(null, null, null, null).AllPages()
+                    .Select(fieldValue => new ProjectFieldValue
+                    {
+                        // Map field values
+                    }).ToList()
+            });
+            
+        return await _connection.Run(query);
+    }
 }
 
-// Models/GraphQL/ (Generated from GraphQL schemas)
-public class GetIssueDetailsQuery { }
-public class GetIssueDetailsQueryVariables { }
-// Other GraphQL models...
-```
+// Models/GraphQL/ (Strongly-typed C# models for GraphQL responses)
+public class IssueDetails
+{
+    public string Id { get; set; }
+    public string Title { get; set; }
+    public string Body { get; set; }
+    public List<IssueComment> Comments { get; set; }
+    // Additional properties...
+}
 
-**Alternative Approach**: If Octokit.NET GraphQL capabilities are insufficient for complex queries, use GraphQL.Client as a fallback with proper authentication and rate limiting integration.
+public class ProjectItem
+{
+    public string Id { get; set; }
+    public ProjectItemContent Content { get; set; }
+    public List<ProjectFieldValue> FieldValues { get; set; }
+}
+```
 
 ### Phase 4: Action Entry Points (TriageAssistant.Action)
 
@@ -432,7 +493,7 @@ runs:
 | @actions/core | Environment Variables | GitHub Actions input/output |
 | @actions/github | Octokit.NET | GitHub API client |
 | @azure-rest/ai-inference | Azure.AI.Inference | AI model integration |
-| graphql-request | Octokit.NET GraphQL (preferred) | GraphQL operations |
+| graphql-request | Octokit.GraphQL.NET | GraphQL operations |
 | js-yaml | YamlDotNet | YAML configuration parsing |
 | uuid | System.Guid | UUID generation |
 | jest | xUnit + NSubstitute | Testing framework |
@@ -440,9 +501,8 @@ runs:
 #### 7.2 New Dependencies Required
 ```xml
 <PackageReference Include="Octokit" Version="latest" />
+<PackageReference Include="Octokit.GraphQL" Version="latest" />
 <PackageReference Include="Azure.AI.Inference" Version="latest" />
-<!-- GraphQL.Client as fallback if Octokit.NET GraphQL is insufficient -->
-<PackageReference Include="GraphQL.Client" Version="latest" />
 <PackageReference Include="YamlDotNet" Version="latest" />
 <PackageReference Include="System.Text.Json" Version="latest" />
 <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="latest" />
@@ -493,7 +553,7 @@ Single output `response-file` must be maintained with same behavior.
 
 ### GitHub Integration (TriageAssistant.GitHub)
 - [ ] Implement GitHub API client with Octokit.NET
-- [ ] Create GraphQL client using Octokit.NET GraphQL capabilities (preferred) for Projects v2 operations
+- [ ] Create GraphQL client using Octokit.GraphQL.NET for Projects v2 operations
 - [ ] Migrate issue management (get, label, comment, reactions)
 - [ ] Implement project field updates and item retrieval
 - [ ] Add search functionality for bulk issue processing
@@ -571,7 +631,7 @@ Single output `response-file` must be maintained with same behavior.
 ## Risk Mitigation
 
 ### Technical Risks
-1. **GraphQL Complexity**: Use Octokit.NET GraphQL capabilities (preferred) or established GraphQL.Client library as fallback, test extensively
+1. **GraphQL Complexity**: Use Octokit.GraphQL.NET for type-safe GraphQL operations with excellent GitHub integration, test extensively
 2. **AI Integration**: Verify Azure AI Inference compatibility early
 3. **Docker Performance**: Optimize with multi-stage builds and Alpine base image
 4. **GitHub API Changes**: Pin to specific API versions, add integration tests
