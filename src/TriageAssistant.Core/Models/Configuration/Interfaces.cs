@@ -107,7 +107,7 @@ public interface IApplyLabelsConfig : IGitHubIssueConfig
 /// </summary>
 public interface IApplySummaryCommentConfig : IGitHubIssueConfig, ISummaryPromptConfig, IInferenceConfig
 {
-    string Token { get; }
+    new string Token { get; }
     bool ApplyComment { get; }
     string? CommentFooter { get; }
 }
@@ -125,7 +125,7 @@ public interface ISingleLabelTriageWorkflowConfig : ILabelTriageWorkflowConfig
 /// </summary>
 public interface IBulkLabelTriageWorkflowConfig : ILabelTriageWorkflowConfig
 {
-    string IssueQuery { get; }
+    new string IssueQuery { get; }
 }
 
 /// <summary>

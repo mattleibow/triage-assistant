@@ -16,7 +16,7 @@
 
   <ItemGroup>
     <PackageReference Include="Octokit" Version="14.0.0" />
-    <PackageReference Include="Octokit.GraphQL" Version="2.3.0" />
+    <PackageReference Include="Octokit.GraphQL" Version="0.4.0-beta" />
     <PackageReference Include="System.Text.Json" Version="8.0.5" />
     <PackageReference Include="Microsoft.Extensions.Http" Version="8.0.1" />
     <PackageReference Include="Polly" Version="8.5.0" />
