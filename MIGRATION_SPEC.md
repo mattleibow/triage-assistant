@@ -1,0 +1,594 @@
+# TypeScript to C#/.NET Migration Specification
+
+## Executive Summary
+
+This document provides a comprehensive specification for migrating the AI Triage Assistant GitHub Action from TypeScript to C#/.NET while preserving all functionality as a drop-in replacement. The migration will use Docker containers for deployment and extract non-GitHub specific functionality into a reusable class library.
+
+## Current Architecture Analysis
+
+### Project Overview
+- **Name**: AI Triage Assistant
+- **Language**: TypeScript (ES Modules)
+- **Runtime**: Node.js 20
+- **Lines of Code**: ~30 TypeScript source files, ~16 test files with 245+ tests
+- **Coverage**: 94.45% statement coverage
+- **Dependencies**: 14 production dependencies, 27 dev dependencies
+
+### Core Functionality Modes
+1. **Apply Labels Mode** (`apply-labels`): AI-powered label application using batch configuration
+2. **Engagement Score Mode** (`engagement-score`): Mathematical scoring based on community activity
+
+### Key Components
+
+#### 1. Entry Points (src/main.ts, src/apply-labels.ts, src/engagement-score.ts)
+- Multi-mode operation system with unified configuration
+- Sub-action architecture for focused functionality
+- Central orchestrator that routes to appropriate workflows
+
+#### 2. Configuration System (src/config.ts, src/config-file.ts)
+- `EverythingConfig` interface extending all specific configs
+- YAML configuration loading (.triagerc.yml)
+- Type-safe input parsing and validation
+- Environment variable handling with fallbacks
+
+#### 3. AI Integration (src/ai/, src/prompts/)
+- Azure AI Inference integration (@azure-rest/ai-inference)
+- Template-based prompt engineering system
+- Multiple prompt types: multi-label, single-label, regression, missing-info
+- Summary generation capabilities
+
+#### 4. GitHub Integration (src/github/)
+- **Issues Management**: Issue retrieval, labeling, commenting, reactions
+- **Projects Integration**: GitHub Projects v2 GraphQL operations
+- **GraphQL Operations**: Type-safe operations with code generation
+- **Search Capabilities**: Bulk issue processing via GitHub search queries
+
+#### 5. Engagement Scoring (src/engagement/)
+- Mathematical algorithm with configurable weights
+- 7-day lookback for historic analysis
+- Components: Comments, Reactions, Contributors, Time Factors, Pull Requests
+- Project field updates with calculated scores
+
+#### 6. Build and Distribution
+- Rollup bundling to single dist/index.js
+- GraphQL code generation from schema
+- ES Modules with .js extensions
+- Three entry points: main, apply-labels, engagement-score
+
+#### 7. Testing Infrastructure
+- Jest with ES Modules support
+- 245+ tests with comprehensive coverage
+- FileSystemMock for file operations testing
+- Mock strategies for GitHub API interactions
+
+## Migration Plan
+
+### Phase 1: Infrastructure Setup
+
+#### 1.1 Project Structure
+```
+TriageAssistant/
+├── src/
+│   ├── TriageAssistant.Core/              # Reusable class library
+│   │   ├── Models/                        # Data models and configurations
+│   │   ├── Services/                      # Business logic services
+│   │   ├── AI/                           # AI integration (Azure AI Inference)
+│   │   ├── Engagement/                   # Engagement scoring logic
+│   │   ├── Configuration/                # Configuration management
+│   │   └── Utils/                        # Utility functions
+│   ├── TriageAssistant.GitHub/           # GitHub-specific functionality
+│   │   ├── Services/                     # GitHub API interactions
+│   │   ├── Models/                       # GitHub-specific models
+│   │   ├── GraphQL/                      # GraphQL operations
+│   │   └── Extensions/                   # GitHub integration extensions
+│   └── TriageAssistant.Action/           # GitHub Action entry point
+│       ├── Program.cs                    # Main entry point
+│       ├── Modes/                        # Mode-specific handlers
+│       └── Docker/                       # Docker configuration
+├── tests/
+│   ├── TriageAssistant.Core.Tests/
+│   ├── TriageAssistant.GitHub.Tests/
+│   └── TriageAssistant.Action.Tests/
+├── schemas/                              # GraphQL schemas
+├── Dockerfile                            # Docker container definition
+└── action.yml                           # GitHub Action definition
+```
+
+#### 1.2 Technology Stack
+- **Framework**: .NET 8.0 (LTS)
+- **Language**: C# 12
+- **Container**: Docker with Ubuntu/Alpine base
+- **Testing**: xUnit with Moq
+- **JSON**: System.Text.Json
+- **YAML**: YamlDotNet
+- **HTTP**: HttpClient with Polly for resilience
+- **GraphQL**: GraphQL.Client or StrawberryShake
+- **AI**: Azure.AI.Inference
+
+#### 1.3 Docker Configuration
+```dockerfile
+FROM mcr.microsoft.com/dotnet/runtime:8.0-alpine
+COPY publish/ /app/
+WORKDIR /app
+ENTRYPOINT ["dotnet", "TriageAssistant.Action.dll"]
+```
+
+### Phase 2: Core Library Migration (TriageAssistant.Core)
+
+#### 2.1 Configuration System
+**Target**: Migrate src/config.ts, src/config-file.ts
+
+```csharp
+// Models/Configuration/EverythingConfig.cs
+public class EverythingConfig : ITriageConfig, IEngagementConfig, IGitHubConfig
+{
+    public string AiEndpoint { get; set; }
+    public string AiModel { get; set; }
+    public string AiToken { get; set; }
+    // ... other properties matching TypeScript interface
+}
+
+// Services/ConfigurationService.cs
+public class ConfigurationService
+{
+    public async Task<ConfigFile> LoadConfigFileAsync(string[] configPaths)
+    public async Task<EverythingConfig> BuildConfigAsync()
+    public T ValidateInput<T>(string input, string fieldName)
+}
+```
+
+#### 2.2 Engagement Scoring Engine
+**Target**: Migrate src/engagement/
+
+```csharp
+// Models/Engagement/ScoringFactors.cs
+public class ScoringFactors
+{
+    public int Comments { get; set; }
+    public int Reactions { get; set; }
+    public int Contributors { get; set; }
+    public double TimeFactors { get; set; }
+    public int PullRequests { get; set; }
+}
+
+// Services/EngagementScoringService.cs
+public class EngagementScoringService
+{
+    public async Task<double> CalculateScoreAsync(IssueDetails issue, EngagementWeights weights)
+    public async Task<EngagementResult> AnalyzeHistoricTrendsAsync(IssueDetails issue)
+    public async Task<List<EngagementResult>> ScoreProjectIssuesAsync(int projectNumber)
+}
+```
+
+#### 2.3 AI Integration
+**Target**: Migrate src/ai/, src/prompts/
+
+```csharp
+// Services/AIInferenceService.cs
+public class AIInferenceService
+{
+    private readonly InferenceClient _client;
+    
+    public async Task<string> RunInferenceAsync(string systemPrompt, string userPrompt)
+    public async Task<TriageResponse> SelectLabelsAsync(IssueDetails issue, ConfigFileLabelGroup group)
+    public async Task<string> GenerateSummaryAsync(string mergedResponseFile)
+}
+
+// Services/PromptService.cs
+public class PromptService
+{
+    public string GetSystemPrompt(string template, ConfigFileLabelGroup group)
+    public string GetUserPrompt(IssueDetails issue)
+}
+```
+
+#### 2.4 Utilities and Validation
+**Target**: Migrate src/utils.ts
+
+```csharp
+// Utils/ValidationUtils.cs
+public static class ValidationUtils
+{
+    public static int ValidateNumericInput(string input, string fieldName)
+    public static int? ValidateOptionalNumericInput(string input, string fieldName)
+    public static TriageMode ValidateMode(string input)
+    public static void ValidateRepositoryId(string owner, string repo)
+}
+
+// Utils/FileSystemUtils.cs
+public static class FileSystemUtils
+{
+    public static async Task<string> ReadFileAsync(string path)
+    public static async Task WriteFileAsync(string path, string content)
+    public static async Task EnsureDirectoryExistsAsync(string path)
+}
+```
+
+### Phase 3: GitHub Integration Layer (TriageAssistant.GitHub)
+
+#### 3.1 GitHub API Services
+**Target**: Migrate src/github/issues.ts
+
+```csharp
+// Services/GitHubIssueService.cs
+public class GitHubIssueService
+{
+    private readonly GitHubClient _client;
+    
+    public async Task<IssueDetails> GetIssueDetailsAsync(string owner, string repo, int issueNumber)
+    public async Task ApplyLabelsToIssueAsync(List<string> labels, GitHubIssueConfig config)
+    public async Task CommentOnIssueAsync(string summaryFile, GitHubIssueConfig config, string footer = null)
+    public async Task AddEyesReactionAsync(GitHubIssueConfig config)
+    public async Task RemoveEyesReactionAsync(GitHubIssueConfig config)
+    public async Task<List<SearchIssue>> SearchIssuesAsync(string query)
+}
+```
+
+#### 3.2 Projects Integration
+**Target**: Migrate src/github/projects.ts
+
+```csharp
+// Services/GitHubProjectsService.cs
+public class GitHubProjectsService
+{
+    private readonly GraphQLHttpClient _client;
+    
+    public async Task<List<ProjectItem>> GetProjectItemsAsync(int projectNumber)
+    public async Task UpdateProjectFieldAsync(ProjectItem item, string fieldName, double score)
+    public async Task<ProjectField> GetProjectFieldAsync(int projectNumber, string fieldName)
+}
+```
+
+#### 3.3 GraphQL Operations
+**Target**: Migrate src/generated/graphql.ts and src/github/queries/
+
+```csharp
+// GraphQL/GitHubGraphQLClient.cs
+public class GitHubGraphQLClient
+{
+    private readonly GraphQLHttpClient _client;
+    
+    public async Task<GetIssueDetailsQuery> GetIssueDetailsAsync(GetIssueDetailsQueryVariables variables)
+    public async Task<GetProjectItemsQuery> GetProjectItemsAsync(GetProjectItemsQueryVariables variables)
+    // Other GraphQL operations...
+}
+
+// Models/GraphQL/ (Generated from GraphQL schemas)
+public class GetIssueDetailsQuery { }
+public class GetIssueDetailsQueryVariables { }
+// Other GraphQL models...
+```
+
+### Phase 4: Action Entry Points (TriageAssistant.Action)
+
+#### 4.1 Main Program Entry Point
+**Target**: Migrate src/main.ts, src/index.ts
+
+```csharp
+// Program.cs
+public class Program
+{
+    public static async Task<int> Main(string[] args)
+    {
+        try
+        {
+            var serviceProvider = ConfigureServices();
+            var workflow = serviceProvider.GetRequiredService<IWorkflowOrchestrator>();
+            
+            var mode = GetTriageMode(args);
+            await workflow.RunWorkflowAsync(mode);
+            
+            return 0;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error: {ex.Message}");
+            return 1;
+        }
+    }
+    
+    private static TriageMode GetTriageMode(string[] args)
+    {
+        // Parse mode from command line arguments or environment variables
+    }
+}
+```
+
+#### 4.2 Workflow Orchestrator
+**Target**: Central workflow logic from src/main.ts
+
+```csharp
+// Services/WorkflowOrchestrator.cs
+public class WorkflowOrchestrator : IWorkflowOrchestrator
+{
+    public async Task<string> RunWorkflowAsync(TriageMode? modeOverride = null)
+    {
+        var config = await _configService.BuildConfigAsync();
+        var configFile = await _configService.LoadConfigFileAsync();
+        
+        return mode switch
+        {
+            TriageMode.ApplyLabels => await _triageService.RunTriageWorkflowAsync(config, configFile.Labels),
+            TriageMode.EngagementScore => await _engagementService.RunEngagementWorkflowAsync(config, configFile.Engagement),
+            _ => throw new ArgumentException($"Unknown triage mode: {mode}")
+        };
+    }
+}
+```
+
+#### 4.3 Mode-Specific Handlers
+**Target**: Migrate src/triage/triage.ts, src/engagement/engagement.ts
+
+```csharp
+// Modes/TriageWorkflowHandler.cs
+public class TriageWorkflowHandler
+{
+    public async Task<string> RunTriageWorkflowAsync(LabelTriageWorkflowConfig config, ConfigFileLabels configFile)
+    public async Task<string> MergeAndApplyTriageAsync(ApplyLabelsConfig config)
+}
+
+// Modes/EngagementWorkflowHandler.cs
+public class EngagementWorkflowHandler
+{
+    public async Task<string> RunEngagementWorkflowAsync(EngagementScoringConfig config, ConfigFileEngagement configFile)
+    public async Task ProcessProjectEngagementAsync(int projectNumber, EngagementWeights weights)
+    public async Task ProcessSingleIssueEngagementAsync(int issueNumber, EngagementWeights weights)
+}
+```
+
+### Phase 5: Testing Migration
+
+#### 5.1 Test Infrastructure
+**Target**: Migrate __tests__/ directory structure
+
+```csharp
+// Tests setup with xUnit and Moq
+[Fact]
+public async Task ShouldCalculateCorrectScoreWithAllFactors()
+{
+    // Arrange
+    var mockService = new Mock<IGitHubIssueService>();
+    var scoringService = new EngagementScoringService(mockService.Object);
+    
+    // Act & Assert
+    var result = await scoringService.CalculateScoreAsync(issueDetails, weights);
+    Assert.Equal(expectedScore, result, precision: 2);
+}
+
+// File system mocking with temporary directories
+public class FileSystemTestFixture : IDisposable
+{
+    public string TempDirectory { get; }
+    
+    public FileSystemTestFixture()
+    {
+        TempDirectory = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
+        Directory.CreateDirectory(TempDirectory);
+    }
+}
+```
+
+#### 5.2 Test Coverage Targets
+- **Unit Tests**: All core business logic (EngagementScoringService, AIInferenceService, etc.)
+- **Integration Tests**: GitHub API interactions, GraphQL operations
+- **End-to-End Tests**: Full workflow execution with mocked external dependencies
+- **Security Tests**: Path traversal, input validation, token handling
+
+### Phase 6: Docker Configuration
+
+#### 6.1 Multi-Stage Dockerfile
+```dockerfile
+# Build stage
+FROM mcr.microsoft.com/dotnet/sdk:8.0-alpine AS build
+WORKDIR /src
+
+# Copy project files
+COPY ["src/TriageAssistant.Action/TriageAssistant.Action.csproj", "TriageAssistant.Action/"]
+COPY ["src/TriageAssistant.Core/TriageAssistant.Core.csproj", "TriageAssistant.Core/"]
+COPY ["src/TriageAssistant.GitHub/TriageAssistant.GitHub.csproj", "TriageAssistant.GitHub/"]
+
+# Restore dependencies
+RUN dotnet restore "TriageAssistant.Action/TriageAssistant.Action.csproj"
+
+# Copy source code
+COPY src/ .
+
+# Build and publish
+RUN dotnet publish "TriageAssistant.Action/TriageAssistant.Action.csproj" \
+    -c Release \
+    -o /app/publish \
+    --no-restore
+
+# Runtime stage
+FROM mcr.microsoft.com/dotnet/runtime:8.0-alpine
+WORKDIR /app
+COPY --from=build /app/publish .
+
+# Install required packages
+RUN apk add --no-cache ca-certificates
+
+ENTRYPOINT ["dotnet", "TriageAssistant.Action.dll"]
+```
+
+#### 6.2 Action Definition Updates
+```yaml
+# action.yml updates for Docker container
+runs:
+  using: 'docker'
+  image: 'Dockerfile'
+  # All existing inputs and outputs remain the same
+```
+
+### Phase 7: Dependency Mapping
+
+#### 7.1 TypeScript to C# Package Mapping
+
+| TypeScript Package | C# Equivalent | Purpose |
+|-------------------|---------------|---------|
+| @actions/core | Environment Variables | GitHub Actions input/output |
+| @actions/github | Octokit.NET | GitHub API client |
+| @azure-rest/ai-inference | Azure.AI.Inference | AI model integration |
+| graphql-request | GraphQL.Client | GraphQL operations |
+| js-yaml | YamlDotNet | YAML configuration parsing |
+| uuid | System.Guid | UUID generation |
+| jest | xUnit + Moq | Testing framework |
+
+#### 7.2 New Dependencies Required
+```xml
+<PackageReference Include="Octokit" Version="latest" />
+<PackageReference Include="Azure.AI.Inference" Version="latest" />
+<PackageReference Include="GraphQL.Client" Version="latest" />
+<PackageReference Include="YamlDotNet" Version="latest" />
+<PackageReference Include="System.Text.Json" Version="latest" />
+<PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="latest" />
+<PackageReference Include="Microsoft.Extensions.Configuration" Version="latest" />
+<PackageReference Include="Microsoft.Extensions.Logging" Version="latest" />
+<PackageReference Include="Polly" Version="latest" />
+```
+
+### Phase 8: Configuration and Compatibility
+
+#### 8.1 Environment Variable Mapping
+All existing environment variables remain the same:
+- `GITHUB_TOKEN` → Environment.GetEnvironmentVariable("GITHUB_TOKEN")
+- `TRIAGE_AI_TOKEN` → Environment.GetEnvironmentVariable("TRIAGE_AI_TOKEN")
+- `RUNNER_TEMP` → Environment.GetEnvironmentVariable("RUNNER_TEMP")
+
+#### 8.2 Action Input Compatibility
+All 15 action inputs must be preserved exactly:
+- token, fallback-token, ai-endpoint, ai-model, ai-token
+- issue, issue-query, mode, project, project-column, apply-scores
+- apply-labels, apply-comment, comment-footer, dry-run
+
+#### 8.3 Output Compatibility
+Single output `response-file` must be maintained with same behavior.
+
+## Implementation Checklist
+
+### Infrastructure & Setup
+- [ ] Create solution structure with three projects (Core, GitHub, Action)
+- [ ] Set up .NET 8.0 project files with correct dependencies
+- [ ] Configure Docker multi-stage build
+- [ ] Set up CI/CD pipeline for .NET build and test
+- [ ] Implement dependency injection container
+- [ ] Configure logging and error handling
+
+### Core Library (TriageAssistant.Core)
+- [ ] Migrate configuration system with YAML support
+- [ ] Implement engagement scoring algorithm with weight configuration
+- [ ] Create AI inference service with Azure AI Inference
+- [ ] Build prompt engineering system with template support
+- [ ] Implement utility functions and validation
+- [ ] Create file system operations with proper error handling
+
+### GitHub Integration (TriageAssistant.GitHub)
+- [ ] Implement GitHub API client with Octokit.NET
+- [ ] Create GraphQL client for Projects v2 operations
+- [ ] Migrate issue management (get, label, comment, reactions)
+- [ ] Implement project field updates and item retrieval
+- [ ] Add search functionality for bulk issue processing
+- [ ] Handle GitHub API rate limiting and retries
+
+### Action Entry Points (TriageAssistant.Action)
+- [ ] Create main program entry point with argument parsing
+- [ ] Implement workflow orchestrator for mode routing
+- [ ] Build triage workflow handler
+- [ ] Build engagement scoring workflow handler
+- [ ] Implement sub-action support (apply-labels, engagement-score)
+- [ ] Add comprehensive error handling and logging
+
+### Testing Infrastructure
+- [ ] Create test projects for all three assemblies
+- [ ] Implement file system mocking strategies
+- [ ] Create GitHub API mocking with Moq
+- [ ] Write unit tests for all core business logic (245+ tests)
+- [ ] Add integration tests for GitHub operations
+- [ ] Implement end-to-end workflow tests
+- [ ] Add security tests for path traversal and input validation
+- [ ] Set up test coverage reporting
+
+### Docker & Deployment
+- [ ] Create optimized Dockerfile with Alpine Linux
+- [ ] Update action.yml for Docker container execution
+- [ ] Test container build and execution locally
+- [ ] Validate all environment variable handling
+- [ ] Ensure proper secret handling in container
+
+### Validation & Quality Assurance
+- [ ] Verify all 15 action inputs work identically
+- [ ] Test both operational modes (apply-labels, engagement-score)
+- [ ] Validate GraphQL operations against GitHub Projects v2
+- [ ] Test AI inference with Azure AI models
+- [ ] Verify YAML configuration file parsing
+- [ ] Test bulk issue processing with search queries
+- [ ] Validate engagement scoring algorithm accuracy
+- [ ] Test error handling and edge cases
+- [ ] Performance testing for large issue sets
+- [ ] Security audit for token handling and input validation
+
+### Documentation & Migration
+- [ ] Update README.md with C# usage examples
+- [ ] Create migration guide for users
+- [ ] Document new Docker container usage
+- [ ] Update contribution guidelines for C# development
+- [ ] Create troubleshooting guide for common issues
+
+## Acceptance Criteria
+
+### Functional Requirements
+1. **Drop-in Replacement**: All existing workflows using the TypeScript version must work without modification
+2. **Feature Parity**: Both operational modes (apply-labels, engagement-score) must function identically
+3. **Configuration Compatibility**: All .triagerc.yml configurations must work unchanged
+4. **API Compatibility**: All GitHub API operations must produce identical results
+5. **AI Integration**: Azure AI Inference must work with same prompts and responses
+
+### Performance Requirements
+1. **Execution Time**: C# version should execute within 10% of TypeScript performance
+2. **Memory Usage**: Container memory usage should not exceed 512MB for typical operations
+3. **API Rate Limits**: Must respect GitHub API rate limits identically
+
+### Quality Requirements
+1. **Test Coverage**: Minimum 90% code coverage across all projects
+2. **Error Handling**: Comprehensive error handling with clear error messages
+3. **Logging**: Structured logging for debugging and monitoring
+4. **Security**: No regression in security posture, proper secret handling
+
+### Deployment Requirements
+1. **Container Size**: Docker image should be under 200MB
+2. **Startup Time**: Container startup should complete within 10 seconds
+3. **Cross-Platform**: Must work on GitHub Actions Ubuntu, Windows, and macOS runners
+
+## Risk Mitigation
+
+### Technical Risks
+1. **GraphQL Complexity**: Use established GraphQL.Client library, test extensively
+2. **AI Integration**: Verify Azure AI Inference compatibility early
+3. **Docker Performance**: Optimize with multi-stage builds and Alpine base image
+4. **GitHub API Changes**: Pin to specific API versions, add integration tests
+
+### Migration Risks
+1. **Breaking Changes**: Extensive testing with existing workflows
+2. **Feature Gaps**: Comprehensive feature mapping and validation
+3. **Performance Regression**: Benchmark testing against TypeScript version
+4. **User Adoption**: Clear migration documentation and backward compatibility
+
+## Success Metrics
+
+1. **Zero Breaking Changes**: All existing workflows continue to work
+2. **Complete Test Suite**: 245+ tests migrated and passing
+3. **Performance Maintained**: Execution time within 10% of TypeScript version
+4. **Container Efficiency**: Small, fast-starting Docker image
+5. **Code Quality**: High test coverage and clean architecture
+6. **User Experience**: Seamless transition for existing users
+
+## Timeline Estimate
+
+- **Phase 1-2 (Infrastructure + Core)**: 3-4 weeks
+- **Phase 3 (GitHub Integration)**: 2-3 weeks  
+- **Phase 4 (Action Entry Points)**: 1-2 weeks
+- **Phase 5 (Testing Migration)**: 2-3 weeks
+- **Phase 6-8 (Docker + Validation)**: 1-2 weeks
+
+**Total Estimated Duration**: 9-14 weeks for complete migration
+
+This specification provides a comprehensive roadmap for migrating the AI Triage Assistant from TypeScript to C#/.NET while maintaining all functionality and ensuring it serves as a true drop-in replacement.
