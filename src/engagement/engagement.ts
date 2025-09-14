@@ -6,7 +6,12 @@ import { ConfigFileEngagement, ConfigFileEngagementWeights } from '../config-fil
 import { EngagementResponse, EngagementItem, EngagementClassification } from './engagement-types.js'
 import { getIssueDetails } from '../github/issues.js'
 import { getProjectDetails, updateProjectWithScores } from '../github/projects.js'
-import { calculateScore, calculateHistoricalScore, calculateScoreWithRoles, calculateHistoricalScoreWithRoles } from '../github/issue-details.js'
+import {
+  calculateScore,
+  calculateHistoricalScore,
+  calculateScoreWithRoles,
+  calculateHistoricalScoreWithRoles
+} from '../github/issue-details.js'
 import { IssueDetails } from '../github/types.js'
 import { EngagementWorkflowConfig } from '../config.js'
 import { EngagementWeights } from './engagement-config.js'

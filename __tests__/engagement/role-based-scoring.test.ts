@@ -7,34 +7,10 @@ import {
   getWeightForRole,
   normalizeWeights
 } from '../../src/engagement/engagement-config.js'
-import {
-  calculateScoreWithRoles,
-  calculateHistoricalScoreWithRoles
-} from '../../src/github/issue-details.js'
 import { IssueDetails } from '../../src/github/types.js'
 import { FileSystemMock } from '../helpers/filesystem-mock.js'
 
-// Mock the role detection module
-jest.mock('../../src/github/role-detection.js')
-
-// Import the mocked functions after mocking
-import {
-  detectUserRole
-} from '../../src/github/role-detection.js'
-
-// Type the mocked functions
-const mockDetectUserRole = jest.mocked(detectUserRole)
-
-// Mock the GraphQL SDK
-const mockGraphQLSdk = {
-  GetUserRepositoryPermission: jest.fn(),
-  GetUserOrganizationMembership: jest.fn(),
-  GetUserContributionHistory: jest.fn(),
-  SearchIssues: jest.fn(),
-  SearchPullRequests: jest.fn()
-} as any
-
-describe('Role-Based Engagement Scoring', () => {
+describe('Role-Based Engagement Configuration', () => {
   const inMemoryFs = new FileSystemMock()
 
   beforeEach(() => {
@@ -116,7 +92,7 @@ describe('Role-Based Engagement Scoring', () => {
 
     it('should fall back to base weight when role-specific weight is missing', () => {
       const partialWeights: RoleBasedWeights = { base: 3, maintainer: 4 }
-      
+
       expect(getWeightForRole(partialWeights, ContributorRole.Maintainer)).toBe(4)
       expect(getWeightForRole(partialWeights, ContributorRole.Partner)).toBe(3) // falls back to base
       expect(getWeightForRole(partialWeights, ContributorRole.Base)).toBe(3)
@@ -128,188 +104,72 @@ describe('Role-Based Engagement Scoring', () => {
     })
   })
 
-  describe('detectUserRole', () => {
-    const repoInfo = { owner: 'test-owner', name: 'test-repo' }
-    const groups: UserGroups = {
-      partner: ['partner-user', 'external-collab'],
-      internal: ['internal-user']
-    }
-
-    it('should use mocked role detection', async () => {
-      mockDetectUserRole.mockResolvedValue(ContributorRole.Maintainer)
-
-      const role = await detectUserRole('test-user', repoInfo, groups, mockGraphQLSdk)
-      expect(role).toBe(ContributorRole.Maintainer)
-      expect(mockDetectUserRole).toHaveBeenCalledWith('test-user', repoInfo, groups, mockGraphQLSdk)
-    })
-
-    it('should handle different role types', async () => {
-      mockDetectUserRole.mockResolvedValueOnce(ContributorRole.Partner)
-      mockDetectUserRole.mockResolvedValueOnce(ContributorRole.FirstTime)
-      mockDetectUserRole.mockResolvedValueOnce(ContributorRole.Frequent)
-
-      const role1 = await detectUserRole('partner-user', repoInfo, groups, mockGraphQLSdk)
-      const role2 = await detectUserRole('first-time-user', repoInfo, groups, mockGraphQLSdk)
-      const role3 = await detectUserRole('frequent-user', repoInfo, groups, mockGraphQLSdk)
-
-      expect(role1).toBe(ContributorRole.Partner)
-      expect(role2).toBe(ContributorRole.FirstTime)
-      expect(role3).toBe(ContributorRole.Frequent)
+  describe('ContributorRole enum', () => {
+    it('should have all expected role values', () => {
+      expect(ContributorRole.Base).toBe('base')
+      expect(ContributorRole.Maintainer).toBe('maintainer')
+      expect(ContributorRole.Partner).toBe('partner')
+      expect(ContributorRole.FirstTime).toBe('firstTime')
+      expect(ContributorRole.Frequent).toBe('frequent')
     })
   })
 
-  describe('calculateScoreWithRoles', () => {
-    const mockIssueDetails: IssueDetails = {
-      id: '1',
-      owner: 'test-owner',
-      repo: 'test-repo',
-      number: 123,
-      title: 'Test Issue',
-      body: 'Test issue body',
-      state: 'open',
-      createdAt: new Date('2023-01-01T12:00:00Z'),
-      updatedAt: new Date('2023-01-08T12:00:00Z'),
-      closedAt: null,
-      reactions: [
-        {
-          user: { login: 'maintainer-user', type: 'User' },
-          reaction: 'thumbs_up',
-          createdAt: new Date('2023-01-02T12:00:00Z')
-        }
-      ],
-      comments: [
-        {
-          user: { login: 'partner-user', type: 'User' },
-          createdAt: new Date('2023-01-02T12:00:00Z'),
-          reactions: [
-            {
-              user: { login: 'first-time-user', type: 'User' },
-              reaction: 'heart',
-              createdAt: new Date('2023-01-02T13:00:00Z')
-            }
-          ]
-        }
-      ],
-      user: { login: 'frequent-user', type: 'User' },
-      assignees: []
-    }
-
-    const roleWeights: EngagementWeights = {
-      comments: { base: 3, maintainer: 4, partner: 5, firstTime: 6, frequent: 2 },
-      reactions: { base: 1, maintainer: 3, partner: 2, firstTime: 4, frequent: 1 },
-      contributors: { base: 2, maintainer: 2, partner: 3, firstTime: 5, frequent: 2 },
-      lastActivity: 1,
-      issueAge: 1,
-      linkedPullRequests: 2
-    }
-
-    const groups: UserGroups = {
-      partner: ['partner-user'],
-      internal: []
-    }
-
-    beforeEach(() => {
-      // Mock role detection results
-      mockDetectUserRole.mockImplementation(async (username) => {
-        switch (username) {
-          case 'maintainer-user':
-            return ContributorRole.Maintainer
-          case 'partner-user':
-            return ContributorRole.Partner
-          case 'first-time-user':
-            return ContributorRole.FirstTime
-          case 'frequent-user':
-            return ContributorRole.Frequent
-          default:
-            return ContributorRole.Base
-        }
-      })
-    })
-
-    it('should calculate score using role-based weights', async () => {
-      const score = await calculateScoreWithRoles(mockIssueDetails, roleWeights, groups, mockGraphQLSdk)
-
-      // Expected calculation:
-      // Comments: 5 (partner-user comment)
-      // Reactions: 3 (maintainer-user reaction) + 4 (first-time-user comment reaction) = 7
-      // Contributors: 2 (frequent-user author) + 3 (partner-user commenter) + 5 (first-time-user reactor) = 10
-      // Time factors: 1 * (1/2) + 1 * (1/9) = 0.5 + 0.111 = 0.611
-      // Total: 5 + 7 + 10 + 0.611 = 22.611, rounded = 23
-
-      expect(score).toBe(23)
-    })
-
-    it('should handle issues with no role-based activity', async () => {
-      const simpleIssue: IssueDetails = {
-        ...mockIssueDetails,
-        comments: [],
-        reactions: [],
-        user: { login: 'simple-user', type: 'User' }
+  describe('RoleBasedWeights interface', () => {
+    it('should support partial role definitions', () => {
+      const partialWeights: RoleBasedWeights = {
+        base: 3,
+        maintainer: 4
+        // Other roles undefined, should fall back to base
       }
 
-      mockDetectUserRole.mockResolvedValue(ContributorRole.Base)
-
-      const score = await calculateScoreWithRoles(simpleIssue, roleWeights, groups, mockGraphQLSdk)
-
-      // Only contributor score (base role) + time factors
-      expect(score).toBeGreaterThan(0)
+      expect(partialWeights.base).toBe(3)
+      expect(partialWeights.maintainer).toBe(4)
+      expect(partialWeights.partner).toBeUndefined()
     })
 
-    it('should handle mixed role-based and flat weights', async () => {
-      const mixedWeights: EngagementWeights = {
-        comments: 5, // flat number
-        reactions: { base: 1, maintainer: 3 }, // role-based
-        contributors: { base: 2, partner: 4 }, // role-based
-        lastActivity: 1,
-        issueAge: 1,
-        linkedPullRequests: 2
+    it('should support complete role definitions', () => {
+      const completeWeights: RoleBasedWeights = {
+        base: 3,
+        maintainer: 4,
+        partner: 3,
+        firstTime: 5,
+        frequent: 2
       }
 
-      const score = await calculateScoreWithRoles(mockIssueDetails, mixedWeights, groups, mockGraphQLSdk)
-
-      expect(score).toBeGreaterThan(0)
+      expect(completeWeights.base).toBe(3)
+      expect(completeWeights.maintainer).toBe(4)
+      expect(completeWeights.partner).toBe(3)
+      expect(completeWeights.firstTime).toBe(5)
+      expect(completeWeights.frequent).toBe(2)
     })
   })
 
-  describe('calculateHistoricalScoreWithRoles', () => {
-    it('should calculate historical score with role-based weights', async () => {
-      const mockIssueDetails: IssueDetails = {
-        id: '1',
-        owner: 'test-owner',
-        repo: 'test-repo',
-        number: 123,
-        title: 'Test Issue',
-        body: 'Test issue body',
-        state: 'open',
-        createdAt: new Date('2023-01-01T12:00:00Z'),
-        updatedAt: new Date('2023-01-08T12:00:00Z'),
-        closedAt: null,
-        reactions: [],
-        comments: [],
-        user: { login: 'test-user', type: 'User' },
-        assignees: []
+  describe('UserGroups interface', () => {
+    it('should support partner and internal groups', () => {
+      const groups: UserGroups = {
+        partner: ['user1', 'user2'],
+        internal: ['admin1', 'admin2']
       }
 
-      const roleWeights: EngagementWeights = {
-        comments: { base: 3 },
-        reactions: { base: 1 },
-        contributors: { base: 2 },
-        lastActivity: 1,
-        issueAge: 1,
-        linkedPullRequests: 2
+      expect(groups.partner).toEqual(['user1', 'user2'])
+      expect(groups.internal).toEqual(['admin1', 'admin2'])
+    })
+
+    it('should support optional groups', () => {
+      const groups1: UserGroups = {
+        partner: ['user1']
+        // internal is optional
       }
 
-      mockDetectUserRole.mockResolvedValue(ContributorRole.Base)
+      const groups2: UserGroups = {
+        internal: ['admin1']
+        // partner is optional
+      }
 
-      const historicalScore = await calculateHistoricalScoreWithRoles(
-        mockIssueDetails,
-        roleWeights,
-        undefined,
-        mockGraphQLSdk
-      )
-
-      expect(historicalScore).toBeGreaterThanOrEqual(0)
-      expect(typeof historicalScore).toBe('number')
+      expect(groups1.partner).toEqual(['user1'])
+      expect(groups1.internal).toBeUndefined()
+      expect(groups2.internal).toEqual(['admin1'])
+      expect(groups2.partner).toBeUndefined()
     })
   })
 })

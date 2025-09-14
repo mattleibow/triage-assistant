@@ -5,11 +5,7 @@
 #   name: triage-assistant
 #   login: some-username
 
-query GetUserRepositoryPermission(
-  $owner: String!
-  $name: String!
-  $login: String!
-) {
+query GetUserRepositoryPermission($owner: String!, $name: String!, $login: String!) {
   repository(owner: $owner, name: $name) {
     collaborators(first: 100) {
       edges {
@@ -28,10 +24,7 @@ query GetUserRepositoryPermission(
 #   organization: mattleibow
 #   login: some-username
 
-query GetUserOrganizationMembership(
-  $organization: String!
-  $login: String!
-) {
+query GetUserOrganizationMembership($organization: String!, $login: String!) {
   organization(login: $organization) {
     membersWithRole(first: 100) {
       nodes {
@@ -48,11 +41,7 @@ query GetUserOrganizationMembership(
 #   from: "2023-01-01T00:00:00Z"
 #   to: "2023-04-01T00:00:00Z"
 
-query GetUserContributionHistory(
-  $login: String!
-  $from: DateTime!
-  $to: DateTime!
-) {
+query GetUserContributionHistory($login: String!, $from: DateTime!, $to: DateTime!) {
   user(login: $login) {
     contributionsCollection(from: $from, to: $to) {
       issueContributions {
@@ -72,10 +61,7 @@ query GetUserContributionHistory(
 #   query: "author:username repo:owner/name"
 #   first: 10
 
-query SearchIssues(
-  $query: String!
-  $first: Int!
-) {
+query SearchIssues($query: String!, $first: Int!) {
   search(query: $query, type: ISSUE, first: $first) {
     issueCount
     pageInfo {
@@ -97,10 +83,7 @@ query SearchIssues(
 #   query: "is:pr author:username repo:owner/name"
 #   first: 10
 
-query SearchPullRequests(
-  $query: String!
-  $first: Int!
-) {
+query SearchPullRequests($query: String!, $first: Int!) {
   search(query: $query, type: ISSUE, first: $first) {
     issueCount
     pageInfo {

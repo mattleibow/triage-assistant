@@ -38,7 +38,7 @@ export interface RepoInfo {
 /**
  * Detect the role of a user for scoring purposes
  * @param username - The username to check
- * @param repoInfo - Repository information 
+ * @param repoInfo - Repository information
  * @param groups - User groups configuration
  * @param graphql - GraphQL SDK instance
  * @returns Promise<ContributorRole> - The detected role
@@ -50,7 +50,7 @@ export async function detectUserRole(
   graphql: GraphQLSdk
 ): Promise<ContributorRole> {
   const cacheKey = `${username}:${repoInfo.owner}:${repoInfo.name}`
-  
+
   // Check cache first
   if (roleCache.has(cacheKey)) {
     return roleCache.get(cacheKey)!
@@ -78,9 +78,8 @@ export async function detectUserRole(
 
     // Cache the result
     roleCache.set(cacheKey, role)
-    
+
     core.debug(`Detected role for user ${username}: ${role}`)
-    
   } catch (error) {
     core.warning(`Failed to detect role for user ${username}: ${error}`)
     // Fall back to base role
@@ -95,7 +94,7 @@ export async function detectUserRole(
  */
 async function isMaintainer(username: string, repoInfo: RepoInfo, graphql: GraphQLSdk): Promise<boolean> {
   const cacheKey = `${username}:${repoInfo.owner}:${repoInfo.name}:permission`
-  
+
   if (permissionsCache.has(cacheKey)) {
     const permission = permissionsCache.get(cacheKey)!
     return permission === 'ADMIN' || permission === 'WRITE'
@@ -125,9 +124,7 @@ async function isMaintainer(username: string, repoInfo: RepoInfo, graphql: Graph
       login: username
     })
 
-    const isMember = orgResult.organization?.membersWithRole?.nodes?.some(
-      (node: any) => node?.login === username
-    )
+    const isMember = orgResult.organization?.membersWithRole?.nodes?.some((node: any) => node?.login === username)
 
     if (isMember) {
       permissionsCache.set(cacheKey, 'ORG_MEMBER')
@@ -136,7 +133,6 @@ async function isMaintainer(username: string, repoInfo: RepoInfo, graphql: Graph
 
     permissionsCache.set(cacheKey, 'READ')
     return false
-    
   } catch (error) {
     core.debug(`Failed to check maintainer status for ${username}: ${error}`)
     return false
@@ -155,7 +151,7 @@ function isPartner(username: string, groups: UserGroups | undefined): boolean {
  */
 async function isFrequentContributor(username: string, repoInfo: RepoInfo, graphql: GraphQLSdk): Promise<boolean> {
   const cacheKey = `${username}:${repoInfo.owner}:${repoInfo.name}:contributions`
-  
+
   if (contributionHistoryCache.has(cacheKey)) {
     return contributionHistoryCache.get(cacheKey)! >= 3
   }
@@ -171,14 +167,13 @@ async function isFrequentContributor(username: string, repoInfo: RepoInfo, graph
     })
 
     const contributions = result.user?.contributionsCollection
-    const totalContributions = 
+    const totalContributions =
       (contributions?.issueContributions?.totalCount ?? 0) +
       (contributions?.pullRequestContributions?.totalCount ?? 0) +
       (contributions?.totalCommitContributions ?? 0)
 
     contributionHistoryCache.set(cacheKey, totalContributions)
     return totalContributions >= 3
-    
   } catch (error) {
     core.debug(`Failed to check contribution history for ${username}: ${error}`)
     return false
@@ -192,7 +187,7 @@ async function isFirstTimeContributor(username: string, repoInfo: RepoInfo, grap
   try {
     // Check if user has any previous issues, PRs, or comments in this repo
     const searchQuery = `author:${username} repo:${repoInfo.owner}/${repoInfo.name}`
-    
+
     const issuesResult = await graphql.SearchIssues({
       query: searchQuery,
       first: 1
@@ -208,7 +203,6 @@ async function isFirstTimeContributor(username: string, repoInfo: RepoInfo, grap
 
     // If no issues or PRs, this is likely a first-time contributor
     return !hasIssues && !hasPullRequests
-    
   } catch (error) {
     core.debug(`Failed to check first-time contributor status for ${username}: ${error}`)
     return false

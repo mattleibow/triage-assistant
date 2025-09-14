@@ -248,7 +248,10 @@ labels:
   groups: {}
 `
 
-      inMemoryFs.forceSet(`/home/runner/work/triage-assistant/triage-assistant/${workspacePath}/.triagerc.yml`, roleBasedConfig)
+      inMemoryFs.forceSet(
+        `/home/runner/work/triage-assistant/triage-assistant/${workspacePath}/.triagerc.yml`,
+        roleBasedConfig
+      )
 
       const result = await loadConfigFile(workspacePath)
 
@@ -283,7 +286,10 @@ labels:
   groups: {}
 `
 
-      inMemoryFs.forceSet(`/home/runner/work/triage-assistant/triage-assistant/${workspacePath}/.github/.triagerc.yml`, roleBasedConfig)
+      inMemoryFs.forceSet(
+        `/home/runner/work/triage-assistant/triage-assistant/${workspacePath}/.github/.triagerc.yml`,
+        roleBasedConfig
+      )
 
       const result = await loadConfigFile(workspacePath)
 
@@ -327,7 +333,10 @@ labels:
       template: 'single-label'
 `
 
-      inMemoryFs.forceSet(`/home/runner/work/triage-assistant/triage-assistant/${workspacePath}/.triagerc.yml`, legacyConfig)
+      inMemoryFs.forceSet(
+        `/home/runner/work/triage-assistant/triage-assistant/${workspacePath}/.triagerc.yml`,
+        legacyConfig
+      )
 
       const result = await loadConfigFile(workspacePath)
 
@@ -365,7 +374,10 @@ labels:
   groups: {}
 `
 
-      inMemoryFs.forceSet(`/home/runner/work/triage-assistant/triage-assistant/${workspacePath}/.triagerc.yml`, selectiveConfig)
+      inMemoryFs.forceSet(
+        `/home/runner/work/triage-assistant/triage-assistant/${workspacePath}/.triagerc.yml`,
+        selectiveConfig
+      )
 
       const result = await loadConfigFile(workspacePath)
 

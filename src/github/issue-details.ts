@@ -157,7 +157,7 @@ export async function calculateScoreWithRoles(
 
   // Calculate role-based reaction scores
   let reactionScore = 0
-  
+
   // Issue reactions
   for (const reaction of issue.reactions || []) {
     const role = await detectUserRole(reaction.user.login, repoInfo, groups, graphql)
@@ -176,13 +176,13 @@ export async function calculateScoreWithRoles(
 
   // Calculate role-based contributor scores
   const uniqueContributors = new Set<string>()
-  
+
   // Add issue author
   uniqueContributors.add(issue.user.login)
-  
+
   // Add assignees
   issue.assignees.forEach((assignee) => uniqueContributors.add(assignee.login))
-  
+
   // Add comment authors
   issue.comments?.forEach((comment) => uniqueContributors.add(comment.user.login))
 
