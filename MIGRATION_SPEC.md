@@ -102,7 +102,7 @@ TriageAssistant/
 - **JSON**: System.Text.Json
 - **YAML**: YamlDotNet
 - **HTTP**: HttpClient with Polly for resilience
-- **GraphQL**: GraphQL.Client or StrawberryShake
+- **GraphQL**: Octokit.NET GraphQL support (preferred) or GraphQL.Client
 - **AI**: Azure.AI.Inference
 
 #### 1.3 Docker Configuration
@@ -231,7 +231,7 @@ public class GitHubIssueService
 // Services/GitHubProjectsService.cs
 public class GitHubProjectsService
 {
-    private readonly GraphQLHttpClient _client;
+    private readonly GitHubClient _client; // Using Octokit.NET GraphQL capabilities (preferred)
     
     public async Task<List<ProjectItem>> GetProjectItemsAsync(int projectNumber)
     public async Task UpdateProjectFieldAsync(ProjectItem item, string fieldName, double score)
@@ -242,11 +242,13 @@ public class GitHubProjectsService
 #### 3.3 GraphQL Operations
 **Target**: Migrate src/generated/graphql.ts and src/github/queries/
 
+**Preferred Approach**: Use Octokit.NET's built-in GraphQL capabilities for GitHub API operations, which provides a unified client experience and better integration with GitHub's authentication and rate limiting.
+
 ```csharp
 // GraphQL/GitHubGraphQLClient.cs
 public class GitHubGraphQLClient
 {
-    private readonly GraphQLHttpClient _client;
+    private readonly GitHubClient _client; // Using Octokit.NET GraphQL capabilities (preferred)
     
     public async Task<GetIssueDetailsQuery> GetIssueDetailsAsync(GetIssueDetailsQueryVariables variables)
     public async Task<GetProjectItemsQuery> GetProjectItemsAsync(GetProjectItemsQueryVariables variables)
@@ -258,6 +260,8 @@ public class GetIssueDetailsQuery { }
 public class GetIssueDetailsQueryVariables { }
 // Other GraphQL models...
 ```
+
+**Alternative Approach**: If Octokit.NET GraphQL capabilities are insufficient for complex queries, use GraphQL.Client as a fallback with proper authentication and rate limiting integration.
 
 ### Phase 4: Action Entry Points (TriageAssistant.Action)
 
@@ -428,7 +432,7 @@ runs:
 | @actions/core | Environment Variables | GitHub Actions input/output |
 | @actions/github | Octokit.NET | GitHub API client |
 | @azure-rest/ai-inference | Azure.AI.Inference | AI model integration |
-| graphql-request | GraphQL.Client | GraphQL operations |
+| graphql-request | Octokit.NET GraphQL (preferred) | GraphQL operations |
 | js-yaml | YamlDotNet | YAML configuration parsing |
 | uuid | System.Guid | UUID generation |
 | jest | xUnit + NSubstitute | Testing framework |
@@ -437,6 +441,7 @@ runs:
 ```xml
 <PackageReference Include="Octokit" Version="latest" />
 <PackageReference Include="Azure.AI.Inference" Version="latest" />
+<!-- GraphQL.Client as fallback if Octokit.NET GraphQL is insufficient -->
 <PackageReference Include="GraphQL.Client" Version="latest" />
 <PackageReference Include="YamlDotNet" Version="latest" />
 <PackageReference Include="System.Text.Json" Version="latest" />
@@ -488,7 +493,7 @@ Single output `response-file` must be maintained with same behavior.
 
 ### GitHub Integration (TriageAssistant.GitHub)
 - [ ] Implement GitHub API client with Octokit.NET
-- [ ] Create GraphQL client for Projects v2 operations
+- [ ] Create GraphQL client using Octokit.NET GraphQL capabilities (preferred) for Projects v2 operations
 - [ ] Migrate issue management (get, label, comment, reactions)
 - [ ] Implement project field updates and item retrieval
 - [ ] Add search functionality for bulk issue processing
@@ -566,7 +571,7 @@ Single output `response-file` must be maintained with same behavior.
 ## Risk Mitigation
 
 ### Technical Risks
-1. **GraphQL Complexity**: Use established GraphQL.Client library, test extensively
+1. **GraphQL Complexity**: Use Octokit.NET GraphQL capabilities (preferred) or established GraphQL.Client library as fallback, test extensively
 2. **AI Integration**: Verify Azure AI Inference compatibility early
 3. **Docker Performance**: Optimize with multi-stage builds and Alpine base image
 4. **GitHub API Changes**: Pin to specific API versions, add integration tests
