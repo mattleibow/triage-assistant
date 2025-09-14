@@ -98,7 +98,7 @@ TriageAssistant/
 - **Framework**: .NET 8.0 (LTS)
 - **Language**: C# 12
 - **Container**: Docker with Ubuntu/Alpine base
-- **Testing**: xUnit with Moq
+- **Testing**: xUnit with NSubstitute
 - **JSON**: System.Text.Json
 - **YAML**: YamlDotNet
 - **HTTP**: HttpClient with Polly for resilience
@@ -342,13 +342,13 @@ public class EngagementWorkflowHandler
 **Target**: Migrate __tests__/ directory structure
 
 ```csharp
-// Tests setup with xUnit and Moq
+// Tests setup with xUnit and NSubstitute
 [Fact]
 public async Task ShouldCalculateCorrectScoreWithAllFactors()
 {
     // Arrange
-    var mockService = new Mock<IGitHubIssueService>();
-    var scoringService = new EngagementScoringService(mockService.Object);
+    var mockService = Substitute.For<IGitHubIssueService>();
+    var scoringService = new EngagementScoringService(mockService);
     
     // Act & Assert
     var result = await scoringService.CalculateScoreAsync(issueDetails, weights);
@@ -431,7 +431,7 @@ runs:
 | graphql-request | GraphQL.Client | GraphQL operations |
 | js-yaml | YamlDotNet | YAML configuration parsing |
 | uuid | System.Guid | UUID generation |
-| jest | xUnit + Moq | Testing framework |
+| jest | xUnit + NSubstitute | Testing framework |
 
 #### 7.2 New Dependencies Required
 ```xml
@@ -444,6 +444,11 @@ runs:
 <PackageReference Include="Microsoft.Extensions.Configuration" Version="latest" />
 <PackageReference Include="Microsoft.Extensions.Logging" Version="latest" />
 <PackageReference Include="Polly" Version="latest" />
+
+<!-- Test Dependencies -->
+<PackageReference Include="xunit" Version="latest" />
+<PackageReference Include="xunit.runner.visualstudio" Version="latest" />
+<PackageReference Include="NSubstitute" Version="latest" />
 ```
 
 ### Phase 8: Configuration and Compatibility
@@ -500,7 +505,7 @@ Single output `response-file` must be maintained with same behavior.
 ### Testing Infrastructure
 - [ ] Create test projects for all three assemblies
 - [ ] Implement file system mocking strategies
-- [ ] Create GitHub API mocking with Moq
+- [ ] Create GitHub API mocking with NSubstitute
 - [ ] Write unit tests for all core business logic (245+ tests)
 - [ ] Add integration tests for GitHub operations
 - [ ] Implement end-to-end workflow tests
