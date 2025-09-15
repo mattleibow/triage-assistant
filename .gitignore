@@ -100,3 +100,50 @@ __tests__/runner/*
 # IDE files
 .idea
 *.code-workspace
+
+# .NET / C# build artifacts and intermediate files
+bin/
+obj/
+*.user
+*.suo
+*.cache
+*.dll
+*.pdb
+*.exe
+*.deps.json
+*.runtimeconfig.json
+*.runtimeconfig.dev.json
+
+# Test results
+TestResults/
+*.trx
+*.coverage
+*.coveragexml
+
+# NuGet packages (uncomment if not using package restore)
+# packages/
+
+# Visual Studio cache files
+*.intellisense.js
+*.vspscc
+*.vssscc
+.builds
+*.pidb
+*.scc
+
+# ReSharper
+_ReSharper*/
+*.[Rr]e[Ss]harper
+*.DotSettings.user
+
+# Package files
+*.nupkg
+*.snupkg
+.nuget/
+packages/
+
+# Rider
+.idea/
+
+# Temp folder for action outputs
+temp/
