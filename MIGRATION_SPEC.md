@@ -537,39 +537,97 @@ private async Task<string> RunLabelingWorkflow(ActionInputs inputs)
 }
 ```
 
-### Phase 6: Complete Testing - 📋 NEXT
+### Phase 6: Complete Testing - 🚧 IN PROGRESS
 
-#### 6.1 Test Infrastructure
+#### 6.1 Test Infrastructure ✅ COMPLETED
 **Target**: Migrate __tests__/ directory structure
 
+**Current Status:**
+- **46 C# Tests Running** (18 Core + 3 GitHub + 25 Security/Validation)
+- **Security Test Coverage**: Input validation, content sanitization, path traversal protection
+- **Core Business Logic**: Engagement scoring, configuration loading, triage workflows
+- **GitHub Integration**: Project workflows, issue processing
+
+**Migrated Test Categories:**
+✅ **Security Tests** (From __tests__/security/):
+- Input validation (repository IDs, numeric inputs, mode validation)
+- Content sanitization (token redaction, HTML sanitization, template variables)
+- Path traversal protection (directory traversal, safe path validation)
+
+✅ **Core Service Tests**:
+- Engagement scoring algorithm with all factors
+- Configuration loading with YAML support
+- AI triage service integration
+- Prompt template system
+
+✅ **GitHub Integration Tests**:
+- Engagement workflow orchestration
+- Project v2 operations
+- Issue processing workflows
+
+**Test Infrastructure:**
 ```csharp
-// Tests setup with xUnit and NSubstitute
+// Security Tests with NSubstitute
 [Fact]
-public async Task ShouldCalculateCorrectScoreWithAllFactors()
+public void ValidateRepositoryId_WithInvalidOwner_ThrowsException()
 {
-    // Arrange
-    var mockService = Substitute.For<IGitHubIssueService>();
-    var scoringService = new EngagementScoringService(mockService);
-    
-    // Act & Assert
-    var result = await scoringService.CalculateScoreAsync(issueDetails, weights);
-    Assert.Equal(expectedScore, result, precision: 2);
+    var exception = Assert.Throws<ArgumentException>(() => 
+        InputValidator.ValidateRepositoryId("../../../malicious", "repo"));
+    exception.Message.Should().Contain("Invalid repository identifier");
 }
 
-// File system mocking with temporary directories
-public class FileSystemTestFixture : IDisposable
+// Content Sanitization Tests
+[Fact]
+public void SanitizeForLogging_WithTokenPatterns_RedactsTokens()
 {
-    public string TempDirectory { get; }
-    
-    public FileSystemTestFixture()
-    {
-        TempDirectory = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
-        Directory.CreateDirectory(TempDirectory);
-    }
+    var testContent = "Here is a token: ghp_1234567890abcdef1234567890abcdef12 and a secret: sk_test_1234567890abcdef";
+    var sanitized = ContentSanitizer.SanitizeForLogging(testContent);
+    sanitized.Should().Be("Here is a [REDACTED] and a [REDACTED]");
 }
 ```
 
-#### 5.2 Test Coverage Targets
+#### 6.2 Remaining Test Migration Tasks 📋 TODO
+
+**Missing TypeScript Test Files (12 remaining):**
+
+❌ **Main Workflow Tests** (__tests__/main.test.ts):
+- Multi-mode orchestration (apply-labels vs engagement-score)
+- Configuration parsing and validation
+- Error handling and graceful degradation
+- Sub-action functionality testing
+
+❌ **Prompt System Tests** (__tests__/prompts/):
+- `prompts.test.ts` - Template generation and variable substitution
+- `select-labels.test.ts` - Label selection prompt engineering
+- `summary.test.ts` - Summary generation workflows
+- `integration.test.ts` - End-to-end prompt workflows
+- `missing-info-structured.test.ts` - Missing info template validation
+
+❌ **GitHub Integration Tests** (__tests__/github/):
+- `integration.test.ts` - End-to-end GitHub workflows
+- Additional issue processing tests
+- Projects v2 GraphQL operations
+- Error handling for API failures
+
+❌ **Configuration Tests** (__tests__/config-file.test.ts):
+- YAML .triagerc.yml file parsing
+- Configuration merging with defaults
+- Environment variable integration
+
+❌ **Utility Tests** (__tests__/helpers/filesystem-mock.test.ts):
+- File system testing infrastructure
+- Mock file operations
+
+**Priority Order for Migration:**
+1. **Main workflow tests** - Critical for overall functionality validation
+2. **Prompt system tests** - Essential for AI integration validation
+3. **GitHub integration tests** - Important for API interaction validation
+4. **Configuration tests** - Important for setup validation
+5. **Utility tests** - Supporting infrastructure
+
+**Target**: 70+ total tests to match TypeScript coverage (currently 46/70+)
+
+#### 6.3 Test Coverage Infrastructure
 - **Unit Tests**: All core business logic (EngagementScoringService, AIInferenceService, etc.)
 - **Integration Tests**: GitHub API interactions, GraphQL operations
 - **End-to-End Tests**: Full workflow execution with mocked external dependencies
