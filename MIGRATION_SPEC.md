@@ -401,9 +401,145 @@ public class EngagementWorkflowHandler
 }
 ```
 
-### Phase 5: Testing Migration
+### Phase 5: AI Integration (Azure.AI.Inference) - ✅ COMPLETED
 
-#### 5.1 Test Infrastructure
+#### 5.1 AI Services Infrastructure
+**Target**: Migrate src/ai/ai.ts
+
+✅ **Completed Implementation:**
+```csharp
+// Services/AI/IAIInferenceService.cs
+public interface IAIInferenceService
+{
+    Task<AIInferenceResponse> RunInferenceAsync(AIInferenceRequest request, CancellationToken cancellationToken = default);
+    bool IsConfigured { get; }
+}
+
+// Services/AI/AzureAIInferenceService.cs
+public class AzureAIInferenceService : IAIInferenceService
+{
+    public async Task<AIInferenceResponse> RunInferenceAsync(AIInferenceRequest request, CancellationToken cancellationToken = default)
+    {
+        var messages = new List<ChatRequestMessage>
+        {
+            new ChatRequestSystemMessage(request.SystemPrompt),
+            new ChatRequestUserMessage(request.UserPrompt)
+        };
+        
+        var completionsOptions = new ChatCompletionsOptions(messages)
+        {
+            MaxTokens = request.MaxTokens,
+            Model = request.Model
+        };
+        
+        var response = await _client.CompleteAsync(completionsOptions, null, cancellationToken);
+        return new AIInferenceResponse { Content = response.Value.Choices[0].Message.Content };
+    }
+}
+```
+
+#### 5.2 Prompt Engineering System
+**Target**: Migrate src/prompts/ directory
+
+✅ **Completed Implementation:**
+```csharp
+// Services/Prompts/IPromptService.cs
+public interface IPromptService
+{
+    Task<string> GeneratePromptAsync(string templateContent, Dictionary<string, object> variables, string token, CancellationToken cancellationToken = default);
+    string GetTemplate(string templateName);
+}
+
+// Services/Prompts/PromptTemplates.cs
+public static class PromptTemplates
+{
+    public const string MultiLabelSystemPrompt = "You are an expert triage assistant...";
+    public const string SingleLabelSystemPrompt = "You are an expert triage assistant...";
+    public const string RegressionSystemPrompt = "You specialize in identifying regression issues...";
+    public const string MissingInfoSystemPrompt = "You identify missing information...";
+    public const string SummarySystemPrompt = "You create concise summaries...";
+    public const string UserPrompt = "Please analyze the following GitHub issue...";
+    public const string SummaryUserPrompt = "Please create a summary based on...";
+}
+
+// Services/Prompts/PromptService.cs
+public class PromptService : IPromptService
+{
+    public async Task<string> GeneratePromptAsync(string templateContent, Dictionary<string, object> variables, string token, CancellationToken cancellationToken = default)
+    {
+        // Template variable substitution
+        // GitHub CLI command execution for EXEC: directives
+        // Dynamic content generation
+    }
+}
+```
+
+#### 5.3 Triage Workflow System
+**Target**: Migrate src/triage/triage.ts
+
+✅ **Completed Implementation:**
+```csharp
+// Services/Triage/ITriageService.cs
+public interface ITriageService
+{
+    Task<string> SelectLabelsAsync(LabelSelectionConfig config, CancellationToken cancellationToken = default);
+    Task<string> GenerateSummaryAsync(SummaryConfig config, string mergedResponseFile, CancellationToken cancellationToken = default);
+    Task<TriageResponse> MergeResponsesAsync(string responsesDir, string outputPath, CancellationToken cancellationToken = default);
+}
+
+// Services/Workflows/ITriageWorkflowService.cs
+public interface ITriageWorkflowService
+{
+    Task<string> RunSingleIssueTriageWorkflowAsync(SingleIssueTriageConfig config, LabelsConfiguration labelsConfig, CancellationToken cancellationToken = default);
+    Task<string> RunBulkTriageWorkflowAsync(BulkIssueTriageConfig config, LabelsConfiguration labelsConfig, CancellationToken cancellationToken = default);
+    Task<string> MergeAndApplyTriageAsync(ApplyTriageConfig config, CancellationToken cancellationToken = default);
+}
+```
+
+#### 5.4 Complete Apply-Labels Workflow
+**Target**: Complete apply-labels sub-action functionality
+
+✅ **Completed Features:**
+- **AI-Powered Label Selection**: Full integration with Azure.AI.Inference
+- **Multi-Template Support**: multi-label, single-label, regression, missing-info templates
+- **Bulk Processing**: Support for issue queries and batch processing
+- **Response Merging**: JSON response aggregation and processing
+- **Summary Generation**: AI-powered issue summaries
+- **GitHub CLI Integration**: Dynamic label fetching and issue content retrieval
+- **Configuration Support**: .triagerc.yml label groups configuration
+- **Dry-Run Mode**: Safe testing without making actual changes
+
+#### 5.5 Updated Workflow Orchestrator
+**Target**: Complete integration in action entry point
+
+✅ **Completed Integration:**
+```csharp
+// Services/WorkflowOrchestrator.cs
+private async Task<string> RunLabelingWorkflow(ActionInputs inputs)
+{
+    // Validate AI configuration
+    if (string.IsNullOrEmpty(inputs.AiEndpoint) || string.IsNullOrEmpty(inputs.EffectiveAiToken))
+        throw new InvalidOperationException("AI endpoint and token are required for labeling workflow");
+    
+    // Create AI service with actual configuration
+    var aiService = new AzureAIInferenceService(_loggerFactory.CreateLogger<AzureAIInferenceService>(), inputs.AiEndpoint, inputs.EffectiveAiToken);
+    
+    // Load labels configuration
+    var triageConfig = await _configService.LoadTriageConfigurationAsync();
+    
+    // Determine workflow type and run appropriate workflow
+    if (!string.IsNullOrEmpty(inputs.IssueQuery))
+        return await _triageWorkflowService.RunBulkTriageWorkflowAsync(bulkConfig, triageConfig.Labels);
+    else if (inputs.Issue.HasValue && inputs.Issue.Value > 0)
+        return await _triageWorkflowService.RunSingleIssueTriageWorkflowAsync(singleConfig, triageConfig.Labels);
+    else
+        throw new InvalidOperationException("Either issue number or issue query must be provided for labeling workflow");
+}
+```
+
+### Phase 6: Complete Testing - 📋 NEXT
+
+#### 6.1 Test Infrastructure
 **Target**: Migrate __tests__/ directory structure
 
 ```csharp
@@ -439,9 +575,9 @@ public class FileSystemTestFixture : IDisposable
 - **End-to-End Tests**: Full workflow execution with mocked external dependencies
 - **Security Tests**: Path traversal, input validation, token handling
 
-### Phase 6: Docker Configuration
+### Phase 7: Docker Configuration
 
-#### 6.1 Multi-Stage Dockerfile
+#### 7.1 Multi-Stage Dockerfile
 ```dockerfile
 # Build stage
 FROM mcr.microsoft.com/dotnet/sdk:8.0-alpine AS build
@@ -475,7 +611,7 @@ RUN apk add --no-cache ca-certificates
 ENTRYPOINT ["dotnet", "TriageAssistant.Action.dll"]
 ```
 
-#### 6.2 Action Definition Updates
+#### 7.2 Action Definition Updates
 ```yaml
 # action.yml updates for Docker container
 runs:
@@ -484,9 +620,9 @@ runs:
   # All existing inputs and outputs remain the same
 ```
 
-### Phase 7: Dependency Mapping
+### Phase 8: Dependency Mapping
 
-#### 7.1 TypeScript to C# Package Mapping
+#### 8.1 TypeScript to C# Package Mapping
 
 | TypeScript Package | C# Equivalent | Purpose |
 |-------------------|---------------|---------|

@@ -6,6 +6,10 @@ using System.CommandLine;
 using TriageAssistant.Action.Services;
 using TriageAssistant.Core.Configuration;
 using TriageAssistant.Core.Services;
+using TriageAssistant.Core.Services.AI;
+using TriageAssistant.Core.Services.Prompts;
+using TriageAssistant.Core.Services.Triage;
+using TriageAssistant.Core.Services.Workflows;
 using TriageAssistant.GitHub.Services;
 
 namespace TriageAssistant.Action;
@@ -50,6 +54,11 @@ public class Program
         // Register EngagementWeights with default values (will be overridden by configuration)
         services.AddSingleton<EngagementWeights>(_ => new EngagementWeights());
         services.AddSingleton<EngagementScoringService>();
+        
+        // AI services
+        services.AddSingleton<IPromptService, PromptService>();
+        services.AddSingleton<ITriageService, TriageService>();
+        services.AddSingleton<ITriageWorkflowService, TriageWorkflowService>();
         
         // GitHub services
         services.AddSingleton<IGitHubIssueService, GitHubIssueService>();

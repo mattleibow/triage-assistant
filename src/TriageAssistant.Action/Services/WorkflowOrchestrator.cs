@@ -2,6 +2,8 @@ using Microsoft.Extensions.Logging;
 using TriageAssistant.Action.Models;
 using TriageAssistant.Core.Configuration;
 using TriageAssistant.Core.Services;
+using TriageAssistant.Core.Services.AI;
+using TriageAssistant.Core.Services.Workflows;
 using TriageAssistant.GitHub.Services;
 
 namespace TriageAssistant.Action.Services;
@@ -24,19 +26,25 @@ public class WorkflowOrchestrator : IWorkflowOrchestrator
 {
     private readonly ILogger<WorkflowOrchestrator> _logger;
     private readonly EngagementWorkflowService _engagementService;
+    private readonly ITriageWorkflowService _triageWorkflowService;
     private readonly IActionOutputService _outputService;
     private readonly IConfigurationService _configService;
+    private readonly ILoggerFactory _loggerFactory;
     
     public WorkflowOrchestrator(
         ILogger<WorkflowOrchestrator> logger,
         EngagementWorkflowService engagementService,
+        ITriageWorkflowService triageWorkflowService,
         IActionOutputService outputService,
-        IConfigurationService configService)
+        IConfigurationService configService,
+        ILoggerFactory loggerFactory)
     {
         _logger = logger;
         _engagementService = engagementService;
+        _triageWorkflowService = triageWorkflowService;
         _outputService = outputService;
         _configService = configService;
+        _loggerFactory = loggerFactory;
     }
     
     public async Task RunWorkflowAsync(ActionInputs inputs)
@@ -110,25 +118,73 @@ public class WorkflowOrchestrator : IWorkflowOrchestrator
     {
         _logger.LogInformation("Running labeling workflow");
         
-        // TODO: Implement AI-powered labeling workflow in Phase 5
-        // For now, create a placeholder response file
-        var responseFile = Path.Combine(inputs.TempDir, $"triage-response-{DateTimeOffset.UtcNow.ToUnixTimeSeconds()}.json");
-        
-        var placeholderResponse = new
+        // Validate AI configuration
+        if (string.IsNullOrEmpty(inputs.AiEndpoint) || string.IsNullOrEmpty(inputs.EffectiveAiToken))
         {
-            mode = "apply-labels",
-            message = "Labeling workflow not yet implemented - will be completed in Phase 5",
-            issue = inputs.Issue,
-            issueQuery = inputs.IssueQuery,
-            timestamp = DateTimeOffset.UtcNow.ToString("O")
-        };
+            throw new InvalidOperationException("AI endpoint and token are required for labeling workflow");
+        }
         
-        #pragma warning disable IL2026 // Disable trimming warning for JSON serialization
-        await File.WriteAllTextAsync(responseFile, System.Text.Json.JsonSerializer.Serialize(placeholderResponse, new System.Text.Json.JsonSerializerOptions { WriteIndented = true }));
-        #pragma warning restore IL2026
+        // Create AI service with actual configuration
+        var aiService = new AzureAIInferenceService(
+            _loggerFactory.CreateLogger<AzureAIInferenceService>(),
+            inputs.AiEndpoint,
+            inputs.EffectiveAiToken);
         
-        _logger.LogWarning("Labeling workflow is not yet implemented. This will be completed in Phase 5 of the migration.");
+        if (!aiService.IsConfigured)
+        {
+            throw new InvalidOperationException("AI service is not properly configured");
+        }
         
-        return responseFile;
+        // Load labels configuration
+        var triageConfig = await _configService.LoadTriageConfigurationAsync();
+        
+        // Determine workflow type and run appropriate workflow
+        if (!string.IsNullOrEmpty(inputs.IssueQuery))
+        {
+            // Bulk workflow
+            var bulkConfig = new BulkIssueTriageConfig
+            {
+                Repository = inputs.Repository,
+                IssueQuery = inputs.IssueQuery,
+                RepoOwner = inputs.RepoOwner,
+                RepoName = inputs.RepoName,
+                IssueNumber = inputs.Issue ?? 0, // For demo purposes
+                Token = inputs.EffectiveToken,
+                AiEndpoint = inputs.AiEndpoint,
+                AiModel = inputs.AiModel,
+                AiToken = inputs.EffectiveAiToken,
+                ApplyLabels = inputs.ApplyLabels,
+                ApplyComment = inputs.ApplyComment,
+                CommentFooter = inputs.CommentFooter,
+                TempDir = inputs.TempDir,
+                DryRun = inputs.DryRun
+            };
+            
+            return await _triageWorkflowService.RunBulkTriageWorkflowAsync(bulkConfig, triageConfig.Labels);
+        }
+        else if (inputs.Issue.HasValue && inputs.Issue.Value > 0)
+        {
+            // Single issue workflow
+            var singleConfig = new SingleIssueTriageConfig
+            {
+                Repository = inputs.Repository,
+                IssueNumber = inputs.Issue.Value,
+                Token = inputs.EffectiveToken,
+                AiEndpoint = inputs.AiEndpoint,
+                AiModel = inputs.AiModel,
+                AiToken = inputs.EffectiveAiToken,
+                ApplyLabels = inputs.ApplyLabels,
+                ApplyComment = inputs.ApplyComment,
+                CommentFooter = inputs.CommentFooter,
+                TempDir = inputs.TempDir,
+                DryRun = inputs.DryRun
+            };
+            
+            return await _triageWorkflowService.RunSingleIssueTriageWorkflowAsync(singleConfig, triageConfig.Labels);
+        }
+        else
+        {
+            throw new InvalidOperationException("Either issue number or issue query must be provided for labeling workflow");
+        }
     }
 }
