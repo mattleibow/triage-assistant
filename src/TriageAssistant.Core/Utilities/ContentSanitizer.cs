@@ -6,7 +6,7 @@ public static class ContentSanitizer
 {
     public const int MAX_COMMENT_LENGTH = 65536; // GitHub's comment limit
 
-    private static readonly Regex TokenPattern = new(@"(ghp_[a-zA-Z0-9]{36}|sk_[a-zA-Z0-9_-]+)", RegexOptions.Compiled);
+    private static readonly Regex TokenPattern = new(@"(ghp_[a-zA-Z0-9]{40}|sk_[a-zA-Z0-9_-]{20,})", RegexOptions.Compiled);
     private static readonly Regex DangerousHtmlPattern = new(@"<(script|iframe|form|input|object|embed|link|meta)[^>]*>.*?</\1>|<(script|iframe|form|input|object|embed|link|meta)[^>]*/>", RegexOptions.Compiled | RegexOptions.IgnoreCase);
     private static readonly Regex ScriptTagPattern = new(@"<script[^>]*>.*?</script>", RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
