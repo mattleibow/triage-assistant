@@ -12,8 +12,7 @@
     <AssemblyName>triage-assistant</AssemblyName>
     <RootNamespace>TriageAssistant.Action</RootNamespace>
     <PublishSingleFile>true</PublishSingleFile>
-    <PublishTrimmed>true</PublishTrimmed>
-    <TrimMode>link</TrimMode>
+    <PublishTrimmed>false</PublishTrimmed>
     <RuntimeIdentifier>linux-x64</RuntimeIdentifier>
     <SelfContained>true</SelfContained>
   </PropertyGroup>
