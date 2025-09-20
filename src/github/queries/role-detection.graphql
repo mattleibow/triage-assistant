@@ -1,0 +1,100 @@
+# Get user's permission level for a repository
+#
+# Example values:
+#   owner: mattleibow
+#   name: triage-assistant
+#   login: some-username
+
+query GetUserRepositoryPermission($owner: String!, $name: String!, $login: String!) {
+  repository(owner: $owner, name: $name) {
+    collaborators(first: 100) {
+      edges {
+        node {
+          login
+        }
+        permission
+      }
+    }
+  }
+}
+
+# Get user's organization membership for a repository owner organization
+#
+# Example values:
+#   organization: mattleibow
+#   login: some-username
+
+query GetUserOrganizationMembership($organization: String!, $login: String!) {
+  organization(login: $organization) {
+    membersWithRole(first: 100) {
+      nodes {
+        login
+      }
+    }
+  }
+}
+
+# Get user's contribution history for a time period
+#
+# Example values:
+#   login: some-username
+#   from: "2023-01-01T00:00:00Z"
+#   to: "2023-04-01T00:00:00Z"
+
+query GetUserContributionHistory($login: String!, $from: DateTime!, $to: DateTime!) {
+  user(login: $login) {
+    contributionsCollection(from: $from, to: $to) {
+      issueContributions {
+        totalCount
+      }
+      pullRequestContributions {
+        totalCount
+      }
+      totalCommitContributions
+    }
+  }
+}
+
+# Search for issues by author in a repository
+#
+# Example values:
+#   query: "author:username repo:owner/name"
+#   first: 10
+
+query SearchIssues($query: String!, $first: Int!) {
+  search(query: $query, type: ISSUE, first: $first) {
+    issueCount
+    pageInfo {
+      hasNextPage
+      endCursor
+    }
+    nodes {
+      ... on Issue {
+        number
+        title
+      }
+    }
+  }
+}
+
+# Search for pull requests by author in a repository
+#
+# Example values:
+#   query: "is:pr author:username repo:owner/name"
+#   first: 10
+
+query SearchPullRequests($query: String!, $first: Int!) {
+  search(query: $query, type: ISSUE, first: $first) {
+    issueCount
+    pageInfo {
+      hasNextPage
+      endCursor
+    }
+    nodes {
+      ... on PullRequest {
+        number
+        title
+      }
+    }
+  }
+}

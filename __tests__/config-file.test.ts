@@ -31,7 +31,12 @@ describe('EngagementConfig', () => {
     it('should return default weights when no config file exists', async () => {
       const result = await loadConfigFile(testWorkspacePath)
 
-      expect(result.engagement.weights).toEqual(DEFAULT_ENGAGEMENT_WEIGHTS)
+      expect(result.engagement.weights.comments).toEqual({ base: 3 })
+      expect(result.engagement.weights.reactions).toEqual({ base: 1 })
+      expect(result.engagement.weights.contributors).toEqual({ base: 2 })
+      expect(result.engagement.weights.lastActivity).toBe(1)
+      expect(result.engagement.weights.issueAge).toBe(1)
+      expect(result.engagement.weights.linkedPullRequests).toBe(2)
       expect(core.warning).toHaveBeenCalledWith(
         expect.stringContaining('Failed to load configuration from the following paths:')
       )
@@ -49,13 +54,12 @@ engagement:
 
       const result = await loadConfigFile(testWorkspacePath)
 
-      expect(result.engagement.weights).not.toEqual(DEFAULT_ENGAGEMENT_WEIGHTS)
-      expect(result.engagement.weights).toEqual({
-        ...DEFAULT_ENGAGEMENT_WEIGHTS,
-        comments: 5,
-        reactions: 2,
-        contributors: 3
-      })
+      expect(result.engagement.weights.comments).toEqual({ base: 5 })
+      expect(result.engagement.weights.reactions).toEqual({ base: 2 })
+      expect(result.engagement.weights.contributors).toEqual({ base: 3 })
+      expect(result.engagement.weights.lastActivity).toBe(1)
+      expect(result.engagement.weights.issueAge).toBe(1)
+      expect(result.engagement.weights.linkedPullRequests).toBe(2)
     })
 
     it('should load config from .github/.triagerc.yml when root config not found', async () => {
@@ -69,12 +73,12 @@ engagement:
 
       const result = await loadConfigFile(testWorkspacePath)
 
-      expect(result.engagement.weights).not.toEqual(DEFAULT_ENGAGEMENT_WEIGHTS)
-      expect(result.engagement.weights).toEqual({
-        ...DEFAULT_ENGAGEMENT_WEIGHTS,
-        comments: 4,
-        linkedPullRequests: 3
-      })
+      expect(result.engagement.weights.comments).toEqual({ base: 4 })
+      expect(result.engagement.weights.reactions).toEqual({ base: 1 })
+      expect(result.engagement.weights.contributors).toEqual({ base: 2 })
+      expect(result.engagement.weights.lastActivity).toBe(1)
+      expect(result.engagement.weights.issueAge).toBe(1)
+      expect(result.engagement.weights.linkedPullRequests).toBe(3)
     })
 
     it('should merge partial weights with defaults', async () => {
@@ -88,15 +92,12 @@ engagement:
 
       const result = await loadConfigFile(testWorkspacePath)
 
-      expect(result.engagement.weights).not.toEqual(DEFAULT_ENGAGEMENT_WEIGHTS)
-      expect(result.engagement.weights).toEqual({
-        comments: 8,
-        reactions: DEFAULT_ENGAGEMENT_WEIGHTS.reactions,
-        contributors: DEFAULT_ENGAGEMENT_WEIGHTS.contributors,
-        lastActivity: 3,
-        issueAge: DEFAULT_ENGAGEMENT_WEIGHTS.issueAge,
-        linkedPullRequests: DEFAULT_ENGAGEMENT_WEIGHTS.linkedPullRequests
-      })
+      expect(result.engagement.weights.comments).toEqual({ base: 8 })
+      expect(result.engagement.weights.reactions).toEqual({ base: 1 })
+      expect(result.engagement.weights.contributors).toEqual({ base: 2 })
+      expect(result.engagement.weights.lastActivity).toBe(3)
+      expect(result.engagement.weights.issueAge).toBe(1)
+      expect(result.engagement.weights.linkedPullRequests).toBe(2)
     })
 
     it('should handle invalid YAML gracefully', async () => {
@@ -105,7 +106,12 @@ engagement:
 
       const result = await loadConfigFile(testWorkspacePath)
 
-      expect(result.engagement.weights).toEqual(DEFAULT_ENGAGEMENT_WEIGHTS)
+      expect(result.engagement.weights.comments).toEqual({ base: 3 })
+      expect(result.engagement.weights.reactions).toEqual({ base: 1 })
+      expect(result.engagement.weights.contributors).toEqual({ base: 2 })
+      expect(result.engagement.weights.lastActivity).toBe(1)
+      expect(result.engagement.weights.issueAge).toBe(1)
+      expect(result.engagement.weights.linkedPullRequests).toBe(2)
     })
 
     it('should handle missing engagement section', async () => {
@@ -117,7 +123,12 @@ other:
 
       const result = await loadConfigFile(testWorkspacePath)
 
-      expect(result.engagement.weights).toEqual(DEFAULT_ENGAGEMENT_WEIGHTS)
+      expect(result.engagement.weights.comments).toEqual({ base: 3 })
+      expect(result.engagement.weights.reactions).toEqual({ base: 1 })
+      expect(result.engagement.weights.contributors).toEqual({ base: 2 })
+      expect(result.engagement.weights.lastActivity).toBe(1)
+      expect(result.engagement.weights.issueAge).toBe(1)
+      expect(result.engagement.weights.linkedPullRequests).toBe(2)
     })
 
     it('should handle missing weights section', async () => {
@@ -129,7 +140,12 @@ engagement:
 
       const result = await loadConfigFile(testWorkspacePath)
 
-      expect(result.engagement.weights).toEqual(DEFAULT_ENGAGEMENT_WEIGHTS)
+      expect(result.engagement.weights.comments).toEqual({ base: 3 })
+      expect(result.engagement.weights.reactions).toEqual({ base: 1 })
+      expect(result.engagement.weights.contributors).toEqual({ base: 2 })
+      expect(result.engagement.weights.lastActivity).toBe(1)
+      expect(result.engagement.weights.issueAge).toBe(1)
+      expect(result.engagement.weights.linkedPullRequests).toBe(2)
     })
 
     it('should prefer root config over .github config', async () => {
@@ -148,11 +164,12 @@ engagement:
 
       const result = await loadConfigFile(testWorkspacePath)
 
-      expect(result.engagement.weights).not.toEqual(DEFAULT_ENGAGEMENT_WEIGHTS)
-      expect(result.engagement.weights).toEqual({
-        ...DEFAULT_ENGAGEMENT_WEIGHTS,
-        comments: 10
-      })
+      expect(result.engagement.weights.comments).toEqual({ base: 10 })
+      expect(result.engagement.weights.reactions).toEqual({ base: 1 })
+      expect(result.engagement.weights.contributors).toEqual({ base: 2 })
+      expect(result.engagement.weights.lastActivity).toBe(1)
+      expect(result.engagement.weights.issueAge).toBe(1)
+      expect(result.engagement.weights.linkedPullRequests).toBe(2)
     })
 
     it('should handle complete custom weights configuration', async () => {
@@ -170,16 +187,13 @@ engagement:
 
       const result = await loadConfigFile(testWorkspacePath)
 
-      const expected: ConfigFileEngagementWeights = {
-        comments: 5,
-        reactions: 3,
-        contributors: 4,
-        lastActivity: 2,
-        issueAge: 1,
-        linkedPullRequests: 6
-      }
-
-      expect(result.engagement.weights).toEqual(expected)
+      // With the new role-based system, flat weights get converted to { base: value }
+      expect(result.engagement.weights.comments).toEqual({ base: 5 })
+      expect(result.engagement.weights.reactions).toEqual({ base: 3 })
+      expect(result.engagement.weights.contributors).toEqual({ base: 4 })
+      expect(result.engagement.weights.lastActivity).toBe(2)
+      expect(result.engagement.weights.issueAge).toBe(1)
+      expect(result.engagement.weights.linkedPullRequests).toBe(6)
     })
   })
 })
