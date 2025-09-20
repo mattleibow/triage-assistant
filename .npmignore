@@ -1,0 +1,48 @@
+# Documentation site - not needed for npm package
+docs/
+
+# Development and testing files
+__tests__/
+__fixtures__/
+.env*
+.vscode/
+.devcontainer/
+
+# CI/CD files
+.github/
+
+# Build artifacts
+*.tsbuildinfo
+coverage/
+badges/
+
+# IDE and system files
+.DS_Store
+Thumbs.db
+*.code-workspace
+
+# Linting and configuration
+.eslintcache
+.prettierignore
+.prettierrc.json
+eslint.config.mjs
+jest.config.js
+
+# GraphQL and schema files
+.graphqlrc.yml
+schemas/
+
+# License scanning
+.licensed.yml
+.licenses/
+
+# Security scanning
+.gitleaksignore
+.checkov.yaml
+
+# Documentation maintenance
+.markdown-lint.yml
+.yaml-lint.yml
+
+# Scripts and utilities
+script/
