@@ -1,12 +1,14 @@
 # AI Triage Assistant
 
+> **🚀 Major Update**: This action has been migrated from TypeScript to C#/.NET while maintaining complete feature parity. All existing workflows will continue to work unchanged. The action now runs in a containerized environment for improved security and performance.
+
 [![GitHub Super-Linter](https://github.com/mattleibow/triage-assistant/actions/workflows/check-linter.yml/badge.svg)](https://github.com/super-linter/super-linter)
 ![CI](https://github.com/mattleibow/triage-assistant/actions/workflows/check-ci.yml/badge.svg)
 [![Check dist/](https://github.com/mattleibow/triage-assistant/actions/workflows/check-dist.yml/badge.svg)](https://github.com/mattleibow/triage-assistant/actions/workflows/check-dist.yml)
 [![CodeQL](https://github.com/mattleibow/triage-assistant/actions/workflows/check-codeql-analysis.yml/badge.svg)](https://github.com/mattleibow/triage-assistant/actions/workflows/check-codeql-analysis.yml)
 [![Coverage](./badges/coverage.svg)](./badges/coverage.svg)
 
-An AI-powered GitHub Action that provides sophisticated issue and pull request triage capabilities with explicit
+An AI-powered GitHub Action built with C#/.NET that provides sophisticated issue and pull request triage capabilities with explicit
 mode-based operation. Features include AI-powered label application using large language models and comprehensive
 engagement scoring for project prioritization.
 

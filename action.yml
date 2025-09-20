@@ -85,5 +85,5 @@ outputs:
     description: 'The file that contains the result of AI inference'
 
 runs:
-  using: node20
-  main: dist/index.js
+  using: docker
+  image: Dockerfile
