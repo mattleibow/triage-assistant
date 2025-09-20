@@ -1,0 +1,14 @@
+apiVersion: 1.0
+
+labels:
+  groups:
+    - name: "Area" 
+      prefix: "area-"
+      description: "The functional area of the codebase"
+      isRequired: true
+      maxLabels: 1
+    - name: "Overlap"
+      prefix: "overlap-"
+      description: "Example multi-label overlap categorization"
+      isRequired: false
+      maxLabels: 0
