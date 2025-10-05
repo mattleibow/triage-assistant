@@ -1,0 +1,89 @@
+name: 'AI Triage Assistant (.NET)'
+description: 'An AI assistant that triages issues by applying labels based on the issue content. (.NET Implementation)'
+author: 'mattleibow'
+
+branding:
+  icon: 'feather'
+  color: 'blue'
+
+inputs:
+  # GitHub token input
+  token:
+    description: 'GitHub token for API access'
+    required: false
+    default: ''
+  fallback-token:
+    description: 'Fallback GitHub token for API access'
+    required: false
+    default: '${{ github.token }}'
+
+  # AI model and endpoint inputs
+  ai-endpoint:
+    description: 'Endpoint to use for AI inference'
+    required: false
+    default: ''
+  ai-model:
+    description: 'Model to use for AI inference'
+    required: false
+    default: ''
+  ai-token:
+    description: 'Token for AI inference'
+    required: false
+    default: ''
+
+  issue:
+    description: 'The issue number of the issue to triage'
+    required: false
+    default: ''
+  issue-query:
+    description: 'GitHub search query to find issues to triage (e.g., "is:issue state:open created:>@today-30d")'
+    required: false
+    default: ''
+
+  # Mode selection
+  mode:
+    description: 'Operation mode: apply-labels, engagement-score'
+    required: false
+    default: 'apply-labels'
+
+  # Engagement scoring inputs
+  project:
+    description: 'Project number for engagement scoring'
+    required: false
+    default: ''
+  project-column:
+    description: 'Project column name to update with engagement scores'
+    required: false
+    default: 'Engagement Score'
+  apply-scores:
+    description: 'Whether to apply engagement scores to project items'
+    required: false
+    default: 'false'
+
+  # Label and comment posting inputs
+  apply-labels:
+    description: 'Whether to apply labels to the issue'
+    required: false
+    default: 'false'
+  apply-comment:
+    description: 'Whether to comment on the issue with the AI response'
+    required: false
+    default: 'false'
+  comment-footer:
+    description: 'Footer text to append to the AI response comment'
+    required: false
+    default:
+      '_This entire triage process was automated by AI and mistakes may have been made. Please let us know so we can
+      continue to improve._'
+  dry-run:
+    description: 'Whether to run the action in dry-run mode (no changes made)'
+    required: false
+    default: 'false'
+
+outputs:
+  response-file:
+    description: 'The file that contains the result of AI inference'
+
+runs:
+  using: 'docker'
+  image: 'Dockerfile'
