@@ -97,6 +97,10 @@ Thumbs.db
 # Ignore built ts files
 __tests__/runner/*
 
+# Documentation build artifacts
+docs/dist/
+docs/.astro/
+
 # IDE files
 .idea
 *.code-workspace

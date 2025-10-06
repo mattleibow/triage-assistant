@@ -1,7 +1,8 @@
+---
 name: 'AI Triage Assistant'
-description: 'An AI assistant that triages issues by applying labels based on the issue content.'
+description: >-
+  An AI assistant that triages issues by applying labels based on the issue content.
 author: 'mattleibow'
-
 branding:
   icon: 'feather'
   color: 'blue'
@@ -36,7 +37,8 @@ inputs:
     required: false
     default: ''
   issue-query:
-    description: 'GitHub search query to find issues to triage (e.g., "is:issue state:open created:>@today-30d")'
+    description: >-
+      GitHub search query to find issues to triage (e.g., "is:issue state:open created:>@today-30d")
     required: false
     default: ''
 
@@ -72,9 +74,9 @@ inputs:
   comment-footer:
     description: 'Footer text to append to the AI response comment'
     required: false
-    default:
-      '_This entire triage process was automated by AI and mistakes may have been made. Please let us know so we can
-      continue to improve._'
+    default: >-
+      _This entire triage process was automated by AI and mistakes may have been made. Please let us know so we can
+      continue to improve._
   dry-run:
     description: 'Whether to run the action in dry-run mode (no changes made)'
     required: false
