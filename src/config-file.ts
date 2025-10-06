@@ -3,9 +3,10 @@ import * as path from 'path'
 import * as core from '@actions/core'
 import * as yaml from 'js-yaml'
 import * as utils from './utils.js'
+import { EngagementWeights, EngagementConfig, UserGroups, normalizeWeights } from './engagement/engagement-config.js'
 
 /**
- * Configuration interface for engagement scoring weights
+ * Configuration interface for engagement scoring weights (legacy format)
  */
 export interface ConfigFileEngagementWeights {
   comments: number
@@ -17,10 +18,11 @@ export interface ConfigFileEngagementWeights {
 }
 
 /**
- * Configuration interface for batch label processing
+ * Configuration interface for batch label processing (extended format)
  */
-export interface ConfigFileEngagement {
-  weights: ConfigFileEngagementWeights
+export interface ConfigFileEngagement extends EngagementConfig {
+  weights: EngagementWeights
+  groups?: UserGroups
 }
 
 /**
@@ -119,7 +121,8 @@ export async function loadFile(configPaths: string[]): Promise<ConfigFile> {
   // Nothing was loaded, so we got an empty config file
   return {
     engagement: {
-      weights: { ...DEFAULT_ENGAGEMENT_WEIGHTS }
+      weights: normalizeWeights(DEFAULT_ENGAGEMENT_WEIGHTS),
+      groups: {}
     },
     labels: {
       groups: {}
@@ -140,10 +143,8 @@ export function parseConfigFile(fileContent: string): ConfigFile | undefined {
     ...parsedConfig,
     engagement: {
       ...parsedConfig.engagement,
-      weights: {
-        ...DEFAULT_ENGAGEMENT_WEIGHTS,
-        ...(parsedConfig.engagement?.weights ?? {})
-      }
+      weights: normalizeWeights(parsedConfig.engagement?.weights ?? DEFAULT_ENGAGEMENT_WEIGHTS),
+      groups: parsedConfig.engagement?.groups ?? {}
     },
     labels: {
       ...parsedConfig.labels,

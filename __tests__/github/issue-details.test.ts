@@ -9,7 +9,7 @@ import {
 } from '../../src/github/issue-details.js'
 import { createEngagementItem } from '../../src/engagement/engagement.js'
 import { IssueDetails } from '../../src/github/types.js'
-import { EngagementWeights } from '../../src/engagement/engagement-config.js'
+import { ConfigFileEngagementWeights } from '../../src/config-file.js'
 
 describe('IssueDetails', () => {
   // Mock date for consistent testing
@@ -17,7 +17,7 @@ describe('IssueDetails', () => {
   const MOCK_SEVEN_DAYS_AGO = new Date('2023-01-03T12:00:00Z')
 
   // Default weights for testing
-  const defaultWeights: EngagementWeights = {
+  const defaultWeights: ConfigFileEngagementWeights = {
     comments: 3,
     reactions: 1,
     contributors: 2,
@@ -379,7 +379,7 @@ describe('IssueDetails', () => {
     })
 
     it('should use custom weights when provided', () => {
-      const customWeights: EngagementWeights = {
+      const customWeights: ConfigFileEngagementWeights = {
         comments: 10,
         reactions: 5,
         contributors: 1,
@@ -403,7 +403,7 @@ describe('IssueDetails', () => {
     })
 
     it('should use different weights for different calculations', () => {
-      const customWeights: EngagementWeights = {
+      const customWeights: ConfigFileEngagementWeights = {
         comments: 5,
         reactions: 3,
         contributors: 2,
@@ -423,7 +423,7 @@ describe('IssueDetails', () => {
     })
 
     it('should handle zero custom weights', () => {
-      const zeroWeights: EngagementWeights = {
+      const zeroWeights: ConfigFileEngagementWeights = {
         comments: 0,
         reactions: 0,
         contributors: 0,
@@ -476,7 +476,7 @@ describe('IssueDetails', () => {
     })
 
     it('should accept custom weights for historical scoring', async () => {
-      const customWeights: EngagementWeights = {
+      const customWeights: ConfigFileEngagementWeights = {
         comments: 1,
         reactions: 1,
         contributors: 1,

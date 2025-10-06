@@ -35663,6 +35663,48 @@ export type GetProjectItemsQueryVariables = Exact<{
 
 export type GetProjectItemsQuery = { __typename?: 'Query', repository?: { __typename?: 'Repository', projectV2?: { __typename?: 'ProjectV2', id: string, title: string, items: { __typename?: 'ProjectV2ItemConnection', pageInfo: { __typename?: 'PageInfo', hasNextPage: boolean, endCursor?: string | null }, nodes?: Array<{ __typename: 'ProjectV2Item', id: string, content?: { __typename: 'DraftIssue' } | { __typename: 'Issue', id: string, number: number, repository: { __typename?: 'Repository', name: string, owner: { __typename: 'Organization', login: string } | { __typename: 'User', login: string } } } | { __typename: 'PullRequest' } | null } | null> | null } } | null } | null };
 
+export type GetUserRepositoryPermissionQueryVariables = Exact<{
+  owner: Scalars['String']['input'];
+  name: Scalars['String']['input'];
+  login: Scalars['String']['input'];
+}>;
+
+
+export type GetUserRepositoryPermissionQuery = { __typename?: 'Query', repository?: { __typename?: 'Repository', collaborators?: { __typename?: 'RepositoryCollaboratorConnection', edges?: Array<{ __typename?: 'RepositoryCollaboratorEdge', permission: RepositoryPermission, node: { __typename?: 'User', login: string } } | null> | null } | null } | null };
+
+export type GetUserOrganizationMembershipQueryVariables = Exact<{
+  organization: Scalars['String']['input'];
+  login: Scalars['String']['input'];
+}>;
+
+
+export type GetUserOrganizationMembershipQuery = { __typename?: 'Query', organization?: { __typename?: 'Organization', membersWithRole: { __typename?: 'OrganizationMemberConnection', nodes?: Array<{ __typename?: 'User', login: string } | null> | null } } | null };
+
+export type GetUserContributionHistoryQueryVariables = Exact<{
+  login: Scalars['String']['input'];
+  from: Scalars['DateTime']['input'];
+  to: Scalars['DateTime']['input'];
+}>;
+
+
+export type GetUserContributionHistoryQuery = { __typename?: 'Query', user?: { __typename?: 'User', contributionsCollection: { __typename?: 'ContributionsCollection', totalCommitContributions: number, issueContributions: { __typename?: 'CreatedIssueContributionConnection', totalCount: number }, pullRequestContributions: { __typename?: 'CreatedPullRequestContributionConnection', totalCount: number } } } | null };
+
+export type SearchIssuesQueryVariables = Exact<{
+  query: Scalars['String']['input'];
+  first: Scalars['Int']['input'];
+}>;
+
+
+export type SearchIssuesQuery = { __typename?: 'Query', search: { __typename?: 'SearchResultItemConnection', issueCount: number, pageInfo: { __typename?: 'PageInfo', hasNextPage: boolean, endCursor?: string | null }, nodes?: Array<{ __typename?: 'App' } | { __typename?: 'Discussion' } | { __typename?: 'Issue', number: number, title: string } | { __typename?: 'MarketplaceListing' } | { __typename?: 'Organization' } | { __typename?: 'PullRequest' } | { __typename?: 'Repository' } | { __typename?: 'User' } | null> | null } };
+
+export type SearchPullRequestsQueryVariables = Exact<{
+  query: Scalars['String']['input'];
+  first: Scalars['Int']['input'];
+}>;
+
+
+export type SearchPullRequestsQuery = { __typename?: 'Query', search: { __typename?: 'SearchResultItemConnection', issueCount: number, pageInfo: { __typename?: 'PageInfo', hasNextPage: boolean, endCursor?: string | null }, nodes?: Array<{ __typename?: 'App' } | { __typename?: 'Discussion' } | { __typename?: 'Issue' } | { __typename?: 'MarketplaceListing' } | { __typename?: 'Organization' } | { __typename?: 'PullRequest', number: number, title: string } | { __typename?: 'Repository' } | { __typename?: 'User' } | null> | null } };
+
 export type UpdateProjectItemFieldMutationVariables = Exact<{
   projectItemId: Scalars['ID']['input'];
   projectFieldId: Scalars['ID']['input'];
@@ -35803,6 +35845,80 @@ export const GetProjectItemsDocument = gql`
   }
 }
     `;
+export const GetUserRepositoryPermissionDocument = gql`
+    query GetUserRepositoryPermission($owner: String!, $name: String!, $login: String!) {
+  repository(owner: $owner, name: $name) {
+    collaborators(first: 100) {
+      edges {
+        node {
+          login
+        }
+        permission
+      }
+    }
+  }
+}
+    `;
+export const GetUserOrganizationMembershipDocument = gql`
+    query GetUserOrganizationMembership($organization: String!, $login: String!) {
+  organization(login: $organization) {
+    membersWithRole(first: 100) {
+      nodes {
+        login
+      }
+    }
+  }
+}
+    `;
+export const GetUserContributionHistoryDocument = gql`
+    query GetUserContributionHistory($login: String!, $from: DateTime!, $to: DateTime!) {
+  user(login: $login) {
+    contributionsCollection(from: $from, to: $to) {
+      issueContributions {
+        totalCount
+      }
+      pullRequestContributions {
+        totalCount
+      }
+      totalCommitContributions
+    }
+  }
+}
+    `;
+export const SearchIssuesDocument = gql`
+    query SearchIssues($query: String!, $first: Int!) {
+  search(query: $query, type: ISSUE, first: $first) {
+    issueCount
+    pageInfo {
+      hasNextPage
+      endCursor
+    }
+    nodes {
+      ... on Issue {
+        number
+        title
+      }
+    }
+  }
+}
+    `;
+export const SearchPullRequestsDocument = gql`
+    query SearchPullRequests($query: String!, $first: Int!) {
+  search(query: $query, type: ISSUE, first: $first) {
+    issueCount
+    pageInfo {
+      hasNextPage
+      endCursor
+    }
+    nodes {
+      ... on PullRequest {
+        number
+        title
+      }
+    }
+  }
+}
+    `;
 export const UpdateProjectItemFieldDocument = gql`
     mutation UpdateProjectItemField($projectItemId: ID!, $projectFieldId: ID!, $projectId: ID!, $engagementScoreNumber: Float!) {
   updateProjectV2ItemFieldValue(
@@ -35830,6 +35946,21 @@ export function getSdk(client: GraphQLClient, withWrapper: SdkFunctionWrapper = 
     },
     GetProjectItems(variables: GetProjectItemsQueryVariables, requestHeaders?: GraphQLClientRequestHeaders, signal?: RequestInit['signal']): Promise<GetProjectItemsQuery> {
       return withWrapper((wrappedRequestHeaders) => client.request<GetProjectItemsQuery>({ document: GetProjectItemsDocument, variables, requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders }, signal }), 'GetProjectItems', 'query', variables);
+    },
+    GetUserRepositoryPermission(variables: GetUserRepositoryPermissionQueryVariables, requestHeaders?: GraphQLClientRequestHeaders, signal?: RequestInit['signal']): Promise<GetUserRepositoryPermissionQuery> {
+      return withWrapper((wrappedRequestHeaders) => client.request<GetUserRepositoryPermissionQuery>({ document: GetUserRepositoryPermissionDocument, variables, requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders }, signal }), 'GetUserRepositoryPermission', 'query', variables);
+    },
+    GetUserOrganizationMembership(variables: GetUserOrganizationMembershipQueryVariables, requestHeaders?: GraphQLClientRequestHeaders, signal?: RequestInit['signal']): Promise<GetUserOrganizationMembershipQuery> {
+      return withWrapper((wrappedRequestHeaders) => client.request<GetUserOrganizationMembershipQuery>({ document: GetUserOrganizationMembershipDocument, variables, requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders }, signal }), 'GetUserOrganizationMembership', 'query', variables);
+    },
+    GetUserContributionHistory(variables: GetUserContributionHistoryQueryVariables, requestHeaders?: GraphQLClientRequestHeaders, signal?: RequestInit['signal']): Promise<GetUserContributionHistoryQuery> {
+      return withWrapper((wrappedRequestHeaders) => client.request<GetUserContributionHistoryQuery>({ document: GetUserContributionHistoryDocument, variables, requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders }, signal }), 'GetUserContributionHistory', 'query', variables);
+    },
+    SearchIssues(variables: SearchIssuesQueryVariables, requestHeaders?: GraphQLClientRequestHeaders, signal?: RequestInit['signal']): Promise<SearchIssuesQuery> {
+      return withWrapper((wrappedRequestHeaders) => client.request<SearchIssuesQuery>({ document: SearchIssuesDocument, variables, requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders }, signal }), 'SearchIssues', 'query', variables);
+    },
+    SearchPullRequests(variables: SearchPullRequestsQueryVariables, requestHeaders?: GraphQLClientRequestHeaders, signal?: RequestInit['signal']): Promise<SearchPullRequestsQuery> {
+      return withWrapper((wrappedRequestHeaders) => client.request<SearchPullRequestsQuery>({ document: SearchPullRequestsDocument, variables, requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders }, signal }), 'SearchPullRequests', 'query', variables);
     },
     UpdateProjectItemField(variables: UpdateProjectItemFieldMutationVariables, requestHeaders?: GraphQLClientRequestHeaders, signal?: RequestInit['signal']): Promise<UpdateProjectItemFieldMutation> {
       return withWrapper((wrappedRequestHeaders) => client.request<UpdateProjectItemFieldMutation>({ document: UpdateProjectItemFieldDocument, variables, requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders }, signal }), 'UpdateProjectItemField', 'mutation', variables);

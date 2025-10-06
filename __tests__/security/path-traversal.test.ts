@@ -36,7 +36,7 @@ describe('Path Traversal Security Tests', () => {
       inMemoryFs.forceSet(`${process.cwd()}/valid-workspace/.triagerc.yml`, 'engagement:\n  weights:\n    comments: 5')
 
       const result = await loadConfigFile(validPath)
-      expect(result.engagement.weights.comments).toBe(5)
+      expect(result.engagement.weights.comments).toEqual({ base: 5 })
     })
 
     it('should normalize and validate paths correctly', async () => {
@@ -46,7 +46,7 @@ describe('Path Traversal Security Tests', () => {
       inMemoryFs.forceSet(`${process.cwd()}/workspace/.triagerc.yml`, 'engagement:\n  weights:\n    reactions: 3')
 
       const result = await loadConfigFile(pathWithDots)
-      expect(result.engagement.weights.reactions).toBe(3)
+      expect(result.engagement.weights.reactions).toEqual({ base: 3 })
     })
 
     it('should work with default workspace path', async () => {
@@ -54,7 +54,7 @@ describe('Path Traversal Security Tests', () => {
       inMemoryFs.forceSet(`${process.cwd()}/.triagerc.yml`, 'engagement:\n  weights:\n    contributors: 4')
 
       const result = await loadConfigFile()
-      expect(result.engagement.weights.contributors).toBe(4)
+      expect(result.engagement.weights.contributors).toEqual({ base: 4 })
     })
 
     it('should check .github subdirectory safely', async () => {

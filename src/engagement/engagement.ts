@@ -6,9 +6,15 @@ import { ConfigFileEngagement, ConfigFileEngagementWeights } from '../config-fil
 import { EngagementResponse, EngagementItem, EngagementClassification } from './engagement-types.js'
 import { getIssueDetails } from '../github/issues.js'
 import { getProjectDetails, updateProjectWithScores } from '../github/projects.js'
-import { calculateScore, calculateHistoricalScore } from '../github/issue-details.js'
+import {
+  calculateScore,
+  calculateHistoricalScore,
+  calculateScoreWithRoles,
+  calculateHistoricalScoreWithRoles
+} from '../github/issue-details.js'
 import { IssueDetails } from '../github/types.js'
 import { EngagementWorkflowConfig } from '../config.js'
+import { EngagementWeights } from './engagement-config.js'
 
 /**
  * Run the complete engagement scoring workflow
@@ -29,7 +35,7 @@ export async function runEngagementWorkflow(
   })
   const sdk = getSdk(graphql)
 
-  const engagementResponse = await calculateEngagementScores(config, sdk, configFile.weights)
+  const engagementResponse = await calculateEngagementScores(config, sdk, configFile.weights, configFile.groups)
   core.info(`Calculated engagement scores for ${engagementResponse.totalItems} items`)
 
   // Update project with scores if requested
@@ -49,17 +55,19 @@ export async function runEngagementWorkflow(
  * @param config - Configuration object containing project and authentication details
  * @param graphql - GraphQL SDK instance for making API calls
  * @param weights - Engagement scoring weights configuration
+ * @param groups - User groups configuration
  * @returns Promise<EngagementResponse> - The engagement response with scores
  */
 export async function calculateEngagementScores(
   config: EngagementWorkflowConfig,
   graphql: GraphQLSdk,
-  weights: ConfigFileEngagementWeights
+  weights: EngagementWeights,
+  groups?: import('./engagement-config.js').UserGroups
 ): Promise<EngagementResponse> {
   if (config.projectNumber && config.projectNumber > 0) {
-    return await calculateProjectEngagementScores(config, graphql, weights)
+    return await calculateProjectEngagementScores(config, graphql, weights, groups)
   } else if (config.issueNumber && config.issueNumber > 0) {
-    return await calculateIssueEngagementScores(config, graphql, weights)
+    return await calculateIssueEngagementScores(config, graphql, weights, groups)
   } else {
     throw new Error('Either project number or issue number must be specified')
   }
@@ -71,12 +79,13 @@ export async function calculateEngagementScores(
 async function calculateIssueEngagementScores(
   config: EngagementWorkflowConfig,
   graphql: GraphQLSdk,
-  weights: ConfigFileEngagementWeights
+  weights: EngagementWeights,
+  groups?: import('./engagement-config.js').UserGroups
 ): Promise<EngagementResponse> {
   core.info(`Calculating engagement score for issue #${config.issueNumber}`)
 
   const issueDetails = await getIssueDetails(graphql, config.repoOwner, config.repoName, config.issueNumber!)
-  const item = await createEngagementItem(issueDetails, undefined, weights)
+  const item = await createEngagementItem(issueDetails, undefined, weights, groups, graphql)
 
   return {
     items: [item],
@@ -90,7 +99,8 @@ async function calculateIssueEngagementScores(
 async function calculateProjectEngagementScores(
   config: EngagementWorkflowConfig,
   graphql: GraphQLSdk,
-  weights: ConfigFileEngagementWeights
+  weights: EngagementWeights,
+  groups?: import('./engagement-config.js').UserGroups
 ): Promise<EngagementResponse> {
   core.info(`Calculating engagement scores for project #${config.projectNumber}`)
 
@@ -115,7 +125,7 @@ async function calculateProjectEngagementScores(
       projectItem.content.repo,
       projectItem.content.number
     )
-    const item = await createEngagementItem(issueDetails, projectItem.id, weights)
+    const item = await createEngagementItem(issueDetails, projectItem.id, weights, groups, graphql)
     items.push(item)
   }
 
@@ -137,9 +147,38 @@ export async function createEngagementItem(
   issueDetails: IssueDetails,
   projectItemId: string | undefined,
   weights: ConfigFileEngagementWeights
+): Promise<EngagementItem>
+
+export async function createEngagementItem(
+  issueDetails: IssueDetails,
+  projectItemId: string | undefined,
+  weights: EngagementWeights,
+  groups: import('./engagement-config.js').UserGroups | undefined,
+  graphql: GraphQLSdk
+): Promise<EngagementItem>
+
+export async function createEngagementItem(
+  issueDetails: IssueDetails,
+  projectItemId: string | undefined,
+  weights: ConfigFileEngagementWeights | EngagementWeights,
+  groups?: import('./engagement-config.js').UserGroups | undefined,
+  graphql?: GraphQLSdk
 ): Promise<EngagementItem> {
-  const score = calculateScore(issueDetails, weights)
-  const previousScore = await calculateHistoricalScore(issueDetails, weights)
+  let score: number
+  let previousScore: number
+
+  // Determine if we should use role-based scoring
+  if (weights && typeof (weights as any).comments === 'object' && graphql) {
+    // Role-based scoring
+    const roleWeights = weights as EngagementWeights
+    score = await calculateScoreWithRoles(issueDetails, roleWeights, groups, graphql)
+    previousScore = await calculateHistoricalScoreWithRoles(issueDetails, roleWeights, groups, graphql)
+  } else {
+    // Legacy scoring
+    const legacyWeights = weights as ConfigFileEngagementWeights
+    score = calculateScore(issueDetails, legacyWeights)
+    previousScore = await calculateHistoricalScore(issueDetails, legacyWeights)
+  }
 
   const item: EngagementItem = {
     ...(projectItemId && { id: projectItemId }),

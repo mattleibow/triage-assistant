@@ -1,5 +1,8 @@
 import { IssueDetails } from './types.js'
 import { ConfigFileEngagementWeights } from '../config-file.js'
+import { EngagementWeights, getWeightForRole, UserGroups } from '../engagement/engagement-config.js'
+import { detectUserRole, RepoInfo } from './role-detection.js'
+import { Sdk as GraphQLSdk } from '../generated/graphql.js'
 
 /**
  * Get historic issue details by filtering activity to 7 days ago
@@ -126,6 +129,87 @@ export function calculateScore(issue: IssueDetails, weights: ConfigFileEngagemen
 }
 
 /**
+ * Calculate engagement score with role-based weights
+ * @param issue - The issue details to score
+ * @param weights - Role-based weights for scoring components
+ * @param groups - User groups configuration
+ * @param graphql - GraphQL SDK instance for role detection
+ * @returns Promise<number> - The calculated score
+ */
+export async function calculateScoreWithRoles(
+  issue: IssueDetails,
+  weights: EngagementWeights,
+  groups: UserGroups | undefined,
+  graphql: GraphQLSdk
+): Promise<number> {
+  const repoInfo: RepoInfo = {
+    owner: issue.owner,
+    name: issue.repo
+  }
+
+  // Calculate role-based comment scores
+  let commentScore = 0
+  for (const comment of issue.comments || []) {
+    const role = await detectUserRole(comment.user.login, repoInfo, groups, graphql)
+    const weight = getWeightForRole(weights.comments, role)
+    commentScore += weight
+  }
+
+  // Calculate role-based reaction scores
+  let reactionScore = 0
+
+  // Issue reactions
+  for (const reaction of issue.reactions || []) {
+    const role = await detectUserRole(reaction.user.login, repoInfo, groups, graphql)
+    const weight = getWeightForRole(weights.reactions, role)
+    reactionScore += weight
+  }
+
+  // Comment reactions
+  for (const comment of issue.comments || []) {
+    for (const reaction of comment.reactions || []) {
+      const role = await detectUserRole(reaction.user.login, repoInfo, groups, graphql)
+      const weight = getWeightForRole(weights.reactions, role)
+      reactionScore += weight
+    }
+  }
+
+  // Calculate role-based contributor scores
+  const uniqueContributors = new Set<string>()
+
+  // Add issue author
+  uniqueContributors.add(issue.user.login)
+
+  // Add assignees
+  issue.assignees.forEach((assignee) => uniqueContributors.add(assignee.login))
+
+  // Add comment authors
+  issue.comments?.forEach((comment) => uniqueContributors.add(comment.user.login))
+
+  let contributorScore = 0
+  for (const contributor of uniqueContributors) {
+    const role = await detectUserRole(contributor, repoInfo, groups, graphql)
+    const weight = getWeightForRole(weights.contributors, role)
+    contributorScore += weight
+  }
+
+  // Calculate time-based factors (no role weighting needed)
+  const lastActivity = Math.max(1, getDaysSinceLastActivity(issue))
+  const issueAge = Math.max(1, getDaysSinceCreation(issue))
+  const linkedPullRequests = 0 // Not implemented yet
+
+  const score =
+    commentScore +
+    reactionScore +
+    contributorScore +
+    weights.lastActivity * (1 / lastActivity) +
+    weights.issueAge * (1 / issueAge) +
+    weights.linkedPullRequests * linkedPullRequests
+
+  return Math.round(score)
+}
+
+/**
  * Calculate previous score (7 days ago) based on historical issue details
  * @param issue - The issue details to score
  * @param weights - Custom weights for scoring components
@@ -136,4 +220,22 @@ export async function calculateHistoricalScore(
 ): Promise<number> {
   const historicIssue = getHistoricalIssueDetails(issue)
   return calculateScore(historicIssue, weights)
+}
+
+/**
+ * Calculate historical score with role-based weights
+ * @param issue - The issue details to score
+ * @param weights - Role-based weights for scoring components
+ * @param groups - User groups configuration
+ * @param graphql - GraphQL SDK instance for role detection
+ * @returns Promise<number> - The calculated historical score
+ */
+export async function calculateHistoricalScoreWithRoles(
+  issue: IssueDetails,
+  weights: EngagementWeights,
+  groups: UserGroups | undefined,
+  graphql: GraphQLSdk
+): Promise<number> {
+  const historicIssue = getHistoricalIssueDetails(issue)
+  return calculateScoreWithRoles(historicIssue, weights, groups, graphql)
 }
